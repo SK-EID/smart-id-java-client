@@ -1,14 +1,8 @@
 package ee.sk.smartid.rest;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import ee.sk.smartid.exception.CertificateNotFoundException;
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.exception.UnauthorizedException;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.exception.*;
+import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -99,7 +93,6 @@ public class SmartIdConnectorTest {
     CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
     assertNotNull(response);
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
-
   }
 
   @Test
@@ -150,6 +143,56 @@ public class SmartIdConnectorTest {
     stubBadRequestResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
+  }
+
+  @Test
+  public void sign_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionId());
+  }
+
+  @Test
+  public void sign_withDisplayText_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithDisplayText.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    request.setDisplayText("Authorize transfer of €10");
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionId());
+  }
+
+  @Test
+  public void sign_withNonce_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    request.setNonce("zstOt2umlc");
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionId());
+  }
+
+  @Test(expected = UserAccountNotFoundException.class)
+  public void sign_whenDocumentNumberNotFound_shouldThrowException() throws Exception {
+    stubNotFoundResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    connector.sign("PNOEE-123456", request);
+  }
+
+  @Test(expected = UnauthorizedException.class)
+  public void sign_withWorongAuthenticationParams_shouldThrowException() throws Exception {
+    stubUnauthorizedResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    connector.sign("PNOEE-123456", request);
+  }
+
+  @Test(expected = InvalidParametersException.class)
+  public void sign_withWorongRequestParams_shouldThrowException() throws Exception {
+    stubBadRequestResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    connector.sign("PNOEE-123456", request);
   }
 
   private void assertSuccessfulResponse(SessionStatus sessionStatus) {
@@ -233,6 +276,16 @@ public class SmartIdConnectorTest {
     request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
     request.setRelyingPartyName("BANK123");
     request.setCertificateLevel("ADVANCED");
+    return request;
+  }
+
+  private SignatureSessionRequest createDummySignatureSessionRequest() {
+    SignatureSessionRequest request = new SignatureSessionRequest();
+    request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
+    request.setRelyingPartyName("BANK123");
+    request.setCertificateLevel("ADVANCED");
+    request.setHash("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    request.setHashType("SHA256");
     return request;
   }
 }

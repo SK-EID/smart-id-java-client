@@ -4,10 +4,13 @@ import ee.sk.smartid.exception.CertificateNotFoundException;
 import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.UnauthorizedException;
+import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +29,10 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 public class SmartIdConnector {
 
   private static final Logger logger = LoggerFactory.getLogger(SmartIdConnector.class);
+  private static final String SESSION_STATUS_URI = "/session/{sessionId}";
+  private static final String CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH = "/certificatechoice/pno/{country}/{nationalIdentityNumber}";
+  private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
+  private static final String SIGNATURE_BY_DOCUMENT_NUMBER_PATH = "/signature/document/{documentNumber}";
   private String endpointUrl;
 
   public SmartIdConnector(String endpointUrl) {
@@ -36,7 +43,7 @@ public class SmartIdConnector {
     logger.debug("Getting session status for " + sessionId);
     URI uri = UriBuilder
         .fromUri(endpointUrl)
-        .path("/session/{sessionId}")
+        .path(SESSION_STATUS_URI)
         .build(sessionId);
     try {
       SessionStatus result = repareClient(uri).get(SessionStatus.class);
@@ -52,7 +59,7 @@ public class SmartIdConnector {
     logger.debug("Getting certificate for " + identity);
     URI uri = UriBuilder
         .fromUri(endpointUrl)
-        .path("/certificatechoice/pno/{country}/{nationalIdentityNumber}")
+        .path(CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH)
         .build(identity.getCountry(), identity.getNationalIdentityNumber());
     return postCertificateRequest(uri, request);
   }
@@ -61,25 +68,22 @@ public class SmartIdConnector {
     logger.debug("Getting certificate for document " + documentNumber);
     URI uri = UriBuilder
         .fromUri(endpointUrl)
-        .path("/certificatechoice/document/{documentNumber}")
+        .path(CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH)
         .build(documentNumber);
     return postCertificateRequest(uri, request);
   }
 
-  private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
+  public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
+    logger.debug("Signing for document " + documentNumber);
+    URI uri = UriBuilder
+        .fromUri(endpointUrl)
+        .path(SIGNATURE_BY_DOCUMENT_NUMBER_PATH)
+        .build(documentNumber);
     try {
-      Entity<CertificateRequest> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
-      CertificateChoiceResponse result = repareClient(uri).post(requestEntity, CertificateChoiceResponse.class);
-      return result;
+      return postRequest(uri, request, SignatureSessionResponse.class);
     } catch (NotFoundException e) {
-      logger.warn("Certificate not found for URI " + uri + ": " + e.getMessage());
-      throw new CertificateNotFoundException();
-    } catch (NotAuthorizedException e) {
-      logger.warn("Certificate request is unauthorized for URI " + uri + ": " + e.getMessage());
-      throw new UnauthorizedException();
-    } catch (BadRequestException e) {
-      logger.warn("Certificate request is invalid for URI " + uri + ": " + e.getMessage());
-      throw new InvalidParametersException();
+      logger.warn("User account was not found for signing with document " + documentNumber);
+      throw new UserAccountNotFoundException();
     }
   }
 
@@ -93,4 +97,26 @@ public class SmartIdConnector {
     return builder;
   }
 
+  private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
+    try {
+      return postRequest(uri, request, CertificateChoiceResponse.class);
+    } catch (NotFoundException e) {
+      logger.warn("Certificate not found for URI " + uri + ": " + e.getMessage());
+      throw new CertificateNotFoundException();
+    }
+  }
+
+  private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
+    try {
+      Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
+      T result = repareClient(uri).post(requestEntity, responseType);
+      return result;
+    } catch (NotAuthorizedException e) {
+      logger.warn("Certificate request is unauthorized for URI " + uri + ": " + e.getMessage());
+      throw new UnauthorizedException();
+    } catch (BadRequestException e) {
+      logger.warn("Certificate request is invalid for URI " + uri + ": " + e.getMessage());
+      throw new InvalidParametersException();
+    }
+  }
 }
