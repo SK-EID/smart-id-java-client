@@ -1,7 +1,13 @@
 package ee.sk.smartid.rest;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import ee.sk.smartid.exception.CertificateNotFoundException;
+import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.UnauthorizedException;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -76,6 +82,76 @@ public class SmartIdConnectorTest {
     assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
   }
 
+  @Test
+  public void getCertificate_usingNationalIdentityNumber() throws Exception {
+    stubRequestWithResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    CertificateRequest request = createDummyCertificateRequest();
+    CertificateChoiceResponse response = connector.getCertificate(identity, request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+  }
+
+  @Test
+  public void getCertificate_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+    CertificateRequest request = createDummyCertificateRequest();
+    CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+
+  }
+
+  @Test
+  public void getCertificate_withNonce_usingNationalIdentityNumber() throws Exception {
+    stubRequestWithResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    CertificateRequest request = createDummyCertificateRequest();
+    request.setNonce("zstOt2umlc");
+    CertificateChoiceResponse response = connector.getCertificate(identity, request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+  }
+
+  @Test
+  public void getCertificate_withNonce_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+    CertificateRequest request = createDummyCertificateRequest();
+    request.setNonce("zstOt2umlc");
+    CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+  }
+
+  @Test(expected = CertificateNotFoundException.class)
+  public void getCertificate_whenNationalIdentityNumberNotFound_shoudThrowException() throws Exception {
+    stubNotFoundResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequest.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate(identity, request);
+  }
+
+  @Test(expected = CertificateNotFoundException.class)
+  public void getCertificate_whenDocumentNumberNotFound_shoudThrowException() throws Exception {
+    stubNotFoundResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate("PNOEE-123456", request);
+  }
+
+  @Test(expected = UnauthorizedException.class)
+  public void getCertificate_withWrongAuthenticationParams_shuldThrowException() throws Exception {
+    stubUnauthorizedResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate("PNOEE-123456", request);
+  }
+
+  @Test(expected = InvalidParametersException.class)
+  public void getCertificate_withWrongRequestParams_shouldThrowException() throws Exception {
+    stubBadRequestResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate("PNOEE-123456", request);
+  }
+
   private void assertSuccessfulResponse(SessionStatus sessionStatus) {
     assertEquals("COMPLETE", sessionStatus.getState());
     assertNotNull(sessionStatus.getResult());
@@ -103,20 +179,60 @@ public class SmartIdConnectorTest {
             .withBody("Not found")));
   }
 
+  private void stubNotFoundResponse(String url, String requestFile) throws IOException {
+    stubErrorResponse(url, requestFile, 404);
+  }
+
+  private void stubUnauthorizedResponse(String url, String requestFile) throws IOException {
+    stubErrorResponse(url, requestFile, 401);
+  }
+
+  private void stubBadRequestResponse(String url, String requestFile) throws IOException {
+    stubErrorResponse(url, requestFile, 400);
+  }
+
+  private void stubErrorResponse(String url, String requestFile, int errorStatus) throws IOException {
+    stubFor(post(urlEqualTo(url))
+        .withHeader("Accept", equalTo("application/json"))
+        .withRequestBody(equalToJson(readFileBody(requestFile)))
+        .willReturn(aResponse()
+            .withStatus(errorStatus)
+            .withHeader("Content-Type", "application/json")
+            .withBody("Not found")));
+  }
+
   private void stubRequestWithResponse(String urlEquals, String responseFile) throws IOException {
     stubFor(get(urlEqualTo(urlEquals))
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(readResponseBody(responseFile))));
+            .withBody(readFileBody(responseFile))));
   }
 
-  private String readResponseBody(String fileName) throws IOException {
+  private void stubRequestWithResponse(String url, String requestFile, String responseFile) throws IOException {
+    stubFor(post(urlEqualTo(url))
+        .withHeader("Accept", equalTo("application/json"))
+        .withRequestBody(equalToJson(readFileBody(requestFile)))
+        .willReturn(aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(readFileBody(responseFile))));
+  }
+
+  private String readFileBody(String fileName) throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
     URL resource = classLoader.getResource(fileName);
     assertNotNull("File not found: " + fileName, resource);
     File file = new File(resource.getFile());
     return FileUtils.readFileToString(file, "UTF-8");
+  }
+
+  private CertificateRequest createDummyCertificateRequest() {
+    CertificateRequest request = new CertificateRequest();
+    request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
+    request.setRelyingPartyName("BANK123");
+    request.setCertificateLevel("ADVANCED");
+    return request;
   }
 }
