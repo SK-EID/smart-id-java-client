@@ -38,7 +38,6 @@ public class SmartIdConnector {
         .fromUri(endpointUrl)
         .path("/session/{sessionId}")
         .build(sessionId);
-    logger.debug("GET " + uri.toString());
     try {
       SessionStatus result = repareClient(uri).get(SessionStatus.class);
       return result;
@@ -68,7 +67,6 @@ public class SmartIdConnector {
   }
 
   private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
-    logger.debug("POST " + uri.toString());
     try {
       Entity<CertificateRequest> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
       CertificateChoiceResponse result = repareClient(uri).post(requestEntity, CertificateChoiceResponse.class);
@@ -88,9 +86,11 @@ public class SmartIdConnector {
   private Invocation.Builder repareClient(URI uri) {
     Invocation.Builder builder = ClientBuilder
         .newClient()
+        .register(new LoggingFilter())
         .target(uri)
         .request()
         .accept(APPLICATION_JSON_TYPE);
     return builder;
   }
+
 }
