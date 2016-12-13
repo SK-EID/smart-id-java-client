@@ -33,19 +33,19 @@ public class SmartIdRestIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
-    connector = new SmartIdConnector("https://sid.demo.sk.ee/smart-id-rp/v1/");
+    connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v1/");
   }
 
   @Test
   public void getCertificateAndSignHash() throws Exception {
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession();
 
-    SessionStatus sessionStatus = pollSessionStatus(connector, certificateChoiceResponse.getSessionId());
+    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionId());
     assertCertificateChosen(sessionStatus);
 
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
     SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber);
-    sessionStatus = pollSessionStatus(connector, signatureSessionResponse.getSessionId());
+    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionId());
     assertSignatureCreated(sessionStatus);
   }
 
@@ -83,7 +83,7 @@ public class SmartIdRestIntegrationTest {
     return signatureSessionRequest;
   }
 
-  private SessionStatus pollSessionStatus(SmartIdConnector connector, String sessionId) throws InterruptedException {
+  private SessionStatus pollSessionStatus(String sessionId) throws InterruptedException {
     SessionStatus sessionStatus = null;
     while (sessionStatus == null || StringUtils.equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
       sessionStatus = connector.getSessionStatus(sessionId);

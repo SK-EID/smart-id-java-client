@@ -1,22 +1,33 @@
 package ee.sk.smartid.rest;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import ee.sk.smartid.exception.*;
-import ee.sk.smartid.rest.dao.*;
-import org.apache.commons.io.FileUtils;
+import ee.sk.smartid.exception.CertificateNotFoundException;
+import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.UnauthorizedException;
+import ee.sk.smartid.exception.UserAccountNotFoundException;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static ee.sk.smartid.NetworkStubs.stubBadRequestResponse;
+import static ee.sk.smartid.NetworkStubs.stubNotFoundResponse;
+import static ee.sk.smartid.NetworkStubs.stubRequestWithResponse;
+import static ee.sk.smartid.NetworkStubs.stubUnauthorizedResponse;
 import static org.hamcrest.core.StringStartsWith.startsWith;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
-public class SmartIdConnectorTest {
+public class SmartIdRestConnectorTest {
 
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(18089);
@@ -24,7 +35,7 @@ public class SmartIdConnectorTest {
 
   @Before
   public void setUp() throws Exception {
-    connector = new SmartIdConnector("http://localhost:18089");
+    connector = new SmartIdRestConnector("http://localhost:18089");
   }
 
   @Test(expected = SessionNotFoundException.class)
@@ -45,7 +56,7 @@ public class SmartIdConnectorTest {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
     assertSuccessfulResponse(sessionStatus);
     assertNotNull(sessionStatus.getCertificate());
-    assertThat(sessionStatus.getCertificate().getValue(), startsWith("MIIFrjCCA5agAwIBAgIQUwvkG7xZfERXDit8E7z6DDANB"));
+    assertThat(sessionStatus.getCertificate().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
     assertEquals("QUALIFIED", sessionStatus.getCertificate().getCertificateLevel());
   }
 
@@ -211,64 +222,6 @@ public class SmartIdConnectorTest {
   private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) throws IOException {
     stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
     return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
-  }
-
-  private void stubNotFoundResponse(String urlEquals) {
-    stubFor(get(urlEqualTo(urlEquals))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(404)
-            .withHeader("Content-Type", "application/json")
-            .withBody("Not found")));
-  }
-
-  private void stubNotFoundResponse(String url, String requestFile) throws IOException {
-    stubErrorResponse(url, requestFile, 404);
-  }
-
-  private void stubUnauthorizedResponse(String url, String requestFile) throws IOException {
-    stubErrorResponse(url, requestFile, 401);
-  }
-
-  private void stubBadRequestResponse(String url, String requestFile) throws IOException {
-    stubErrorResponse(url, requestFile, 400);
-  }
-
-  private void stubErrorResponse(String url, String requestFile, int errorStatus) throws IOException {
-    stubFor(post(urlEqualTo(url))
-        .withHeader("Accept", equalTo("application/json"))
-        .withRequestBody(equalToJson(readFileBody(requestFile)))
-        .willReturn(aResponse()
-            .withStatus(errorStatus)
-            .withHeader("Content-Type", "application/json")
-            .withBody("Not found")));
-  }
-
-  private void stubRequestWithResponse(String urlEquals, String responseFile) throws IOException {
-    stubFor(get(urlEqualTo(urlEquals))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(readFileBody(responseFile))));
-  }
-
-  private void stubRequestWithResponse(String url, String requestFile, String responseFile) throws IOException {
-    stubFor(post(urlEqualTo(url))
-        .withHeader("Accept", equalTo("application/json"))
-        .withRequestBody(equalToJson(readFileBody(requestFile)))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(readFileBody(responseFile))));
-  }
-
-  private String readFileBody(String fileName) throws IOException {
-    ClassLoader classLoader = getClass().getClassLoader();
-    URL resource = classLoader.getResource(fileName);
-    assertNotNull("File not found: " + fileName, resource);
-    File file = new File(resource.getFile());
-    return FileUtils.readFileToString(file, "UTF-8");
   }
 
   private CertificateRequest createDummyCertificateRequest() {
