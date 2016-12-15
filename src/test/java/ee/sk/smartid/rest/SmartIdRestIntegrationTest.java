@@ -96,7 +96,7 @@ public class SmartIdRestIntegrationTest {
   private void assertSignatureCreated(SessionStatus sessionStatus) {
     assertNotNull(sessionStatus);
     assertNotNull(sessionStatus.getSignature());
-    assertThat(sessionStatus.getSignature().getValue(), not(isEmptyOrNullString()));
+    assertThat(sessionStatus.getSignature().getValueInBase64(), not(isEmptyOrNullString()));
   }
 
   private void assertCertificateChosen(SessionStatus sessionStatus) {

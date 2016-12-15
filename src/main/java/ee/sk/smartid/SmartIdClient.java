@@ -18,6 +18,14 @@ public class SmartIdClient implements Serializable {
     return builder;
   }
 
+  public SignatureRequestBuilder createSignature() {
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl);
+    SignatureRequestBuilder builder = new SignatureRequestBuilder(connector);
+    builder.withRelyingPartyUUID(relyingPartyUUID);
+    builder.withRelyingPartyName(relyingPartyName);
+    return builder;
+  }
+
   public void setRelyingPartyUUID(String relyingPartyUUID) {
     this.relyingPartyUUID = relyingPartyUUID;
   }
@@ -36,9 +44,5 @@ public class SmartIdClient implements Serializable {
 
   public void setHostUrl(String hostUrl) {
     this.hostUrl = hostUrl;
-  }
-
-  public String getHostUrl() {
-    return hostUrl;
   }
 }

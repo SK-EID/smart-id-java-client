@@ -1,5 +1,6 @@
 package ee.sk.smartid;
 
+import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.TechnicalErrorException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
@@ -18,6 +19,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 public class CertificateRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(CertificateRequestBuilder.class);
@@ -26,9 +29,10 @@ public class CertificateRequestBuilder {
   private String relyingPartyName;
   private NationalIdentity nationalIdentity;
   private String certificateLevel;
+  private String documentNumber;
 
   public CertificateRequestBuilder(SmartIdConnector connector) {
-    logger.debug("Initializing certificate request builder");
+    logger.debug("Instantiating certificate request builder");
     this.connector = connector;
   }
 
@@ -52,10 +56,15 @@ public class CertificateRequestBuilder {
     return this;
   }
 
+  public CertificateRequestBuilder withDocumentNumber(String documentNumber) {
+    this.documentNumber = documentNumber;
+    return this;
+  }
+
   public X509Certificate fetch() {
     logger.debug("Starting to fetch certificate");
     CertificateRequest request = createCertificateRequest();
-    CertificateChoiceResponse certificateChoiceResponse = connector.getCertificate(nationalIdentity, request);
+    CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
 
     SessionStatus sessionStatus = pollSessionStatus(connector, certificateChoiceResponse.getSessionId());
     SessionCertificate certificate = sessionStatus.getCertificate();
@@ -63,6 +72,17 @@ public class CertificateRequestBuilder {
 
     X509Certificate cert = parseX509Certificate(certificateValue);
     return cert;
+  }
+
+  private CertificateChoiceResponse fetchCertificateChoiceSessionResponse(CertificateRequest request) {
+    if (isNotEmpty(documentNumber)) {
+      return connector.getCertificate(documentNumber, request);
+    } else if (nationalIdentity != null) {
+      return connector.getCertificate(nationalIdentity, request);
+    } else {
+      logger.error("Either document number or national identity must be set");
+      throw new InvalidParametersException("Either document number or national identity must be set");
+    }
   }
 
   private CertificateRequest createCertificateRequest() {
@@ -78,7 +98,7 @@ public class CertificateRequestBuilder {
     String certificateString = X509Factory.BEGIN_CERT + "\n" + certificateValue + "\n" + X509Factory.END_CERT;
     try {
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      return (X509Certificate)cf.generateCertificate(new ByteArrayInputStream(certificateString.getBytes()));
+      return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateString.getBytes()));
     } catch (CertificateException e) {
       logger.error("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage());
       throw new TechnicalErrorException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);

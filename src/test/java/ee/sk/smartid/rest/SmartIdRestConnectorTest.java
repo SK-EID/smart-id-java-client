@@ -65,7 +65,7 @@ public class SmartIdRestConnectorTest {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
     assertSuccessfulResponse(sessionStatus);
     assertNotNull(sessionStatus.getSignature());
-    assertThat(sessionStatus.getSignature().getValue(), startsWith("luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv"));
+    assertThat(sessionStatus.getSignature().getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv"));
     assertEquals("sha256WithRSAEncryption", sessionStatus.getSignature().getAlgorithm());
   }
 

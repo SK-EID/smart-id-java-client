@@ -1,14 +1,10 @@
 package ee.sk.smartid;
 
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,7 +14,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class CertificateRequestBuilderTest {
 
@@ -27,12 +22,12 @@ public class CertificateRequestBuilderTest {
   @Before
   public void setUp() throws Exception {
     connector = new SmartIdConnectorSpy();
+    connector.sessionStatusToRespond = createCertificateSessionStatusCompleteResponse();
+    connector.certificateChoiceToRespond = createCertificateChoiceResponse();
   }
 
   @Test
   public void getCertificate() throws Exception {
-    connector.sessionStatusToRespond = createCertificateSessionStatusCompleteResponse();
-    connector.certificateChoiceToRespond = createCertificateChoiceResponse();
     CertificateRequestBuilder builder = new CertificateRequestBuilder(connector);
     X509Certificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
@@ -48,8 +43,29 @@ public class CertificateRequestBuilderTest {
 
   @Test
   public void getCertificateUsingDocumentNumber() throws Exception {
-    assertTrue(false);
+    CertificateRequestBuilder builder = new CertificateRequestBuilder(connector);
+    X509Certificate certificate = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withDocumentNumber("PNOEE-31111111111")
+        .withCertificateLevel("QUALIFIED")
+        .fetch();
+    assertNotNull(certificate);
+    assertThat(certificate.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
+    assertCorrectSessionRequestMade();
+    assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
+    assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
+    assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
+    assertEquals("QUALIFIED", connector.certificateRequestUsed.getCertificateLevel());
+  }
 
+  @Test(expected = InvalidParametersException.class)
+  public void getCertificate_whenIdentityOrDocumentNumberNotSet_shouldThrowException() throws Exception {
+    new CertificateRequestBuilder(connector)
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withCertificateLevel("QUALIFIED")
+        .fetch();
   }
 
   private void assertCorrectSessionRequestMade() {
@@ -80,36 +96,4 @@ public class CertificateRequestBuilderTest {
     return certificateChoiceResponse;
   }
 
-  public static class SmartIdConnectorSpy implements SmartIdConnector {
-
-    SessionStatus sessionStatusToRespond;
-    CertificateChoiceResponse certificateChoiceToRespond;
-
-    String sessionIdUsed;
-    NationalIdentity identityUsed;
-    CertificateRequest certificateRequestUsed;
-
-    @Override
-    public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
-      sessionIdUsed = sessionId;
-      return sessionStatusToRespond;
-    }
-
-    @Override
-    public CertificateChoiceResponse getCertificate(NationalIdentity identity, CertificateRequest request) {
-      identityUsed = identity;
-      certificateRequestUsed = request;
-      return certificateChoiceToRespond;
-    }
-
-    @Override
-    public CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request) {
-      return null;
-    }
-
-    @Override
-    public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
-      return null;
-    }
-  }
 }

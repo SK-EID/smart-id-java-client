@@ -2,16 +2,16 @@ package ee.sk.smartid;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.rest.dao.NationalIdentity;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.security.cert.X509Certificate;
-import java.util.concurrent.Future;
 
 import static ee.sk.smartid.NetworkStubs.stubRequestWithResponse;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
@@ -29,11 +29,13 @@ public class SmartIdClientTest {
     client.setRelyingPartyName("BANK123");
     client.setHostUrl("http://localhost:18089");
     stubRequestWithResponse("/certificatechoice/pno/EE/31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
+    stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+    stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
   }
 
   @Test
   public void getCertificateUsingNationalIdentity() throws Exception {
+    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
     NationalIdentity identity = new NationalIdentity("EE", "31111111111");
     X509Certificate certificate = client
         .getCertificate()
@@ -44,19 +46,36 @@ public class SmartIdClientTest {
     assertThat(certificate.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
   }
 
-  /*
   @Test
-  public void sign() throws Exception {
-    String hashInBase64 = "0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=";
-    SmartIdSignature signature = client
-        .createSignature()
-        .forDocument("PNOEE-123456")
-        .withHashInBase64(hashInBase64)
-        .withHashType("SHA256")
-        .withCertificateLevel("QUALIFIED")
-        .sign();
+  public void getCertificateUsingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
+    X509Certificate certificate = client
+        .getCertificate()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withCertificateLevel("ADVANCED")
+        .fetch();
+    assertNotNull(certificate);
+    assertThat(certificate.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
   }
 
+  @Test
+  public void sign() throws Exception {
+    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType("SHA256");
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    SmartIdSignature signature = client
+        .createSignature()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withHash(hashToSign)
+        .withCertificateLevel("ADVANCED")
+        .sign();
+    assertNotNull(signature);
+    assertThat(signature.getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
+    assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
+  }
+
+  /*
   @Test
   public void getCertificateAsync() throws Exception {
     NationalIdentity identity = new NationalIdentity("EE", "31111111111");
