@@ -1,7 +1,6 @@
-package ee.sk.smartid;
+package ee.sk.smartid.rest;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
@@ -11,15 +10,15 @@ import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 
 public class SmartIdConnectorSpy implements SmartIdConnector {
 
-  SessionStatus sessionStatusToRespond;
-  CertificateChoiceResponse certificateChoiceToRespond;
-  SignatureSessionResponse signatureSessionResponseToRespond;
+  public SessionStatus sessionStatusToRespond;
+  public CertificateChoiceResponse certificateChoiceToRespond;
+  public SignatureSessionResponse signatureSessionResponseToRespond;
 
-  String sessionIdUsed;
-  NationalIdentity identityUsed;
-  String documentNumberUsed;
-  CertificateRequest certificateRequestUsed;
-  SignatureSessionRequest signatureSessionRequestUsed;
+  public String sessionIdUsed;
+  public NationalIdentity identityUsed;
+  public String documentNumberUsed;
+  public CertificateRequest certificateRequestUsed;
+  public SignatureSessionRequest signatureSessionRequestUsed;
 
   @Override
   public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {

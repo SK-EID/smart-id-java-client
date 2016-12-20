@@ -1,5 +1,9 @@
 package ee.sk.smartid;
 
+import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
+import ee.sk.smartid.exception.TechnicalErrorException;
+
 import java.io.Serializable;
 
 public class SmartIdSignature implements Serializable {
@@ -8,7 +12,11 @@ public class SmartIdSignature implements Serializable {
   private String algorithmName;
 
   public byte[] getValue() {
-    return null;//TODO
+    try {
+      return Base64.decode(valueInBase64);
+    } catch (Base64DecodingException e) {
+      throw new TechnicalErrorException("Failed to parse signature value in base64. Probably incorrectly encoded base64 string: '" + valueInBase64 + "' - " + e.getMessage(), e);
+    }
   }
 
   public String getValueInBase64() {

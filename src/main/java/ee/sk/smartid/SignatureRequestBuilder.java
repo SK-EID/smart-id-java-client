@@ -1,16 +1,13 @@
 package ee.sk.smartid;
 
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 public class SignatureRequestBuilder {
 
@@ -55,7 +52,7 @@ public class SignatureRequestBuilder {
   public SmartIdSignature sign() {
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = connector.sign(documentNumber, request);
-    SessionStatus sessionStatus = pollSessionStatus(connector, response.getSessionId());
+    SessionStatus sessionStatus = new SessionStatusPoller(connector).fetchFinalSessionStatus(response.getSessionId());
     SmartIdSignature signature = createSmartIdSignature(sessionStatus);
     return signature;
   }
@@ -76,22 +73,5 @@ public class SignatureRequestBuilder {
     signature.setValueInBase64(sessionSignature.getValueInBase64());
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
     return signature;
-  }
-
-  private SessionStatus pollSessionStatus(SmartIdConnector connector, String sessionId) {
-    logger.debug("Starting to poll session status");
-    try {
-      SessionStatus sessionStatus = null;
-      while (sessionStatus == null || StringUtils.equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
-        logger.debug("Polling session status");
-        sessionStatus = connector.getSessionStatus(sessionId);
-        TimeUnit.SECONDS.sleep(1);
-      }
-      logger.debug("Got session final session status response");
-      return sessionStatus;
-    } catch (InterruptedException e) {
-      logger.error("Failed to poll session status: " + e.getMessage());
-      throw new TechnicalErrorException("Failed to poll session status: " + e.getMessage(), e);
-    }
   }
 }

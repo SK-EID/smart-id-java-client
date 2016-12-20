@@ -2,13 +2,13 @@ package ee.sk.smartid;
 
 import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.security.provider.X509Factory;
@@ -17,7 +17,6 @@ import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.concurrent.TimeUnit;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -66,7 +65,7 @@ public class CertificateRequestBuilder {
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
 
-    SessionStatus sessionStatus = pollSessionStatus(connector, certificateChoiceResponse.getSessionId());
+    SessionStatus sessionStatus = new SessionStatusPoller(connector).fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
     SessionCertificate certificate = sessionStatus.getCertificate();
     String certificateValue = certificate.getValue();
 
@@ -102,23 +101,6 @@ public class CertificateRequestBuilder {
     } catch (CertificateException e) {
       logger.error("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage());
       throw new TechnicalErrorException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);
-    }
-  }
-
-  private SessionStatus pollSessionStatus(SmartIdConnector connector, String sessionId) {
-    logger.debug("Starting to poll session status");
-    try {
-      SessionStatus sessionStatus = null;
-      while (sessionStatus == null || StringUtils.equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
-        logger.debug("Polling session status");
-        sessionStatus = connector.getSessionStatus(sessionId);
-        TimeUnit.SECONDS.sleep(1);
-      }
-      logger.debug("Got session final session status response");
-      return sessionStatus;
-    } catch (InterruptedException e) {
-      logger.error("Failed to poll session status: " + e.getMessage());
-      throw new TechnicalErrorException("Failed to poll session status: " + e.getMessage(), e);
     }
   }
 }

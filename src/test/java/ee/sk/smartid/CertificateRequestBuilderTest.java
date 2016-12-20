@@ -1,6 +1,7 @@
 package ee.sk.smartid;
 
 import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionCertificate;

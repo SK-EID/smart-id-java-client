@@ -1,5 +1,6 @@
 package ee.sk.smartid;
 
+import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
