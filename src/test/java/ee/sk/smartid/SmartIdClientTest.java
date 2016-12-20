@@ -7,13 +7,17 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
 
-import static ee.sk.smartid.NetworkStubs.stubRequestWithResponse;
+import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubSessionStatusWithState;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class SmartIdClientTest {
 
@@ -73,6 +77,54 @@ public class SmartIdClientTest {
     assertNotNull(signature);
     assertThat(signature.getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
     assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
+  }
+
+  @Test
+  public void setPollingSleepTimeoutForSignatureCreation() throws Exception {
+    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
+    client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
+    long duration = measureSigningDuration();
+    assertTrue("Duration is " + duration, duration > 2000L);
+    assertTrue("Duration is " + duration, duration < 3000L);
+  }
+
+  @Test
+  public void setPollingSleepTimeoutForCertificateChoice() throws Exception {
+    stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+    stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json", "COMPLETE", STARTED);
+    client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
+    long duration = measureCertificateChoiceDuration();
+    assertTrue("Duration is " + duration, duration > 2000L);
+    assertTrue("Duration is " + duration, duration < 3000L);
+  }
+
+  private long measureSigningDuration() {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType("SHA256");
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    long startTime = System.currentTimeMillis();
+    SmartIdSignature signature = client
+        .createSignature()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withHash(hashToSign)
+        .withCertificateLevel("ADVANCED")
+        .sign();
+    long endTime = System.currentTimeMillis();
+    assertNotNull(signature);
+    return endTime - startTime;
+  }
+
+  private long measureCertificateChoiceDuration() {
+    long startTime = System.currentTimeMillis();
+    X509Certificate certificate = client
+        .getCertificate()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withCertificateLevel("ADVANCED")
+        .fetch();
+    long endTime = System.currentTimeMillis();
+    assertNotNull(certificate);
+    return endTime - startTime;
   }
 
   /*

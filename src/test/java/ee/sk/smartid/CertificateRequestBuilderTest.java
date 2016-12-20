@@ -1,6 +1,7 @@
 package ee.sk.smartid;
 
 import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.NationalIdentity;
@@ -19,17 +20,20 @@ import static org.junit.Assert.assertThat;
 public class CertificateRequestBuilderTest {
 
   private SmartIdConnectorSpy connector;
+  private SessionStatusPoller sessionStatusPoller;
+  private CertificateRequestBuilder builder;
 
   @Before
   public void setUp() throws Exception {
     connector = new SmartIdConnectorSpy();
+    sessionStatusPoller = new SessionStatusPoller(connector);
     connector.sessionStatusToRespond = createCertificateSessionStatusCompleteResponse();
     connector.certificateChoiceToRespond = createCertificateChoiceResponse();
+    builder = new CertificateRequestBuilder(connector, sessionStatusPoller);
   }
 
   @Test
   public void getCertificate() throws Exception {
-    CertificateRequestBuilder builder = new CertificateRequestBuilder(connector);
     X509Certificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -44,7 +48,6 @@ public class CertificateRequestBuilderTest {
 
   @Test
   public void getCertificateUsingDocumentNumber() throws Exception {
-    CertificateRequestBuilder builder = new CertificateRequestBuilder(connector);
     X509Certificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -62,7 +65,7 @@ public class CertificateRequestBuilderTest {
 
   @Test(expected = InvalidParametersException.class)
   public void getCertificate_whenIdentityOrDocumentNumberNotSet_shouldThrowException() throws Exception {
-    new CertificateRequestBuilder(connector)
+    builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("QUALIFIED")

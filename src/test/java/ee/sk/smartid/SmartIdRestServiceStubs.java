@@ -9,7 +9,7 @@ import java.net.URL;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertNotNull;
 
-public class NetworkStubs {
+public class SmartIdRestServiceStubs {
 
   public static void stubNotFoundResponse(String urlEquals) {
     stubFor(get(urlEqualTo(urlEquals))
@@ -61,8 +61,22 @@ public class NetworkStubs {
             .withBody(readFileBody(responseFile))));
   }
 
+  public static void stubSessionStatusWithState(String sessionId, String responseFile, String startState, String endState) throws IOException {
+    String urlEquals = "/session/" + sessionId;
+    stubFor(get(urlEqualTo(urlEquals))
+        .inScenario("session status")
+        .whenScenarioStateIs(startState)
+        .withHeader("Accept", equalTo("application/json"))
+        .willReturn(aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(readFileBody(responseFile)))
+        .willSetStateTo(endState)
+    );
+  }
+
   private static String readFileBody(String fileName) throws IOException {
-    ClassLoader classLoader = NetworkStubs.class.getClassLoader();
+    ClassLoader classLoader = SmartIdRestServiceStubs.class.getClassLoader();
     URL resource = classLoader.getResource(fileName);
     assertNotNull("File not found: " + fileName, resource);
     File file = new File(resource.getFile());

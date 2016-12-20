@@ -1,5 +1,6 @@
 package ee.sk.smartid;
 
+import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
@@ -13,17 +14,19 @@ import static org.junit.Assert.assertNotNull;
 public class SignatureRequestBuilderTest {
 
   private SmartIdConnectorSpy connector;
+  private SessionStatusPoller sessionStatusPoller;
 
   @Before
   public void setUp() throws Exception {
     connector = new SmartIdConnectorSpy();
+    sessionStatusPoller = new SessionStatusPoller(connector);
     connector.signatureSessionResponseToRespond = createDummySignatureSessionResponse();
   }
 
   @Test
   public void sign() throws Exception {
     connector.sessionStatusToRespond = createDummySessionStatusResponse();
-    SignatureRequestBuilder builder = new SignatureRequestBuilder(connector);
+    SignatureRequestBuilder builder = new SignatureRequestBuilder(connector, sessionStatusPoller);
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType("SHA256");
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");

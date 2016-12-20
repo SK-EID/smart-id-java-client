@@ -16,8 +16,8 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   private String certificateLevel;
   private SignableHash hashToSign;
 
-  public SignatureRequestBuilder(SmartIdConnector connector) {
-    super(connector);
+  public SignatureRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
+    super(connector, sessionStatusPoller);
     logger.debug("Instantiating signature request builder");
   }
 
@@ -49,7 +49,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   public SmartIdSignature sign() {
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = getConnector().sign(documentNumber, request);
-    SessionStatus sessionStatus = new SessionStatusPoller(getConnector()).fetchFinalSessionStatus(response.getSessionId());
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
     SmartIdSignature signature = createSmartIdSignature(sessionStatus);
     return signature;
   }

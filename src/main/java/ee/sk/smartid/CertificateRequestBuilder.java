@@ -27,8 +27,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   private String certificateLevel;
   private String documentNumber;
 
-  public CertificateRequestBuilder(SmartIdConnector connector) {
-    super(connector);
+  public CertificateRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
+    super(connector, sessionStatusPoller);
     logger.debug("Instantiating certificate request builder");
   }
 
@@ -62,7 +62,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
 
-    SessionStatus sessionStatus = new SessionStatusPoller(getConnector()).fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
     SessionCertificate certificate = sessionStatus.getCertificate();
     String certificateValue = certificate.getValue();
 

@@ -18,10 +18,10 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static ee.sk.smartid.NetworkStubs.stubBadRequestResponse;
-import static ee.sk.smartid.NetworkStubs.stubNotFoundResponse;
-import static ee.sk.smartid.NetworkStubs.stubRequestWithResponse;
-import static ee.sk.smartid.NetworkStubs.stubUnauthorizedResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubBadRequestResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubUnauthorizedResponse;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
