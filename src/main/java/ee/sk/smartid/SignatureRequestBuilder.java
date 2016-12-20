@@ -9,19 +9,16 @@ import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SignatureRequestBuilder {
+public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(SignatureRequestBuilder.class);
-  private SmartIdConnector connector;
-  private String relyingPartyUUID;
-  private String relyingPartyName;
   private String documentNumber;
   private String certificateLevel;
   private SignableHash hashToSign;
 
   public SignatureRequestBuilder(SmartIdConnector connector) {
+    super(connector);
     logger.debug("Instantiating signature request builder");
-    this.connector = connector;
   }
 
   public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
@@ -40,27 +37,27 @@ public class SignatureRequestBuilder {
   }
 
   public SignatureRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
-    this.relyingPartyUUID = relyingPartyUUID;
+    super.withRelyingPartyUUID(relyingPartyUUID);
     return this;
   }
 
   public SignatureRequestBuilder withRelyingPartyName(String relyingPartyName) {
-    this.relyingPartyName = relyingPartyName;
+    super.withRelyingPartyName(relyingPartyName);
     return this;
   }
 
   public SmartIdSignature sign() {
     SignatureSessionRequest request = createSignatureSessionRequest();
-    SignatureSessionResponse response = connector.sign(documentNumber, request);
-    SessionStatus sessionStatus = new SessionStatusPoller(connector).fetchFinalSessionStatus(response.getSessionId());
+    SignatureSessionResponse response = getConnector().sign(documentNumber, request);
+    SessionStatus sessionStatus = new SessionStatusPoller(getConnector()).fetchFinalSessionStatus(response.getSessionId());
     SmartIdSignature signature = createSmartIdSignature(sessionStatus);
     return signature;
   }
 
   private SignatureSessionRequest createSignatureSessionRequest() {
     SignatureSessionRequest request = new SignatureSessionRequest();
-    request.setRelyingPartyUUID(relyingPartyUUID);
-    request.setRelyingPartyName(relyingPartyName);
+    request.setRelyingPartyUUID(getRelyingPartyUUID());
+    request.setRelyingPartyName(getRelyingPartyName());
     request.setCertificateLevel(certificateLevel);
     request.setHashType(hashToSign.getHashType());
     request.setHash(hashToSign.getHashInBase64());

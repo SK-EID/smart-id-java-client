@@ -20,19 +20,16 @@ import java.security.cert.X509Certificate;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-public class CertificateRequestBuilder {
+public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(CertificateRequestBuilder.class);
-  private SmartIdConnector connector;
-  private String relyingPartyUUID;
-  private String relyingPartyName;
   private NationalIdentity nationalIdentity;
   private String certificateLevel;
   private String documentNumber;
 
   public CertificateRequestBuilder(SmartIdConnector connector) {
+    super(connector);
     logger.debug("Instantiating certificate request builder");
-    this.connector = connector;
   }
 
   public CertificateRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
@@ -46,12 +43,12 @@ public class CertificateRequestBuilder {
   }
 
   public CertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
-    this.relyingPartyUUID = relyingPartyUUID;
+    super.withRelyingPartyUUID(relyingPartyUUID);
     return this;
   }
 
   public CertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
-    this.relyingPartyName = relyingPartyName;
+    super.withRelyingPartyName(relyingPartyName);
     return this;
   }
 
@@ -65,7 +62,7 @@ public class CertificateRequestBuilder {
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
 
-    SessionStatus sessionStatus = new SessionStatusPoller(connector).fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
+    SessionStatus sessionStatus = new SessionStatusPoller(getConnector()).fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
     SessionCertificate certificate = sessionStatus.getCertificate();
     String certificateValue = certificate.getValue();
 
@@ -75,9 +72,9 @@ public class CertificateRequestBuilder {
 
   private CertificateChoiceResponse fetchCertificateChoiceSessionResponse(CertificateRequest request) {
     if (isNotEmpty(documentNumber)) {
-      return connector.getCertificate(documentNumber, request);
+      return getConnector().getCertificate(documentNumber, request);
     } else if (nationalIdentity != null) {
-      return connector.getCertificate(nationalIdentity, request);
+      return getConnector().getCertificate(nationalIdentity, request);
     } else {
       logger.error("Either document number or national identity must be set");
       throw new InvalidParametersException("Either document number or national identity must be set");
@@ -86,8 +83,8 @@ public class CertificateRequestBuilder {
 
   private CertificateRequest createCertificateRequest() {
     CertificateRequest request = new CertificateRequest();
-    request.setRelyingPartyUUID(relyingPartyUUID);
-    request.setRelyingPartyName(relyingPartyName);
+    request.setRelyingPartyUUID(getRelyingPartyUUID());
+    request.setRelyingPartyName(getRelyingPartyName());
     request.setCertificateLevel(certificateLevel);
     return request;
   }
