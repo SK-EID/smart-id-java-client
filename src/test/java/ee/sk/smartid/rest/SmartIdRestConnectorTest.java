@@ -226,7 +226,7 @@ public class SmartIdRestConnectorTest {
     assertEquals("COMPLETE", sessionStatus.getState());
     assertNotNull(sessionStatus.getResult());
     assertEquals("OK", sessionStatus.getResult().getEndResult());
-    assertEquals("PNOEE-372123456", sessionStatus.getResult().getDocumentNumber());
+    assertEquals("PNOEE-31111111111", sessionStatus.getResult().getDocumentNumber());
   }
 
   private void assertSessionStatusErrorWithEndResult(SessionStatus sessionStatus, String endResult) {

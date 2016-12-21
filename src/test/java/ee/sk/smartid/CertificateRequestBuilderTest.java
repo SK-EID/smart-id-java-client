@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import java.security.cert.X509Certificate;
 
+import static ee.sk.smartid.DummyData.createSessionEndResult;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -34,33 +35,28 @@ public class CertificateRequestBuilderTest {
 
   @Test
   public void getCertificate() throws Exception {
-    X509Certificate certificate = builder
+    SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
         .withCertificateLevel("QUALIFIED")
         .fetch();
-    assertNotNull(certificate);
-    assertThat(certificate.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
+    assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
     assertValidCertificateChoiceRequestMade();
   }
 
   @Test
   public void getCertificateUsingDocumentNumber() throws Exception {
-    X509Certificate certificate = builder
+    SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withDocumentNumber("PNOEE-31111111111")
         .withCertificateLevel("QUALIFIED")
         .fetch();
-    assertNotNull(certificate);
-    assertThat(certificate.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
+    assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
-    assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
-    assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
-    assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
-    assertEquals("QUALIFIED", connector.certificateRequestUsed.getCertificateLevel());
+    assertValidCertificateRequestMadeWithDocumentNumber();
   }
 
   @Test(expected = InvalidParametersException.class)
@@ -70,6 +66,15 @@ public class CertificateRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("QUALIFIED")
         .fetch();
+  }
+
+  private void assertCertificateResponseValid(SmartIdCertificate certificate) {
+    assertNotNull(certificate);
+    assertNotNull(certificate.getCertificate());
+    X509Certificate cert = certificate.getCertificate();
+    assertThat(cert.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
+    assertEquals("PNOEE-31111111111", certificate.getDocumentNumber());
+    assertEquals("ADVANCED", certificate.getCertificateLevel());
   }
 
   private void assertCorrectSessionRequestMade() {
@@ -84,14 +89,26 @@ public class CertificateRequestBuilderTest {
     assertEquals("QUALIFIED", connector.certificateRequestUsed.getCertificateLevel());
   }
 
+  private void assertValidCertificateRequestMadeWithDocumentNumber() {
+    assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
+    assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
+    assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
+    assertEquals("QUALIFIED", connector.certificateRequestUsed.getCertificateLevel());
+  }
+
   private SessionStatus createCertificateSessionStatusCompleteResponse() {
     SessionStatus status = new SessionStatus();
     status.setState("COMPLETE");
-    SessionCertificate sessionCertificate = new SessionCertificate();
-    sessionCertificate.setCertificateLevel("QUALIFIED");
-    sessionCertificate.setValue(DummyData.CERTIFICATE);
-    status.setCertificate(sessionCertificate);
+    status.setCertificate(createSessionCertificate());
+    status.setResult(createSessionEndResult());
     return status;
+  }
+
+  private SessionCertificate createSessionCertificate() {
+    SessionCertificate sessionCertificate = new SessionCertificate();
+    sessionCertificate.setCertificateLevel("ADVANCED");
+    sessionCertificate.setValue(DummyData.CERTIFICATE);
+    return sessionCertificate;
   }
 
   private CertificateChoiceResponse createCertificateChoiceResponse() {

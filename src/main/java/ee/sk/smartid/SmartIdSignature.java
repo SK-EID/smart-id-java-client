@@ -10,6 +10,7 @@ public class SmartIdSignature implements Serializable {
 
   private String valueInBase64;
   private String algorithmName;
+  private String documentNumber;
 
   public byte[] getValue() {
     try {
@@ -33,5 +34,13 @@ public class SmartIdSignature implements Serializable {
 
   public void setAlgorithmName(String algorithmName) {
     this.algorithmName = algorithmName;
+  }
+
+  public String getDocumentNumber() {
+    return documentNumber;
+  }
+
+  public void setDocumentNumber(String documentNumber) {
+    this.documentNumber = documentNumber;
   }
 }

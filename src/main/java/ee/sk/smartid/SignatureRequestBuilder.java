@@ -69,6 +69,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64(sessionSignature.getValueInBase64());
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
+    signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
     return signature;
   }
 }

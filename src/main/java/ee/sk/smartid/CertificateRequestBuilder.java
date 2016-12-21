@@ -8,6 +8,7 @@ import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,17 +58,22 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     return this;
   }
 
-  public X509Certificate fetch() {
+  public SmartIdCertificate fetch() {
     logger.debug("Starting to fetch certificate");
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
-
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
-    SessionCertificate certificate = sessionStatus.getCertificate();
-    String certificateValue = certificate.getValue();
+    SmartIdCertificate smartIdCertificate = createSmartIdCertificate(sessionStatus);
+    return smartIdCertificate;
+  }
 
-    X509Certificate cert = parseX509Certificate(certificateValue);
-    return cert;
+  private SmartIdCertificate createSmartIdCertificate(SessionStatus sessionStatus) {
+    SessionCertificate certificate = sessionStatus.getCertificate();
+    SmartIdCertificate smartIdCertificate = new SmartIdCertificate();
+    smartIdCertificate.setCertificate(getX509Certificate(certificate));
+    smartIdCertificate.setCertificateLevel(certificate.getCertificateLevel());
+    smartIdCertificate.setDocumentNumber(getDocumentNumber(sessionStatus));
+    return smartIdCertificate;
   }
 
   private CertificateChoiceResponse fetchCertificateChoiceSessionResponse(CertificateRequest request) {
@@ -89,6 +95,11 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     return request;
   }
 
+  private X509Certificate getX509Certificate(SessionCertificate certificate) {
+    String certificateValue = certificate.getValue();
+    return parseX509Certificate(certificateValue);
+  }
+
   private X509Certificate parseX509Certificate(String certificateValue) {
     logger.debug("Parsing X509 certificate");
     String certificateString = X509Factory.BEGIN_CERT + "\n" + certificateValue + "\n" + X509Factory.END_CERT;
@@ -99,5 +110,10 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
       logger.error("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage());
       throw new TechnicalErrorException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);
     }
+  }
+
+  private String getDocumentNumber(SessionStatus sessionStatus) {
+    SessionResult sessionResult = sessionStatus.getResult();
+    return sessionResult.getDocumentNumber();
   }
 }

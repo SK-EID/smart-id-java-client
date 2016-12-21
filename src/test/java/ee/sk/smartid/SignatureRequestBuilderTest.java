@@ -8,6 +8,7 @@ import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.junit.Before;
 import org.junit.Test;
 
+import static ee.sk.smartid.DummyData.createSessionEndResult;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -30,13 +31,13 @@ public class SignatureRequestBuilderTest {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType("SHA256");
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    builder
+    SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
         .withHash(hashToSign)
-        .withDocumentNumber("PNOEE-31111111111");
-    SmartIdSignature signature = builder.sign();
+        .withDocumentNumber("PNOEE-31111111111")
+        .sign();
     assertCorrectSignatureRequestMade();
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
@@ -59,6 +60,7 @@ public class SignatureRequestBuilderTest {
     assertNotNull(signature);
     assertEquals("luvjsi1+1iLN9yfDFEh/BE8h", signature.getValueInBase64());
     assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
+    assertEquals("PNOEE-31111111111", signature.getDocumentNumber());
   }
 
   private SignatureSessionResponse createDummySignatureSessionResponse() {
@@ -70,6 +72,7 @@ public class SignatureRequestBuilderTest {
   private SessionStatus createDummySessionStatusResponse() {
     SessionStatus status = new SessionStatus();
     status.setState("COMPLETE");
+    status.setResult(createSessionEndResult());
     SessionSignature signature = new SessionSignature();
     signature.setValueInBase64("luvjsi1+1iLN9yfDFEh/BE8h");
     signature.setAlgorithm("sha256WithRSAEncryption");
