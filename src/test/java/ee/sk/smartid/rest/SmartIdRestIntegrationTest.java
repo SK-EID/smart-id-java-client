@@ -3,6 +3,7 @@ package ee.sk.smartid.rest;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SessionStatusRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.apache.commons.codec.binary.Base64;
@@ -86,7 +87,8 @@ public class SmartIdRestIntegrationTest {
   private SessionStatus pollSessionStatus(String sessionId) throws InterruptedException {
     SessionStatus sessionStatus = null;
     while (sessionStatus == null || StringUtils.equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
-      sessionStatus = connector.getSessionStatus(sessionId);
+      SessionStatusRequest request = new SessionStatusRequest(sessionId);
+      sessionStatus = connector.getSessionStatus(request);
       TimeUnit.SECONDS.sleep(1);
     }
     assertEquals("COMPLETE", sessionStatus.getState());

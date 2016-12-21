@@ -43,7 +43,7 @@ public class SmartIdRestServiceStubs {
   }
 
   public static void stubRequestWithResponse(String urlEquals, String responseFile) throws IOException {
-    stubFor(get(urlEqualTo(urlEquals))
+    stubFor(get(urlPathEqualTo(urlEquals))
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse()
             .withStatus(200)

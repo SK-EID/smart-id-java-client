@@ -10,6 +10,7 @@ import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SessionStatusRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.junit.Before;
@@ -17,7 +18,11 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubBadRequestResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
@@ -41,7 +46,8 @@ public class SmartIdRestConnectorTest {
   @Test(expected = SessionNotFoundException.class)
   public void getNotExistingSessionStatus() throws Exception {
     stubNotFoundResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016");
-    connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+    SessionStatusRequest request = new SessionStatusRequest("de305d54-75b4-431b-adb2-eb6b9e546016");
+    connector.getSessionStatus(request);
   }
 
   @Test
@@ -85,6 +91,16 @@ public class SmartIdRestConnectorTest {
   public void getSessionStatus_whenDocumentUnusable() throws Exception {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenDocumentUnusable.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
+  }
+
+  @Test
+  public void getSessionStatus_withTimeoutParameter() throws Exception {
+    stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
+    SessionStatusRequest request = new SessionStatusRequest("de305d54-75b4-431b-adb2-eb6b9e546016");
+    request.setResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
+    SessionStatus sessionStatus = connector.getSessionStatus(request);
+    assertSuccessfulResponse(sessionStatus);
+    verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000")));
   }
 
   @Test
@@ -221,7 +237,8 @@ public class SmartIdRestConnectorTest {
 
   private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) throws IOException {
     stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
-    return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+    SessionStatusRequest request = new SessionStatusRequest("de305d54-75b4-431b-adb2-eb6b9e546016");
+    return connector.getSessionStatus(request);
   }
 
   private CertificateRequest createDummyCertificateRequest() {

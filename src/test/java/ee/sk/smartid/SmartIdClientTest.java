@@ -9,6 +9,9 @@ import org.junit.Test;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubSessionStatusWithState;
@@ -16,6 +19,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -99,20 +103,34 @@ public class SmartIdClientTest {
     assertTrue("Duration is " + duration, duration < 3000L);
   }
 
+  @Test
+  public void setSessionStatusResponseSocketTimeout() throws Exception {
+    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
+    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
+    SmartIdSignature signature = createSignature();
+    assertNotNull(signature);
+    verify(getRequestedFor(urlEqualTo("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00?timeoutMs=10000")));
+  }
+
   private long measureSigningDuration() {
+    long startTime = System.currentTimeMillis();
+    SmartIdSignature signature = createSignature();
+    long endTime = System.currentTimeMillis();
+    assertNotNull(signature);
+    return endTime - startTime;
+  }
+
+  private SmartIdSignature createSignature() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType("SHA256");
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    long startTime = System.currentTimeMillis();
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber("PNOEE-31111111111")
         .withHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .sign();
-    long endTime = System.currentTimeMillis();
-    assertNotNull(signature);
-    return endTime - startTime;
+    return signature;
   }
 
   private long measureCertificateChoiceDuration() {

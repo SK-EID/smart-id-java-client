@@ -13,25 +13,35 @@ public class SmartIdClient implements Serializable {
   private String hostUrl;
   private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
   private long pollingSleepTimeout = 1L;
+  private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
+  private long sessionStatusResponseSocketOpenTimeValue;
 
   public CertificateRequestBuilder getCertificate() {
     SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl);
-    SessionStatusPoller sessionStatusPoller = new SessionStatusPoller(connector);
-    sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     CertificateRequestBuilder builder = new CertificateRequestBuilder(connector, sessionStatusPoller);
-    builder.withRelyingPartyUUID(relyingPartyUUID);
-    builder.withRelyingPartyName(relyingPartyName);
+    populateBuilderFields(builder);
     return builder;
   }
 
   public SignatureRequestBuilder createSignature() {
     SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl);
-    SessionStatusPoller sessionStatusPoller = new SessionStatusPoller(connector);
-    sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     SignatureRequestBuilder builder = new SignatureRequestBuilder(connector, sessionStatusPoller);
+    populateBuilderFields(builder);
+    return builder;
+  }
+
+  private void populateBuilderFields(SmartIdRequestBuilder builder) {
     builder.withRelyingPartyUUID(relyingPartyUUID);
     builder.withRelyingPartyName(relyingPartyName);
-    return builder;
+  }
+
+  private SessionStatusPoller createSessionStatusPoller(SmartIdRestConnector connector) {
+    SessionStatusPoller sessionStatusPoller = new SessionStatusPoller(connector);
+    sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+    sessionStatusPoller.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+    return sessionStatusPoller;
   }
 
   public void setRelyingPartyUUID(String relyingPartyUUID) {
@@ -57,5 +67,10 @@ public class SmartIdClient implements Serializable {
   public void setPollingSleepTimeout(TimeUnit unit, long timeout) {
     pollingSleepTimeUnit = unit;
     pollingSleepTimeout = timeout;
+  }
+
+  public void setSessionStatusResponseSocketOpenTime(TimeUnit timeUnit, long timeValue) {
+    sessionStatusResponseSocketOpenTimeUnit = timeUnit;
+    sessionStatusResponseSocketOpenTimeValue = timeValue;
   }
 }

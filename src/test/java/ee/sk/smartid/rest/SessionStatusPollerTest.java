@@ -5,6 +5,7 @@ import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SessionStatusRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.junit.Before;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -59,6 +61,25 @@ public class SessionStatusPollerTest {
     assertTrue(duration < 1100L);
   }
 
+  @Test
+  public void setResponseSocketOpenTime() throws Exception {
+    poller.setResponseSocketOpenTime(TimeUnit.MINUTES, 2L);
+    connector.responses.add(createCompleteSessionStatus());
+    SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+    assertCompleteStateReceived(status);
+    assertTrue(connector.requestUsed.isResponseSocketOpenTimeSet());
+    assertEquals(TimeUnit.MINUTES, connector.requestUsed.getResponseSocketOpenTimeUnit());
+    assertEquals(2L, connector.requestUsed.getResponseSocketOpenTimeValue());
+  }
+
+  @Test
+  public void responseSocketOpenTimeShouldNotBeSetByDefault() throws Exception {
+    connector.responses.add(createCompleteSessionStatus());
+    SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+    assertCompleteStateReceived(status);
+    assertFalse(connector.requestUsed.isResponseSocketOpenTimeSet());
+  }
+
   private long measurePollingDuration() {
     long startTime = System.currentTimeMillis();
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
@@ -68,7 +89,7 @@ public class SessionStatusPollerTest {
   }
 
   private void addMultipleRunningSessionResponses(int numberOfResponses) {
-    for(int i = 0; i < numberOfResponses;i++)
+    for (int i = 0; i < numberOfResponses; i++)
       connector.responses.add(createRunningSessionStatus());
   }
 
@@ -91,12 +112,14 @@ public class SessionStatusPollerTest {
 
   public static class SmartIdConnectorStub implements SmartIdConnector {
     String sessionIdUsed;
+    SessionStatusRequest requestUsed;
     List<SessionStatus> responses = new ArrayList<>();
     int responseNumber = 0;
 
     @Override
-    public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
-      sessionIdUsed = sessionId;
+    public SessionStatus getSessionStatus(SessionStatusRequest request) throws SessionNotFoundException {
+      sessionIdUsed = request.getSessionId();
+      requestUsed = request;
       return responses.get(responseNumber++);
     }
 

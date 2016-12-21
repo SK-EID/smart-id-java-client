@@ -9,6 +9,7 @@ import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SessionStatusRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
@@ -40,17 +42,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   @Override
-  public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
-    logger.debug("Getting session status for " + sessionId);
-    URI uri = UriBuilder
+  public SessionStatus getSessionStatus(SessionStatusRequest request) throws SessionNotFoundException {
+    logger.debug("Getting session status for " + request.getSessionId());
+    UriBuilder uriBuilder = UriBuilder
         .fromUri(endpointUrl)
-        .path(SESSION_STATUS_URI)
-        .build(sessionId);
+        .path(SESSION_STATUS_URI);
+    addResponseSocketOpenTimeUrlParameter(request, uriBuilder);
+    URI uri = uriBuilder.build(request.getSessionId());
     try {
       SessionStatus result = repareClient(uri).get(SessionStatus.class);
       return result;
     } catch (NotFoundException e) {
-      logger.warn("Session " + sessionId + " not found: " + e.getMessage());
+      logger.warn("Session " + request + " not found: " + e.getMessage());
       throw new SessionNotFoundException();
     }
 
@@ -121,6 +124,15 @@ public class SmartIdRestConnector implements SmartIdConnector {
     } catch (BadRequestException e) {
       logger.warn("Certificate request is invalid for URI " + uri + ": " + e.getMessage());
       throw new InvalidParametersException();
+    }
+  }
+
+  private void addResponseSocketOpenTimeUrlParameter(SessionStatusRequest request, UriBuilder uriBuilder) {
+    if (request.isResponseSocketOpenTimeSet()) {
+      TimeUnit timeUnit = request.getResponseSocketOpenTimeUnit();
+      long timeValue = request.getResponseSocketOpenTimeValue();
+      long queryTimeoutInMilliseconds = timeUnit.toMillis(timeValue);
+      uriBuilder.queryParam("timeoutMs", queryTimeoutInMilliseconds);
     }
   }
 }
