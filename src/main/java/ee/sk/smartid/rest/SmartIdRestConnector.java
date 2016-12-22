@@ -65,7 +65,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     URI uri = UriBuilder
         .fromUri(endpointUrl)
         .path(CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH)
-        .build(identity.getCountry(), identity.getNationalIdentityNumber());
+        .build(identity.getCountryCode(), identity.getNationalIdentityNumber());
     return postCertificateRequest(uri, request);
   }
 

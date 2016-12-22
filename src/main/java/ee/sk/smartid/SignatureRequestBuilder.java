@@ -1,5 +1,6 @@
 package ee.sk.smartid;
 
+import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.SessionSignature;
@@ -9,12 +10,17 @@ import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(SignatureRequestBuilder.class);
   private String documentNumber;
   private String certificateLevel;
   private SignableHash hashToSign;
+  private String hashType;
+  private String hashInBase64;
 
   public SignatureRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     super(connector, sessionStatusPoller);
@@ -28,6 +34,16 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   public SignatureRequestBuilder withHash(SignableHash hashToSign) {
     this.hashToSign = hashToSign;
+    return this;
+  }
+
+  public SignatureRequestBuilder withHashType(String hashType) {
+    this.hashType = hashType;
+    return this;
+  }
+
+  public SignatureRequestBuilder withHashInBase64(String hashInBase64) {
+    this.hashInBase64 = hashInBase64;
     return this;
   }
 
@@ -47,6 +63,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   public SmartIdSignature sign() {
+    validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = getConnector().sign(documentNumber, request);
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
@@ -54,13 +71,29 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     return signature;
   }
 
+  protected void validateParameters() {
+    super.validateParameters();
+    if (isBlank(documentNumber)) {
+      logger.error("Document number must be set");
+      throw new InvalidParametersException("Document number must be set");
+    }
+    if (isBlank(certificateLevel)) {
+      logger.error("Certificate level must be set");
+      throw new InvalidParametersException("Certificate level must be set");
+    }
+    if (!isHashSet()) {
+      logger.error("Hash with hash type must be set");
+      throw new InvalidParametersException("Hash with hash type must be set");
+    }
+  }
+
   private SignatureSessionRequest createSignatureSessionRequest() {
     SignatureSessionRequest request = new SignatureSessionRequest();
     request.setRelyingPartyUUID(getRelyingPartyUUID());
     request.setRelyingPartyName(getRelyingPartyName());
     request.setCertificateLevel(certificateLevel);
-    request.setHashType(hashToSign.getHashType());
-    request.setHash(hashToSign.getHashInBase64());
+    request.setHashType(getHashType());
+    request.setHash(getHashInBase64());
     return request;
   }
 
@@ -71,5 +104,23 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
     signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
     return signature;
+  }
+
+  private boolean isHashSet() {
+    return (hashToSign != null && hashToSign.areFieldsFilled()) || (isNotBlank(hashType) && isNotBlank(hashInBase64));
+  }
+
+  private String getHashType() {
+    if (isNotBlank(hashType)) {
+      return hashType;
+    }
+    return hashToSign.getHashType();
+  }
+
+  private String getHashInBase64() {
+    if (isNotBlank(hashInBase64)) {
+      return hashInBase64;
+    }
+    return hashToSign.getHashInBase64();
   }
 }

@@ -38,6 +38,20 @@ public class CertificateRequestBuilderTest {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
+        .withCountryCode("EE")
+        .withNationalIdentityNumber("31111111111")
+        .withCertificateLevel("QUALIFIED")
+        .fetch();
+    assertCertificateResponseValid(certificate);
+    assertCorrectSessionRequestMade();
+    assertValidCertificateChoiceRequestMade();
+  }
+
+  @Test
+  public void getCertificateUsingNationalIdentity() throws Exception {
+    SmartIdCertificate certificate = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
         .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
         .withCertificateLevel("QUALIFIED")
         .fetch();
@@ -68,6 +82,35 @@ public class CertificateRequestBuilderTest {
         .fetch();
   }
 
+  @Test(expected = InvalidParametersException.class)
+  public void getCertificate_whenCertificateLevelIsNotSet_shouldThrowException() throws Exception {
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withDocumentNumber("PNOEE-31111111111")
+        .fetch();
+  }
+
+  @Test(expected = InvalidParametersException.class)
+  public void getCertificate_withoutRelyingPartyUUID_shouldThrowException() throws Exception {
+    builder
+        .withRelyingPartyName("relying-party-name")
+        .withCountryCode("EE")
+        .withNationalIdentityNumber("31111111111")
+        .withCertificateLevel("QUALIFIED")
+        .fetch();
+  }
+
+  @Test(expected = InvalidParametersException.class)
+  public void getCertificate_withoutRelyingPartyName_shouldThrowException() throws Exception {
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withCountryCode("EE")
+        .withNationalIdentityNumber("31111111111")
+        .withCertificateLevel("QUALIFIED")
+        .fetch();
+  }
+
   private void assertCertificateResponseValid(SmartIdCertificate certificate) {
     assertNotNull(certificate);
     assertNotNull(certificate.getCertificate());
@@ -82,7 +125,7 @@ public class CertificateRequestBuilderTest {
   }
 
   private void assertValidCertificateChoiceRequestMade() {
-    assertEquals("EE", connector.identityUsed.getCountry());
+    assertEquals("EE", connector.identityUsed.getCountryCode());
     assertEquals("31111111111", connector.identityUsed.getNationalIdentityNumber());
     assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());

@@ -4,23 +4,23 @@ import java.io.Serializable;
 
 public class NationalIdentity implements Serializable {
 
-  private String country;
+  private String countryCode;
   private String nationalIdentityNumber;
 
   public NationalIdentity() {
   }
 
-  public NationalIdentity(String country, String nationalIdentityNumber) {
-    this.country = country;
+  public NationalIdentity(String countryCode, String nationalIdentityNumber) {
+    this.countryCode = countryCode;
     this.nationalIdentityNumber = nationalIdentityNumber;
   }
 
-  public String getCountry() {
-    return country;
+  public String getCountryCode() {
+    return countryCode;
   }
 
-  public void setCountry(String country) {
-    this.country = country;
+  public void setCountryCode(String countryCode) {
+    this.countryCode = countryCode;
   }
 
   public String getNationalIdentityNumber() {
@@ -34,7 +34,7 @@ public class NationalIdentity implements Serializable {
   @Override
   public String toString() {
     return "NationalIdentity{" +
-        "country='" + country + '\'' +
+        "countryCode='" + countryCode + '\'' +
         ", nationalIdentityNumber='" + nationalIdentityNumber + '\'' +
         '}';
   }

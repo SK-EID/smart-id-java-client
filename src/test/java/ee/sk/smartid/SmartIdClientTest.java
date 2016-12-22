@@ -44,28 +44,26 @@ public class SmartIdClientTest {
 
   @Test
   public void getCertificateAndSign_fullExample() throws Exception {
-    NationalIdentity identity = new NationalIdentity("EE", "31111111111");
     SmartIdCertificate certificateResponse = client
         .getCertificate()
-        .withNationalIdentity(identity)
+        .withCountryCode("EE")
+        .withNationalIdentityNumber("31111111111")
         .withCertificateLevel("ADVANCED")
         .fetch();
 
     X509Certificate x509Certificate = certificateResponse.getCertificate();
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType("SHA256");
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
     String documentNumber = certificateResponse.getDocumentNumber();
+
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber(documentNumber)
-        .withHash(hashToSign)
+        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
+        .withHashType("SHA256")
         .withCertificateLevel("ADVANCED")
         .sign();
 
     byte[] signatureValue = signature.getValue();
-    String algorithmName = signature.getAlgorithmName();
+    String algorithmName = signature.getAlgorithmName(); // Returns "sha256WithRSAEncryption"
 
     assertValidSignatureCreated(signature);
   }

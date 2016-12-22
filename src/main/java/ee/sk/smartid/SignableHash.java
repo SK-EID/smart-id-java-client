@@ -4,6 +4,8 @@ import org.apache.commons.codec.binary.Base64;
 
 import java.io.Serializable;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 public class SignableHash implements Serializable {
 
   private byte[] hash;
@@ -23,5 +25,9 @@ public class SignableHash implements Serializable {
 
   public void setHashType(String hashType) {
     this.hashType = hashType;
+  }
+
+  public boolean areFieldsFilled() {
+    return isNotBlank(hashType) && hash != null && hash.length > 0;
   }
 }

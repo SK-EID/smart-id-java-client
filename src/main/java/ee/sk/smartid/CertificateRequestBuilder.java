@@ -19,6 +19,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 public class CertificateRequestBuilder extends SmartIdRequestBuilder {
@@ -27,6 +29,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   private NationalIdentity nationalIdentity;
   private String certificateLevel;
   private String documentNumber;
+  private String countryCode;
+  private String nationalIdentityNumber;
 
   public CertificateRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     super(connector, sessionStatusPoller);
@@ -35,6 +39,16 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   public CertificateRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
     this.nationalIdentity = nationalIdentity;
+    return this;
+  }
+
+  public CertificateRequestBuilder withCountryCode(String countryCode) {
+    this.countryCode = countryCode;
+    return this;
+  }
+
+  public CertificateRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
+    this.nationalIdentityNumber = nationalIdentityNumber;
     return this;
   }
 
@@ -60,6 +74,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   public SmartIdCertificate fetch() {
     logger.debug("Starting to fetch certificate");
+    validateParameters();
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
@@ -79,11 +94,9 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   private CertificateChoiceResponse fetchCertificateChoiceSessionResponse(CertificateRequest request) {
     if (isNotEmpty(documentNumber)) {
       return getConnector().getCertificate(documentNumber, request);
-    } else if (nationalIdentity != null) {
-      return getConnector().getCertificate(nationalIdentity, request);
     } else {
-      logger.error("Either document number or national identity must be set");
-      throw new InvalidParametersException("Either document number or national identity must be set");
+      NationalIdentity identity = getNationalIdentity();
+      return getConnector().getCertificate(identity, request);
     }
   }
 
@@ -110,6 +123,29 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
       logger.error("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage());
       throw new TechnicalErrorException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);
     }
+  }
+
+  protected void validateParameters() {
+    super.validateParameters();
+    if (isBlank(certificateLevel)) {
+      logger.error("Certificate level must be set");
+      throw new InvalidParametersException("Certificate level must be set");
+    }
+    if (isBlank(documentNumber) && !hasNationalIdentity()) {
+      logger.error("Either document number or national identity must be set");
+      throw new InvalidParametersException("Either document number or national identity must be set");
+    }
+  }
+
+  private boolean hasNationalIdentity() {
+    return nationalIdentity != null || (isNotBlank(countryCode) && isNotBlank(nationalIdentityNumber));
+  }
+
+  private NationalIdentity getNationalIdentity() {
+    if (nationalIdentity != null) {
+      return nationalIdentity;
+    }
+    return new NationalIdentity(countryCode, nationalIdentityNumber);
   }
 
   private String getDocumentNumber(SessionStatus sessionStatus) {
