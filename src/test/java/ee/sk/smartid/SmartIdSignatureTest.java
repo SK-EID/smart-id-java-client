@@ -25,7 +25,7 @@ public class SmartIdSignatureTest {
   @Test(expected = TechnicalErrorException.class)
   public void incorrectBase64StringShouldThrowException() throws Exception {
     SmartIdSignature signature = new SmartIdSignature();
-    signature.setValueInBase64("notEncodedInBase64");
+    signature.setValueInBase64("äIsNotValidBase64Character");
     signature.getValue();
   }
 }

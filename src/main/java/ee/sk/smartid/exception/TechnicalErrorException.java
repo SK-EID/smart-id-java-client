@@ -5,4 +5,8 @@ public class TechnicalErrorException extends SmartIdException {
   public TechnicalErrorException(String message, Throwable cause) {
     super(message, cause);
   }
+
+  public TechnicalErrorException(String message) {
+    super(message);
+  }
 }
