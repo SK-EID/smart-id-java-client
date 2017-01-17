@@ -98,7 +98,10 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private SmartIdSignature createSmartIdSignature(SessionStatus sessionStatus) {
+    // TODO: Consider to return session status as well, to distinguish between various reasons (timeout, user cancelled)
+    //      for not receiving signature
     SessionSignature sessionSignature = sessionStatus.getSignature();
+    if(sessionSignature == null) { return null; }
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64(sessionSignature.getValueInBase64());
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
