@@ -1,5 +1,6 @@
 package ee.sk.smartid.rest;
 
+import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
@@ -28,8 +29,8 @@ public class SmartIdRestIntegrationTest {
   private static final String RELYING_PARTY_UUID = "5e6cea38-6333-4e21-b3fe-df6d02ce44c7";
   private static final String RELYING_PARTY_NAME = "TEST DigiDoc4J";
   private static final String DOCUMENT_NUMBER = "PNOEE-31111111111-K0DD-NQ";
-  private static final String DATA_TO_SIGN = "Hedgehogs – why can't they just share the hedge?";
-  private static final String CERTIFICATE_LEVEL = "QUALIFIED";
+  private static final String DATA_TO_SIGN = "Hello World!";
+  private static final String CERTIFICATE_LEVEL = "ADVANCED";
   private SmartIdConnector connector;
 
   @Before
@@ -78,7 +79,7 @@ public class SmartIdRestIntegrationTest {
     signatureSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     signatureSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
     signatureSessionRequest.setCertificateLevel(CERTIFICATE_LEVEL);
-    signatureSessionRequest.setHashType("SHA256");
+    signatureSessionRequest.setHashType("SHA512");
     String hashInBase64 = calculateHashInBase64(DATA_TO_SIGN.getBytes());
     signatureSessionRequest.setHash(hashInBase64);
     return signatureSessionRequest;
@@ -108,9 +109,7 @@ public class SmartIdRestIntegrationTest {
   }
 
   private String calculateHashInBase64(byte[] dataToSign) throws NoSuchAlgorithmException {
-    String digestAlgorithmOid = "2.16.840.1.101.3.4.2.1";//SHA256
-    MessageDigest messageDigest = MessageDigest.getInstance(digestAlgorithmOid);
-    byte[] digestValue = messageDigest.digest(dataToSign);
+    byte[] digestValue = DigestCalculator.calculateDigest(dataToSign, "SHA-512");
     return Base64.encodeBase64String(digestValue);
   }
 }

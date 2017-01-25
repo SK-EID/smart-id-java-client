@@ -6,25 +6,29 @@ import java.security.NoSuchAlgorithmException;
 
 public class VerificationCodeCalculator {
 
-    // Method code based on ee.cyber.smartid.clirp by Cybernetica AS
-    public static String calculate(byte[] documentHash) {
-        MessageDigest sha256;
-
-        try {
-            sha256 = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("No SHA-256?", e);
-        }
-
-        ByteBuffer buf = ByteBuffer.wrap(sha256.digest(documentHash));
-
-        // convert to positive integer..
-        int shortBytes = Short.SIZE / Byte.SIZE; // Short.BYTES in java 8
-        String code = String.valueOf(
-                ((int) buf.getShort(buf.limit() - shortBytes)) & 0xffff);
-        // .. and pad with zeroes.
-        code = ("0000" + code).substring(code.length());
-
-        return code;
-    }
+  /**
+   * The Verification Code (VC) is computed as:
+   * <p/>
+   * integer(SHA256(hash)[−2:−1]) mod 10000
+   * <p/>
+   * where we take SHA256 result, extract 2 rightmost bytes from it,
+   * interpret them as a big-endian unsigned integer and take the last 4 digits in decimal for display.
+   * <p/>
+   * SHA256 is always used here, no matter what was the algorithm used to calculate hash.
+   *
+   * @param documentHash hash used to calculate verification code.
+   * @return verification code.
+   */
+  public static String calculate(byte[] documentHash) {
+    byte[] digest = DigestCalculator.calculateDigest(documentHash, "SHA-256");
+    ByteBuffer byteBuffer = ByteBuffer.wrap(digest);
+    int shortBytes = Short.SIZE / Byte.SIZE; // Short.BYTES in java 8
+    int rightMostBytesIndex = byteBuffer.limit() - shortBytes;
+    short twoRightmostBytes = byteBuffer.getShort(rightMostBytesIndex);
+    int positiveInteger = ((int) twoRightmostBytes) & 0xffff;
+    String code = String.valueOf(positiveInteger);
+    String paddedCode = "0000" + code;
+    String result = paddedCode.substring(code.length());
+    return result;
+  }
 }
