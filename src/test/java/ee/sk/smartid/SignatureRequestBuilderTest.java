@@ -35,7 +35,7 @@ public class SignatureRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
         .withHashType("SHA256")
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
+        .withHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=")
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
     assertCorrectSignatureRequestMade();
@@ -47,7 +47,7 @@ public class SignatureRequestBuilderTest {
   public void signWithSignableHash() throws Exception {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType("SHA256");
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
     SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -58,6 +58,23 @@ public class SignatureRequestBuilderTest {
     assertCorrectSignatureRequestMade();
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
+  }
+
+  @Test
+  public void signWithSignableData() throws Exception {
+    SignableData dataToSign = new SignableData("Say 'hello' to my little friend!".getBytes());
+    dataToSign.setHashType("SHA256");
+    SmartIdSignature signature = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withCertificateLevel("ADVANCED")
+        .withSignableData(dataToSign)
+        .withDocumentNumber("PNOEE-31111111111")
+        .sign();
+    assertCorrectSignatureRequestMade();
+    assertCorrectSessionRequestMade();
+    assertSignatureCorrect(signature);
+
   }
 
   @Test(expected = InvalidParametersException.class)
@@ -83,7 +100,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithoutHash_shouldThrowException() throws Exception {
+  public void signWithoutHash_andWithoutData_shouldThrowException() throws Exception {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -157,7 +174,7 @@ public class SignatureRequestBuilderTest {
     assertEquals("relying-party-name", connector.signatureSessionRequestUsed.getRelyingPartyName());
     assertEquals("ADVANCED", connector.signatureSessionRequestUsed.getCertificateLevel());
     assertEquals("SHA256", connector.signatureSessionRequestUsed.getHashType());
-    assertEquals("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=", connector.signatureSessionRequestUsed.getHash());
+    assertEquals("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=", connector.signatureSessionRequestUsed.getHash());
   }
 
   private void assertCorrectSessionRequestMade() {

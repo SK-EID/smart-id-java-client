@@ -38,12 +38,46 @@ public class SmartIdClientTest {
     stubRequestWithResponse("/certificatechoice/pno/EE/31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+    stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithSha512.json", "responses/signatureSessionResponse.json");
     stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
     stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
   }
 
   @Test
   public void getCertificateAndSign_fullExample() throws Exception {
+    // Provide data bytes to be signed (Default hash type is SHA-512)
+    SignableData dataToSign = new SignableData("Hello World!".getBytes());
+
+    // Calculate verification code
+    assertEquals("4664", dataToSign.calculateVerificationCode());
+
+    // Get certificate and document number
+    SmartIdCertificate certificateResponse = client
+        .getCertificate()
+        .withCountryCode("EE")
+        .withNationalIdentityNumber("31111111111")
+        .withCertificateLevel("ADVANCED")
+        .fetch();
+
+    X509Certificate x509Certificate = certificateResponse.getCertificate();
+    String documentNumber = certificateResponse.getDocumentNumber();
+
+    // Sign the data using the document number
+    SmartIdSignature signature = client
+        .createSignature()
+        .withDocumentNumber(documentNumber)
+        .withSignableData(dataToSign)
+        .withCertificateLevel("ADVANCED")
+        .sign();
+
+    byte[] signatureValue = signature.getValue();
+    String algorithmName = signature.getAlgorithmName(); // Returns "sha512WithRSAEncryption"
+
+    assertValidSignatureCreated(signature);
+  }
+
+  @Test
+  public void getCertificateAndSign_withExistingHash() throws Exception {
     SmartIdCertificate certificateResponse = client
         .getCertificate()
         .withCountryCode("EE")
@@ -94,6 +128,7 @@ public class SmartIdClientTest {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType("SHA256");
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    assertEquals("1796", hashToSign.calculateVerificationCode());
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber("PNOEE-31111111111")
@@ -179,27 +214,4 @@ public class SmartIdClientTest {
     assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
   }
 
-  /*
-  @Test
-  public void getCertificateAsync() throws Exception {
-    NationalIdentity identity = new NationalIdentity("EE", "31111111111");
-    Future<X509Certificate> certificate = client
-        .getCertificate()
-        .withNationalIdentity(identity)
-        .withCertificateLevel("QUALIFIED")
-        .fetchCertificateFuture();
-  }
-
-  @Test
-  public void signAsync() throws Exception {
-    String hashInBase64 = "0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=";
-    Future<SmartIdSignature> signature = client
-        .createSignature()
-        .forDocument("PNOEE-123456")
-        .withHashInBase64(hashInBase64)
-        .withHashType("SHA256")
-        .withCertificateLevel("QUALIFIED")
-        .fetchSignatureFuture();
-  }
-  */
 }

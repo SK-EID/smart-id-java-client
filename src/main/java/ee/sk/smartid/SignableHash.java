@@ -11,6 +11,10 @@ public class SignableHash implements Serializable {
   private byte[] hash;
   private String hashType;
 
+  public void setHash(byte[] hash) {
+    this.hash = hash;
+  }
+
   public void setHashInBase64(String hashInBase64) {
     hash = Base64.decodeBase64(hashInBase64);
   }
@@ -29,5 +33,9 @@ public class SignableHash implements Serializable {
 
   public boolean areFieldsFilled() {
     return isNotBlank(hashType) && hash != null && hash.length > 0;
+  }
+
+  public String calculateVerificationCode() {
+    return VerificationCodeCalculator.calculate(hash);
   }
 }

@@ -18,6 +18,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   private static final Logger logger = LoggerFactory.getLogger(SignatureRequestBuilder.class);
   private String documentNumber;
   private String certificateLevel;
+  private SignableData dataToSign;
   private SignableHash hashToSign;
   private String hashType;
   private String hashInBase64;
@@ -29,6 +30,11 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
     this.documentNumber = documentNumber;
+    return this;
+  }
+
+  public SignatureRequestBuilder withSignableData(SignableData dataToSign) {
+    this.dataToSign = dataToSign;
     return this;
   }
 
@@ -81,9 +87,9 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
       logger.error("Certificate level must be set");
       throw new InvalidParametersException("Certificate level must be set");
     }
-    if (!isHashSet()) {
-      logger.error("Hash with hash type must be set");
-      throw new InvalidParametersException("Hash with hash type must be set");
+    if (!isHashSet() && !isSignableDataSet()) {
+      logger.error("Signable data or hash with hash type must be set");
+      throw new InvalidParametersException("Signable data or hash with hash type must be set");
     }
   }
 
@@ -113,17 +119,27 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     return (hashToSign != null && hashToSign.areFieldsFilled()) || (isNotBlank(hashType) && isNotBlank(hashInBase64));
   }
 
+  private boolean isSignableDataSet() {
+    return dataToSign != null;
+  }
+
   private String getHashType() {
     if (isNotBlank(hashType)) {
       return hashType;
     }
-    return hashToSign.getHashType();
+    if(hashToSign != null) {
+      return hashToSign.getHashType();
+    }
+    return dataToSign.getHashType();
   }
 
   private String getHashInBase64() {
     if (isNotBlank(hashInBase64)) {
       return hashInBase64;
     }
-    return hashToSign.getHashInBase64();
+    if(hashToSign != null) {
+      return hashToSign.getHashInBase64();
+    }
+    return dataToSign.calculateHashInBase64();
   }
 }

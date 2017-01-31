@@ -7,7 +7,7 @@ import java.io.Serializable;
 public class SignableData implements Serializable {
 
   private byte[] dataToSign;
-  private String hashType = "SHA-512";
+  private String hashType = "SHA512";
 
   public SignableData(byte[] dataToSign) {
     this.dataToSign = dataToSign;
