@@ -1,6 +1,7 @@
 package ee.sk.smartid.rest;
 
 import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
@@ -13,7 +14,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 
@@ -109,7 +109,7 @@ public class SmartIdRestIntegrationTest {
   }
 
   private String calculateHashInBase64(byte[] dataToSign) throws NoSuchAlgorithmException {
-    byte[] digestValue = DigestCalculator.calculateDigest(dataToSign, "SHA-512");
+    byte[] digestValue = DigestCalculator.calculateDigest(dataToSign, HashType.SHA512);
     return Base64.encodeBase64String(digestValue);
   }
 }

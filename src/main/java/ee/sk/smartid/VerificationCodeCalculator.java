@@ -20,7 +20,7 @@ public class VerificationCodeCalculator {
    * @return verification code.
    */
   public static String calculate(byte[] documentHash) {
-    byte[] digest = DigestCalculator.calculateDigest(documentHash, "SHA-256");
+    byte[] digest = DigestCalculator.calculateDigest(documentHash, HashType.SHA256);
     ByteBuffer byteBuffer = ByteBuffer.wrap(digest);
     int shortBytes = Short.SIZE / Byte.SIZE; // Short.BYTES in java 8
     int rightMostBytesIndex = byteBuffer.limit() - shortBytes;
@@ -28,7 +28,6 @@ public class VerificationCodeCalculator {
     int positiveInteger = ((int) twoRightmostBytes) & 0xffff;
     String code = String.valueOf(positiveInteger);
     String paddedCode = "0000" + code;
-    String result = paddedCode.substring(code.length());
-    return result;
+    return paddedCode.substring(code.length());
   }
 }

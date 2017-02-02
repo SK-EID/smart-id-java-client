@@ -20,7 +20,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   private String certificateLevel;
   private SignableData dataToSign;
   private SignableHash hashToSign;
-  private String hashType;
+  private HashType hashType;
   private String hashInBase64;
 
   public SignatureRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
@@ -43,7 +43,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     return this;
   }
 
-  public SignatureRequestBuilder withHashType(String hashType) {
+  public SignatureRequestBuilder withHashType(HashType hashType) {
     this.hashType = hashType;
     return this;
   }
@@ -98,7 +98,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setRelyingPartyUUID(getRelyingPartyUUID());
     request.setRelyingPartyName(getRelyingPartyName());
     request.setCertificateLevel(certificateLevel);
-    request.setHashType(getHashType());
+    request.setHashType(getHashTypeString());
     request.setHash(getHashInBase64());
     return request;
   }
@@ -116,18 +116,22 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private boolean isHashSet() {
-    return (hashToSign != null && hashToSign.areFieldsFilled()) || (isNotBlank(hashType) && isNotBlank(hashInBase64));
+    return (hashToSign != null && hashToSign.areFieldsFilled()) || (hashType != null && isNotBlank(hashInBase64));
   }
 
   private boolean isSignableDataSet() {
     return dataToSign != null;
   }
 
-  private String getHashType() {
-    if (isNotBlank(hashType)) {
+  private String getHashTypeString() {
+    return getHashType().getHashTypeName();
+  }
+
+  private HashType getHashType() {
+    if (hashType != null) {
       return hashType;
     }
-    if(hashToSign != null) {
+    if (hashToSign != null) {
       return hashToSign.getHashType();
     }
     return dataToSign.getHashType();

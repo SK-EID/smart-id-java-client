@@ -4,12 +4,10 @@ import org.apache.commons.codec.binary.Base64;
 
 import java.io.Serializable;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 public class SignableHash implements Serializable {
 
   private byte[] hash;
-  private String hashType;
+  private HashType hashType;
 
   public void setHash(byte[] hash) {
     this.hash = hash;
@@ -23,16 +21,16 @@ public class SignableHash implements Serializable {
     return Base64.encodeBase64String(hash);
   }
 
-  public String getHashType() {
+  public HashType getHashType() {
     return hashType;
   }
 
-  public void setHashType(String hashType) {
+  public void setHashType(HashType hashType) {
     this.hashType = hashType;
   }
 
   public boolean areFieldsFilled() {
-    return isNotBlank(hashType) && hash != null && hash.length > 0;
+    return hashType != null && hash != null && hash.length > 0;
   }
 
   public String calculateVerificationCode() {

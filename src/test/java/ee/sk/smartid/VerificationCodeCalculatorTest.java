@@ -24,7 +24,7 @@ public class VerificationCodeCalculatorTest {
 
   private void assertVerificationCode(String verificationCode, String dataString) {
     byte[] data = dataString.getBytes();
-    byte[] hash = DigestCalculator.calculateDigest(data, "SHA-256");
+    byte[] hash = DigestCalculator.calculateDigest(data, HashType.SHA256);
     assertEquals(verificationCode, VerificationCodeCalculator.calculate(hash));
   }
 }

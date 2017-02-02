@@ -92,7 +92,7 @@ public class SmartIdClientTest {
         .createSignature()
         .withDocumentNumber(documentNumber)
         .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
-        .withHashType("SHA256")
+        .withHashType(HashType.SHA256)
         .withCertificateLevel("ADVANCED")
         .sign();
 
@@ -126,7 +126,7 @@ public class SmartIdClientTest {
   @Test
   public void sign() throws Exception {
     SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType("SHA256");
+    hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     assertEquals("1796", hashToSign.calculateVerificationCode());
     SmartIdSignature signature = client
@@ -176,7 +176,7 @@ public class SmartIdClientTest {
 
   private SmartIdSignature createSignature() {
     SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType("SHA256");
+    hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     SmartIdSignature signature = client
         .createSignature()

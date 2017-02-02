@@ -7,7 +7,7 @@ import java.io.Serializable;
 public class SignableData implements Serializable {
 
   private byte[] dataToSign;
-  private String hashType = "SHA512";
+  private HashType hashType = HashType.SHA512;
 
   public SignableData(byte[] dataToSign) {
     this.dataToSign = dataToSign;
@@ -27,11 +27,11 @@ public class SignableData implements Serializable {
     return VerificationCodeCalculator.calculate(digest);
   }
 
-  public void setHashType(String hashType) {
+  public void setHashType(HashType hashType) {
     this.hashType = hashType;
   }
 
-  public String getHashType() {
+  public HashType getHashType() {
     return hashType;
   }
 }

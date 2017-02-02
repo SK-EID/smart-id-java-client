@@ -16,7 +16,7 @@ public class SignableDataTest {
   @Test
   public void signableData_withDefaultHashType_sha512() throws Exception {
     SignableData signableData = new SignableData(DATA_TO_SIGN);
-    assertEquals("SHA512", signableData.getHashType());
+    assertEquals("SHA512", signableData.getHashType().getHashTypeName());
     assertEquals(SHA512_HASH_IN_BASE64, signableData.calculateHashInBase64());
     assertArrayEquals(Base64.decodeBase64(SHA512_HASH_IN_BASE64), signableData.calculateHash());
     assertEquals("4664", signableData.calculateVerificationCode());
@@ -25,8 +25,8 @@ public class SignableDataTest {
   @Test
   public void signableData_with_sha256() throws Exception {
     SignableData signableData = new SignableData(DATA_TO_SIGN);
-    signableData.setHashType("SHA256");
-    assertEquals("SHA256", signableData.getHashType());
+    signableData.setHashType(HashType.SHA256);
+    assertEquals("SHA256", signableData.getHashType().getHashTypeName());
     assertEquals(SHA256_HASH_IN_BASE64, signableData.calculateHashInBase64());
     assertArrayEquals(Base64.decodeBase64(SHA256_HASH_IN_BASE64), signableData.calculateHash());
     assertEquals("7712", signableData.calculateVerificationCode());
@@ -35,8 +35,8 @@ public class SignableDataTest {
   @Test
   public void signableData_with_sha384() throws Exception {
     SignableData signableData = new SignableData(DATA_TO_SIGN);
-    signableData.setHashType("SHA384");
-    assertEquals("SHA384", signableData.getHashType());
+    signableData.setHashType(HashType.SHA384);
+    assertEquals("SHA384", signableData.getHashType().getHashTypeName());
     assertEquals(SHA384_HASH_IN_BASE64, signableData.calculateHashInBase64());
     assertArrayEquals(Base64.decodeBase64(SHA384_HASH_IN_BASE64), signableData.calculateHash());
     assertEquals("3486", signableData.calculateVerificationCode());
