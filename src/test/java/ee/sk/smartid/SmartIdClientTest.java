@@ -1,6 +1,11 @@
 package ee.sk.smartid;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import ee.sk.smartid.exception.CertificateNotFoundException;
+import ee.sk.smartid.exception.DocumentUnusableException;
+import ee.sk.smartid.exception.SessionTimeoutException;
+import ee.sk.smartid.exception.UserAccountNotFoundException;
+import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import org.junit.Before;
 import org.junit.Rule;
@@ -13,6 +18,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubSessionStatusWithState;
 import static org.hamcrest.Matchers.containsString;
@@ -138,6 +144,54 @@ public class SmartIdClientTest {
     assertValidSignatureCreated(signature);
   }
 
+  @Test(expected = CertificateNotFoundException.class)
+  public void getCertificate_whenUserAccountNotFound_shouldThrowException() throws Exception {
+    stubNotFoundResponse("/certificatechoice/pno/EE/31111111111", "requests/certificateChoiceRequest.json");
+    makeGetCertificateRequest();
+  }
+
+  @Test(expected = UserAccountNotFoundException.class)
+  public void sign_whenUserAccountNotFound_shouldThrowException() throws Exception {
+    stubNotFoundResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json");
+    makeCreateSignatureRequest();
+  }
+
+  @Test(expected = UserRefusedException.class)
+  public void getCertificate_whenUserCancels_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenUserHasRefused.json");
+    makeGetCertificateRequest();
+  }
+
+  @Test(expected = UserRefusedException.class)
+  public void sign_whenUserCancels_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenUserHasRefused.json");
+    makeCreateSignatureRequest();
+  }
+
+  @Test(expected = SessionTimeoutException.class)
+  public void getCertificate_whenTimeout_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenTimeout.json");
+    makeGetCertificateRequest();
+  }
+
+  @Test(expected = SessionTimeoutException.class)
+  public void sign_whenTimeout_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenTimeout.json");
+    makeCreateSignatureRequest();
+  }
+
+  @Test(expected = DocumentUnusableException.class)
+  public void getCertificate_whenDocumentUnusable_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenDocumentUnusable.json");
+    makeGetCertificateRequest();
+  }
+
+  @Test(expected = DocumentUnusableException.class)
+  public void sign_whenDocumentUnusable_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenDocumentUnusable.json");
+    makeCreateSignatureRequest();
+  }
+
   @Test
   public void setPollingSleepTimeoutForSignatureCreation() throws Exception {
     stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
@@ -197,6 +251,24 @@ public class SmartIdClientTest {
     long endTime = System.currentTimeMillis();
     assertNotNull(certificate);
     return endTime - startTime;
+  }
+
+  private void makeGetCertificateRequest() {
+    client
+        .getCertificate()
+        .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
+        .withCertificateLevel("ADVANCED")
+        .fetch();
+  }
+
+  private void makeCreateSignatureRequest() {
+    client
+        .createSignature()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
+        .withHashType(HashType.SHA256)
+        .withCertificateLevel("ADVANCED")
+        .sign();
   }
 
   private void assertCertificateResponseValid(SmartIdCertificate certificate) {

@@ -1,6 +1,11 @@
 package ee.sk.smartid.rest;
 
+import ee.sk.smartid.DummyData;
+import ee.sk.smartid.exception.DocumentUnusableException;
 import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.SessionTimeoutException;
+import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.CertificateRequest;
 import ee.sk.smartid.rest.dao.NationalIdentity;
@@ -15,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static ee.sk.smartid.DummyData.createSessionResult;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -80,6 +87,40 @@ public class SessionStatusPollerTest {
     assertFalse(connector.requestUsed.isResponseSocketOpenTimeSet());
   }
 
+  @Test(expected = UserRefusedException.class)
+  public void getUserRefusedResponse_shouldThrowException() throws Exception {
+    connector.responses.add(DummyData.createUserRefusedSessionStatus());
+    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+  }
+
+  @Test(expected = SessionTimeoutException.class)
+  public void getUserTimeoutResponse_shouldThrowException() throws Exception {
+    connector.responses.add(DummyData.createTimeoutSessionStatus());
+    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+  }
+
+  @Test(expected = DocumentUnusableException.class)
+  public void getDocumentUnusableResponse_shouldThrowException() throws Exception {
+    connector.responses.add(DummyData.createDocumentUnusableSessionStatus());
+    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void getUnknownEndResult_shouldThrowException() throws Exception {
+    SessionStatus status = createCompleteSessionStatus();
+    status.setResult(createSessionResult("BLAH"));
+    connector.responses.add(status);
+    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void getMissingEndResult_shouldThrowException() throws Exception {
+    SessionStatus status = createCompleteSessionStatus();
+    status.setResult(null);
+    connector.responses.add(status);
+    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+  }
+
   private long measurePollingDuration() {
     long startTime = System.currentTimeMillis();
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
@@ -101,6 +142,7 @@ public class SessionStatusPollerTest {
   private SessionStatus createCompleteSessionStatus() {
     SessionStatus sessionStatus = new SessionStatus();
     sessionStatus.setState("COMPLETE");
+    sessionStatus.setResult(createSessionEndResult());
     return sessionStatus;
   }
 

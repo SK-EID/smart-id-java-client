@@ -1,6 +1,8 @@
 package ee.sk.smartid;
 
 import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.SessionSignature;
@@ -10,6 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -168,6 +171,18 @@ public class SignatureRequestBuilderTest {
         .sign();
   }
 
+  @Test(expected = UserRefusedException.class)
+  public void sign_withUserRefused_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus();
+    makeSigningRequest();
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void sign_withSignatureMissingInResponse_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond.setSignature(null);
+    makeSigningRequest();
+  }
+
   private void assertCorrectSignatureRequestMade() {
     assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
     assertEquals("relying-party-uuid", connector.signatureSessionRequestUsed.getRelyingPartyUUID());
@@ -203,5 +218,16 @@ public class SignatureRequestBuilderTest {
     signature.setAlgorithm("sha256WithRSAEncryption");
     status.setSignature(signature);
     return status;
+  }
+
+  private void makeSigningRequest() {
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withCertificateLevel("ADVANCED")
+        .withHashType(HashType.SHA256)
+        .withHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=")
+        .withDocumentNumber("PNOEE-31111111111")
+        .sign();
   }
 }

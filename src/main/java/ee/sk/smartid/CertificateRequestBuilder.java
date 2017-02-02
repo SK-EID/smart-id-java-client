@@ -1,7 +1,11 @@
 package ee.sk.smartid;
 
+import ee.sk.smartid.exception.CertificateNotFoundException;
+import ee.sk.smartid.exception.DocumentUnusableException;
 import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.SessionTimeoutException;
 import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
@@ -72,7 +76,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     return this;
   }
 
-  public SmartIdCertificate fetch() {
+  public SmartIdCertificate fetch() throws CertificateNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
     logger.debug("Starting to fetch certificate");
     validateParameters();
     CertificateRequest request = createCertificateRequest();
@@ -83,6 +87,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private SmartIdCertificate createSmartIdCertificate(SessionStatus sessionStatus) {
+    validateCertificateResponse(sessionStatus);
     SessionCertificate certificate = sessionStatus.getCertificate();
     SmartIdCertificate smartIdCertificate = new SmartIdCertificate();
     smartIdCertificate.setCertificate(getX509Certificate(certificate));
@@ -106,6 +111,18 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     request.setRelyingPartyName(getRelyingPartyName());
     request.setCertificateLevel(certificateLevel);
     return request;
+  }
+
+  private void validateCertificateResponse(SessionStatus sessionStatus) {
+    SessionCertificate certificate = sessionStatus.getCertificate();
+    if (certificate == null || isBlank(certificate.getValue())) {
+      logger.error("Certificate was not present in the session status response");
+      throw new TechnicalErrorException("Certificate was not present in the session status response");
+    }
+    if (isBlank(sessionStatus.getResult().getDocumentNumber())) {
+      logger.error("Document number was not present in the session status response");
+      throw new TechnicalErrorException("Document number was not present in the session status response");
+    }
   }
 
   private X509Certificate getX509Certificate(SessionCertificate certificate) {

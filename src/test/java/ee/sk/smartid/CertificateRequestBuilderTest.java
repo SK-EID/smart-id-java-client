@@ -1,6 +1,8 @@
 package ee.sk.smartid;
 
 import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
@@ -13,6 +15,7 @@ import org.junit.Test;
 import java.security.cert.X509Certificate;
 
 import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -111,6 +114,47 @@ public class CertificateRequestBuilderTest {
         .fetch();
   }
 
+  @Test(expected = UserRefusedException.class)
+  public void getCertificate_whenUserRefuses_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus();
+    makeCertificateRequest();
+  }
+
+  @Test(expected = UserRefusedException.class)
+  public void getCertificate_withDocumentNumber_whenUserRefuses_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus();
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withDocumentNumber("PNOEE-31111111111")
+        .withCertificateLevel("QUALIFIED")
+        .fetch();
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void getCertificate_withCertificateResponseWithoutCertificate_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond.setCertificate(null);
+    makeCertificateRequest();
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void getCertificate_withCertificateResponseContainingEmptyCertificate_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond.getCertificate().setValue("");
+    makeCertificateRequest();
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void getCertificate_withCertificateResponseWithoutDocumentNumber_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond.getResult().setDocumentNumber(null);
+    makeCertificateRequest();
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void getCertificate_withCertificateResponseWithBlankDocumentNumber_shouldThrowException() throws Exception {
+    connector.sessionStatusToRespond.getResult().setDocumentNumber(" ");
+    makeCertificateRequest();
+  }
+
   private void assertCertificateResponseValid(SmartIdCertificate certificate) {
     assertNotNull(certificate);
     assertNotNull(certificate.getCertificate());
@@ -158,6 +202,15 @@ public class CertificateRequestBuilderTest {
     CertificateChoiceResponse certificateChoiceResponse = new CertificateChoiceResponse();
     certificateChoiceResponse.setSessionId("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     return certificateChoiceResponse;
+  }
+
+  private void makeCertificateRequest() {
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
+        .withCertificateLevel("QUALIFIED")
+        .fetch();
   }
 
 }

@@ -1,6 +1,11 @@
 package ee.sk.smartid;
 
+import ee.sk.smartid.exception.DocumentUnusableException;
 import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.SessionTimeoutException;
+import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UserAccountNotFoundException;
+import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.SessionSignature;
@@ -68,11 +73,12 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     return this;
   }
 
-  public SmartIdSignature sign() {
+  public SmartIdSignature sign() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
     validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = getConnector().sign(documentNumber, request);
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
+    validateResponse(sessionStatus);
     SmartIdSignature signature = createSmartIdSignature(sessionStatus);
     return signature;
   }
@@ -93,6 +99,13 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     }
   }
 
+  private void validateResponse(SessionStatus sessionStatus) {
+    if (sessionStatus.getSignature() == null) {
+      logger.error("Signature was not present in the response");
+      throw new TechnicalErrorException("Signature was not present in the response");
+    }
+  }
+
   private SignatureSessionRequest createSignatureSessionRequest() {
     SignatureSessionRequest request = new SignatureSessionRequest();
     request.setRelyingPartyUUID(getRelyingPartyUUID());
@@ -104,10 +117,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private SmartIdSignature createSmartIdSignature(SessionStatus sessionStatus) {
-    // TODO: Consider to return session status as well, to distinguish between various reasons (timeout, user cancelled)
-    //      for not receiving signature
     SessionSignature sessionSignature = sessionStatus.getSignature();
-    if(sessionSignature == null) { return null; }
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64(sessionSignature.getValueInBase64());
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
@@ -141,7 +151,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     if (isNotBlank(hashInBase64)) {
       return hashInBase64;
     }
-    if(hashToSign != null) {
+    if (hashToSign != null) {
       return hashToSign.getHashInBase64();
     }
     return dataToSign.calculateHashInBase64();

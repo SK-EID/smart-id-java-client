@@ -1,6 +1,10 @@
 package ee.sk.smartid.rest;
 
+import ee.sk.smartid.exception.DocumentUnusableException;
+import ee.sk.smartid.exception.SessionTimeoutException;
 import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SessionStatusRequest;
 import org.slf4j.Logger;
@@ -23,10 +27,12 @@ public class SessionStatusPoller {
     this.connector = connector;
   }
 
-  public SessionStatus fetchFinalSessionStatus(String sessionId) {
+  public SessionStatus fetchFinalSessionStatus(String sessionId) throws UserRefusedException, SessionTimeoutException, DocumentUnusableException {
     logger.debug("Starting to poll session status for session " + sessionId);
     try {
-      return pollForFinalSessionStatus(sessionId);
+      SessionStatus status = pollForFinalSessionStatus(sessionId);
+      validateResult(status);
+      return status;
     } catch (InterruptedException e) {
       logger.error("Failed to poll session status: " + e.getMessage());
       throw new TechnicalErrorException("Failed to poll session status: " + e.getMessage(), e);
@@ -59,6 +65,28 @@ public class SessionStatusPoller {
       request.setResponseSocketOpenTime(responseSocketOpenTimeUnit, responseSocketOpenTimeValue);
     }
     return request;
+  }
+
+  private void validateResult(SessionStatus status) throws UserRefusedException, SessionTimeoutException, DocumentUnusableException {
+    SessionResult result = status.getResult();
+    if (result == null) {
+      logger.error("Result is missing in the session status response");
+      throw new TechnicalErrorException("Result is missing in the session status response");
+    }
+    String endResult = result.getEndResult();
+    if (equalsIgnoreCase(endResult, "USER_REFUSED")) {
+      logger.debug("User has refused");
+      throw new UserRefusedException();
+    } else if (equalsIgnoreCase(endResult, "TIMEOUT")) {
+      logger.debug("Session timeout");
+      throw new SessionTimeoutException();
+    } else if (equalsIgnoreCase(endResult, "DOCUMENT_UNUSABLE")) {
+      logger.debug("Document unusable");
+      throw new DocumentUnusableException();
+    } else if (!equalsIgnoreCase(endResult, "OK")) {
+      logger.warn("Session status end result is '" + endResult + "'");
+      throw new TechnicalErrorException("Session status end result is '" + endResult + "'");
+    }
   }
 
   public void setPollingSleepTime(TimeUnit unit, long timeout) {
