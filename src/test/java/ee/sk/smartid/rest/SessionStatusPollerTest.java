@@ -6,13 +6,7 @@ import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.SessionTimeoutException;
 import ee.sk.smartid.exception.TechnicalErrorException;
 import ee.sk.smartid.exception.UserRefusedException;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -177,6 +171,16 @@ public class SessionStatusPollerTest {
 
     @Override
     public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
+      return null;
+    }
+
+    @Override
+    public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
+      return null;
+    }
+
+    @Override
+    public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
       return null;
     }
   }

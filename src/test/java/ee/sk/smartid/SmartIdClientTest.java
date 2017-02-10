@@ -47,6 +47,9 @@ public class SmartIdClientTest {
     stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithSha512.json", "responses/signatureSessionResponse.json");
     stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
     stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
+    stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/authentication/pno/EE/31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json");
   }
 
   @Test
@@ -220,6 +223,71 @@ public class SmartIdClientTest {
     verify(getRequestedFor(urlEqualTo("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00?timeoutMs=10000")));
   }
 
+  @Test
+  public void authenticateUsingDocumentNumber() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA512);
+    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    assertEquals("4430", hashToSign.calculateVerificationCode());
+    SmartIdAuthenticationResult authenticationResult = client
+        .createAuthentication()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withHash(hashToSign)
+        .withCertificateLevel("ADVANCED")
+        .authenticate();
+  }
+
+  @Test
+  public void authenticateUsingNationalIdentity() throws Exception {
+    NationalIdentity identity = new NationalIdentity("EE", "31111111111");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA512);
+    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    assertEquals("4430", hashToSign.calculateVerificationCode());
+    SmartIdAuthenticationResult authenticationResult = client
+        .createAuthentication()
+        .withNationalIdentity(identity)
+        .withHash(hashToSign)
+        .withCertificateLevel("ADVANCED")
+        .authenticate();
+    assertValidAuthenticationesultValid(authenticationResult);
+  }
+
+  @Test(expected = UserAccountNotFoundException.class)
+  public void authenticate_whenUserAccountNotFound_shouldThrowException() throws Exception {
+    stubNotFoundResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json");
+    makeAuthenticationRequest();
+  }
+
+  @Test(expected = UserRefusedException.class)
+  public void authenticate_whenUserCancels_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenUserHasRefused.json");
+    makeAuthenticationRequest();
+  }
+
+  @Test(expected = SessionTimeoutException.class)
+  public void authenticate_whenTimeout_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenTimeout.json");
+    makeAuthenticationRequest();
+  }
+
+  @Test(expected = DocumentUnusableException.class)
+  public void authenticate_whenDocumentUnusable_shouldThrowException() throws Exception {
+    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenDocumentUnusable.json");
+    makeAuthenticationRequest();
+  }
+
+  @Test
+  public void setPollingSleepTimeoutForAuthentication() throws Exception {
+    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
+    client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
+    long duration = measureAuthenticationDuration();
+    assertTrue("Duration is " + duration, duration > 2000L);
+    assertTrue("Duration is " + duration, duration < 3000L);
+  }
+
   private long measureSigningDuration() {
     long startTime = System.currentTimeMillis();
     SmartIdSignature signature = createSignature();
@@ -239,6 +307,27 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .sign();
     return signature;
+  }
+
+  private long measureAuthenticationDuration() {
+    long startTime = System.currentTimeMillis();
+    SmartIdAuthenticationResult authenticationResult = createAuthentication();
+    long endTime = System.currentTimeMillis();
+    assertNotNull(authenticationResult);
+    return endTime - startTime;
+  }
+
+  private SmartIdAuthenticationResult createAuthentication() {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA512);
+    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    SmartIdAuthenticationResult authenticationResult = client
+        .createAuthentication()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withHash(hashToSign)
+        .withCertificateLevel("ADVANCED")
+        .authenticate();
+    return authenticationResult;
   }
 
   private long measureCertificateChoiceDuration() {
@@ -271,6 +360,16 @@ public class SmartIdClientTest {
         .sign();
   }
 
+  private void makeAuthenticationRequest() {
+    client
+        .createAuthentication()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==")
+        .withHashType(HashType.SHA512)
+        .withCertificateLevel("ADVANCED")
+        .authenticate();
+  }
+
   private void assertCertificateResponseValid(SmartIdCertificate certificate) {
     assertNotNull(certificate);
     assertNotNull(certificate.getCertificate());
@@ -284,6 +383,12 @@ public class SmartIdClientTest {
     assertNotNull(signature);
     assertThat(signature.getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
     assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
+  }
+
+  private void assertValidAuthenticationesultValid(SmartIdAuthenticationResult authenticationResult) {
+    assertNotNull(authenticationResult);
+    assertThat(authenticationResult.getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
+    assertEquals("sha256WithRSAEncryption", authenticationResult.getAlgorithmName());
   }
 
 }

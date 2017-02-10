@@ -6,13 +6,7 @@ import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.UnauthorizedException;
 import ee.sk.smartid.exception.UserAccountNotFoundException;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -209,17 +203,107 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test(expected = UnauthorizedException.class)
-  public void sign_withWorongAuthenticationParams_shouldThrowException() throws Exception {
+  public void sign_withWrongAuthenticationParams_shouldThrowException() throws Exception {
     stubUnauthorizedResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void sign_withWorongRequestParams_shouldThrowException() throws Exception {
+  public void sign_withWrongRequestParams_shouldThrowException() throws Exception {
     stubBadRequestResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
+  }
+
+  @Test
+  public void authenticate_usingNationalIdentityNumber() throws Exception {
+    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+  }
+
+  @Test
+  public void authenticate_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+  }
+
+  @Test
+  public void authenticate_withNonce_usingNationalIdentityNumber() throws Exception {
+    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    request.setNonce("g9rp4kjca3");
+    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+  }
+
+  @Test
+  public void authenticate_withNonce_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    request.setNonce("g9rp4kjca3");
+    AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+  }
+
+  @Test
+  public void authenticate_withDisplayText_usingNationalIdentityNumber() throws Exception {
+    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    request.setDisplayText("Log into internet banking system");
+    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+  }
+
+  @Test
+  public void authenticate_withDisplayText_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    request.setDisplayText("Log into internet banking system");
+    AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+  }
+
+  @Test(expected = UserAccountNotFoundException.class)
+  public void authenticate_whenNationalIdentityNumberNotFound_shoudThrowException() throws Exception {
+    stubNotFoundResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequest.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate(identity, request);
+  }
+
+  @Test(expected = UserAccountNotFoundException.class)
+  public void authenticate_whenDocumentNumberNotFound_shoudThrowException() throws Exception {
+    stubNotFoundResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = UnauthorizedException.class)
+  public void authenticate_withWrongAuthenticationParams_shuldThrowException() throws Exception {
+    stubUnauthorizedResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = InvalidParametersException.class)
+  public void authenticate_withWrongRequestParams_shouldThrowException() throws Exception {
+    stubBadRequestResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate("PNOEE-123456", request);
   }
 
   private void assertSuccessfulResponse(SessionStatus sessionStatus) {
@@ -256,6 +340,16 @@ public class SmartIdRestConnectorTest {
     request.setCertificateLevel("ADVANCED");
     request.setHash("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     request.setHashType("SHA256");
+    return request;
+  }
+
+  private AuthenticationSessionRequest createDummyAuthenticationSessionRequest() {
+    AuthenticationSessionRequest request = new AuthenticationSessionRequest();
+    request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
+    request.setRelyingPartyName("BANK123");
+    request.setCertificateLevel("ADVANCED");
+    request.setHash("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    request.setHashType("SHA512");
     return request;
   }
 }

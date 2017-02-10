@@ -5,13 +5,7 @@ import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.UnauthorizedException;
 import ee.sk.smartid.exception.UserAccountNotFoundException;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +29,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private static final String CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH = "/certificatechoice/pno/{country}/{nationalIdentityNumber}";
   private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
   private static final String SIGNATURE_BY_DOCUMENT_NUMBER_PATH = "/signature/document/{documentNumber}";
+  private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
+  private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
   private String endpointUrl;
 
   public SmartIdRestConnector(String endpointUrl) {
@@ -89,9 +85,29 @@ public class SmartIdRestConnector implements SmartIdConnector {
     try {
       return postRequest(uri, request, SignatureSessionResponse.class);
     } catch (NotFoundException e) {
-      logger.warn("User account was not found for signing with document " + documentNumber);
+      logger.warn("User account not found for signing with document " + documentNumber);
       throw new UserAccountNotFoundException();
     }
+  }
+
+  @Override
+  public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
+    logger.debug("Authenticating for document " + documentNumber);
+    URI uri = UriBuilder
+        .fromUri(endpointUrl)
+        .path(AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH)
+        .build(documentNumber);
+    return postAuthenticationRequest(uri, request);
+  }
+
+  @Override
+  public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
+    logger.debug("Authenticating for " + identity);
+    URI uri = UriBuilder
+        .fromUri(endpointUrl)
+        .path(AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH)
+        .build(identity.getCountryCode(), identity.getNationalIdentityNumber());
+    return postAuthenticationRequest(uri, request);
   }
 
   private Invocation.Builder prepareClient(URI uri) {
@@ -113,16 +129,25 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
   }
 
+  private AuthenticationSessionResponse postAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
+    try {
+      return postRequest(uri, request, AuthenticationSessionResponse.class);
+    } catch (NotFoundException e) {
+      logger.warn("User account not found for URI " + uri + ": " + e.getMessage());
+      throw new UserAccountNotFoundException();
+    }
+  }
+
   private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
     try {
       Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
       T result = prepareClient(uri).post(requestEntity, responseType);
       return result;
     } catch (NotAuthorizedException e) {
-      logger.warn("Certificate request is unauthorized for URI " + uri + ": " + e.getMessage());
+      logger.warn("Request is unauthorized for URI " + uri + ": " + e.getMessage());
       throw new UnauthorizedException();
     } catch (BadRequestException e) {
-      logger.warn("Certificate request is invalid for URI " + uri + ": " + e.getMessage());
+      logger.warn("Request is invalid for URI " + uri + ": " + e.getMessage());
       throw new InvalidParametersException();
     }
   }

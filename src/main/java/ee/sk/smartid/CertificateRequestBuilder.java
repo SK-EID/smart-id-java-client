@@ -16,11 +16,6 @@ import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.security.provider.X509Factory;
-
-import java.io.ByteArrayInputStream;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -90,7 +85,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     validateCertificateResponse(sessionStatus);
     SessionCertificate certificate = sessionStatus.getCertificate();
     SmartIdCertificate smartIdCertificate = new SmartIdCertificate();
-    smartIdCertificate.setCertificate(getX509Certificate(certificate));
+    smartIdCertificate.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     smartIdCertificate.setCertificateLevel(certificate.getCertificateLevel());
     smartIdCertificate.setDocumentNumber(getDocumentNumber(sessionStatus));
     return smartIdCertificate;
@@ -122,23 +117,6 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     if (isBlank(sessionStatus.getResult().getDocumentNumber())) {
       logger.error("Document number was not present in the session status response");
       throw new TechnicalErrorException("Document number was not present in the session status response");
-    }
-  }
-
-  private X509Certificate getX509Certificate(SessionCertificate certificate) {
-    String certificateValue = certificate.getValue();
-    return parseX509Certificate(certificateValue);
-  }
-
-  private X509Certificate parseX509Certificate(String certificateValue) {
-    logger.debug("Parsing X509 certificate");
-    String certificateString = X509Factory.BEGIN_CERT + "\n" + certificateValue + "\n" + X509Factory.END_CERT;
-    try {
-      CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateString.getBytes()));
-    } catch (CertificateException e) {
-      logger.error("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage());
-      throw new TechnicalErrorException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);
     }
   }
 

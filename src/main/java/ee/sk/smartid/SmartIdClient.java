@@ -32,6 +32,14 @@ public class SmartIdClient implements Serializable {
     return builder;
   }
 
+  public AuthenticationRequestBuilder createAuthentication() {
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl);
+    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
+    AuthenticationRequestBuilder builder = new AuthenticationRequestBuilder(connector, sessionStatusPoller);
+    populateBuilderFields(builder);
+    return builder;
+  }
+
   private void populateBuilderFields(SmartIdRequestBuilder builder) {
     builder.withRelyingPartyUUID(relyingPartyUUID);
     builder.withRelyingPartyName(relyingPartyName);

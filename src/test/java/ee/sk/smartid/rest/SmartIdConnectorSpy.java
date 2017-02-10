@@ -1,25 +1,21 @@
 package ee.sk.smartid.rest;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 
 public class SmartIdConnectorSpy implements SmartIdConnector {
 
   public SessionStatus sessionStatusToRespond;
   public CertificateChoiceResponse certificateChoiceToRespond;
   public SignatureSessionResponse signatureSessionResponseToRespond;
+  public AuthenticationSessionResponse authenticationSessionResponseToRespond;
 
   public String sessionIdUsed;
   public NationalIdentity identityUsed;
   public String documentNumberUsed;
   public CertificateRequest certificateRequestUsed;
   public SignatureSessionRequest signatureSessionRequestUsed;
+  public AuthenticationSessionRequest authenticationSessionRequestUsed;
 
   @Override
   public SessionStatus getSessionStatus(SessionStatusRequest request) throws SessionNotFoundException {
@@ -46,5 +42,19 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
     documentNumberUsed = documentNumber;
     signatureSessionRequestUsed = request;
     return signatureSessionResponseToRespond;
+  }
+
+  @Override
+  public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
+    documentNumberUsed = documentNumber;
+    authenticationSessionRequestUsed = request;
+    return authenticationSessionResponseToRespond;
+  }
+
+  @Override
+  public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
+    identityUsed = identity;
+    authenticationSessionRequestUsed = request;
+    return authenticationSessionResponseToRespond;
   }
 }
