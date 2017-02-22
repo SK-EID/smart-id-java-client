@@ -33,14 +33,18 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void signHashInBase64() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+    hashToSign.setHashType(HashType.SHA256);
+
     SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withHashType(HashType.SHA256)
-        .withHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=")
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
+
     assertCorrectSignatureRequestMade();
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
@@ -51,13 +55,15 @@ public class SignatureRequestBuilderTest {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+
     SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
+
     assertCorrectSignatureRequestMade();
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
@@ -67,6 +73,7 @@ public class SignatureRequestBuilderTest {
   public void signWithSignableData() throws Exception {
     SignableData dataToSign = new SignableData("Say 'hello' to my little friend!".getBytes());
     dataToSign.setHashType(HashType.SHA256);
+
     SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -74,6 +81,7 @@ public class SignatureRequestBuilderTest {
         .withSignableData(dataToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
+
     assertCorrectSignatureRequestMade();
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
@@ -82,43 +90,38 @@ public class SignatureRequestBuilderTest {
 
   @Test(expected = InvalidParametersException.class)
   public void signWithoutDocumentNumber_shouldThrowException() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withHashType(HashType.SHA256)
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
+        .withSignableHash(hashToSign)
         .sign();
   }
 
   @Test(expected = InvalidParametersException.class)
   public void signWithoutCertificateLevel_shouldThrowException() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withHashType(HashType.SHA256)
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithoutHash_andWithoutData_shouldThrowException() throws Exception {
+  public void signWithoutSignableHash_andWithoutSignableData_shouldThrowException() throws Exception {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withDocumentNumber("PNOEE-31111111111")
-        .sign();
-  }
-
-  @Test(expected = InvalidParametersException.class)
-  public void signWithoutHashType_shouldThrowException() throws Exception {
-    builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
@@ -127,11 +130,12 @@ public class SignatureRequestBuilderTest {
   public void signWithSignableHash_withoutHashType_shouldThrowException() throws Exception {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
@@ -144,29 +148,35 @@ public class SignatureRequestBuilderTest {
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
 
   @Test(expected = InvalidParametersException.class)
   public void signWithoutRelyingPartyUuid_shouldThrowException() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
     builder
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withHashType(HashType.SHA256)
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
 
   @Test(expected = InvalidParametersException.class)
   public void signWithoutRelyingPartyName_shouldThrowException() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withCertificateLevel("ADVANCED")
-        .withHashType(HashType.SHA256)
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
@@ -221,12 +231,15 @@ public class SignatureRequestBuilderTest {
   }
 
   private void makeSigningRequest() {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+    hashToSign.setHashType(HashType.SHA256);
+
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withHashType(HashType.SHA256)
-        .withHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=")
+        .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }

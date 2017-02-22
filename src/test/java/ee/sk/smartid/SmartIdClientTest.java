@@ -97,11 +97,14 @@ public class SmartIdClientTest {
     X509Certificate x509Certificate = certificateResponse.getCertificate();
     String documentNumber = certificateResponse.getDocumentNumber();
 
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA256);
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber(documentNumber)
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
-        .withHashType(HashType.SHA256)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .sign();
 
@@ -141,7 +144,7 @@ public class SmartIdClientTest {
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber("PNOEE-31111111111")
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .sign();
     assertValidSignatureCreated(signature);
@@ -232,9 +235,10 @@ public class SmartIdClientTest {
     SmartIdAuthenticationResult authenticationResult = client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .authenticate();
+    assertValidAuthenticationesultValid(authenticationResult);
   }
 
   @Test
@@ -248,7 +252,7 @@ public class SmartIdClientTest {
     SmartIdAuthenticationResult authenticationResult = client
         .createAuthentication()
         .withNationalIdentity(identity)
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .authenticate();
     assertValidAuthenticationesultValid(authenticationResult);
@@ -303,7 +307,7 @@ public class SmartIdClientTest {
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber("PNOEE-31111111111")
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .sign();
     return signature;
@@ -324,7 +328,7 @@ public class SmartIdClientTest {
     SmartIdAuthenticationResult authenticationResult = client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
-        .withHash(hashToSign)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .authenticate();
     return authenticationResult;
@@ -351,21 +355,27 @@ public class SmartIdClientTest {
   }
 
   private void makeCreateSignatureRequest() {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA256);
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
     client
         .createSignature()
         .withDocumentNumber("PNOEE-31111111111")
-        .withHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=")
-        .withHashType(HashType.SHA256)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .sign();
   }
 
   private void makeAuthenticationRequest() {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA512);
+    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+
     client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
-        .withHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==")
-        .withHashType(HashType.SHA512)
+        .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .authenticate();
   }
@@ -387,7 +397,10 @@ public class SmartIdClientTest {
 
   private void assertValidAuthenticationesultValid(SmartIdAuthenticationResult authenticationResult) {
     assertNotNull(authenticationResult);
-    assertThat(authenticationResult.getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
+    assertEquals("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==", authenticationResult.getSignedHashInBase64());
+    assertEquals("OK", authenticationResult.getEndResult());
+    assertNotNull(authenticationResult.getCertificate());
+    assertThat(authenticationResult.getSignatureValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
     assertEquals("sha256WithRSAEncryption", authenticationResult.getAlgorithmName());
   }
 

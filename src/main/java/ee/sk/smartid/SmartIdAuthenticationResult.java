@@ -8,30 +8,43 @@ import java.security.cert.X509Certificate;
 
 public class SmartIdAuthenticationResult implements Serializable {
 
-  private String endResult;
-  private String valueInBase64;
-  private String algorithmName;
   private String documentNumber;
+  private String endResult;
+  private String signedHashInBase64;
+  private String signatureValueInBase64;
+  private String algorithmName;
   private X509Certificate certificate;
   private String certificateLevel;
 
-  public byte[] getValue() {
-    if (!Base64.isBase64(valueInBase64)) {
-      throw new TechnicalErrorException("Failed to parse signature value in base64. Probably incorrectly encoded base64 string: '" + valueInBase64);
+  public String getDocumentNumber() {
+    return documentNumber;
+  }
+
+  public void setDocumentNumber(String documentNumber) {
+    this.documentNumber = documentNumber;
+  }
+
+  public byte[] getSignatureValue() {
+    if (!Base64.isBase64(signatureValueInBase64)) {
+      throw new TechnicalErrorException("Failed to parse signature value in base64. Probably incorrectly encoded base64 string: '" + signatureValueInBase64);
     }
-    return Base64.decodeBase64(valueInBase64);
+    return Base64.decodeBase64(signatureValueInBase64);
   }
 
-  public String getEndResult() { return endResult;}
-
-  public void setEndResult(String endResult) { this.endResult = endResult; }
-
-  public String getValueInBase64() {
-    return valueInBase64;
+  public String getEndResult() {
+    return endResult;
   }
 
-  public void setValueInBase64(String valueInBase64) {
-    this.valueInBase64 = valueInBase64;
+  public void setEndResult(String endResult) {
+    this.endResult = endResult;
+  }
+
+  public String getSignatureValueInBase64() {
+    return signatureValueInBase64;
+  }
+
+  public void setSignatureValueInBase64(String signatureValueInBase64) {
+    this.signatureValueInBase64 = signatureValueInBase64;
   }
 
   public String getAlgorithmName() {
@@ -42,19 +55,27 @@ public class SmartIdAuthenticationResult implements Serializable {
     this.algorithmName = algorithmName;
   }
 
-  public String getDocumentNumber() {
-    return documentNumber;
+  public X509Certificate getCertificate() {
+    return certificate;
   }
 
-  public void setDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
+  public void setCertificate(X509Certificate certificate) {
+    this.certificate = certificate;
   }
 
-  public X509Certificate getCertificate() { return certificate; }
+  public String getCertificateLevel() {
+    return certificateLevel;
+  }
 
-  public void setCertificate(X509Certificate certificate) { this.certificate = certificate; }
+  public void setCertificateLevel(String certificateLevel) {
+    this.certificateLevel = certificateLevel;
+  }
 
-  public String getCertificateLevel() { return certificateLevel; }
+  public String getSignedHashInBase64() {
+    return signedHashInBase64;
+  }
 
-  public void setCertificateLevel(String certificateLevel) { this.certificateLevel = certificateLevel; }
+  public void setSignedHashInBase64(String signedHashInBase64) {
+    this.signedHashInBase64 = signedHashInBase64;
+  }
 }

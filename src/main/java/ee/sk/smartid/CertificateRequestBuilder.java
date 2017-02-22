@@ -25,35 +25,10 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(CertificateRequestBuilder.class);
-  private NationalIdentity nationalIdentity;
-  private String certificateLevel;
-  private String documentNumber;
-  private String countryCode;
-  private String nationalIdentityNumber;
 
   public CertificateRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     super(connector, sessionStatusPoller);
     logger.debug("Instantiating certificate request builder");
-  }
-
-  public CertificateRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
-    this.nationalIdentity = nationalIdentity;
-    return this;
-  }
-
-  public CertificateRequestBuilder withCountryCode(String countryCode) {
-    this.countryCode = countryCode;
-    return this;
-  }
-
-  public CertificateRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
-    this.nationalIdentityNumber = nationalIdentityNumber;
-    return this;
-  }
-
-  public CertificateRequestBuilder withCertificateLevel(String certificateLevel) {
-    this.certificateLevel = certificateLevel;
-    return this;
   }
 
   public CertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
@@ -67,7 +42,27 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   public CertificateRequestBuilder withDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
+    super.withDocumentNumber(documentNumber);
+    return this;
+  }
+
+  public CertificateRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
+    super.withNationalIdentity(nationalIdentity);
+    return this;
+  }
+
+  public CertificateRequestBuilder withCountryCode(String countryCode) {
+    super.withCountryCode(countryCode);
+    return this;
+  }
+
+  public CertificateRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
+    super.withNationalIdentityNumber(nationalIdentityNumber);
+    return this;
+  }
+
+  public CertificateRequestBuilder withCertificateLevel(String certificateLevel) {
+    super.withCertificateLevel(certificateLevel);
     return this;
   }
 
@@ -92,8 +87,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private CertificateChoiceResponse fetchCertificateChoiceSessionResponse(CertificateRequest request) {
-    if (isNotEmpty(documentNumber)) {
-      return getConnector().getCertificate(documentNumber, request);
+    if (isNotEmpty(getDocumentNumber())) {
+      return getConnector().getCertificate(getDocumentNumber(), request);
     } else {
       NationalIdentity identity = getNationalIdentity();
       return getConnector().getCertificate(identity, request);
@@ -104,7 +99,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     CertificateRequest request = new CertificateRequest();
     request.setRelyingPartyUUID(getRelyingPartyUUID());
     request.setRelyingPartyName(getRelyingPartyName());
-    request.setCertificateLevel(certificateLevel);
+    request.setCertificateLevel(getCertificateLevel());
     return request;
   }
 
@@ -122,25 +117,14 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(certificateLevel)) {
+    if (isBlank(getCertificateLevel())) {
       logger.error("Certificate level must be set");
       throw new InvalidParametersException("Certificate level must be set");
     }
-    if (isBlank(documentNumber) && !hasNationalIdentity()) {
+    if (isBlank(getDocumentNumber()) && !hasNationalIdentity()) {
       logger.error("Either document number or national identity must be set");
       throw new InvalidParametersException("Either document number or national identity must be set");
     }
-  }
-
-  private boolean hasNationalIdentity() {
-    return nationalIdentity != null || (isNotBlank(countryCode) && isNotBlank(nationalIdentityNumber));
-  }
-
-  private NationalIdentity getNationalIdentity() {
-    if (nationalIdentity != null) {
-      return nationalIdentity;
-    }
-    return new NationalIdentity(countryCode, nationalIdentityNumber);
   }
 
   private String getDocumentNumber(SessionStatus sessionStatus) {

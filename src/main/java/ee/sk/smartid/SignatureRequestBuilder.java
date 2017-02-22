@@ -21,46 +21,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(SignatureRequestBuilder.class);
-  private String documentNumber;
-  private String certificateLevel;
-  private SignableData dataToSign;
-  private SignableHash hashToSign;
-  private HashType hashType;
-  private String hashInBase64;
 
   public SignatureRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     super(connector, sessionStatusPoller);
     logger.debug("Instantiating signature request builder");
-  }
-
-  public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
-    return this;
-  }
-
-  public SignatureRequestBuilder withSignableData(SignableData dataToSign) {
-    this.dataToSign = dataToSign;
-    return this;
-  }
-
-  public SignatureRequestBuilder withHash(SignableHash hashToSign) {
-    this.hashToSign = hashToSign;
-    return this;
-  }
-
-  public SignatureRequestBuilder withHashType(HashType hashType) {
-    this.hashType = hashType;
-    return this;
-  }
-
-  public SignatureRequestBuilder withHashInBase64(String hashInBase64) {
-    this.hashInBase64 = hashInBase64;
-    return this;
-  }
-
-  public SignatureRequestBuilder withCertificateLevel(String certificateLevel) {
-    this.certificateLevel = certificateLevel;
-    return this;
   }
 
   public SignatureRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
@@ -73,10 +37,30 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     return this;
   }
 
+  public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
+    super.withDocumentNumber(documentNumber);
+    return this;
+  }
+
+  public SignatureRequestBuilder withSignableData(SignableData dataToSign) {
+    super.withSignableData(dataToSign);
+    return this;
+  }
+
+  public SignatureRequestBuilder withSignableHash(SignableHash hashToSign) {
+    super.withSignableHash(hashToSign);
+    return this;
+  }
+
+  public SignatureRequestBuilder withCertificateLevel(String certificateLevel) {
+    super.withCertificateLevel(certificateLevel);
+    return this;
+  }
+
   public SmartIdSignature sign() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
     validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
-    SignatureSessionResponse response = getConnector().sign(documentNumber, request);
+    SignatureSessionResponse response = getConnector().sign(getDocumentNumber(), request);
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
     validateResponse(sessionStatus);
     SmartIdSignature signature = createSmartIdSignature(sessionStatus);
@@ -85,11 +69,11 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(documentNumber)) {
+    if (isBlank(getDocumentNumber())) {
       logger.error("Document number must be set");
       throw new InvalidParametersException("Document number must be set");
     }
-    if (isBlank(certificateLevel)) {
+    if (isBlank(getCertificateLevel())) {
       logger.error("Certificate level must be set");
       throw new InvalidParametersException("Certificate level must be set");
     }
@@ -110,7 +94,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     SignatureSessionRequest request = new SignatureSessionRequest();
     request.setRelyingPartyUUID(getRelyingPartyUUID());
     request.setRelyingPartyName(getRelyingPartyName());
-    request.setCertificateLevel(certificateLevel);
+    request.setCertificateLevel(getCertificateLevel());
     request.setHashType(getHashTypeString());
     request.setHash(getHashInBase64());
     return request;
@@ -118,42 +102,11 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   private SmartIdSignature createSmartIdSignature(SessionStatus sessionStatus) {
     SessionSignature sessionSignature = sessionStatus.getSignature();
+
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64(sessionSignature.getValueInBase64());
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
     signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
     return signature;
-  }
-
-  private boolean isHashSet() {
-    return (hashToSign != null && hashToSign.areFieldsFilled()) || (hashType != null && isNotBlank(hashInBase64));
-  }
-
-  private boolean isSignableDataSet() {
-    return dataToSign != null;
-  }
-
-  private String getHashTypeString() {
-    return getHashType().getHashTypeName();
-  }
-
-  private HashType getHashType() {
-    if (hashType != null) {
-      return hashType;
-    }
-    if (hashToSign != null) {
-      return hashToSign.getHashType();
-    }
-    return dataToSign.getHashType();
-  }
-
-  private String getHashInBase64() {
-    if (isNotBlank(hashInBase64)) {
-      return hashInBase64;
-    }
-    if (hashToSign != null) {
-      return hashToSign.getHashInBase64();
-    }
-    return dataToSign.calculateHashInBase64();
   }
 }
