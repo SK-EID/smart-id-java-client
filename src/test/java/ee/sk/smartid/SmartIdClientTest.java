@@ -232,13 +232,13 @@ public class SmartIdClientTest {
     hashToSign.setHashType(HashType.SHA512);
     hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
     assertEquals("4430", hashToSign.calculateVerificationCode());
-    SmartIdAuthenticationResult authenticationResult = client
+    SmartIdAuthenticationResponse authenticationResponse = client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .authenticate();
-    assertValidAuthenticationesultValid(authenticationResult);
+    assertValidAuthenticationesultValid(authenticationResponse);
   }
 
   @Test
@@ -249,13 +249,13 @@ public class SmartIdClientTest {
     hashToSign.setHashType(HashType.SHA512);
     hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
     assertEquals("4430", hashToSign.calculateVerificationCode());
-    SmartIdAuthenticationResult authenticationResult = client
+    SmartIdAuthenticationResponse authenticationResponse = client
         .createAuthentication()
         .withNationalIdentity(identity)
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .authenticate();
-    assertValidAuthenticationesultValid(authenticationResult);
+    assertValidAuthenticationesultValid(authenticationResponse);
   }
 
   @Test(expected = UserAccountNotFoundException.class)
@@ -315,23 +315,23 @@ public class SmartIdClientTest {
 
   private long measureAuthenticationDuration() {
     long startTime = System.currentTimeMillis();
-    SmartIdAuthenticationResult authenticationResult = createAuthentication();
+    SmartIdAuthenticationResponse AuthenticationResponse = createAuthentication();
     long endTime = System.currentTimeMillis();
-    assertNotNull(authenticationResult);
+    assertNotNull(AuthenticationResponse);
     return endTime - startTime;
   }
 
-  private SmartIdAuthenticationResult createAuthentication() {
+  private SmartIdAuthenticationResponse createAuthentication() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA512);
     hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    SmartIdAuthenticationResult authenticationResult = client
+    SmartIdAuthenticationResponse AuthenticationResponse = client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .authenticate();
-    return authenticationResult;
+    return AuthenticationResponse;
   }
 
   private long measureCertificateChoiceDuration() {
@@ -395,13 +395,13 @@ public class SmartIdClientTest {
     assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
   }
 
-  private void assertValidAuthenticationesultValid(SmartIdAuthenticationResult authenticationResult) {
-    assertNotNull(authenticationResult);
-    assertEquals("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==", authenticationResult.getSignedHashInBase64());
-    assertEquals("OK", authenticationResult.getEndResult());
-    assertNotNull(authenticationResult.getCertificate());
-    assertThat(authenticationResult.getSignatureValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
-    assertEquals("sha256WithRSAEncryption", authenticationResult.getAlgorithmName());
+  private void assertValidAuthenticationesultValid(SmartIdAuthenticationResponse authenticationResponse) {
+    assertNotNull(authenticationResponse);
+    assertEquals("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==", authenticationResponse.getSignedHashInBase64());
+    assertEquals("OK", authenticationResponse.getEndResult());
+    assertNotNull(authenticationResponse.getCertificate());
+    assertThat(authenticationResponse.getSignatureValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
+    assertEquals("sha256WithRSAEncryption", authenticationResponse.getAlgorithmName());
   }
 
 }

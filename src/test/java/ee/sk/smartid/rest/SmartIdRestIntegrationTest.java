@@ -2,7 +2,6 @@ package ee.sk.smartid.rest;
 
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.SmartIdAuthenticationResult;
 import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +50,7 @@ public class SmartIdRestIntegrationTest {
   public void authenticate() throws Exception {
     AuthenticationSessionResponse authenticationSessionResponse = fetchAuthenticationSession();
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionId());
-    assertAuthenticationResultCreated(sessionStatus);
+    assertAuthenticationResponseCreated(sessionStatus);
   }
 
   private CertificateChoiceResponse fetchCertificateChoiceSession() {
@@ -131,7 +130,7 @@ public class SmartIdRestIntegrationTest {
     assertThat(sessionStatus.getCertificate().getValue(), not(isEmptyOrNullString()));
   }
 
-  private void assertAuthenticationResultCreated(SessionStatus sessionStatus) {
+  private void assertAuthenticationResponseCreated(SessionStatus sessionStatus) {
     assertNotNull(sessionStatus);
 
     assertThat(sessionStatus.getResult().getEndResult(), not(isEmptyOrNullString()));

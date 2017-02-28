@@ -1,81 +1,27 @@
 package ee.sk.smartid;
 
-import ee.sk.smartid.exception.TechnicalErrorException;
-import org.apache.commons.codec.binary.Base64;
+import java.util.ArrayList;
+import java.util.List;
 
-import java.io.Serializable;
-import java.security.cert.X509Certificate;
+public class SmartIdAuthenticationResult {
 
-public class SmartIdAuthenticationResult implements Serializable {
+  private boolean valid = true;
 
-  private String documentNumber;
-  private String endResult;
-  private String signedHashInBase64;
-  private String signatureValueInBase64;
-  private String algorithmName;
-  private X509Certificate certificate;
-  private String certificateLevel;
+  private List<String> errors = new ArrayList<>();
 
-  public String getDocumentNumber() {
-    return documentNumber;
+  public boolean isValid() {
+    return valid;
   }
 
-  public void setDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
+  public void setValid(boolean valid) {
+    this.valid = valid;
   }
 
-  public byte[] getSignatureValue() {
-    if (!Base64.isBase64(signatureValueInBase64)) {
-      throw new TechnicalErrorException("Failed to parse signature value in base64. Probably incorrectly encoded base64 string: '" + signatureValueInBase64);
-    }
-    return Base64.decodeBase64(signatureValueInBase64);
+  public void addError(String errorMessage) {
+    errors.add(errorMessage);
   }
 
-  public String getEndResult() {
-    return endResult;
-  }
-
-  public void setEndResult(String endResult) {
-    this.endResult = endResult;
-  }
-
-  public String getSignatureValueInBase64() {
-    return signatureValueInBase64;
-  }
-
-  public void setSignatureValueInBase64(String signatureValueInBase64) {
-    this.signatureValueInBase64 = signatureValueInBase64;
-  }
-
-  public String getAlgorithmName() {
-    return algorithmName;
-  }
-
-  public void setAlgorithmName(String algorithmName) {
-    this.algorithmName = algorithmName;
-  }
-
-  public X509Certificate getCertificate() {
-    return certificate;
-  }
-
-  public void setCertificate(X509Certificate certificate) {
-    this.certificate = certificate;
-  }
-
-  public String getCertificateLevel() {
-    return certificateLevel;
-  }
-
-  public void setCertificateLevel(String certificateLevel) {
-    this.certificateLevel = certificateLevel;
-  }
-
-  public String getSignedHashInBase64() {
-    return signedHashInBase64;
-  }
-
-  public void setSignedHashInBase64(String signedHashInBase64) {
-    this.signedHashInBase64 = signedHashInBase64;
+  public List<String> getErrors() {
+    return errors;
   }
 }

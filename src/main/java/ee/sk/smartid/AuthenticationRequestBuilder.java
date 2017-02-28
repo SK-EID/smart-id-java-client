@@ -75,14 +75,14 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     return this;
   }
 
-  public SmartIdAuthenticationResult authenticate() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
+  public SmartIdAuthenticationResponse authenticate() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
     validateParameters();
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
     AuthenticationSessionResponse response = getAuthenticationResponse(request);
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
     validateResponse(sessionStatus);
-    SmartIdAuthenticationResult authenticationResult = createSmartIdAuthenticationResult(sessionStatus);
-    return authenticationResult;
+    SmartIdAuthenticationResponse AuthenticationResponse = createSmartIdAuthenticationResponse(sessionStatus, getCertificateLevel());
+    return AuthenticationResponse;
   }
 
   private AuthenticationSessionResponse getAuthenticationResponse(AuthenticationSessionRequest request) {
@@ -131,19 +131,21 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     return request;
   }
 
-  private SmartIdAuthenticationResult createSmartIdAuthenticationResult(SessionStatus sessionStatus) {
+  private SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus, String expectedCertificateLevel) {
     SessionResult sessionResult = sessionStatus.getResult();
     SessionSignature sessionSignature = sessionStatus.getSignature();
     SessionCertificate certificate = sessionStatus.getCertificate();
 
-    SmartIdAuthenticationResult authenticationResult = new SmartIdAuthenticationResult();
-    authenticationResult.setDocumentNumber(sessionResult.getDocumentNumber());
-    authenticationResult.setEndResult(sessionStatus.getResult().getEndResult());
-    authenticationResult.setSignedHashInBase64(getHashInBase64());
-    authenticationResult.setSignatureValueInBase64(sessionSignature.getValueInBase64());
-    authenticationResult.setAlgorithmName(sessionSignature.getAlgorithm());
-    authenticationResult.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
-    authenticationResult.setCertificateLevel(certificate.getCertificateLevel());
-    return authenticationResult;
+    SmartIdAuthenticationResponse authenticationResponse = new SmartIdAuthenticationResponse();
+    authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
+    authenticationResponse.setEndResult(sessionStatus.getResult().getEndResult());
+    authenticationResponse.setSignedHashInBase64(getHashInBase64());
+    authenticationResponse.setHashType(getHashType());
+    authenticationResponse.setSignatureValueInBase64(sessionSignature.getValueInBase64());
+    authenticationResponse.setAlgorithmName(sessionSignature.getAlgorithm());
+    authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
+    authenticationResponse.setExpectedCertificateLevel(expectedCertificateLevel);
+    authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
+    return authenticationResponse;
   }
 }

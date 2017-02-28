@@ -9,16 +9,17 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 @Ignore("Requires physical interaction with a Smart ID device")
-public class SmartIdClientIntegrationTest {
+public class SmartIdIntegrationTest {
 
   private static final String HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v1/";
   private static final String RELYING_PARTY_UUID = "5e6cea38-6333-4e21-b3fe-df6d02ce44c7";
   private static final String RELYING_PARTY_NAME = "TEST DigiDoc4J";
-  private static final String DOCUMENT_NUMBER = "PNOEE-31111111111-K0DD-NQ";
+  private static final String DOCUMENT_NUMBER = "PNOEE-39004170346-K1DP-Q";
   private static final String DATA_TO_SIGN = "Well hello there!";
-  private static final String CERTIFICATE_LEVEL = "ADVANCED";
+  private static final String CERTIFICATE_LEVEL = "QUALIFIED";
   private SmartIdClient client;
 
   @Before
@@ -61,7 +62,7 @@ public class SmartIdClientIntegrationTest {
     SignableHash hashToSign = SignableHashGenerator.generate(HashType.SHA512);
     assertNotNull(hashToSign.calculateVerificationCode());
 
-    SmartIdAuthenticationResult authenticationResult = client
+    SmartIdAuthenticationResponse authenticationResponse = client
         .createAuthentication()
         .withRelyingPartyUUID(RELYING_PARTY_UUID)
         .withRelyingPartyName(RELYING_PARTY_NAME)
@@ -70,7 +71,11 @@ public class SmartIdClientIntegrationTest {
         .withCertificateLevel(CERTIFICATE_LEVEL)
         .authenticate();
 
-    assertAuthenticationResultCreated(authenticationResult, hashToSign.getHashInBase64());
+    assertAuthenticationResponseCreated(authenticationResponse, hashToSign.getHashInBase64());
+
+    AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
+    SmartIdAuthenticationResult authenticationResult = authenticationResponseValidator.validate(authenticationResponse);
+    asserAuthenticationResultValid(authenticationResult);
   }
 
   private void assertSignatureCreated(SmartIdSignature signature) {
@@ -84,12 +89,16 @@ public class SmartIdClientIntegrationTest {
     assertNotNull(certificateResponse.getCertificate());
   }
 
-  private void assertAuthenticationResultCreated(SmartIdAuthenticationResult authenticationResult, String expectedHashToSignInBase64) {
-    assertNotNull(authenticationResult);
-    assertThat(authenticationResult.getEndResult(), not(isEmptyOrNullString()));
-    assertEquals(expectedHashToSignInBase64, authenticationResult.getSignedHashInBase64());
-    assertThat(authenticationResult.getSignatureValueInBase64(), not(isEmptyOrNullString()));
-    assertNotNull(authenticationResult.getCertificate());
-    assertThat(authenticationResult.getCertificateLevel(), not(isEmptyOrNullString()));
+  private void assertAuthenticationResponseCreated(SmartIdAuthenticationResponse authenticationResponse, String expectedHashToSignInBase64) {
+    assertNotNull(authenticationResponse);
+    assertThat(authenticationResponse.getEndResult(), not(isEmptyOrNullString()));
+    assertEquals(expectedHashToSignInBase64, authenticationResponse.getSignedHashInBase64());
+    assertThat(authenticationResponse.getSignatureValueInBase64(), not(isEmptyOrNullString()));
+    assertNotNull(authenticationResponse.getCertificate());
+    assertThat(authenticationResponse.getCertificateLevel(), not(isEmptyOrNullString()));
+  }
+
+  private void asserAuthenticationResultValid(SmartIdAuthenticationResult authenticationResult) {
+    assertTrue(authenticationResult.isValid());
   }
 }
