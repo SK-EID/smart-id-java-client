@@ -37,51 +37,33 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test
-  public void authenticateWithDocumentNumberAndGeneratedSignableHash() throws Exception {
-    SignableHash hashToSign = SignableHashGenerator.generate(HashType.SHA512);
+  public void authenticateWithDocumentNumberAndGeneratedHash() throws Exception {
+    AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
 
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
 
-    assertCorrectAuthenticationRequestMadeWithDocumentNumber(hashToSign.getHashInBase64());
+    assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64());
     assertCorrectSessionRequestMade();
-    assertAuthenticationResponseCorrect(authenticationResponse, hashToSign.getHashInBase64());
+    assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
   }
 
   @Test
-  public void authenticateWithSignableHash() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    hashToSign.setHashType(HashType.SHA512);
+  public void authenticateWithHash() throws Exception {
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withSignableHash(hashToSign)
-        .withDocumentNumber("PNOEE-31111111111")
-        .authenticate();
-
-    assertCorrectAuthenticationRequestMadeWithDocumentNumber("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    assertCorrectSessionRequestMade();
-    assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-  }
-
-  @Test
-  public void authenticateWithSignableData() throws Exception {
-    SignableData dataToSign = new SignableData("test".getBytes());
-    dataToSign.setHashType(HashType.SHA512);
-
-    SmartIdAuthenticationResponse authenticationResponse = builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
-        .withSignableData(dataToSign)
+        .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
 
@@ -92,14 +74,15 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticateUsingNationalIdentityNumberAndCountryCode() throws Exception {
-    SignableData dataToSign = new SignableData("test".getBytes());
-    dataToSign.setHashType(HashType.SHA512);
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withSignableData(dataToSign)
+        .withAuthenticationHash(authenticationHash)
         .withNationalIdentityNumber("31111111111")
         .withCountryCode("EE")
         .authenticate();
@@ -111,16 +94,16 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticateUsingNationalIdentity() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    hashToSign.setHashType(HashType.SHA512);
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     NationalIdentity identity = new NationalIdentity("EE", "31111111111");
 
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .withNationalIdentity(identity)
         .authenticate();
@@ -132,34 +115,34 @@ public class AuthenticationRequestBuilderTest {
 
   @Test(expected = InvalidParametersException.class)
   public void authenticateWithoutDocumentNumberNorNationalIdentity_shouldThrowException() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    hashToSign.setHashType(HashType.SHA512);
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .authenticate();
   }
 
   @Test(expected = InvalidParametersException.class)
   public void authenticateWithoutCertificateLevel_shouldThrowException() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    hashToSign.setHashType(HashType.SHA512);
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutSignableHash_andWithoutSignableData_shouldThrowException() throws Exception {
+  public void authenticateWithoutHash_andWithoutSignableData_shouldThrowException() throws Exception {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -169,42 +152,42 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithSignableHash_withoutHashType_shouldThrowException() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+  public void authenticateWithHash_withoutHashType_shouldThrowException() throws Exception {
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
 
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithSignableHash_withoutHash_shouldThrowException() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA512);
+  public void authenticateWithHash_withoutHash_shouldThrowException() throws Exception {
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashType(HashType.SHA512);
 
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("ADVANCED")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
   }
 
   @Test(expected = InvalidParametersException.class)
   public void authenticateWithoutRelyingPartyUuid_shouldThrowException() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    hashToSign.setHashType(HashType.SHA512);
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     builder
         .withRelyingPartyName("relying-party-name")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
@@ -212,13 +195,13 @@ public class AuthenticationRequestBuilderTest {
 
   @Test(expected = InvalidParametersException.class)
   public void authenticateWithoutRelyingPartyName_shouldThrowException() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    hashToSign.setHashType(HashType.SHA512);
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     builder
         .withRelyingPartyUUID("relying-party-uuid")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
@@ -306,14 +289,14 @@ public class AuthenticationRequestBuilderTest {
   }
 
   private void makeAuthenticationRequest() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
-    hashToSign.setHashType(HashType.SHA256);
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();

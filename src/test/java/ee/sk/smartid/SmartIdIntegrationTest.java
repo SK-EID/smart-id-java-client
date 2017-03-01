@@ -59,19 +59,19 @@ public class SmartIdIntegrationTest {
 
   @Test
   public void authenticate() throws Exception {
-    SignableHash hashToSign = SignableHashGenerator.generate(HashType.SHA512);
-    assertNotNull(hashToSign.calculateVerificationCode());
+    AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
+    assertNotNull(authenticationHash.calculateVerificationCode());
 
     SmartIdAuthenticationResponse authenticationResponse = client
         .createAuthentication()
         .withRelyingPartyUUID(RELYING_PARTY_UUID)
         .withRelyingPartyName(RELYING_PARTY_NAME)
         .withDocumentNumber(DOCUMENT_NUMBER)
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel(CERTIFICATE_LEVEL)
         .authenticate();
 
-    assertAuthenticationResponseCreated(authenticationResponse, hashToSign.getHashInBase64());
+    assertAuthenticationResponseCreated(authenticationResponse, authenticationHash.getHashInBase64());
 
     AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
     SmartIdAuthenticationResult authenticationResult = authenticationResponseValidator.validate(authenticationResponse);

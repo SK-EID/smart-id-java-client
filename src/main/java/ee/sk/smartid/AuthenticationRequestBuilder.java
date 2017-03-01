@@ -60,13 +60,8 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     return this;
   }
 
-  public AuthenticationRequestBuilder withSignableData(SignableData dataToSign) {
-    super.withSignableData(dataToSign);
-    return this;
-  }
-
-  public AuthenticationRequestBuilder withSignableHash(SignableHash hashToSign) {
-    super.withSignableHash(hashToSign);
+  public AuthenticationRequestBuilder withAuthenticationHash(AuthenticationHash authenticationHash) {
+    super.withSignableHash(authenticationHash);
     return this;
   }
 

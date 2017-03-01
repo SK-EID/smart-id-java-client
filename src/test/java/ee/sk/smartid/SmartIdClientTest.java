@@ -94,7 +94,6 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .fetch();
 
-    X509Certificate x509Certificate = certificateResponse.getCertificate();
     String documentNumber = certificateResponse.getDocumentNumber();
 
     SignableHash hashToSign = new SignableHash();
@@ -108,9 +107,6 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .sign();
 
-    byte[] signatureValue = signature.getValue();
-    String algorithmName = signature.getAlgorithmName(); // Returns "sha256WithRSAEncryption"
-
     assertValidSignatureCreated(signature);
   }
 
@@ -122,6 +118,7 @@ public class SmartIdClientTest {
         .withNationalIdentity(identity)
         .withCertificateLevel("ADVANCED")
         .fetch();
+
     assertCertificateResponseValid(certificate);
   }
 
@@ -132,6 +129,7 @@ public class SmartIdClientTest {
         .withDocumentNumber("PNOEE-31111111111")
         .withCertificateLevel("ADVANCED")
         .fetch();
+
     assertCertificateResponseValid(certificate);
   }
 
@@ -147,6 +145,7 @@ public class SmartIdClientTest {
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .sign();
+
     assertValidSignatureCreated(signature);
   }
 
@@ -228,34 +227,40 @@ public class SmartIdClientTest {
 
   @Test
   public void authenticateUsingDocumentNumber() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA512);
-    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    assertEquals("4430", hashToSign.calculateVerificationCode());
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==\"");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    assertEquals("4430", authenticationHash.calculateVerificationCode());
+
     SmartIdAuthenticationResponse authenticationResponse = client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .authenticate();
-    assertValidAuthenticationesultValid(authenticationResponse);
+
+    assertAuthenticationResponseValid(authenticationResponse);
   }
 
   @Test
   public void authenticateUsingNationalIdentity() throws Exception {
     NationalIdentity identity = new NationalIdentity("EE", "31111111111");
 
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA512);
-    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    assertEquals("4430", hashToSign.calculateVerificationCode());
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    assertEquals("4430", authenticationHash.calculateVerificationCode());
+
     SmartIdAuthenticationResponse authenticationResponse = client
         .createAuthentication()
         .withNationalIdentity(identity)
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .authenticate();
-    assertValidAuthenticationesultValid(authenticationResponse);
+
+    assertAuthenticationResponseValid(authenticationResponse);
   }
 
   @Test(expected = UserAccountNotFoundException.class)
@@ -322,13 +327,14 @@ public class SmartIdClientTest {
   }
 
   private SmartIdAuthenticationResponse createAuthentication() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA512);
-    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
+
     SmartIdAuthenticationResponse AuthenticationResponse = client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .authenticate();
     return AuthenticationResponse;
@@ -368,14 +374,14 @@ public class SmartIdClientTest {
   }
 
   private void makeAuthenticationRequest() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA512);
-    hashToSign.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
 
     client
         .createAuthentication()
         .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
+        .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .authenticate();
   }
@@ -395,7 +401,7 @@ public class SmartIdClientTest {
     assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
   }
 
-  private void assertValidAuthenticationesultValid(SmartIdAuthenticationResponse authenticationResponse) {
+  private void assertAuthenticationResponseValid(SmartIdAuthenticationResponse authenticationResponse) {
     assertNotNull(authenticationResponse);
     assertEquals("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==", authenticationResponse.getSignedHashInBase64());
     assertEquals("OK", authenticationResponse.getEndResult());
