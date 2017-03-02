@@ -17,11 +17,30 @@ public class SmartIdAuthenticationResult {
     this.valid = valid;
   }
 
-  public void addError(String errorMessage) {
-    errors.add(errorMessage);
+  public void addError(Error error) {
+    errors.add(error.getMessage());
   }
 
   public List<String> getErrors() {
     return errors;
+  }
+
+  public enum Error {
+
+    INVALID_END_RESULT("Response end result verification failed."),
+    SIGNATURE_VERIFICATION_FAILURE("Signature verification failed."),
+    CERTIFICATE_EXPIRED("Signer's certificate expired."),
+    CERTIFICATE_LEVEL_MISMATCH("Signer's certificate level does not match with the requested level.");
+
+    private String message;
+
+    Error(String message) {
+      this.message = message;
+    }
+
+    public String getMessage() {
+      return message;
+    }
+
   }
 }

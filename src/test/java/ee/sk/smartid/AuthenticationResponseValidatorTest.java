@@ -1,10 +1,20 @@
 package ee.sk.smartid;
 
-import org.junit.Ignore;
+import ee.sk.smartid.exception.TechnicalErrorException;
+
+import org.apache.commons.lang3.time.DateUtils;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Date;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 public class AuthenticationResponseValidatorTest {
   
@@ -16,52 +26,73 @@ public class AuthenticationResponseValidatorTest {
 
   private static final String HASH_TO_SIGN_IN_BASE64 = "a0OCk3OGh/x9LXQ1JyCFWg0Thp5qe/Xh2oUxQduNwJGh5fBC/7DrzqfBwe9wiA/BrYC3N3Dn4Je6MjRNtMJphQ==";
 
-  private AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
+  private AuthenticationResponseValidator validator;
+
+  @Before
+  public void setUp() {
+    validator = new AuthenticationResponseValidator();
+  }
 
   @Test
   public void validationReturnsValidAuthenticationResult() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
-    SmartIdAuthenticationResult smartIdAuthenticationResult = validator.validate(response);
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
-    assertTrue(smartIdAuthenticationResult.isValid());
-    assertTrue(smartIdAuthenticationResult.getErrors().isEmpty());
+    assertTrue(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().isEmpty());
+  }
+
+  @Test
+  public void validationReturnsValidAuthenticationResult_whenEndResultLowerCase() {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setEndResult("ok");
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+
+    assertTrue(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().isEmpty());
   }
 
   @Test
   public void validationReturnsInvalidAuthenticationResult_whenEndResultNotOk() {
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidEndResult();
-    SmartIdAuthenticationResult smartIdAuthenticationResult = validator.validate(response);
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
-    assertFalse(smartIdAuthenticationResult.isValid());
-    assertTrue(smartIdAuthenticationResult.getErrors().contains("Response end result verification failed"));
+    assertFalse(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.INVALID_END_RESULT.getMessage()));
   }
 
   @Test
   public void validationReturnsInvalidAuthenticationResult_whenSignatureVerificationFails() {
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidSignature();
-    SmartIdAuthenticationResult smartIdAuthenticationResult = validator.validate(response);
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
-    assertFalse(smartIdAuthenticationResult.isValid());
-    assertTrue(smartIdAuthenticationResult.getErrors().contains("Signature verification failed"));
+    assertFalse(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE.getMessage()));
   }
 
-  @Ignore("TODO")
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenSignersCertExpired() {
-    SmartIdAuthenticationResponse response = new SmartIdAuthenticationResponse();
-    SmartIdAuthenticationResult smartIdAuthenticationResult = validator.validate(response);
+  public void validationReturnsInvalidAuthenticationResult_whenSignersCertExpired() throws CertificateException, IOException {
+    SmartIdAuthenticationResponse response = createValidationResponseWithExpiredCertificate();
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
-    assertFalse(smartIdAuthenticationResult.isValid());
-    assertTrue(smartIdAuthenticationResult.getErrors().contains("Signer's certificate expired"));
+    assertFalse(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_EXPIRED.getMessage()));
   }
 
   @Test
   public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelMismatches() {
     SmartIdAuthenticationResponse response = createValidationResponseWithMismatchingCertificateLevel();
-    SmartIdAuthenticationResult smartIdAuthenticationResult = validator.validate(response);
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
-    assertFalse(smartIdAuthenticationResult.isValid());
-    assertTrue(smartIdAuthenticationResult.getErrors().contains("Signer's certificate level mismatch"));
+    assertFalse(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH.getMessage()));
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void whenCertificateIsNull_ThenThrowException() {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setCertificate(null);
+    validator.validate(response);
   }
 
   private SmartIdAuthenticationResponse createValidValidationResponse() {
@@ -74,6 +105,14 @@ public class AuthenticationResponseValidatorTest {
 
   private SmartIdAuthenticationResponse createValidationResponseWithInvalidSignature() {
     return createValidationResponse("OK", INVALID_SIGNATURE_IN_BASE64, "QUALIFIED");
+  }
+
+  private SmartIdAuthenticationResponse createValidationResponseWithExpiredCertificate() {
+    SmartIdAuthenticationResponse response = createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED");
+    X509Certificate certificateSpy = spy(response.getCertificate());
+    when(certificateSpy.getNotAfter()).thenReturn(DateUtils.addHours(new Date(), -1));
+    response.setCertificate(certificateSpy);
+    return response;
   }
 
   private SmartIdAuthenticationResponse createValidationResponseWithMismatchingCertificateLevel() {

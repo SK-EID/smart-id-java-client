@@ -100,5 +100,6 @@ public class SmartIdIntegrationTest {
 
   private void asserAuthenticationResultValid(SmartIdAuthenticationResult authenticationResult) {
     assertTrue(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().isEmpty());
   }
 }
