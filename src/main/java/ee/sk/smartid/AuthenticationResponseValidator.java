@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
@@ -82,7 +80,7 @@ public class AuthenticationResponseValidator {
   }
 
   private void initializeTrustedCACertificatesFromResources() throws IOException, CertificateException {
-    URL certificatesLocation = Thread.currentThread().getContextClassLoader().getResource("trusted_certificates");
+    URL certificatesLocation = AuthenticationResponseValidator.class.getClassLoader().getResource("trusted_certificates");
     File certificatesFolder = new File(certificatesLocation.getPath());
     for (File certificateFile : certificatesFolder.listFiles()) {
       addTrustedCACertificate(certificateFile);
