@@ -30,6 +30,7 @@ public class SmartIdAuthenticationResult {
     INVALID_END_RESULT("Response end result verification failed."),
     SIGNATURE_VERIFICATION_FAILURE("Signature verification failed."),
     CERTIFICATE_EXPIRED("Signer's certificate expired."),
+    CERTIFICATE_NOT_TRUSTED("Signer's certificate is not trusted."),
     CERTIFICATE_LEVEL_MISMATCH("Signer's certificate level does not match with the requested level.");
 
     private String message;

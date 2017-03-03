@@ -76,7 +76,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     AuthenticationSessionResponse response = getAuthenticationResponse(request);
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
     validateResponse(sessionStatus);
-    SmartIdAuthenticationResponse AuthenticationResponse = createSmartIdAuthenticationResponse(sessionStatus, getCertificateLevel());
+    SmartIdAuthenticationResponse AuthenticationResponse = createSmartIdAuthenticationResponse(sessionStatus);
     return AuthenticationResponse;
   }
 
@@ -126,20 +126,20 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     return request;
   }
 
-  private SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus, String expectedCertificateLevel) {
+  private SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus) {
     SessionResult sessionResult = sessionStatus.getResult();
     SessionSignature sessionSignature = sessionStatus.getSignature();
     SessionCertificate certificate = sessionStatus.getCertificate();
 
     SmartIdAuthenticationResponse authenticationResponse = new SmartIdAuthenticationResponse();
     authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-    authenticationResponse.setEndResult(sessionStatus.getResult().getEndResult());
+    authenticationResponse.setEndResult(sessionResult.getEndResult());
     authenticationResponse.setSignedHashInBase64(getHashInBase64());
     authenticationResponse.setHashType(getHashType());
     authenticationResponse.setSignatureValueInBase64(sessionSignature.getValueInBase64());
     authenticationResponse.setAlgorithmName(sessionSignature.getAlgorithm());
     authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
-    authenticationResponse.setExpectedCertificateLevel(expectedCertificateLevel);
+    authenticationResponse.setRequestedCertificateLevel(getCertificateLevel());
     authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
     return authenticationResponse;
   }

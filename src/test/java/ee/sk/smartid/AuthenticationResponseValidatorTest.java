@@ -2,10 +2,12 @@ package ee.sk.smartid;
 
 import ee.sk.smartid.exception.TechnicalErrorException;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -80,6 +82,19 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
+  public void validationReturnsInvalidAuthenticationResult_whenSignersCertNotTrusted() throws CertificateException, IOException {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+
+    AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
+    validator.clearTrustedCACertificates();
+    validator.addTrustedCACertificate(Base64.decodeBase64(CERTIFICATE));
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+
+    assertFalse(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_NOT_TRUSTED.getMessage()));
+  }
+
+  @Test
   public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelMismatches() {
     SmartIdAuthenticationResponse response = createValidationResponseWithMismatchingCertificateLevel();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
@@ -92,6 +107,27 @@ public class AuthenticationResponseValidatorTest {
   public void whenCertificateIsNull_ThenThrowException() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setCertificate(null);
+    validator.validate(response);
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void whenSignatureIsEmpty_ThenThrowException() {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setSignatureValueInBase64("");
+    validator.validate(response);
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void whenHashTypeIsNull_ThenThrowException() {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setHashType(null);
+    validator.validate(response);
+  }
+
+  @Test(expected = TechnicalErrorException.class)
+  public void whenRequestedCertificateLevelIsNullEmpty_ThenThrowException() {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setRequestedCertificateLevel("");
     validator.validate(response);
   }
 
@@ -126,7 +162,7 @@ public class AuthenticationResponseValidatorTest {
     authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(CERTIFICATE));
     authenticationResponse.setSignedHashInBase64(HASH_TO_SIGN_IN_BASE64);
     authenticationResponse.setHashType(HashType.SHA512);
-    authenticationResponse.setExpectedCertificateLevel("QUALIFIED");
+    authenticationResponse.setRequestedCertificateLevel("QUALIFIED");
     authenticationResponse.setCertificateLevel(certificateLevel);
     return authenticationResponse;
   }
