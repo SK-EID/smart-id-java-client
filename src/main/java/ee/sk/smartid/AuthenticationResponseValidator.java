@@ -65,14 +65,22 @@ public class AuthenticationResponseValidator {
     return authenticationResult;
   }
 
-  public void addTrustedCACertificate(File certificateFile) throws IOException, CertificateException {
-    addTrustedCACertificate(Files.readAllBytes(certificateFile.toPath()));
+  public List<X509Certificate> getTrustedCACertificates() {
+    return trustedCACertificates;
   }
 
-  public void addTrustedCACertificate(byte [] certificateBytes) throws CertificateException {
+  public void addTrustedCACertificate(X509Certificate certificate) {
+    trustedCACertificates.add(certificate);
+  }
+
+  public void addTrustedCACertificate(byte[] certificateBytes) throws CertificateException {
     CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
     X509Certificate caCertificate = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
-    trustedCACertificates.add(caCertificate);
+    addTrustedCACertificate(caCertificate);
+  }
+
+  public void addTrustedCACertificate(File certificateFile) throws IOException, CertificateException {
+    addTrustedCACertificate(Files.readAllBytes(certificateFile.toPath()));
   }
 
   public void clearTrustedCACertificates() {
@@ -80,7 +88,7 @@ public class AuthenticationResponseValidator {
   }
 
   private void initializeTrustedCACertificatesFromResources() throws IOException, CertificateException {
-    URL certificatesLocation = AuthenticationResponseValidator.class.getClassLoader().getResource("trusted_certificates");
+    URL certificatesLocation = AuthenticationResponseValidator.class.getResource("/trusted_certificates");
     File certificatesFolder = new File(certificatesLocation.getPath());
     for (File certificateFile : certificatesFolder.listFiles()) {
       addTrustedCACertificate(certificateFile);
@@ -130,14 +138,14 @@ public class AuthenticationResponseValidator {
   }
 
   private boolean isCertificateTrusted(X509Certificate certificate) {
-    for (X509Certificate trustedCertificate : trustedCACertificates) {
+    for (X509Certificate trustedCACertificate : trustedCACertificates) {
       try {
-        certificate.verify(trustedCertificate.getPublicKey());
+        certificate.verify(trustedCACertificate.getPublicKey());
         return true;
       } catch (SignatureException e) {
         continue;
       } catch (GeneralSecurityException e) {
-        logger.warn("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCertificate.getSubjectDN(), e);
+        logger.warn("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCACertificate.getSubjectDN(), e);
         continue;
       }
     }

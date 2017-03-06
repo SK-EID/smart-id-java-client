@@ -1,17 +1,21 @@
 package ee.sk.smartid;
 
 import ee.sk.smartid.exception.TechnicalErrorException;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
+import sun.security.provider.X509Factory;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.nio.file.Files;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Date;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.spy;
@@ -72,7 +76,7 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenSignersCertExpired() throws CertificateException, IOException {
+  public void validationReturnsInvalidAuthenticationResult_whenSignersCertExpired() throws Exception {
     SmartIdAuthenticationResponse response = createValidationResponseWithExpiredCertificate();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
@@ -81,7 +85,7 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenSignersCertNotTrusted() throws CertificateException, IOException {
+  public void validationReturnsInvalidAuthenticationResult_whenSignersCertNotTrusted() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
 
     AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
@@ -100,6 +104,39 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH.getMessage()));
+  }
+
+  @Test
+  public void testTrustedCACertificateLoadingInPEMFormat() throws Exception {
+    String caCertificateInPem = X509Factory.BEGIN_CERT + "\n" + CERTIFICATE + "\n" + X509Factory.END_CERT;
+
+    AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
+    validator.clearTrustedCACertificates();
+    validator.addTrustedCACertificate(caCertificateInPem.getBytes());
+
+    assertEquals(getX509Certificate(caCertificateInPem.getBytes()).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
+  }
+
+  @Test
+  public void testTrustedCACertificateLoadingInDERFormat() throws Exception {
+    byte[] caCertificateInDER = Base64.decodeBase64(CERTIFICATE);
+
+    AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
+    validator.clearTrustedCACertificates();
+    validator.addTrustedCACertificate(caCertificateInDER);
+
+    assertEquals(getX509Certificate(caCertificateInDER).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
+  }
+
+  @Test
+  public void testTrustedCACertificateLoadingFromFile() throws Exception {
+    File caCertificateFile = new File(AuthenticationResponseValidatorTest.class.getResource("/trusted_certificates/TEST_of_EID-SK_2016.pem.crt").getFile());
+
+    AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
+    validator.clearTrustedCACertificates();
+    validator.addTrustedCACertificate(caCertificateFile);
+
+    assertEquals(getX509Certificate(Files.readAllBytes(caCertificateFile.toPath())).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
   }
 
   @Test(expected = TechnicalErrorException.class)
@@ -142,16 +179,16 @@ public class AuthenticationResponseValidatorTest {
     return createValidationResponse("OK", INVALID_SIGNATURE_IN_BASE64, "QUALIFIED");
   }
 
+  private SmartIdAuthenticationResponse createValidationResponseWithMismatchingCertificateLevel() {
+    return createValidationResponse("OK", INVALID_SIGNATURE_IN_BASE64, "ADVANCED");
+  }
+
   private SmartIdAuthenticationResponse createValidationResponseWithExpiredCertificate() {
     SmartIdAuthenticationResponse response = createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED");
     X509Certificate certificateSpy = spy(response.getCertificate());
     when(certificateSpy.getNotAfter()).thenReturn(DateUtils.addHours(new Date(), -1));
     response.setCertificate(certificateSpy);
     return response;
-  }
-
-  private SmartIdAuthenticationResponse createValidationResponseWithMismatchingCertificateLevel() {
-    return createValidationResponse("OK", INVALID_SIGNATURE_IN_BASE64, "ADVANCED");
   }
 
   private SmartIdAuthenticationResponse createValidationResponse(String endResult, String signatureInBase64, String certificateLevel) {
@@ -164,5 +201,10 @@ public class AuthenticationResponseValidatorTest {
     authenticationResponse.setRequestedCertificateLevel("QUALIFIED");
     authenticationResponse.setCertificateLevel(certificateLevel);
     return authenticationResponse;
+  }
+
+  private X509Certificate getX509Certificate(byte[] certificateBytes) throws CertificateException {
+    CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+    return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
   }
 }
