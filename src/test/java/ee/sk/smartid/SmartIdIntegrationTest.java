@@ -17,7 +17,7 @@ public class SmartIdIntegrationTest {
   private static final String HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v1/";
   private static final String RELYING_PARTY_UUID = "5e6cea38-6333-4e21-b3fe-df6d02ce44c7";
   private static final String RELYING_PARTY_NAME = "TEST DigiDoc4J";
-  private static final String DOCUMENT_NUMBER = "PNOEE-31111111111-K0DD-NQ";
+  private static final String DOCUMENT_NUMBER = "PNOEE-39004170346-K1DP-Q";
   private static final String DATA_TO_SIGN = "Well hello there!";
   private static final String CERTIFICATE_LEVEL = "QUALIFIED";
   private SmartIdClient client;
@@ -95,7 +95,7 @@ public class SmartIdIntegrationTest {
     assertEquals(expectedHashToSignInBase64, authenticationResponse.getSignedHashInBase64());
     assertThat(authenticationResponse.getSignatureValueInBase64(), not(isEmptyOrNullString()));
     assertNotNull(authenticationResponse.getCertificate());
-    assertThat(authenticationResponse.getCertificateLevel(), not(isEmptyOrNullString()));
+    assertNotNull(authenticationResponse.getCertificateLevel());
   }
 
   private void asserAuthenticationResultValid(SmartIdAuthenticationResult authenticationResult) {

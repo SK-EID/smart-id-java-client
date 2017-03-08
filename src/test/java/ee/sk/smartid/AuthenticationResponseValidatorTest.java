@@ -98,8 +98,17 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelMismatches() {
-    SmartIdAuthenticationResponse response = createValidationResponseWithMismatchingCertificateLevel();
+  public void validationReturnsValidAuthenticationResult_whenCertificateLevelHigherThanRequested() {
+    SmartIdAuthenticationResponse response = createValidationResponseWithHigherCertificateLevelThanRequested();
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+
+    assertTrue(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().isEmpty());
+  }
+
+  @Test
+  public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelLowerThanRequested() {
+    SmartIdAuthenticationResponse response = createValidationResponseWithLowerCertificateLevelThanRequested();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertFalse(authenticationResult.isValid());
@@ -168,37 +177,41 @@ public class AuthenticationResponseValidatorTest {
   }
 
   private SmartIdAuthenticationResponse createValidValidationResponse() {
-    return createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED");
+    return createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED", "QUALIFIED");
   }
 
   private SmartIdAuthenticationResponse createValidationResponseWithInvalidEndResult() {
-    return createValidationResponse("NOT OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED");
+    return createValidationResponse("NOT OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED", "QUALIFIED");
   }
 
   private SmartIdAuthenticationResponse createValidationResponseWithInvalidSignature() {
-    return createValidationResponse("OK", INVALID_SIGNATURE_IN_BASE64, "QUALIFIED");
+    return createValidationResponse("OK", INVALID_SIGNATURE_IN_BASE64, "QUALIFIED", "QUALIFIED");
   }
 
-  private SmartIdAuthenticationResponse createValidationResponseWithMismatchingCertificateLevel() {
-    return createValidationResponse("OK", INVALID_SIGNATURE_IN_BASE64, "ADVANCED");
+  private SmartIdAuthenticationResponse createValidationResponseWithLowerCertificateLevelThanRequested() {
+    return createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "ADVANCED", "QUALIFIED");
+  }
+
+  private SmartIdAuthenticationResponse createValidationResponseWithHigherCertificateLevelThanRequested() {
+    return createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED", "ADVANCED");
   }
 
   private SmartIdAuthenticationResponse createValidationResponseWithExpiredCertificate() {
-    SmartIdAuthenticationResponse response = createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED");
+    SmartIdAuthenticationResponse response = createValidationResponse("OK", VALID_SIGNATURE_IN_BASE64, "QUALIFIED", "QUALIFIED");
     X509Certificate certificateSpy = spy(response.getCertificate());
     when(certificateSpy.getNotAfter()).thenReturn(DateUtils.addHours(new Date(), -1));
     response.setCertificate(certificateSpy);
     return response;
   }
 
-  private SmartIdAuthenticationResponse createValidationResponse(String endResult, String signatureInBase64, String certificateLevel) {
+  private SmartIdAuthenticationResponse createValidationResponse(String endResult, String signatureInBase64, String certificateLevel , String requestedCertificateLevel) {
     SmartIdAuthenticationResponse authenticationResponse = new SmartIdAuthenticationResponse();
     authenticationResponse.setEndResult(endResult);
     authenticationResponse.setSignatureValueInBase64(signatureInBase64);
     authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(CERTIFICATE));
     authenticationResponse.setSignedHashInBase64(HASH_TO_SIGN_IN_BASE64);
     authenticationResponse.setHashType(HashType.SHA512);
-    authenticationResponse.setRequestedCertificateLevel("QUALIFIED");
+    authenticationResponse.setRequestedCertificateLevel(requestedCertificateLevel);
     authenticationResponse.setCertificateLevel(certificateLevel);
     return authenticationResponse;
   }

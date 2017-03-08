@@ -153,7 +153,8 @@ public class AuthenticationResponseValidator {
   }
 
   private boolean verifyCertificateLevel(SmartIdAuthenticationResponse authenticationResponse) {
-    return authenticationResponse.getRequestedCertificateLevel().equals(authenticationResponse.getCertificateLevel());
+    CertificateLevel certLevel = new CertificateLevel(authenticationResponse.getCertificateLevel());
+    return certLevel.isEqualOrAbove(authenticationResponse.getRequestedCertificateLevel());
   }
 
   private static byte[] addPadding(byte[] digestInfoPrefix, byte[] digest) {
