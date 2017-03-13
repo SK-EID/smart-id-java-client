@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 public class SmartIdRestIntegrationTest {
 
   private static final String RELYING_PARTY_UUID = "5e6cea38-6333-4e21-b3fe-df6d02ce44c7";
-  private static final String RELYING_PARTY_NAME = "TEST DigiDoc4J";
+  private static final String RELYING_PARTY_NAME = "Test Smart-ID Java client";
   private static final String DOCUMENT_NUMBER = "PNOEE-31111111111-K0DD-NQ";
   private static final String DATA_TO_SIGN = "Hello World!";
   private static final String CERTIFICATE_LEVEL = "ADVANCED";
