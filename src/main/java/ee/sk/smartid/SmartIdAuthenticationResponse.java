@@ -8,7 +8,6 @@ import java.security.cert.X509Certificate;
 
 public class SmartIdAuthenticationResponse implements Serializable {
 
-  private String documentNumber;
   private String endResult;
   private String signedHashInBase64;
   private HashType hashType;
@@ -17,14 +16,6 @@ public class SmartIdAuthenticationResponse implements Serializable {
   private X509Certificate certificate;
   private String requestedCertificateLevel;
   private String certificateLevel;
-
-  public String getDocumentNumber() {
-    return documentNumber;
-  }
-
-  public void setDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
-  }
 
   public byte[] getSignatureValue() {
     if (!Base64.isBase64(signatureValueInBase64)) {

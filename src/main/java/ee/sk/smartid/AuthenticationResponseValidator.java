@@ -8,6 +8,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +45,8 @@ public class AuthenticationResponseValidator {
   public SmartIdAuthenticationResult validate(SmartIdAuthenticationResponse authenticationResponse) {
     validateAuthenticationResponse(authenticationResponse);
     SmartIdAuthenticationResult authenticationResult = new SmartIdAuthenticationResult();
+    AuthenticationIdentity identity = constructAuthenticationIdentity(authenticationResponse.getCertificate());
+    authenticationResult.setAuthenticationIdentity(identity);
     if (!verifyResponseEndResult(authenticationResponse)) {
       authenticationResult.setValid(false);
       authenticationResult.addError(SmartIdAuthenticationResult.Error.INVALID_END_RESULT);
@@ -159,5 +164,28 @@ public class AuthenticationResponseValidator {
 
   private static byte[] addPadding(byte[] digestInfoPrefix, byte[] digest) {
     return ArrayUtils.addAll(digestInfoPrefix, digest);
+  }
+
+  private AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
+    AuthenticationIdentity identity = new AuthenticationIdentity();
+    try {
+      LdapName ln = new LdapName(certificate.getSubjectDN().getName());
+      for(Rdn rdn : ln.getRdns()) {
+        if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {
+          identity.setGivenName(rdn.getValue().toString());
+        } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
+          identity.setSurName(rdn.getValue().toString());
+        } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
+          identity.setIdentityCode(rdn.getValue().toString().split("-")[1]);
+        } else if(rdn.getType().equalsIgnoreCase("C")) {
+          identity.setCountry(rdn.getValue().toString());
+        }
+
+      }
+      return identity;
+    } catch (InvalidNameException e) {
+      logger.error("Error getting authentication identity from the certificate", e);
+      throw new TechnicalErrorException("Error getting authentication identity from the certificate", e);
+    }
   }
 }

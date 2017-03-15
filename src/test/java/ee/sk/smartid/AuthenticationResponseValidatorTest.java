@@ -7,6 +7,9 @@ import org.junit.Before;
 import org.junit.Test;
 import sun.security.provider.X509Factory;
 
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Files;
@@ -39,40 +42,44 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
-  public void validationReturnsValidAuthenticationResult() {
+  public void validationReturnsValidAuthenticationResult() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
-  public void validationReturnsValidAuthenticationResult_whenEndResultLowerCase() {
+  public void validationReturnsValidAuthenticationResult_whenEndResultLowerCase() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setEndResult("ok");
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenEndResultNotOk() {
+  public void validationReturnsInvalidAuthenticationResult_whenEndResultNotOk() throws Exception {
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidEndResult();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.INVALID_END_RESULT.getMessage()));
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenSignatureVerificationFails() {
+  public void validationReturnsInvalidAuthenticationResult_whenSignatureVerificationFails() throws Exception {
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidSignature();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE.getMessage()));
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -82,6 +89,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_EXPIRED.getMessage()));
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -95,24 +103,27 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_NOT_TRUSTED.getMessage()));
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
-  public void validationReturnsValidAuthenticationResult_whenCertificateLevelHigherThanRequested() {
+  public void validationReturnsValidAuthenticationResult_whenCertificateLevelHigherThanRequested() throws Exception {
     SmartIdAuthenticationResponse response = createValidationResponseWithHigherCertificateLevelThanRequested();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelLowerThanRequested() {
+  public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelLowerThanRequested() throws Exception {
     SmartIdAuthenticationResponse response = createValidationResponseWithLowerCertificateLevelThanRequested();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH.getMessage()));
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -219,5 +230,21 @@ public class AuthenticationResponseValidatorTest {
   private X509Certificate getX509Certificate(byte[] certificateBytes) throws CertificateException {
     CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
     return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
+  }
+
+  private void asserAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity, X509Certificate certificate) throws InvalidNameException {
+    LdapName ln = new LdapName(certificate.getSubjectDN().getName());
+    for(Rdn rdn : ln.getRdns()) {
+      if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {
+        assertEquals(rdn.getValue().toString(), authenticationIdentity.getGivenName());
+      } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
+        assertEquals(rdn.getValue().toString(), authenticationIdentity.getSurName());
+      } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
+        assertEquals(rdn.getValue().toString().split("-")[1], authenticationIdentity.getIdentityCode());
+      } else if(rdn.getType().equalsIgnoreCase("C")) {
+        assertEquals(rdn.getValue().toString(), authenticationIdentity.getCountry());
+      }
+
+    }
   }
 }

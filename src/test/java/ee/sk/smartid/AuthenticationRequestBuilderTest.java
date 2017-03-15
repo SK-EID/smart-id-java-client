@@ -260,7 +260,6 @@ public class AuthenticationRequestBuilderTest {
     assertEquals(expectedHashToSignInBase64, authenticationResponse.getSignedHashInBase64());
     assertEquals("c2FtcGxlIHNpZ25hdHVyZQ0K", authenticationResponse.getSignatureValueInBase64());
     assertEquals("sha512WithRSAEncryption", authenticationResponse.getAlgorithmName());
-    assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
     assertEquals(DummyData.CERTIFICATE, Base64.encodeBase64String(authenticationResponse.getCertificate().getEncoded()));
     assertEquals("QUALIFIED", authenticationResponse.getCertificateLevel());
   }

@@ -132,7 +132,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     SessionCertificate certificate = sessionStatus.getCertificate();
 
     SmartIdAuthenticationResponse authenticationResponse = new SmartIdAuthenticationResponse();
-    authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
     authenticationResponse.setEndResult(sessionResult.getEndResult());
     authenticationResponse.setSignedHashInBase64(getHashInBase64());
     authenticationResponse.setHashType(getHashType());

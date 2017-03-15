@@ -15,8 +15,8 @@ import static org.junit.Assert.assertTrue;
 public class SmartIdIntegrationTest {
 
   private static final String HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v1/";
-  private static final String RELYING_PARTY_UUID = "5e6cea38-6333-4e21-b3fe-df6d02ce44c7";
-  private static final String RELYING_PARTY_NAME = "Test Smart-ID Java client";
+  private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
+  private static final String RELYING_PARTY_NAME = "DEMO";
   private static final String DOCUMENT_NUMBER = "PNOEE-31111111111-K0DD-NQ";
   private static final String DATA_TO_SIGN = "Well hello there!";
   private static final String CERTIFICATE_LEVEL = "QUALIFIED";
@@ -101,5 +101,13 @@ public class SmartIdIntegrationTest {
   private void asserAuthenticationResultValid(SmartIdAuthenticationResult authenticationResult) {
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity());
+  }
+
+  private void asserAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity) {
+    assertThat(authenticationIdentity.getGivenName(), not(isEmptyOrNullString()));
+    assertThat(authenticationIdentity.getSurName(), not(isEmptyOrNullString()));
+    assertThat(authenticationIdentity.getIdentityCode(), not(isEmptyOrNullString()));
+    assertThat(authenticationIdentity.getCountry(), not(isEmptyOrNullString()));
   }
 }

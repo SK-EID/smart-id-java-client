@@ -5,9 +5,19 @@ import java.util.List;
 
 public class SmartIdAuthenticationResult {
 
+  private AuthenticationIdentity authenticationIdentity;
+
   private boolean valid = true;
 
   private List<String> errors = new ArrayList<>();
+
+  public AuthenticationIdentity getAuthenticationIdentity() {
+    return authenticationIdentity;
+  }
+
+  public void setAuthenticationIdentity(AuthenticationIdentity authenticationIdentity) {
+    this.authenticationIdentity = authenticationIdentity;
+  }
 
   public boolean isValid() {
     return valid;
