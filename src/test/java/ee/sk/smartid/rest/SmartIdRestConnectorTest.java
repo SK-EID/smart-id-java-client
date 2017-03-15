@@ -7,11 +7,19 @@ import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.UnauthorizedException;
 import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.*;
+import org.apache.http.client.config.RequestConfig;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import javax.ws.rs.ProcessingException;
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
@@ -304,6 +312,49 @@ public class SmartIdRestConnectorTest {
     stubBadRequestResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = ProcessingException.class)
+  public void authenticate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = ProcessingException.class)
+  public void sign_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    connector.sign("PNOEE-123456", request);
+  }
+
+  @Test(expected = ProcessingException.class)
+  public void getCertificate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate("PNOEE-123456", request);
+  }
+
+  @Test(expected = ProcessingException.class)
+  public void getSessionStatus_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+
+    stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
+    SessionStatusRequest request = new SessionStatusRequest("de305d54-75b4-431b-adb2-eb6b9e546016");
+    connector.getSessionStatus(request);
+  }
+
+  private ClientConfig getClientConfigWithTooLowTimeouts() {
+    ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider());
+    clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 1);
+    clientConfig.property(ClientProperties.READ_TIMEOUT, 1);
+    return clientConfig;
   }
 
   private void assertSuccessfulResponse(SessionStatus sessionStatus) {

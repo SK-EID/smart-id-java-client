@@ -7,10 +7,15 @@ import ee.sk.smartid.exception.SessionTimeoutException;
 import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.dao.NationalIdentity;
+import org.apache.http.client.config.RequestConfig;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import javax.ws.rs.ProcessingException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
@@ -297,6 +302,24 @@ public class SmartIdClientTest {
     assertTrue("Duration is " + duration, duration < 3000L);
   }
 
+  @Test(expected = ProcessingException.class)
+  public void authenticate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
+    client.setConnectorClientConfig(getClientConfigWithTooLowTimeouts());
+    makeAuthenticationRequest();
+  }
+
+  @Test(expected = ProcessingException.class)
+  public void sign_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
+    client.setConnectorClientConfig(getClientConfigWithTooLowTimeouts());
+    makeCreateSignatureRequest();
+  }
+
+  @Test(expected = ProcessingException.class)
+  public void getCertificate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
+    client.setConnectorClientConfig(getClientConfigWithTooLowTimeouts());
+    makeGetCertificateRequest();
+  }
+
   private long measureSigningDuration() {
     long startTime = System.currentTimeMillis();
     SmartIdSignature signature = createSignature();
@@ -384,6 +407,17 @@ public class SmartIdClientTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .authenticate();
+  }
+
+  private ClientConfig getClientConfigWithTooLowTimeouts() {
+    ClientConfig clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
+    RequestConfig reqConfig = RequestConfig.custom()
+        .setConnectTimeout(1)
+        .setSocketTimeout(1)
+        .setConnectionRequestTimeout(1)
+        .build();
+    clientConfig.property(ApacheClientProperties.REQUEST_CONFIG, reqConfig);
+    return clientConfig;
   }
 
   private void assertCertificateResponseValid(SmartIdCertificate certificate) {

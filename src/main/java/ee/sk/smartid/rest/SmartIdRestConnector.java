@@ -6,12 +6,14 @@ import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.UnauthorizedException;
 import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.*;
+import org.glassfish.jersey.client.ClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -32,9 +34,15 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
   private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
   private String endpointUrl;
+  private ClientConfig clientConfig;
 
   public SmartIdRestConnector(String endpointUrl) {
     this.endpointUrl = endpointUrl;
+  }
+
+  public SmartIdRestConnector(String endpointUrl, ClientConfig clientConfig) {
+    this(endpointUrl);
+    this.clientConfig = clientConfig;
   }
 
   @Override
@@ -111,8 +119,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   private Invocation.Builder prepareClient(URI uri) {
-    Invocation.Builder builder = ClientBuilder
-        .newClient()
+    Client client = clientConfig == null ? ClientBuilder.newClient() : ClientBuilder.newClient(clientConfig);
+    Invocation.Builder builder = client
         .register(new LoggingFilter())
         .target(uri)
         .request()

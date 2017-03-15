@@ -2,6 +2,7 @@ package ee.sk.smartid;
 
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdRestConnector;
+import org.glassfish.jersey.client.ClientConfig;
 
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
@@ -11,13 +12,14 @@ public class SmartIdClient implements Serializable {
   private String relyingPartyUUID;
   private String relyingPartyName;
   private String hostUrl;
+  private ClientConfig connectorClientConfig;
   private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
   private long pollingSleepTimeout = 1L;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
 
   public CertificateRequestBuilder getCertificate() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl);
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, connectorClientConfig);
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     CertificateRequestBuilder builder = new CertificateRequestBuilder(connector, sessionStatusPoller);
     populateBuilderFields(builder);
@@ -25,7 +27,7 @@ public class SmartIdClient implements Serializable {
   }
 
   public SignatureRequestBuilder createSignature() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl);
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, connectorClientConfig);
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     SignatureRequestBuilder builder = new SignatureRequestBuilder(connector, sessionStatusPoller);
     populateBuilderFields(builder);
@@ -33,7 +35,7 @@ public class SmartIdClient implements Serializable {
   }
 
   public AuthenticationRequestBuilder createAuthentication() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl);
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, connectorClientConfig);
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     AuthenticationRequestBuilder builder = new AuthenticationRequestBuilder(connector, sessionStatusPoller);
     populateBuilderFields(builder);
@@ -70,6 +72,14 @@ public class SmartIdClient implements Serializable {
 
   public void setHostUrl(String hostUrl) {
     this.hostUrl = hostUrl;
+  }
+
+  public ClientConfig getConnectorClientConfig() {
+    return connectorClientConfig;
+  }
+
+  public void setConnectorClientConfig(ClientConfig connectorClientConfig) {
+    this.connectorClientConfig = connectorClientConfig;
   }
 
   public void setPollingSleepTimeout(TimeUnit unit, long timeout) {
