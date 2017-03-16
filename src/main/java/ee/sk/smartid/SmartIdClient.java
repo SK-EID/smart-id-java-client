@@ -12,14 +12,14 @@ public class SmartIdClient implements Serializable {
   private String relyingPartyUUID;
   private String relyingPartyName;
   private String hostUrl;
-  private ClientConfig connectorClientConfig;
+  private ClientConfig networkConnectionConfig;
   private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
   private long pollingSleepTimeout = 1L;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
 
   public CertificateRequestBuilder getCertificate() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, connectorClientConfig);
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     CertificateRequestBuilder builder = new CertificateRequestBuilder(connector, sessionStatusPoller);
     populateBuilderFields(builder);
@@ -27,7 +27,7 @@ public class SmartIdClient implements Serializable {
   }
 
   public SignatureRequestBuilder createSignature() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, connectorClientConfig);
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     SignatureRequestBuilder builder = new SignatureRequestBuilder(connector, sessionStatusPoller);
     populateBuilderFields(builder);
@@ -35,7 +35,7 @@ public class SmartIdClient implements Serializable {
   }
 
   public AuthenticationRequestBuilder createAuthentication() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, connectorClientConfig);
+    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
     AuthenticationRequestBuilder builder = new AuthenticationRequestBuilder(connector, sessionStatusPoller);
     populateBuilderFields(builder);
@@ -74,12 +74,8 @@ public class SmartIdClient implements Serializable {
     this.hostUrl = hostUrl;
   }
 
-  public ClientConfig getConnectorClientConfig() {
-    return connectorClientConfig;
-  }
-
-  public void setConnectorClientConfig(ClientConfig connectorClientConfig) {
-    this.connectorClientConfig = connectorClientConfig;
+  public void setNetworkConnectionConfig(ClientConfig networkConnectionConfig) {
+    this.networkConnectionConfig = networkConnectionConfig;
   }
 
   public void setPollingSleepTimeout(TimeUnit unit, long timeout) {
