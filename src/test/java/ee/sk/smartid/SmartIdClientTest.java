@@ -304,19 +304,19 @@ public class SmartIdClientTest {
 
   @Test(expected = ProcessingException.class)
   public void authenticate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    client.setConnectorClientConfig(getClientConfigWithTooLowTimeouts());
+    client.setNetworkConnectionConfig(getClientConfigWithTooLowTimeouts());
     makeAuthenticationRequest();
   }
 
   @Test(expected = ProcessingException.class)
   public void sign_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    client.setConnectorClientConfig(getClientConfigWithTooLowTimeouts());
+    client.setNetworkConnectionConfig(getClientConfigWithTooLowTimeouts());
     makeCreateSignatureRequest();
   }
 
   @Test(expected = ProcessingException.class)
   public void getCertificate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    client.setConnectorClientConfig(getClientConfigWithTooLowTimeouts());
+    client.setNetworkConnectionConfig(getClientConfigWithTooLowTimeouts());
     makeGetCertificateRequest();
   }
 
