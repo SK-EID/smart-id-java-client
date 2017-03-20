@@ -26,6 +26,6 @@ public class CertificateLevel {
     } else if (certificateLevels.get(certificateLevel) != null && certificateLevels.get(this.certificateLevel) != null) {
       return certificateLevels.get(certificateLevel) <= certificateLevels.get(this.certificateLevel);
     }
-      return false;
+    return false;
   }
 }

@@ -40,12 +40,12 @@ public class SignatureRequestBuilderTest {
     SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
 
-    assertCorrectSignatureRequestMade();
+    assertCorrectSignatureRequestMade("QUALIFIED");
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
   }
@@ -59,12 +59,12 @@ public class SignatureRequestBuilderTest {
     SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
 
-    assertCorrectSignatureRequestMade();
+    assertCorrectSignatureRequestMade("QUALIFIED");
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
   }
@@ -77,15 +77,32 @@ public class SignatureRequestBuilderTest {
     SmartIdSignature signature = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableData(dataToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
 
-    assertCorrectSignatureRequestMade();
+    assertCorrectSignatureRequestMade("QUALIFIED");
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
+  }
 
+  @Test
+  public void getCertificateWithoutCertificateLevel_shouldPass() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+    hashToSign.setHashType(HashType.SHA256);
+
+    SmartIdSignature signature = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withSignableHash(hashToSign)
+        .withDocumentNumber("PNOEE-31111111111")
+        .sign();
+
+    assertCorrectSignatureRequestMade(null);
+    assertCorrectSessionRequestMade();
+    assertSignatureCorrect(signature);
   }
 
   @Test(expected = InvalidParametersException.class)
@@ -97,22 +114,8 @@ public class SignatureRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
-        .sign();
-  }
-
-  @Test(expected = InvalidParametersException.class)
-  public void signWithoutCertificateLevel_shouldThrowException() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    hashToSign.setHashType(HashType.SHA256);
-
-    builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withSignableHash(hashToSign)
-        .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
 
@@ -121,7 +124,7 @@ public class SignatureRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
   }
@@ -134,7 +137,7 @@ public class SignatureRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
@@ -147,7 +150,7 @@ public class SignatureRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
@@ -161,7 +164,7 @@ public class SignatureRequestBuilderTest {
 
     builder
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
@@ -175,7 +178,7 @@ public class SignatureRequestBuilderTest {
 
     builder
         .withRelyingPartyUUID("relying-party-uuid")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();
@@ -193,11 +196,11 @@ public class SignatureRequestBuilderTest {
     makeSigningRequest();
   }
 
-  private void assertCorrectSignatureRequestMade() {
+  private void assertCorrectSignatureRequestMade(String expectedCertificateLevel) {
     assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
     assertEquals("relying-party-uuid", connector.signatureSessionRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.signatureSessionRequestUsed.getRelyingPartyName());
-    assertEquals("ADVANCED", connector.signatureSessionRequestUsed.getCertificateLevel());
+    assertEquals(expectedCertificateLevel, connector.signatureSessionRequestUsed.getCertificateLevel());
     assertEquals("SHA256", connector.signatureSessionRequestUsed.getHashType());
     assertEquals("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=", connector.signatureSessionRequestUsed.getHash());
   }
@@ -238,7 +241,7 @@ public class SignatureRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .sign();

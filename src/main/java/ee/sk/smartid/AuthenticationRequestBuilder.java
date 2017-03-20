@@ -95,10 +95,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
       logger.error("Either document number or national identity must be set");
       throw new InvalidParametersException("Either document number or national identity must be set");
     }
-    if (isBlank(getCertificateLevel())) {
-      logger.error("Certificate level must be set");
-      throw new InvalidParametersException("Certificate level must be set");
-    }
     if (!isHashSet() && !isSignableDataSet()) {
       logger.error("Signable data or hash with hash type must be set");
       throw new InvalidParametersException("Signable data or hash with hash type must be set");

@@ -43,12 +43,12 @@ public class AuthenticationRequestBuilderTest {
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
 
-    assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64());
+    assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), "QUALIFIED");
     assertCorrectSessionRequestMade();
     assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
   }
@@ -62,12 +62,12 @@ public class AuthenticationRequestBuilderTest {
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
 
-    assertCorrectAuthenticationRequestMadeWithDocumentNumber("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    assertCorrectAuthenticationRequestMadeWithDocumentNumber("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==", "QUALIFIED");
     assertCorrectSessionRequestMade();
     assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
   }
@@ -81,13 +81,13 @@ public class AuthenticationRequestBuilderTest {
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withNationalIdentityNumber("31111111111")
         .withCountryCode("EE")
         .authenticate();
 
-    assertCorrectAuthenticationRequestMadeWithNationalIdentity();
+    assertCorrectAuthenticationRequestMadeWithNationalIdentity(authenticationHash.getHashInBase64(), "QUALIFIED");
     assertCorrectSessionRequestMade();
     assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
   }
@@ -104,13 +104,29 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withNationalIdentity(identity)
         .authenticate();
 
-    assertCorrectAuthenticationRequestMadeWithNationalIdentity();
+    assertCorrectAuthenticationRequestMadeWithNationalIdentity(authenticationHash.getHashInBase64(), "QUALIFIED");
     assertCorrectSessionRequestMade();
     assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+  }
+
+  @Test
+  public void authenticateWithoutCertificateLevel_shouldPass() throws Exception {
+    AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
+
+    SmartIdAuthenticationResponse authenticationResponse = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withDocumentNumber("PNOEE-31111111111")
+        .authenticate();
+
+    assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), null);
+    assertCorrectSessionRequestMade();
+    assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
   }
 
   @Test(expected = InvalidParametersException.class)
@@ -123,21 +139,7 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
-        .authenticate();
-  }
-
-  @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutCertificateLevel_shouldThrowException() throws Exception {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withAuthenticationHash(authenticationHash)
-        .withDocumentNumber("PNOEE-31111111111")
+        .withCertificateLevel("QUALIFIED")
         .authenticate();
   }
 
@@ -146,7 +148,7 @@ public class AuthenticationRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
   }
@@ -159,7 +161,7 @@ public class AuthenticationRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
@@ -173,7 +175,7 @@ public class AuthenticationRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
@@ -188,7 +190,7 @@ public class AuthenticationRequestBuilderTest {
     builder
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
   }
@@ -202,7 +204,7 @@ public class AuthenticationRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
   }
@@ -231,23 +233,23 @@ public class AuthenticationRequestBuilderTest {
     makeAuthenticationRequest();
   }
 
-  private void assertCorrectAuthenticationRequestMadeWithDocumentNumber(String expectedHashToSignInBase64) {
+  private void assertCorrectAuthenticationRequestMadeWithDocumentNumber(String expectedHashToSignInBase64, String expectedCertificateLevel) {
     assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
     assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
-    assertEquals("ADVANCED", connector.authenticationSessionRequestUsed.getCertificateLevel());
+    assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
     assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
     assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
   }
 
-  private void assertCorrectAuthenticationRequestMadeWithNationalIdentity() {
+  private void assertCorrectAuthenticationRequestMadeWithNationalIdentity(String expectedHashToSignInBase64, String expectedCertificateLevel) {
     assertEquals("31111111111", connector.identityUsed.getNationalIdentityNumber());
     assertEquals("EE", connector.identityUsed.getCountryCode());
     assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
-    assertEquals("ADVANCED", connector.authenticationSessionRequestUsed.getCertificateLevel());
+    assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
     assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
-    assertEquals("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==", connector.authenticationSessionRequestUsed.getHash());
+    assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
   }
 
   private void assertCorrectSessionRequestMade() {
@@ -296,7 +298,7 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
+        .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .authenticate();
   }

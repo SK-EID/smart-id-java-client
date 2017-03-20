@@ -113,10 +113,6 @@ public class AuthenticationResponseValidator {
       logger.error("Hash type is not present in the authentication response");
       throw new TechnicalErrorException("Hash type is not present in the authentication response");
     }
-    if (StringUtils.isEmpty(authenticationResponse.getRequestedCertificateLevel())) {
-      logger.error("Requested certificate level is not present in the authentication response");
-      throw new TechnicalErrorException("Requested certificate level is not present in the authentication response");
-    }
   }
 
   private boolean verifyResponseEndResult(SmartIdAuthenticationResponse authenticationResponse) {
@@ -159,7 +155,8 @@ public class AuthenticationResponseValidator {
 
   private boolean verifyCertificateLevel(SmartIdAuthenticationResponse authenticationResponse) {
     CertificateLevel certLevel = new CertificateLevel(authenticationResponse.getCertificateLevel());
-    return certLevel.isEqualOrAbove(authenticationResponse.getRequestedCertificateLevel());
+    String requestedCertificateLevel = authenticationResponse.getRequestedCertificateLevel();
+    return StringUtils.isEmpty(requestedCertificateLevel) ? true : certLevel.isEqualOrAbove(requestedCertificateLevel);
   }
 
   private static byte[] addPadding(byte[] digestInfoPrefix, byte[] digest) {

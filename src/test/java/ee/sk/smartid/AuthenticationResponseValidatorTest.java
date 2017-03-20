@@ -159,6 +159,28 @@ public class AuthenticationResponseValidatorTest {
     assertEquals(getX509Certificate(Files.readAllBytes(caCertificateFile.toPath())).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
   }
 
+  @Test
+  public void withEmptyRequestedCertificateLevel_shouldPass() throws Exception {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setRequestedCertificateLevel("");
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+
+    assertTrue(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().isEmpty());
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+  }
+
+  @Test
+  public void withNullRequestedCertificateLevel_shouldPass() throws Exception {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setRequestedCertificateLevel(null);
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+
+    assertTrue(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().isEmpty());
+    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+  }
+
   @Test(expected = TechnicalErrorException.class)
   public void whenCertificateIsNull_ThenThrowException() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
@@ -177,13 +199,6 @@ public class AuthenticationResponseValidatorTest {
   public void whenHashTypeIsNull_ThenThrowException() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setHashType(null);
-    validator.validate(response);
-  }
-
-  @Test(expected = TechnicalErrorException.class)
-  public void whenRequestedCertificateLevelIsNullEmpty_ThenThrowException() {
-    SmartIdAuthenticationResponse response = createValidValidationResponse();
-    response.setRequestedCertificateLevel("");
     validator.validate(response);
   }
 

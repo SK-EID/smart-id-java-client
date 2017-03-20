@@ -47,7 +47,7 @@ public class CertificateRequestBuilderTest {
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
-    assertValidCertificateChoiceRequestMade();
+    assertValidCertificateChoiceRequestMade("QUALIFIED");
   }
 
   @Test
@@ -60,7 +60,7 @@ public class CertificateRequestBuilderTest {
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
-    assertValidCertificateChoiceRequestMade();
+    assertValidCertificateChoiceRequestMade("QUALIFIED");
   }
 
   @Test
@@ -73,7 +73,20 @@ public class CertificateRequestBuilderTest {
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
-    assertValidCertificateRequestMadeWithDocumentNumber();
+    assertValidCertificateRequestMadeWithDocumentNumber("QUALIFIED");
+  }
+
+  @Test
+  public void getCertificateWithoutCertificateLevel_shouldPass() throws Exception {
+    SmartIdCertificate certificate = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withCountryCode("EE")
+        .withNationalIdentityNumber("31111111111")
+        .fetch();
+    assertCertificateResponseValid(certificate);
+    assertCorrectSessionRequestMade();
+    assertValidCertificateChoiceRequestMade(null);
   }
 
   @Test(expected = InvalidParametersException.class)
@@ -82,15 +95,6 @@ public class CertificateRequestBuilderTest {
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("QUALIFIED")
-        .fetch();
-  }
-
-  @Test(expected = InvalidParametersException.class)
-  public void getCertificate_whenCertificateLevelIsNotSet_shouldThrowException() throws Exception {
-    builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withDocumentNumber("PNOEE-31111111111")
         .fetch();
   }
 
@@ -160,27 +164,27 @@ public class CertificateRequestBuilderTest {
     assertNotNull(certificate.getCertificate());
     X509Certificate cert = certificate.getCertificate();
     assertThat(cert.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
+    assertEquals("QUALIFIED", certificate.getCertificateLevel());
     assertEquals("PNOEE-31111111111", certificate.getDocumentNumber());
-    assertEquals("ADVANCED", certificate.getCertificateLevel());
   }
 
   private void assertCorrectSessionRequestMade() {
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", connector.sessionIdUsed);
   }
 
-  private void assertValidCertificateChoiceRequestMade() {
+  private void assertValidCertificateChoiceRequestMade(String certificateLevel) {
     assertEquals("EE", connector.identityUsed.getCountryCode());
     assertEquals("31111111111", connector.identityUsed.getNationalIdentityNumber());
     assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
-    assertEquals("QUALIFIED", connector.certificateRequestUsed.getCertificateLevel());
+    assertEquals(certificateLevel, connector.certificateRequestUsed.getCertificateLevel());
   }
 
-  private void assertValidCertificateRequestMadeWithDocumentNumber() {
+  private void assertValidCertificateRequestMadeWithDocumentNumber(String certificateLevel) {
     assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
     assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
-    assertEquals("QUALIFIED", connector.certificateRequestUsed.getCertificateLevel());
+    assertEquals(certificateLevel, connector.certificateRequestUsed.getCertificateLevel());
   }
 
   private SessionStatus createCertificateSessionStatusCompleteResponse() {
@@ -193,7 +197,7 @@ public class CertificateRequestBuilderTest {
 
   private SessionCertificate createSessionCertificate() {
     SessionCertificate sessionCertificate = new SessionCertificate();
-    sessionCertificate.setCertificateLevel("ADVANCED");
+    sessionCertificate.setCertificateLevel("QUALIFIED");
     sessionCertificate.setValue(DummyData.CERTIFICATE);
     return sessionCertificate;
   }

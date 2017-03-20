@@ -9,16 +9,16 @@ public class CertificateLevelTest {
 
   @Test
   public void testBothCertificateLevelsQualified() {
-    String certficateLevelString = "QUALIFIED";
-    CertificateLevel certificateLevel = new CertificateLevel(certficateLevelString);
-    assertTrue(certificateLevel.isEqualOrAbove(certficateLevelString));
+    String certificateLevelString = "QUALIFIED";
+    CertificateLevel certificateLevel = new CertificateLevel(certificateLevelString);
+    assertTrue(certificateLevel.isEqualOrAbove(certificateLevelString));
   }
 
   @Test
   public void testBothCertificateLevelsAdvanced() {
-    String certficateLevelString = "ADVANCED";
-    CertificateLevel certificateLevel = new CertificateLevel(certficateLevelString);
-    assertTrue(certificateLevel.isEqualOrAbove(certficateLevelString));
+    String certificateLevelString = "ADVANCED";
+    CertificateLevel certificateLevel = new CertificateLevel(certificateLevelString);
+    assertTrue(certificateLevel.isEqualOrAbove(certificateLevelString));
   }
 
   @Test
@@ -34,19 +34,19 @@ public class CertificateLevelTest {
   }
 
   @Test
-  public void testFirstCertLevelUnkown() {
+  public void testFirstCertLevelUnknown() {
     CertificateLevel certificateLevel = new CertificateLevel("SOME UNKNOWN LEVEL");
     assertFalse(certificateLevel.isEqualOrAbove("ADVANCED"));
   }
 
   @Test
-  public void testSecondCertLevelUnkown() {
+  public void testSecondCertLevelUnknown() {
     CertificateLevel certificateLevel = new CertificateLevel("ADVANCED");
     assertFalse(certificateLevel.isEqualOrAbove("SOME UNKNOWN LEVEL"));
   }
 
   @Test
-  public void testBothCertLevelUnkown() {
+  public void testBothCertLevelUnknown() {
     CertificateLevel certificateLevel = new CertificateLevel("SOME UNKNOWN LEVEL");
     assertTrue(certificateLevel.isEqualOrAbove("SOME UNKNOWN LEVEL"));
   }

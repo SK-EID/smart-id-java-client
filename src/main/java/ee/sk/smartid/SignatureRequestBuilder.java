@@ -73,10 +73,6 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
       logger.error("Document number must be set");
       throw new InvalidParametersException("Document number must be set");
     }
-    if (isBlank(getCertificateLevel())) {
-      logger.error("Certificate level must be set");
-      throw new InvalidParametersException("Certificate level must be set");
-    }
     if (!isHashSet() && !isSignableDataSet()) {
       logger.error("Signable data or hash with hash type must be set");
       throw new InvalidParametersException("Signable data or hash with hash type must be set");

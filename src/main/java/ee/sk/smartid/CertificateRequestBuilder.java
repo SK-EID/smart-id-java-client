@@ -117,10 +117,6 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getCertificateLevel())) {
-      logger.error("Certificate level must be set");
-      throw new InvalidParametersException("Certificate level must be set");
-    }
     if (isBlank(getDocumentNumber()) && !hasNationalIdentity()) {
       logger.error("Either document number or national identity must be set");
       throw new InvalidParametersException("Either document number or national identity must be set");
