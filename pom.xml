@@ -6,7 +6,37 @@
 
     <groupId>ee.sk.smartid</groupId>
     <artifactId>smart-id-java-client</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <version>1.0.0</version>
+
+    <name>Smart-ID Java client</name>
+    <description>Smart-ID Java client is a Java library that can be used for easy integration of the Smart-ID solution to information systems or e-services</description>
+    <url>https://github.com/SK-EID/smart-id-java-client</url>
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License, Version 3.0</name>
+            <url>https://www.gnu.org/licenses/lgpl-3.0.html</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Rainer Villido</name>
+            <email>Rainer.Villido at Nortal.com</email>
+            <organization>Nortal</organization>
+            <organizationUrl>http://www.nortal.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Andres Voll</name>
+            <email>Andres.Voll at Nortal.com</email>
+            <organization>Nortal</organization>
+            <organizationUrl>http://www.nortal.com</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:SK-EID/smart-id-java-client.git</connection>
+        <developerConnection>scm:git:git@github.com:SK-EID/smart-id-java-client.git</developerConnection>
+        <url>https://github.com/SK-EID/smart-id-java-client.git</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>1.7</maven.compiler.source>
