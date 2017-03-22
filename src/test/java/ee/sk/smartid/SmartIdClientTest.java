@@ -7,19 +7,20 @@ import ee.sk.smartid.exception.SessionTimeoutException;
 import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.dao.NationalIdentity;
-import org.apache.http.client.config.RequestConfig;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.ws.rs.ProcessingException;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
@@ -302,22 +303,49 @@ public class SmartIdClientTest {
     assertTrue("Duration is " + duration, duration < 3000L);
   }
 
-  @Test(expected = ProcessingException.class)
-  public void authenticate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    client.setNetworkConnectionConfig(getClientConfigWithTooLowTimeouts());
+  @Test
+  public void verifyAuthentication_withNetworkConnectionConfigurationHavingCustomHeader() throws Exception {
+    String headerName = "custom-header";
+    String headerValue = "Hi!";
+
+    Map<String, String> headersToAdd = new HashMap<>();
+    headersToAdd.put(headerName, headerValue);
+    ClientConfig clientConfig = getClientConfigWithCustomRequestHeaders(headersToAdd);
+    client.setNetworkConnectionConfig(clientConfig);
     makeAuthenticationRequest();
+
+    verify(postRequestedFor(urlEqualTo("/authentication/document/PNOEE-31111111111"))
+        .withHeader(headerName, equalTo(headerValue)));
   }
 
-  @Test(expected = ProcessingException.class)
-  public void sign_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    client.setNetworkConnectionConfig(getClientConfigWithTooLowTimeouts());
+  @Test
+  public void verifySigning_withNetworkConnectionConfigurationHavingCustomHeader() throws Exception {
+    String headerName = "custom-header";
+    String headerValue = "Hello?!";
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(headerName, headerValue);
+    ClientConfig clientConfig = getClientConfigWithCustomRequestHeaders(headers);
+    client.setNetworkConnectionConfig(clientConfig);
     makeCreateSignatureRequest();
+
+    verify(postRequestedFor(urlEqualTo("/signature/document/PNOEE-31111111111"))
+        .withHeader(headerName, equalTo(headerValue)));
   }
 
-  @Test(expected = ProcessingException.class)
-  public void getCertificate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    client.setNetworkConnectionConfig(getClientConfigWithTooLowTimeouts());
+  @Test
+  public void verifyCertificateChoice_withNetworkConnectionConfigurationHavingCustomHeader() throws Exception {
+    String headerName = "custom-header";
+    String headerValue = "Man, come on..";
+
+    Map<String, String> headers = new HashMap<>();
+    headers.put(headerName, headerValue);
+    ClientConfig clientConfig = getClientConfigWithCustomRequestHeaders(headers);
+    client.setNetworkConnectionConfig(clientConfig);
     makeGetCertificateRequest();
+
+    verify(postRequestedFor(urlEqualTo("/certificatechoice/pno/EE/31111111111"))
+        .withHeader(headerName, equalTo(headerValue)));
   }
 
   private long measureSigningDuration() {
@@ -409,14 +437,9 @@ public class SmartIdClientTest {
         .authenticate();
   }
 
-  private ClientConfig getClientConfigWithTooLowTimeouts() {
+  private ClientConfig getClientConfigWithCustomRequestHeaders(Map<String, String> headers) {
     ClientConfig clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
-    RequestConfig reqConfig = RequestConfig.custom()
-        .setConnectTimeout(1)
-        .setSocketTimeout(1)
-        .setConnectionRequestTimeout(1)
-        .build();
-    clientConfig.property(ApacheClientProperties.REQUEST_CONFIG, reqConfig);
+    clientConfig.register(new ClientRequestHeaderFilter(headers));
     return clientConfig;
   }
 

@@ -1,28 +1,27 @@
 package ee.sk.smartid.rest;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import ee.sk.smartid.ClientRequestHeaderFilter;
 import ee.sk.smartid.exception.CertificateNotFoundException;
 import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.UnauthorizedException;
 import ee.sk.smartid.exception.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.*;
-import org.apache.http.client.config.RequestConfig;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import javax.ws.rs.ProcessingException;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubBadRequestResponse;
@@ -314,46 +313,73 @@ public class SmartIdRestConnectorTest {
     connector.authenticate("PNOEE-123456", request);
   }
 
-  @Test(expected = ProcessingException.class)
-  public void authenticate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+  @Test
+  public void verifyCustomRequestHeaderPresent_whenAuthenticating() throws Exception {
+    String headerName = "custom-header";
+    String headerValue = "Auth";
 
+    Map<String, String> headers = new HashMap<>();
+    headers.put(headerName, headerValue);
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
+
+    verify(postRequestedFor(urlEqualTo("/authentication/document/PNOEE-123456"))
+        .withHeader(headerName, equalTo(headerValue)));
   }
 
-  @Test(expected = ProcessingException.class)
-  public void sign_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+  @Test
+  public void verifyCustomRequestHeaderPresent_whenSigning() throws Exception {
+    String headerName = "custom-header";
+    String headerValue = "Sign";
 
-    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    Map<String, String> headers = new HashMap<>();
+    headers.put(headerName, headerValue);
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
+
+    verify(postRequestedFor(urlEqualTo("/signature/document/PNOEE-123456"))
+        .withHeader(headerName, equalTo(headerValue)));
   }
 
-  @Test(expected = ProcessingException.class)
-  public void getCertificate_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+  @Test
+  public void verifyCustomRequestHeaderPresent_whenChoosingCertificate() throws Exception {
+    String headerName = "custom-header";
+    String headerValue = "Cert choice";
 
-    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    Map<String, String> headers = new HashMap<>();
+    headers.put(headerName, headerValue);
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
+    stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
+
+    verify(postRequestedFor(urlEqualTo("/certificatechoice/document/PNOEE-123456"))
+        .withHeader(headerName, equalTo(headerValue)));
   }
 
-  @Test(expected = ProcessingException.class)
-  public void getSessionStatus_withConnectorClientConfiguration_havingTooLowTimeOuts_shouldThrowException() throws Exception {
-    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithTooLowTimeouts());
+  @Test
+  public void verifyCustomRequestHeaderPresent_whenRequestingSessionStatus() throws Exception {
+    String headerName = "custom-header";
+    String headerValue = "Session status";
 
+    Map<String, String> headers = new HashMap<>();
+    headers.put(headerName, headerValue);
+    connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
     stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
     SessionStatusRequest request = new SessionStatusRequest("de305d54-75b4-431b-adb2-eb6b9e546016");
     connector.getSessionStatus(request);
+
+    verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
+        .withHeader(headerName, equalTo(headerValue)));
   }
 
-  private ClientConfig getClientConfigWithTooLowTimeouts() {
-    ClientConfig clientConfig = new ClientConfig().connectorProvider(new HttpUrlConnectorProvider());
-    clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 1);
-    clientConfig.property(ClientProperties.READ_TIMEOUT, 1);
+  private ClientConfig getClientConfigWithCustomRequestHeader(Map<String, String> headers) {
+    ClientConfig clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
+    clientConfig.register(new ClientRequestHeaderFilter(headers));
     return clientConfig;
   }
 
