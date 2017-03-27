@@ -8,13 +8,12 @@ public class SignatureSessionRequest implements Serializable {
 
   private String relyingPartyUUID;
   private String relyingPartyName;
+  @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String certificateLevel;
   private String hash;
   private String hashType;
-
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String displayText;
-
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String nonce;
 

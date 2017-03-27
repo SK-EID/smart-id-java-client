@@ -8,8 +8,8 @@ public class CertificateRequest implements Serializable {
 
   private String relyingPartyUUID;
   private String relyingPartyName;
+  @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String certificateLevel;
-
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String nonce;
 
