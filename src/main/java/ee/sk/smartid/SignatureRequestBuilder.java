@@ -18,45 +18,115 @@ import org.slf4j.LoggerFactory;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+/**
+ * Class for building signature request and getting the response.
+ */
 public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(SignatureRequestBuilder.class);
 
+  /**
+   * Constructs a new {@code SignatureRequestBuilder}
+   *
+   * @param connector for requesting signing initiation
+   * @param sessionStatusPoller for polling the signature response
+   */
   public SignatureRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     super(connector, sessionStatusPoller);
     logger.debug("Instantiating signature request builder");
   }
 
+  /**
+   * Sets the request's UUID of the relying party
+   *
+   * If not for explicit need, it is recommended to use
+   * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyUUID(String)}
+   * instead. In that case when getting the builder from
+   * {@link ee.sk.smartid.SmartIdClient} it is not required
+   * to set the UUID every time when building a new request.
+   *
+   * @param relyingPartyUUID UUID of the relying party
+   */
   public SignatureRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
     super.withRelyingPartyUUID(relyingPartyUUID);
     return this;
   }
 
+  /**
+   * Sets the request's name of the relying party
+   *
+   * If not for explicit need, it is recommended to use
+   * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyName(String)}
+   * instead. In that case when getting the builder from
+   * {@link ee.sk.smartid.SmartIdClient} it is not required
+   * to set name every time when building a new request.
+   *
+   * @param relyingPartyName name of the relying party
+   */
   public SignatureRequestBuilder withRelyingPartyName(String relyingPartyName) {
     super.withRelyingPartyName(relyingPartyName);
     return this;
   }
 
+  /**
+   * Sets the request's document number
+   *
+   * Document number is unique for the user's certificate/device
+   * that is used for the signing.
+   *
+   * @param documentNumber document number of the certificate/device used to sign
+   */
   public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
     super.withDocumentNumber(documentNumber);
     return this;
   }
 
+  /**
+   * Sets the data of the document to be signed
+   *
+   * This could be used when the data
+   * to be signed is not in hashed format.
+   * {@link ee.sk.smartid.SignableData#setHashType(HashType)}
+   * can be used to select the wanted hash type
+   * and the data is hashed for you.
+   *
+   * @param dataToSign dat to be signed
+   */
   public SignatureRequestBuilder withSignableData(SignableData dataToSign) {
     super.withSignableData(dataToSign);
     return this;
   }
 
+  /**
+   * Sets the hash to be signed
+   *
+   * This could be used when the data
+   * to be signed is in hashed format.
+   *
+   * @param hashToSign hash to be signed
+   */
   public SignatureRequestBuilder withSignableHash(SignableHash hashToSign) {
     super.withSignableHash(hashToSign);
     return this;
   }
 
+  /**
+   * Sets the request's certificate level
+   *
+   * Defines the minimum required level of the certificate
+   *
+   * @param certificateLevel the level of the certificate
+   */
   public SignatureRequestBuilder withCertificateLevel(String certificateLevel) {
     super.withCertificateLevel(certificateLevel);
     return this;
   }
 
+  /**
+   * Send the signature request and get the response
+   *
+   * @return the signature response
+   */
   public SmartIdSignature sign() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
     validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();

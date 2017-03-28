@@ -7,7 +7,7 @@
     <groupId>ee.sk.smartid</groupId>
     <artifactId>smart-id-java-client</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>1.0-SNAPSHOT</version>
 
     <name>Smart-ID Java client</name>
     <description>Smart-ID Java client is a Java library that can be used for easy integration of the Smart-ID solution to information systems or e-services</description>
@@ -21,13 +21,11 @@
     <developers>
         <developer>
             <name>Rainer Villido</name>
-            <email>Rainer.Villido at Nortal.com</email>
             <organization>Nortal</organization>
             <organizationUrl>http://www.nortal.com</organizationUrl>
         </developer>
         <developer>
             <name>Andres Voll</name>
-            <email>Andres.Voll at Nortal.com</email>
             <organization>Nortal</organization>
             <organizationUrl>http://www.nortal.com</organizationUrl>
         </developer>

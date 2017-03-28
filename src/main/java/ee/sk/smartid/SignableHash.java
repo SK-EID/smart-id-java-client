@@ -33,6 +33,13 @@ public class SignableHash implements Serializable {
     return hashType != null && hash != null && hash.length > 0;
   }
 
+  /**
+   * Calculates the verification code from the hash
+   *
+   * Verification code should be displayed on the web page or some sort of web service
+   * so the person signing through the Smart-ID mobile app can verify if if the verification code
+   * displayed on the phone matches with the one shown on the web page.
+   */
   public String calculateVerificationCode() {
     return VerificationCodeCalculator.calculate(hash);
   }

@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class ClientRequestHeaderFilter implements ClientRequestFilter {
 
-  Map<String, String> headersToAdd;
+  private Map<String, String> headersToAdd;
 
   public ClientRequestHeaderFilter(Map<String, String> headersToAdd) {
     this.headersToAdd = headersToAdd;

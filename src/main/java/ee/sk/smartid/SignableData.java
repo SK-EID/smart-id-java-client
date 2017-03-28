@@ -22,6 +22,13 @@ public class SignableData implements Serializable {
     return DigestCalculator.calculateDigest(dataToSign, hashType);
   }
 
+  /**
+   * Calculates the verification code from the data
+   *
+   * Verification code should be displayed on the web page or some sort of web service
+   * so the person signing through the Smart-ID mobile app can verify if the verification code
+   * displayed on the phone matches with the one shown on the web page.
+   */
   public String calculateVerificationCode() {
     byte[] digest = calculateHash();
     return VerificationCodeCalculator.calculate(digest);

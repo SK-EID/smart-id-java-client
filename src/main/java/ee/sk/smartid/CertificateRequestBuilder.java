@@ -22,50 +22,137 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+/**
+ * Class for building certificate choice request and getting the response.
+ */
 public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(CertificateRequestBuilder.class);
 
+  /**
+   * Constructs a new {@code CertificateRequestBuilder}
+   *
+   * @param connector for requesting certificate choice initiation
+   * @param sessionStatusPoller for polling the certificate choice response
+   */
   public CertificateRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     super(connector, sessionStatusPoller);
     logger.debug("Instantiating certificate request builder");
   }
 
+  /**
+   * Sets the request's UUID of the relying party
+   *
+   * If not for explicit need, it is recommended to use
+   * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyUUID(String)}
+   * instead. In that case when getting the builder from
+   * {@link ee.sk.smartid.SmartIdClient} it is not required
+   * to set the UUID every time when building a new request.
+   *
+   * @param relyingPartyUUID UUID of the relying party
+   */
   public CertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
     super.withRelyingPartyUUID(relyingPartyUUID);
     return this;
   }
 
+  /**
+   * Sets the request's name of the relying party
+   *
+   * If not for explicit need, it is recommended to use
+   * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyName(String)}
+   * instead. In that case when getting the builder from
+   * {@link ee.sk.smartid.SmartIdClient} it is not required
+   * to set name every time when building a new request.
+   *
+   * @param relyingPartyName name of the relying party
+   */
   public CertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
     super.withRelyingPartyName(relyingPartyName);
     return this;
   }
 
+  /**
+   * Sets the request's document number
+   *
+   * Document number is unique for the user's certificate/device
+   * that is used for choosing the certificate.
+   * To choose certificate with person's national identity use:
+   * {@link #withNationalIdentity(NationalIdentity)}
+   *
+   * @param documentNumber document number of the certificate/device used to choose the certificate
+   */
   public CertificateRequestBuilder withDocumentNumber(String documentNumber) {
     super.withDocumentNumber(documentNumber);
     return this;
   }
 
+  /**
+   * Sets the request's national identity
+   *
+   * The national identity of the person choosing the
+   * certificate consists of country code and national
+   * identity number.
+   * To choose the certificate with document number use:
+   * {@link #withDocumentNumber(String) withDocumentNumber}
+   *
+   * @param nationalIdentity national identity of person choosing the certificate
+   */
   public CertificateRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
     super.withNationalIdentity(nationalIdentity);
     return this;
   }
 
+  /**
+   * Sets the request's country code
+   *
+   * National identity consists of country code and national
+   * identity number. Either use
+   * {@link #withNationalIdentity(NationalIdentity)}
+   * or use {@link #withNationalIdentityNumber(String)}
+   * and {@link #withCountryCode(String)} separately.
+   *
+   * @param countryCode country code of the national identity
+   */
   public CertificateRequestBuilder withCountryCode(String countryCode) {
     super.withCountryCode(countryCode);
     return this;
   }
 
+  /**
+   * Sets the request's national identity number
+   *
+   * National identity consists of country code and national
+   * identity number. Either use
+   * {@link #withNationalIdentity(NationalIdentity)}
+   * or use {@link #withNationalIdentityNumber(String)}
+   * and {@link #withCountryCode(String)} separately.
+   *
+   * @param nationalIdentityNumber national identity number of the national identity
+   */
   public CertificateRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
     super.withNationalIdentityNumber(nationalIdentityNumber);
     return this;
   }
 
+  /**
+   * Sets the request's certificate level
+   *
+   * Defines the minimum required level of the certificate.
+   * If not set
+   *
+   * @param certificateLevel the level of the certificate
+   */
   public CertificateRequestBuilder withCertificateLevel(String certificateLevel) {
     super.withCertificateLevel(certificateLevel);
     return this;
   }
 
+  /**
+   * Send the certificate choice request and get the response
+   *
+   * @return the certificate choice response
+   */
   public SmartIdCertificate fetch() throws CertificateNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
     logger.debug("Starting to fetch certificate");
     validateParameters();

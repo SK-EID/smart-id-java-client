@@ -48,7 +48,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -59,7 +59,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -69,7 +69,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.INVALID_END_RESULT.getMessage()));
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -79,7 +79,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE.getMessage()));
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -89,7 +89,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_EXPIRED.getMessage()));
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -103,7 +103,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_NOT_TRUSTED.getMessage()));
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -113,7 +113,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -123,7 +123,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertFalse(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH.getMessage()));
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -167,7 +167,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test
@@ -178,7 +178,7 @@ public class AuthenticationResponseValidatorTest {
 
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
   @Test(expected = TechnicalErrorException.class)
@@ -247,7 +247,7 @@ public class AuthenticationResponseValidatorTest {
     return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
   }
 
-  private void asserAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity, X509Certificate certificate) throws InvalidNameException {
+  private void assertAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity, X509Certificate certificate) throws InvalidNameException {
     LdapName ln = new LdapName(certificate.getSubjectDN().getName());
     for(Rdn rdn : ln.getRdns()) {
       if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {

@@ -75,7 +75,7 @@ public class SmartIdIntegrationTest {
 
     AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
     SmartIdAuthenticationResult authenticationResult = authenticationResponseValidator.validate(authenticationResponse);
-    asserAuthenticationResultValid(authenticationResult);
+    assertAuthenticationResultValid(authenticationResult);
   }
 
   private void assertSignatureCreated(SmartIdSignature signature) {
@@ -98,13 +98,13 @@ public class SmartIdIntegrationTest {
     assertNotNull(authenticationResponse.getCertificateLevel());
   }
 
-  private void asserAuthenticationResultValid(SmartIdAuthenticationResult authenticationResult) {
+  private void assertAuthenticationResultValid(SmartIdAuthenticationResult authenticationResult) {
     assertTrue(authenticationResult.isValid());
     assertTrue(authenticationResult.getErrors().isEmpty());
-    asserAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity());
+    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity());
   }
 
-  private void asserAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity) {
+  private void assertAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity) {
     assertThat(authenticationIdentity.getGivenName(), not(isEmptyOrNullString()));
     assertThat(authenticationIdentity.getSurName(), not(isEmptyOrNullString()));
     assertThat(authenticationIdentity.getIdentityCode(), not(isEmptyOrNullString()));

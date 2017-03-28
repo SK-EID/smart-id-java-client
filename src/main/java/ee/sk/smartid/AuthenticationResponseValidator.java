@@ -27,12 +27,21 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Class used to validate the authentication
+ */
 public class AuthenticationResponseValidator {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseValidator.class);
 
   private List<X509Certificate> trustedCACertificates = new ArrayList<>();
 
+  /**
+   * Constructs a new {@code AuthenticationResponseValidator}.
+   *
+   * The constructed instance is initialized with default trusted
+   * CA certificates.
+   */
   public AuthenticationResponseValidator() {
     try {
       initializeTrustedCACertificatesFromResources();
@@ -42,6 +51,12 @@ public class AuthenticationResponseValidator {
     }
   }
 
+  /**
+   * Validates the authentication response and returns the its result.
+   *
+   * @param authenticationResponse authentication response to be validated
+   * @return authentication result
+   */
   public SmartIdAuthenticationResult validate(SmartIdAuthenticationResponse authenticationResponse) {
     validateAuthenticationResponse(authenticationResponse);
     SmartIdAuthenticationResult authenticationResult = new SmartIdAuthenticationResult();
@@ -70,24 +85,73 @@ public class AuthenticationResponseValidator {
     return authenticationResult;
   }
 
+  /**
+   * Gets the list of trusted CA certificates
+   *
+   * Authenticating person's certificate has to be issued by
+   * one of the trusted CA certificates. Otherwise the person's
+   * authentication is deemed untrusted and therefore not valid.
+   *
+   * @return list of trusted CA certificates
+   */
   public List<X509Certificate> getTrustedCACertificates() {
     return trustedCACertificates;
   }
 
+  /**
+   * Adds a certificate to the list of trusted CA certificates
+   *
+   * Authenticating person's certificate has to be issued by
+   * one of the trusted CA certificates. Otherwise the person's
+   * authentication is deemed untrusted and therefore not valid.
+   *
+   * @param certificate trusted CA certificate
+   */
   public void addTrustedCACertificate(X509Certificate certificate) {
     trustedCACertificates.add(certificate);
   }
 
+  /**
+   * Constructs a certificate from the byte array and
+   * adds it into the list of trusted CA certificates
+   *
+   * Authenticating person's certificate has to be issued by
+   * one of the trusted CA certificates. Otherwise the person's
+   * authentication is deemed untrusted and therefore not valid.
+   *
+   * @throws CertificateException when there was an error constructing the certificate from bytes
+   * @param certificateBytes trusted CA certificate
+   */
   public void addTrustedCACertificate(byte[] certificateBytes) throws CertificateException {
     CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
     X509Certificate caCertificate = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
     addTrustedCACertificate(caCertificate);
   }
 
+  /**
+   * Constructs a certificate from the file
+   * and adds it into the list of trusted CA certificates
+   *
+   * Authenticating person's certificate has to be issued by
+   * one of the trusted CA certificates. Otherwise the person's
+   * authentication is deemed untrusted and therefore not valid.
+   *
+   * @throws IOException when there is an error reading the file
+   * @throws CertificateException when there is an error constructing the certificate from the bytes of the file
+   * @param certificateFile trusted CA certificate
+   */
   public void addTrustedCACertificate(File certificateFile) throws IOException, CertificateException {
     addTrustedCACertificate(Files.readAllBytes(certificateFile.toPath()));
   }
 
+  /**
+   * Clears the list of trusted CA certificates
+   *
+   * PS! When clearing the trusted CA certificates
+   * make sure it is not left empty. In that case
+   * there is impossible to verify the trust of the
+   * authenticating person.
+   */
   public void clearTrustedCACertificates() {
     trustedCACertificates.clear();
   }

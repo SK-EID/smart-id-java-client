@@ -21,55 +21,152 @@ import org.slf4j.LoggerFactory;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+/**
+ * Class for building authentication request and getting the response.
+ */
 public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationRequestBuilder.class);
 
+/**
+ * Constructs a new {@code AuthenticationRequestBuilder}
+ *
+ * @param connector for requesting authentication initiation
+ * @param sessionStatusPoller for polling the authentication response
+ */
   public AuthenticationRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     super(connector, sessionStatusPoller);
     logger.debug("Instantiating authentication request builder");
   }
 
+  /**
+   * Sets the request's UUID of the relying party
+   *
+   * If not for explicit need, it is recommended to use
+   * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyUUID(String)}
+   * instead. In that case when getting the builder from
+   * {@link ee.sk.smartid.SmartIdClient} it is not required
+   * to set the UUID every time when building a new request.
+   *
+   * @param relyingPartyUUID UUID of the relying party
+   */
   public AuthenticationRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
     super.withRelyingPartyUUID(relyingPartyUUID);
     return this;
   }
 
+  /**
+   * Sets the request's name of the relying party
+   *
+   * If not for explicit need, it is recommended to use
+   * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyName(String)}
+   * instead. In that case when getting the builder from
+   * {@link ee.sk.smartid.SmartIdClient} it is not required
+   * to set name every time when building a new request.
+   *
+   * @param relyingPartyName name of the relying party
+   */
   public AuthenticationRequestBuilder withRelyingPartyName(String relyingPartyName) {
     super.withRelyingPartyName(relyingPartyName);
     return this;
   }
 
+  /**
+   * Sets the request's document number
+   *
+   * Document number is unique for the user's certificate/device
+   * that is used for the authentication.
+   * To authenticate with person's national identity use:
+   * {@link #withNationalIdentity(NationalIdentity)}
+   *
+   *
+   * @param documentNumber document number of the certificate/device to be authenticated
+   */
   public AuthenticationRequestBuilder withDocumentNumber(String documentNumber) {
     super.withDocumentNumber(documentNumber);
     return this;
   }
 
+  /**
+   * Sets the request's national identity
+   *
+   * The national identity of the person to be authenticated
+   * consists of country code and national identity number.
+   * To authenticate with document number use:
+   * {@link #withDocumentNumber(String)}}
+   *
+   * @param nationalIdentity national identity of the person to be authenticated
+   */
   public AuthenticationRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
     super.withNationalIdentity(nationalIdentity);
     return this;
   }
 
+  /**
+   * Sets the request's national identity number
+   *
+   * National identity consists of country code and national
+   * identity number. Either use
+   * {@link #withNationalIdentity(NationalIdentity)}
+   * or use {@link #withNationalIdentityNumber(String)}
+   * and {@link #withCountryCode(String)} separately.
+   *
+   * @param nationalIdentityNumber national identity number of the national identity
+   */
   public AuthenticationRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
     super.withNationalIdentityNumber(nationalIdentityNumber);
     return this;
   }
 
+  /**
+   * Sets the request's country code
+   *
+   * National identity consists of country code and national
+   * identity number. Either use
+   * {@link #withNationalIdentity(NationalIdentity)}
+   * or use {@link #withNationalIdentityNumber(String)}
+   * and {@link #withCountryCode(String)} separately.
+   *
+   * @param countryCode country code of the national identity
+   */
   public AuthenticationRequestBuilder withCountryCode(String countryCode) {
     super.withCountryCode(countryCode);
     return this;
   }
 
+  /**
+   * Sets the request's authentication hash
+   *
+   * It is the hash that is signed by a person's device
+   * which is essential for the authentication verification.
+   * For security reasons the hash should be generated
+   * randomly for every new request. It is recommended to use:
+   * {@link ee.sk.smartid.AuthenticationHash#generateRandomHash()}
+   *
+   * @param authenticationHash hash used to sign for authentication
+   */
   public AuthenticationRequestBuilder withAuthenticationHash(AuthenticationHash authenticationHash) {
     super.withSignableHash(authenticationHash);
     return this;
   }
 
+  /**
+   * Sets the request's certificate level
+   *
+   * Defines the minimum required level of the certificate
+   *
+   * @param certificateLevel the level of the certificate
+   */
   public AuthenticationRequestBuilder withCertificateLevel(String certificateLevel) {
     super.withCertificateLevel(certificateLevel);
     return this;
   }
 
+  /**
+   * Send the authentication request and get the response
+   *
+   * @return the authentication response
+   */
   public SmartIdAuthenticationResponse authenticate() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
     validateParameters();
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
