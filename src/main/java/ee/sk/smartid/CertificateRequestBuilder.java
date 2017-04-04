@@ -149,6 +149,25 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Sets the request's nonce
+   *
+   * By default the certificate choice's initiation request
+   * has idempotent behaviour meaning when the request
+   * is repeated inside a given time frame with exactly
+   * the same parameters, session ID of an existing session
+   * can be returned as a result. When requester wants, it can
+   * override the idempotent behaviour inside of this time frame
+   * using an optional "nonce" parameter present for all POST requests.
+   * Normally, this parameter can be omitted.
+   *
+   * @param nonce
+   */
+  public CertificateRequestBuilder withNonce(String nonce) {
+    super.withNonce(nonce);
+    return this;
+  }
+
+  /**
    * Send the certificate choice request and get the response
    *
    * @return the certificate choice response
@@ -187,6 +206,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     request.setRelyingPartyUUID(getRelyingPartyUUID());
     request.setRelyingPartyName(getRelyingPartyName());
     request.setCertificateLevel(getCertificateLevel());
+    request.setNonce(getNonce());
     return request;
   }
 

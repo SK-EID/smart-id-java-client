@@ -49,12 +49,17 @@ public class SmartIdClientTest {
     client.setHostUrl("http://localhost:18089");
     stubRequestWithResponse("/certificatechoice/pno/EE/31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+    stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
     stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithSha512.json", "responses/signatureSessionResponse.json");
+    stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
+    stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithDisplayText.json", "responses/signatureSessionResponse.json");
     stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
     stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
     stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     stubRequestWithResponse("/authentication/pno/EE/31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
     stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json");
   }
 
@@ -140,16 +145,68 @@ public class SmartIdClientTest {
   }
 
   @Test
+  public void getCertificateWithNonce() throws Exception {
+    SmartIdCertificate certificate = client
+        .getCertificate()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withCertificateLevel("ADVANCED")
+        .withNonce("zstOt2umlc")
+        .fetch();
+
+    assertCertificateResponseValid(certificate);
+  }
+
+  @Test
   public void sign() throws Exception {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
     assertEquals("1796", hashToSign.calculateVerificationCode());
+
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber("PNOEE-31111111111")
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
+        .sign();
+
+    assertValidSignatureCreated(signature);
+  }
+
+  @Test
+  public void signWithNonce() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA256);
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
+    assertEquals("1796", hashToSign.calculateVerificationCode());
+
+    SmartIdSignature signature = client
+        .createSignature()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withSignableHash(hashToSign)
+        .withCertificateLevel("ADVANCED")
+        .withNonce("zstOt2umlc")
+        .sign();
+
+    assertValidSignatureCreated(signature);
+  }
+
+  @Test
+  public void signWithDisplayText() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA256);
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
+    assertEquals("1796", hashToSign.calculateVerificationCode());
+
+    SmartIdSignature signature = client
+        .createSignature()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withSignableHash(hashToSign)
+        .withCertificateLevel("ADVANCED")
+        .withDisplayText("Authorize transfer of €10")
         .sign();
 
     assertValidSignatureCreated(signature);
@@ -264,6 +321,44 @@ public class SmartIdClientTest {
         .withNationalIdentity(identity)
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
+        .authenticate();
+
+    assertAuthenticationResponseValid(authenticationResponse);
+  }
+
+  @Test
+  public void authenticateWithNonce() throws Exception {
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==\"");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    assertEquals("4430", authenticationHash.calculateVerificationCode());
+
+    SmartIdAuthenticationResponse authenticationResponse = client
+        .createAuthentication()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("ADVANCED")
+        .withNonce("g9rp4kjca3")
+        .authenticate();
+
+    assertAuthenticationResponseValid(authenticationResponse);
+  }
+
+  @Test
+  public void authenticateWithDisplayText() throws Exception {
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==\"");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    assertEquals("4430", authenticationHash.calculateVerificationCode());
+
+    SmartIdAuthenticationResponse authenticationResponse = client
+        .createAuthentication()
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("ADVANCED")
+        .withDisplayText("Log into internet banking system")
         .authenticate();
 
     assertAuthenticationResponseValid(authenticationResponse);

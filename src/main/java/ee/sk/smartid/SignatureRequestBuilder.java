@@ -123,6 +123,37 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Sets the request's display text
+   *
+   * It's the text to display for authentication consent dialog on the mobile device.
+   *
+   * @param displayText text to display
+   */
+  public SignatureRequestBuilder withDisplayText(String displayText) {
+    super.withDisplayText(displayText);
+    return this;
+  }
+
+  /**
+   * Sets the request's nonce
+   *
+   * By default the signature's initiation request
+   * has idempotent behaviour meaning when the request
+   * is repeated inside a given time frame with exactly
+   * the same parameters, session ID of an existing session
+   * can be returned as a result. When requester wants, it can
+   * override the idempotent behaviour inside of this time frame
+   * using an optional "nonce" parameter present for all POST requests.
+   * Normally, this parameter can be omitted.
+   *
+   * @param nonce
+   */
+  public SignatureRequestBuilder withNonce(String nonce) {
+    super.withNonce(nonce);
+    return this;
+  }
+
+  /**
    * Send the signature request and get the response
    *
    * @return the signature response
@@ -163,6 +194,8 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setCertificateLevel(getCertificateLevel());
     request.setHashType(getHashTypeString());
     request.setHash(getHashInBase64());
+    request.setDisplayText(getDisplayText());
+    request.setNonce(getNonce());
     return request;
   }
 

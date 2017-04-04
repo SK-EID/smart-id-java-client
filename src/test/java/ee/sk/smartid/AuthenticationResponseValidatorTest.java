@@ -5,7 +5,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Before;
 import org.junit.Test;
-import sun.security.provider.X509Factory;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
@@ -128,7 +127,7 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void testTrustedCACertificateLoadingInPEMFormat() throws Exception {
-    String caCertificateInPem = X509Factory.BEGIN_CERT + "\n" + CERTIFICATE + "\n" + X509Factory.END_CERT;
+    String caCertificateInPem = CertificateParser.BEGIN_CERT + "\n" + CERTIFICATE + "\n" + CertificateParser.END_CERT;
 
     AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
     validator.clearTrustedCACertificates();

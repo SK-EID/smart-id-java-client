@@ -24,6 +24,8 @@ public abstract class SmartIdRequestBuilder {
   private String certificateLevel;
   private SignableData dataToSign;
   private SignableHash hashToSign;
+  private String nonce;
+  private String displayText;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
@@ -72,6 +74,16 @@ public abstract class SmartIdRequestBuilder {
 
   protected SmartIdRequestBuilder withCertificateLevel(String certificateLevel) {
     this.certificateLevel = certificateLevel;
+    return this;
+  }
+
+  protected SmartIdRequestBuilder withNonce(String nonce) {
+    this.nonce = nonce;
+    return this;
+  }
+
+  protected SmartIdRequestBuilder withDisplayText(String displayText) {
+    this.displayText = displayText;
     return this;
   }
 
@@ -145,5 +157,13 @@ public abstract class SmartIdRequestBuilder {
 
   protected String getCertificateLevel() {
     return certificateLevel;
+  }
+
+  protected String getNonce() {
+    return nonce;
+  }
+
+  protected String getDisplayText() {
+    return displayText;
   }
 }

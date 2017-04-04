@@ -32,25 +32,6 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test
-  public void signHashInBase64() throws Exception {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
-    hashToSign.setHashType(HashType.SHA256);
-
-    SmartIdSignature signature = builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withCertificateLevel("QUALIFIED")
-        .withSignableHash(hashToSign)
-        .withDocumentNumber("PNOEE-31111111111")
-        .sign();
-
-    assertCorrectSignatureRequestMade("QUALIFIED");
-    assertCorrectSessionRequestMade();
-    assertSignatureCorrect(signature);
-  }
-
-  @Test
   public void signWithSignableHash() throws Exception {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
@@ -88,7 +69,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test
-  public void getCertificateWithoutCertificateLevel_shouldPass() throws Exception {
+  public void signWithoutCertificateLevel_shouldPass() throws Exception {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
     hashToSign.setHashType(HashType.SHA256);
