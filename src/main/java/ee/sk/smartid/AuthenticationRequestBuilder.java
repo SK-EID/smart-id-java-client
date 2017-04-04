@@ -49,6 +49,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * to set the UUID every time when building a new request.
    *
    * @param relyingPartyUUID UUID of the relying party
+   * @return this builder
    */
   public AuthenticationRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
     super.withRelyingPartyUUID(relyingPartyUUID);
@@ -65,6 +66,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * to set name every time when building a new request.
    *
    * @param relyingPartyName name of the relying party
+   * @return this builder
    */
   public AuthenticationRequestBuilder withRelyingPartyName(String relyingPartyName) {
     super.withRelyingPartyName(relyingPartyName);
@@ -79,8 +81,8 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * To authenticate with person's national identity use:
    * {@link #withNationalIdentity(NationalIdentity)}
    *
-   *
    * @param documentNumber document number of the certificate/device to be authenticated
+   * @return this builder
    */
   public AuthenticationRequestBuilder withDocumentNumber(String documentNumber) {
     super.withDocumentNumber(documentNumber);
@@ -96,6 +98,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * {@link #withDocumentNumber(String)}}
    *
    * @param nationalIdentity national identity of the person to be authenticated
+   * @return this builder
    */
   public AuthenticationRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
     super.withNationalIdentity(nationalIdentity);
@@ -112,6 +115,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * and {@link #withCountryCode(String)} separately.
    *
    * @param nationalIdentityNumber national identity number of the national identity
+   * @return this builder
    */
   public AuthenticationRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
     super.withNationalIdentityNumber(nationalIdentityNumber);
@@ -128,6 +132,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * and {@link #withCountryCode(String)} separately.
    *
    * @param countryCode country code of the national identity
+   * @return this builder
    */
   public AuthenticationRequestBuilder withCountryCode(String countryCode) {
     super.withCountryCode(countryCode);
@@ -144,6 +149,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * {@link ee.sk.smartid.AuthenticationHash#generateRandomHash()}
    *
    * @param authenticationHash hash used to sign for authentication
+   * @return this builder
    */
   public AuthenticationRequestBuilder withAuthenticationHash(AuthenticationHash authenticationHash) {
     super.withSignableHash(authenticationHash);
@@ -156,6 +162,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * Defines the minimum required level of the certificate
    *
    * @param certificateLevel the level of the certificate
+   * @return this builder
    */
   public AuthenticationRequestBuilder withCertificateLevel(String certificateLevel) {
     super.withCertificateLevel(certificateLevel);
@@ -168,6 +175,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * It's the text to display for authentication consent dialog on the mobile device.
    *
    * @param displayText text to display
+   * @return this builder
    */
   public AuthenticationRequestBuilder withDisplayText(String displayText) {
     super.withDisplayText(displayText);
@@ -187,6 +195,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * Normally, this parameter can be omitted.
    *
    * @param nonce
+   * @return this builder
    */
   public AuthenticationRequestBuilder withNonce(String nonce) {
     super.withNonce(nonce);

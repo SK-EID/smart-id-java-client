@@ -50,6 +50,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * to set the UUID every time when building a new request.
    *
    * @param relyingPartyUUID UUID of the relying party
+   * @return this builder
    */
   public CertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
     super.withRelyingPartyUUID(relyingPartyUUID);
@@ -66,6 +67,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * to set name every time when building a new request.
    *
    * @param relyingPartyName name of the relying party
+   * @return this builder
    */
   public CertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
     super.withRelyingPartyName(relyingPartyName);
@@ -81,6 +83,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * {@link #withNationalIdentity(NationalIdentity)}
    *
    * @param documentNumber document number of the certificate/device used to choose the certificate
+   * @return this builder
    */
   public CertificateRequestBuilder withDocumentNumber(String documentNumber) {
     super.withDocumentNumber(documentNumber);
@@ -97,6 +100,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * {@link #withDocumentNumber(String) withDocumentNumber}
    *
    * @param nationalIdentity national identity of person choosing the certificate
+   * @return this builder
    */
   public CertificateRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
     super.withNationalIdentity(nationalIdentity);
@@ -113,6 +117,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * and {@link #withCountryCode(String)} separately.
    *
    * @param countryCode country code of the national identity
+   * @return this builder
    */
   public CertificateRequestBuilder withCountryCode(String countryCode) {
     super.withCountryCode(countryCode);
@@ -129,6 +134,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * and {@link #withCountryCode(String)} separately.
    *
    * @param nationalIdentityNumber national identity number of the national identity
+   * @return this builder
    */
   public CertificateRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
     super.withNationalIdentityNumber(nationalIdentityNumber);
@@ -142,6 +148,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * If not set
    *
    * @param certificateLevel the level of the certificate
+   * @return this builder
    */
   public CertificateRequestBuilder withCertificateLevel(String certificateLevel) {
     super.withCertificateLevel(certificateLevel);
@@ -161,6 +168,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * Normally, this parameter can be omitted.
    *
    * @param nonce
+   * @return this builder
    */
   public CertificateRequestBuilder withNonce(String nonce) {
     super.withNonce(nonce);

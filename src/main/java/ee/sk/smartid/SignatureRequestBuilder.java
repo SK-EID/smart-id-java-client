@@ -46,6 +46,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * to set the UUID every time when building a new request.
    *
    * @param relyingPartyUUID UUID of the relying party
+   * @return this builder
    */
   public SignatureRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
     super.withRelyingPartyUUID(relyingPartyUUID);
@@ -62,6 +63,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * to set name every time when building a new request.
    *
    * @param relyingPartyName name of the relying party
+   * @return this builder
    */
   public SignatureRequestBuilder withRelyingPartyName(String relyingPartyName) {
     super.withRelyingPartyName(relyingPartyName);
@@ -75,6 +77,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * that is used for the signing.
    *
    * @param documentNumber document number of the certificate/device used to sign
+   * @return this builder
    */
   public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
     super.withDocumentNumber(documentNumber);
@@ -91,6 +94,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * and the data is hashed for you.
    *
    * @param dataToSign dat to be signed
+   * @return this builder
    */
   public SignatureRequestBuilder withSignableData(SignableData dataToSign) {
     super.withSignableData(dataToSign);
@@ -104,6 +108,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * to be signed is in hashed format.
    *
    * @param hashToSign hash to be signed
+   * @return this builder
    */
   public SignatureRequestBuilder withSignableHash(SignableHash hashToSign) {
     super.withSignableHash(hashToSign);
@@ -116,6 +121,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * Defines the minimum required level of the certificate
    *
    * @param certificateLevel the level of the certificate
+   * @return this builder
    */
   public SignatureRequestBuilder withCertificateLevel(String certificateLevel) {
     super.withCertificateLevel(certificateLevel);
@@ -128,6 +134,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * It's the text to display for authentication consent dialog on the mobile device.
    *
    * @param displayText text to display
+   * @return this builder
    */
   public SignatureRequestBuilder withDisplayText(String displayText) {
     super.withDisplayText(displayText);
@@ -147,6 +154,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * Normally, this parameter can be omitted.
    *
    * @param nonce
+   * @return this builder
    */
   public SignatureRequestBuilder withNonce(String nonce) {
     super.withNonce(nonce);
