@@ -19,7 +19,22 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
- * Class for building signature request and getting the response.
+ * Class for building signature request and getting the response
+ * <p>
+ * Mandatory request parameters:
+ * <ul>
+ * <li><b>Host url</b> - can be set on the {@link ee.sk.smartid.SmartIdClient} level</li>
+ * <li><b>Relying party uuid</b> - can either be set on the client or builder level</li>
+ * <li><b>Relying party name</b> - can either be set on the client or builder level</li>
+ * <li><b>Document number</b></li>
+ * <li>Either <b>Signable hash</b> or <b>Signable data</b></li>
+ * </ul>
+ * Optional request parameters:
+ * <ul>
+ * <li><b>Certificate level</b></li>
+ * <li><b>Display text</b></li>
+ * <li><b>Nonce</b></li>
+ * </ul>
  */
 public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
@@ -38,7 +53,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's UUID of the relying party
-   *
+   * <p>
    * If not for explicit need, it is recommended to use
    * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyUUID(String)}
    * instead. In that case when getting the builder from
@@ -55,7 +70,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's name of the relying party
-   *
+   * <p>
    * If not for explicit need, it is recommended to use
    * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyName(String)}
    * instead. In that case when getting the builder from
@@ -72,7 +87,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's document number
-   *
+   * <p>
    * Document number is unique for the user's certificate/device
    * that is used for the signing.
    *
@@ -86,8 +101,8 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the data of the document to be signed
-   *
-   * This could be used when the data
+   * <p>
+   * This method could be used when the data
    * to be signed is not in hashed format.
    * {@link ee.sk.smartid.SignableData#setHashType(HashType)}
    * can be used to select the wanted hash type
@@ -103,8 +118,8 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the hash to be signed
-   *
-   * This could be used when the data
+   * <p>
+   * This method could be used when the data
    * to be signed is in hashed format.
    *
    * @param hashToSign hash to be signed
@@ -117,8 +132,10 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's certificate level
-   *
-   * Defines the minimum required level of the certificate
+   * <p>
+   * Defines the minimum required level of the certificate.
+   * Optional. When not set, it defaults to what is configured
+   * on the server side i.e. "QUALIFIED".
    *
    * @param certificateLevel the level of the certificate
    * @return this builder
@@ -130,8 +147,9 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's display text
-   *
-   * It's the text to display for authentication consent dialog on the mobile device.
+   * <p>
+   * Optional. It's the text to display for authentication consent dialog
+   * on the mobile device.
    *
    * @param displayText text to display
    * @return this builder
@@ -143,7 +161,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's nonce
-   *
+   * <p>
    * By default the signature's initiation request
    * has idempotent behaviour meaning when the request
    * is repeated inside a given time frame with exactly
@@ -151,9 +169,10 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * can be returned as a result. When requester wants, it can
    * override the idempotent behaviour inside of this time frame
    * using an optional "nonce" parameter present for all POST requests.
+   * <p>
    * Normally, this parameter can be omitted.
    *
-   * @param nonce
+   * @param nonce nonce of the request
    * @return this builder
    */
   public SignatureRequestBuilder withNonce(String nonce) {
@@ -164,9 +183,17 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Send the signature request and get the response
    *
+   * @throws InvalidParametersException when mandatory request parameters are missing
+   * @throws UserAccountNotFoundException when the user account was not found
+   * @throws UserRefusedException when the user has refused the session
+   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
+   * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
+   *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
+   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   *
    * @return the signature response
    */
-  public SmartIdSignature sign() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
+  public SmartIdSignature sign() throws InvalidParametersException, UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException {
     validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = getConnector().sign(getDocumentNumber(), request);

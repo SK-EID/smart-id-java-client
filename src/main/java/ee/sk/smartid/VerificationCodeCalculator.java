@@ -8,12 +8,12 @@ public class VerificationCodeCalculator {
 
   /**
    * The Verification Code (VC) is computed as:
-   * <p/>
+   * <p>
    * integer(SHA256(hash)[−2:−1]) mod 10000
-   * <p/>
+   * <p>
    * where we take SHA256 result, extract 2 rightmost bytes from it,
    * interpret them as a big-endian unsigned integer and take the last 4 digits in decimal for display.
-   * <p/>
+   * <p>
    * SHA256 is always used here, no matter what was the algorithm used to calculate hash.
    *
    * @param documentHash hash used to calculate verification code.

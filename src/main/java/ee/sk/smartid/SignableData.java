@@ -4,6 +4,21 @@ import org.apache.commons.codec.binary.Base64;
 
 import java.io.Serializable;
 
+/**
+ * This class can be used to contain the data
+ * to be signed when it is not yet in hashed format
+ * <p>
+ * {@link #setHashType(HashType)} can be used
+ * to set the wanted hash tpye. SHA-512 is default.
+ * <p>
+ * {@link #calculateHash()} and
+ * {@link #calculateHashInBase64()} methods
+ * are used to calculate the hash for signing request.
+ * <p>
+ * {@link ee.sk.smartid.SignableHash} can be used
+ * instead when the data to be signed is already
+ * in hashed format.
+ */
 public class SignableData implements Serializable {
 
   private byte[] dataToSign;
@@ -24,7 +39,7 @@ public class SignableData implements Serializable {
 
   /**
    * Calculates the verification code from the data
-   *
+   * <p>
    * Verification code should be displayed on the web page or some sort of web service
    * so the person signing through the Smart-ID mobile app can verify if the verification code
    * displayed on the phone matches with the one shown on the web page.

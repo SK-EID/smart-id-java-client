@@ -9,8 +9,70 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Class that can be used to configure and get different types of request builders
+ * <p>
+ * Basic example of authentication:
+ * <pre class="code"><code class="java">
+ *   // Client setup. Note that these values are demo environment specific.
+ *   SmartIdClient client = new SmartIdClient();
+ *   client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+ *   client.setRelyingPartyName("DEMO");
+ *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v1/");
+ *
+ *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
+ *
+ *   AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
+ *
+ *   // verificationCode should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify
+ *   // if the verification code displayed on the phone matches with the one shown on the web page.
+ *   String verificationCode = authenticationHash.calculateVerificationCode());
+ *
+ *   SmartIdAuthenticationResponse authenticationResponse = client
+ *       .createAuthentication()
+ *       .withNationalIdentity(identity)
+ *       .withAuthenticationHash(authenticationHash)
+ *       .authenticate();
+ *
+ * // The authenticationResponse should also be validated with
+ * // AuthenticationResponseValidator's validate(SmartIdAuthenticationResponse) method afterwards.
+ * </code></pre>
+ * <p>
+ * Basic example of choosing a (device) certificate and then creating signature with it:
+ * <pre class="code"><code class="java">
+ *   // Client setup. Note that these values are demo environment specific.
+ *   SmartIdClient client = new SmartIdClient();
+ *   client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+ *   client.setRelyingPartyName("DEMO");
+ *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v1/");
+ *
+ *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
+ *
+ *   SmartIdCertificate certificateResponse = client
+ *       .getCertificate()
+ *       .withNationalIdentity(identity)
+ *       .fetch();
+ *
+ *   // get the document number for creating signature
+ *   String documentNumber = certificateResponse.getDocumentNumber();
+ *
+ *   SignableHash hashToSign = new SignableHash();
+ *   hashToSign.setHashType(HashType.SHA256);
+ *   hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");;
+ *
+ *   // to display the verificationCode on the web page
+ *   String verificationCode = dataToSign.calculateVerificationCode();
+
+ *   SmartIdSignature signature = client
+ *   .createSignature()
+ *   .withDocumentNumber(documentNumber)
+ *   .withSignableHash(hashToSign)
+ *   .withCertificateLevel("QUALIFIED")
+ *   .sign();
+
+ *   byte[] signature = signature.getValue();
+ * </code></pre>
+ * @see <a href="https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it">https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it</a>
  */
-public class SmartIdClient implements Serializable {
+public class SmartIdClient {
 
   private String relyingPartyUUID;
   private String relyingPartyName;
@@ -23,9 +85,10 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Gets an instance of the certificate request builder
-   *
-   * The builder is also configured with specified parameters
-   * before it is returned.
+   * <p>
+   * The builder is also configured with connector,
+   * status poller and specified parameters before
+   * it is returned.
    *
    * @return certificate request builder instance
    */
@@ -39,9 +102,10 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Gets an instance of the signature request builder
-   *
-   * The builder is also configured with specified parameters
-   * before it is returned.
+   * <p>
+   * The builder is also configured with connector,
+   * status poller and specified parameters before
+   * it is returned.
    *
    * @return signature request builder instance
    */
@@ -55,9 +119,10 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Gets an instance of the authentication request builder
-   *
-   * The builder is also configured with specified parameters
-   * before it is returned.
+   * <p>
+   * The builder is also configured with connector,
+   * status poller and specified parameters before
+   * it is returned.
    *
    * @return authentication request builder instance
    */
@@ -71,11 +136,10 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Sets the UUID of the relying party
-   *
+   * <p>
    * Can be set also on the builder level,
    * but in that case it has to be set explicitly
    * every time when building a new request.
-   *
    *
    * @param relyingPartyUUID UUID of the relying party
    */
@@ -94,7 +158,7 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Sets the name of the relying party
-   *
+   * <p>
    * Can be set also on the builder level,
    * but in that case it has to be set
    * every time when building a new request.
@@ -116,7 +180,7 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Sets the base URL of the Smart-ID backend environment
-   *
+   * <p>
    * It defines the endpoint which the client communicates to.
    *
    * @param hostUrl base URL of the Smart-ID backend environment
@@ -127,7 +191,7 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Sets the network connection configuration
-   *
+   * <p>
    * Useful for configuring network connection
    * timeouts, proxy settings, request headers etc.
    *
@@ -139,17 +203,22 @@ public class SmartIdClient implements Serializable {
 
   /**
    * Sets the timeout for each session status poll
-   *
+   * <p>
    * Under the hood each operation (authentication, signing, choosing
    * certificate) consists of 2 request steps:
+   * <p>
    * 1. Initiation request
+   * <p>
    * 2. Session status request
-   *
+   * <p>
    * Session status request is a long poll method, meaning
    * the request method might not return until a timeout expires
    * set by this parameter.
+   *  <p>
    * Caller can tune the request parameters inside the bounds
-   * set by service operator. If not provided, a default is used.
+   * set by service operator.
+   * <p>
+   * If not provided, a default is used.
    *
    * @param timeUnit time unit of the {@code timeValue} argument
    * @param timeValue time value of each status poll's timeout.

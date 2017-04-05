@@ -38,9 +38,11 @@ public class AuthenticationResponseValidator {
 
   /**
    * Constructs a new {@code AuthenticationResponseValidator}.
-   *
+   * <p>
    * The constructed instance is initialized with default trusted
    * CA certificates.
+   *
+   * @throws TechnicalErrorException when there was an error initializing trusted CA certificates
    */
   public AuthenticationResponseValidator() {
     try {
@@ -52,7 +54,9 @@ public class AuthenticationResponseValidator {
   }
 
   /**
-   * Validates the authentication response and returns the its result.
+   * Validates the authentication response and returns the its result
+   *
+   * @throws TechnicalErrorException when there was an error validating the response
    *
    * @param authenticationResponse authentication response to be validated
    * @return authentication result
@@ -87,7 +91,7 @@ public class AuthenticationResponseValidator {
 
   /**
    * Gets the list of trusted CA certificates
-   *
+   * <p>
    * Authenticating person's certificate has to be issued by
    * one of the trusted CA certificates. Otherwise the person's
    * authentication is deemed untrusted and therefore not valid.
@@ -100,7 +104,7 @@ public class AuthenticationResponseValidator {
 
   /**
    * Adds a certificate to the list of trusted CA certificates
-   *
+   * <p>
    * Authenticating person's certificate has to be issued by
    * one of the trusted CA certificates. Otherwise the person's
    * authentication is deemed untrusted and therefore not valid.
@@ -114,12 +118,13 @@ public class AuthenticationResponseValidator {
   /**
    * Constructs a certificate from the byte array and
    * adds it into the list of trusted CA certificates
-   *
+   * <p>
    * Authenticating person's certificate has to be issued by
    * one of the trusted CA certificates. Otherwise the person's
    * authentication is deemed untrusted and therefore not valid.
    *
    * @throws CertificateException when there was an error constructing the certificate from bytes
+   *
    * @param certificateBytes trusted CA certificate
    */
   public void addTrustedCACertificate(byte[] certificateBytes) throws CertificateException {
@@ -131,13 +136,14 @@ public class AuthenticationResponseValidator {
   /**
    * Constructs a certificate from the file
    * and adds it into the list of trusted CA certificates
-   *
+   * <p>
    * Authenticating person's certificate has to be issued by
    * one of the trusted CA certificates. Otherwise the person's
    * authentication is deemed untrusted and therefore not valid.
    *
    * @throws IOException when there is an error reading the file
    * @throws CertificateException when there is an error constructing the certificate from the bytes of the file
+   *
    * @param certificateFile trusted CA certificate
    */
   public void addTrustedCACertificate(File certificateFile) throws IOException, CertificateException {
@@ -146,7 +152,7 @@ public class AuthenticationResponseValidator {
 
   /**
    * Clears the list of trusted CA certificates
-   *
+   * <p>
    * PS! When clearing the trusted CA certificates
    * make sure it is not left empty. In that case
    * there is impossible to verify the trust of the

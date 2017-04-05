@@ -23,7 +23,20 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
- * Class for building certificate choice request and getting the response.
+ * Class for building certificate choice request and getting the response
+ * <p>
+ * Mandatory request parameters:
+ * <ul>
+ * <li><b>Host url</b> - can be set on the {@link ee.sk.smartid.SmartIdClient} level</li>
+ * <li><b>Relying party uuid</b> - can either be set on the client or builder level</li>
+ * <li><b>Relying party name</b> - can either be set on the client or builder level</li>
+ * <li>Either <b>Document number</b> or <b>national identity</b></li>
+ * </ul>
+ * Optional request parameters:
+ * <ul>
+ * <li><b>Certificate level</b></li>
+ * <li><b>Nonce</b></li>
+ * </ul>
  */
 public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
@@ -42,7 +55,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's UUID of the relying party
-   *
+   * <p>
    * If not for explicit need, it is recommended to use
    * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyUUID(String)}
    * instead. In that case when getting the builder from
@@ -59,7 +72,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's name of the relying party
-   *
+   * <p>
    * If not for explicit need, it is recommended to use
    * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyName(String)}
    * instead. In that case when getting the builder from
@@ -76,7 +89,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's document number
-   *
+   * <p>
    * Document number is unique for the user's certificate/device
    * that is used for choosing the certificate.
    * To choose certificate with person's national identity use:
@@ -92,7 +105,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's national identity
-   *
+   * <p>
    * The national identity of the person choosing the
    * certificate consists of country code and national
    * identity number.
@@ -109,7 +122,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's country code
-   *
+   * <p>
    * National identity consists of country code and national
    * identity number. Either use
    * {@link #withNationalIdentity(NationalIdentity)}
@@ -126,7 +139,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's national identity number
-   *
+   * <p>
    * National identity consists of country code and national
    * identity number. Either use
    * {@link #withNationalIdentity(NationalIdentity)}
@@ -143,9 +156,10 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's certificate level
-   *
+   * <p>
    * Defines the minimum required level of the certificate.
-   * If not set
+   * Optional. When not set, it defaults to what is configured
+   * on the server side i.e. "QUALIFIED".
    *
    * @param certificateLevel the level of the certificate
    * @return this builder
@@ -157,7 +171,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's nonce
-   *
+   * <p>
    * By default the certificate choice's initiation request
    * has idempotent behaviour meaning when the request
    * is repeated inside a given time frame with exactly
@@ -165,9 +179,10 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * can be returned as a result. When requester wants, it can
    * override the idempotent behaviour inside of this time frame
    * using an optional "nonce" parameter present for all POST requests.
+   * <p>
    * Normally, this parameter can be omitted.
    *
-   * @param nonce
+   * @param nonce nonce of the request
    * @return this builder
    */
   public CertificateRequestBuilder withNonce(String nonce) {
@@ -177,10 +192,18 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Send the certificate choice request and get the response
+   *x
+   * @throws InvalidParametersException when mandatory request parameters are missing
+   * @throws CertificateNotFoundException when the certificate was not found
+   * @throws UserRefusedException when the user has refused the session
+   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
+   * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
+   *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
+   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
    *
    * @return the certificate choice response
    */
-  public SmartIdCertificate fetch() throws CertificateNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
+  public SmartIdCertificate fetch() throws InvalidParametersException, CertificateNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException {
     logger.debug("Starting to fetch certificate");
     validateParameters();
     CertificateRequest request = createCertificateRequest();

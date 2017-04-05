@@ -22,7 +22,22 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
- * Class for building authentication request and getting the response.
+ * Class for building authentication request and getting the response
+ * <p>
+ * Mandatory request parameters:
+ * <ul>
+ * <li><b>Host url</b> - can be set on the {@link ee.sk.smartid.SmartIdClient} level</li>
+ * <li><b>Relying party uuid</b> - can either be set on the client or builder level</li>
+ * <li><b>Relying party name</b> - can either be set on the client or builder level</li>
+ * <li>Either <b>Document number</b> or <b>National identity</b></li>
+ * <li><b>Authentication hash</b></li>
+ * </ul>
+ * Optional request parameters:
+ * <ul>
+ * <li><b>Certificate level</b></li>
+ * <li><b>Display text</b></li>
+ * <li><b>Nonce</b></li>
+ * </ul>
  */
 public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
@@ -41,7 +56,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's UUID of the relying party
-   *
+   * <p>
    * If not for explicit need, it is recommended to use
    * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyUUID(String)}
    * instead. In that case when getting the builder from
@@ -58,7 +73,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's name of the relying party
-   *
+   * <p>
    * If not for explicit need, it is recommended to use
    * {@link ee.sk.smartid.SmartIdClient#setRelyingPartyName(String)}
    * instead. In that case when getting the builder from
@@ -75,7 +90,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's document number
-   *
+   * <p>
    * Document number is unique for the user's certificate/device
    * that is used for the authentication.
    * To authenticate with person's national identity use:
@@ -91,7 +106,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's national identity
-   *
+   * <p>
    * The national identity of the person to be authenticated
    * consists of country code and national identity number.
    * To authenticate with document number use:
@@ -107,7 +122,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's national identity number
-   *
+   * <p>
    * National identity consists of country code and national
    * identity number. Either use
    * {@link #withNationalIdentity(NationalIdentity)}
@@ -124,7 +139,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's country code
-   *
+   * <p>
    * National identity consists of country code and national
    * identity number. Either use
    * {@link #withNationalIdentity(NationalIdentity)}
@@ -141,7 +156,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's authentication hash
-   *
+   * <p>
    * It is the hash that is signed by a person's device
    * which is essential for the authentication verification.
    * For security reasons the hash should be generated
@@ -158,8 +173,10 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's certificate level
-   *
-   * Defines the minimum required level of the certificate
+   * <p>
+   * Defines the minimum required level of the certificate.
+   * Optional. When not set, it defaults to what is configured
+   * on the server side i.e. "QUALIFIED".
    *
    * @param certificateLevel the level of the certificate
    * @return this builder
@@ -171,8 +188,9 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's display text
-   *
-   * It's the text to display for authentication consent dialog on the mobile device.
+   * <p>
+   * Optional. It's the text to display for authentication consent dialog
+   * on the mobile device.
    *
    * @param displayText text to display
    * @return this builder
@@ -184,7 +202,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Sets the request's nonce
-   *
+   * <p>
    * By default the authentication's initiation request
    * has idempotent behaviour meaning when the request
    * is repeated inside a given time frame with exactly
@@ -192,9 +210,10 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * can be returned as a result. When requester wants, it can
    * override the idempotent behaviour inside of this time frame
    * using an optional "nonce" parameter present for all POST requests.
+   * <p>
    * Normally, this parameter can be omitted.
    *
-   * @param nonce
+   * @param nonce nonce of the request
    * @return this builder
    */
   public AuthenticationRequestBuilder withNonce(String nonce) {
@@ -205,9 +224,17 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Send the authentication request and get the response
    *
+   * @throws InvalidParametersException when mandatory request parameters are missing
+   * @throws UserAccountNotFoundException when the user account was not found
+   * @throws UserRefusedException when the user has refused the session
+   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
+   * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
+   *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
+   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   *
    * @return the authentication response
    */
-  public SmartIdAuthenticationResponse authenticate() throws UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, InvalidParametersException {
+  public SmartIdAuthenticationResponse authenticate() throws InvalidParametersException, UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException {
     validateParameters();
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
     AuthenticationSessionResponse response = getAuthenticationResponse(request);
