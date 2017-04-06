@@ -20,9 +20,10 @@ import java.util.concurrent.TimeUnit;
  *
  *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
  *
+ *   // For security reasons a new hash value must be created for each new authentication request
  *   AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
  *
- *   // verificationCode should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify
+ *   // verification code should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify
  *   // if the verification code displayed on the phone matches with the one shown on the web page.
  *   String verificationCode = authenticationHash.calculateVerificationCode());
  *
@@ -85,10 +86,6 @@ public class SmartIdClient {
 
   /**
    * Gets an instance of the certificate request builder
-   * <p>
-   * The builder is also configured with connector,
-   * status poller and specified parameters before
-   * it is returned.
    *
    * @return certificate request builder instance
    */
@@ -102,10 +99,6 @@ public class SmartIdClient {
 
   /**
    * Gets an instance of the signature request builder
-   * <p>
-   * The builder is also configured with connector,
-   * status poller and specified parameters before
-   * it is returned.
    *
    * @return signature request builder instance
    */
@@ -119,10 +112,6 @@ public class SmartIdClient {
 
   /**
    * Gets an instance of the authentication request builder
-   * <p>
-   * The builder is also configured with connector,
-   * status poller and specified parameters before
-   * it is returned.
    *
    * @return authentication request builder instance
    */
