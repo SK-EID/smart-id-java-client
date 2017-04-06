@@ -2,11 +2,7 @@ package ee.sk.smartid.rest;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.ClientRequestHeaderFilter;
-import ee.sk.smartid.exception.CertificateNotFoundException;
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.exception.UnauthorizedException;
-import ee.sk.smartid.exception.UserAccountNotFoundException;
+import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.dao.*;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
@@ -24,10 +20,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubBadRequestResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubUnauthorizedResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.*;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -173,6 +166,27 @@ public class SmartIdRestConnectorTest {
     connector.getCertificate("PNOEE-123456", request);
   }
 
+  @Test(expected = RequestForbiddenException.class)
+  public void getCertificate_whenRequestForbidden_shouldThrowException() throws Exception {
+    stubForbiddenResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate("PNOEE-123456", request);
+  }
+
+  @Test(expected = ClientNotSupportedException.class)
+  public void getCertificate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+    stubErrorResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", 480);
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate("PNOEE-123456", request);
+  }
+
+  @Test(expected = ServerMaintenanceException.class)
+  public void getCertificate_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+    stubErrorResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", 580);
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate("PNOEE-123456", request);
+  }
+
   @Test
   public void sign_usingDocumentNumber() throws Exception {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
@@ -219,6 +233,27 @@ public class SmartIdRestConnectorTest {
   @Test(expected = InvalidParametersException.class)
   public void sign_withWrongRequestParams_shouldThrowException() throws Exception {
     stubBadRequestResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    connector.sign("PNOEE-123456", request);
+  }
+
+  @Test(expected = RequestForbiddenException.class)
+  public void sign_whenRequestForbidden_shouldThrowException() throws Exception {
+    stubForbiddenResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    connector.sign("PNOEE-123456", request);
+  }
+
+  @Test(expected = ClientNotSupportedException.class)
+  public void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+    stubErrorResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", 480);
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+    connector.sign("PNOEE-123456", request);
+  }
+
+  @Test(expected = ServerMaintenanceException.class)
+  public void sign_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+    stubErrorResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", 580);
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
@@ -309,6 +344,27 @@ public class SmartIdRestConnectorTest {
   @Test(expected = InvalidParametersException.class)
   public void authenticate_withWrongRequestParams_shouldThrowException() throws Exception {
     stubBadRequestResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = RequestForbiddenException.class)
+  public void authenticate_whenRequestForbidden_shouldThrowException() throws Exception {
+    stubForbiddenResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = ClientNotSupportedException.class)
+  public void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+    stubErrorResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", 480);
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = ServerMaintenanceException.class)
+  public void authenticate_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+    stubErrorResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", 580);
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
   }

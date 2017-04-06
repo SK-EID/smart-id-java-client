@@ -1,18 +1,17 @@
 package ee.sk.smartid.rest;
 
-import ee.sk.smartid.exception.CertificateNotFoundException;
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.exception.UnauthorizedException;
-import ee.sk.smartid.exception.UserAccountNotFoundException;
+import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.dao.*;
 import org.glassfish.jersey.client.ClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -95,6 +94,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
     } catch (NotFoundException e) {
       logger.warn("User account not found for signing with document " + documentNumber);
       throw new UserAccountNotFoundException();
+    } catch (ForbiddenException e) {
+      logger.warn("No permission to issue the request");
+      throw new RequestForbiddenException();
     }
   }
 
@@ -134,6 +136,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
     } catch (NotFoundException e) {
       logger.warn("Certificate not found for URI " + uri + ": " + e.getMessage());
       throw new CertificateNotFoundException();
+    } catch (ForbiddenException e) {
+      logger.warn("No permission to issue the request");
+      throw new RequestForbiddenException();
     }
   }
 
@@ -143,6 +148,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
     } catch (NotFoundException e) {
       logger.warn("User account not found for URI " + uri + ": " + e.getMessage());
       throw new UserAccountNotFoundException();
+    } catch (ForbiddenException e) {
+      logger.warn("No permission to issue the request");
+      throw new RequestForbiddenException();
     }
   }
 
@@ -157,6 +165,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
     } catch (BadRequestException e) {
       logger.warn("Request is invalid for URI " + uri + ": " + e.getMessage());
       throw new InvalidParametersException();
+    } catch (ClientErrorException e) {
+      if (e.getResponse().getStatus() == 480) {
+        logger.warn("Client-side API is too old and not supported anymore");
+        throw new ClientNotSupportedException();
+      }
+      throw e;
+    } catch (ServerErrorException e) {
+      if (e.getResponse().getStatus() == 580) {
+        logger.warn("Server is under maintenance, retry later");
+        throw new ServerMaintenanceException();
+      }
+      throw e;
     }
   }
 

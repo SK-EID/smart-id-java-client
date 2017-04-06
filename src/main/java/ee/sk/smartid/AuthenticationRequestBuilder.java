@@ -1,11 +1,6 @@
 package ee.sk.smartid;
 
-import ee.sk.smartid.exception.DocumentUnusableException;
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.SessionTimeoutException;
-import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.exception.UserAccountNotFoundException;
-import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
@@ -226,15 +221,20 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    *
    * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
+   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
+   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
    * @throws UserRefusedException when the user has refused the session
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
    * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
+   * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return the authentication response
    */
-  public SmartIdAuthenticationResponse authenticate() throws InvalidParametersException, UserAccountNotFoundException, UserRefusedException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException {
+  public SmartIdAuthenticationResponse authenticate() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException, UserRefusedException,
+      SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
     validateParameters();
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
     AuthenticationSessionResponse response = getAuthenticationResponse(request);

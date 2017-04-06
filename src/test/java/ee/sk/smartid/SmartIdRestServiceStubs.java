@@ -32,6 +32,10 @@ public class SmartIdRestServiceStubs {
     stubErrorResponse(url, requestFile, 400);
   }
 
+  public static void stubForbiddenResponse(String url, String requestFile) throws IOException {
+    stubErrorResponse(url, requestFile, 403);
+  }
+
   public static void stubErrorResponse(String url, String requestFile, int errorStatus) throws IOException {
     stubFor(post(urlEqualTo(url))
         .withHeader("Accept", equalTo("application/json"))

@@ -1,11 +1,7 @@
 package ee.sk.smartid;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import ee.sk.smartid.exception.CertificateNotFoundException;
-import ee.sk.smartid.exception.DocumentUnusableException;
-import ee.sk.smartid.exception.SessionTimeoutException;
-import ee.sk.smartid.exception.UserAccountNotFoundException;
-import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
@@ -24,6 +20,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubErrorResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubForbiddenResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubSessionStatusWithState;
@@ -260,6 +258,42 @@ public class SmartIdClientTest {
     makeCreateSignatureRequest();
   }
 
+  @Test(expected = RequestForbiddenException.class)
+  public void getCertificate_whenRequestForbidden_shouldThrowException() throws Exception {
+    stubForbiddenResponse("/certificatechoice/pno/EE/31111111111", "requests/certificateChoiceRequest.json");
+    makeGetCertificateRequest();
+  }
+
+  @Test(expected = RequestForbiddenException.class)
+  public void sign_whenRequestForbidden_shouldThrowException() throws Exception {
+    stubForbiddenResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json");
+    makeCreateSignatureRequest();
+  }
+
+  @Test(expected = ClientNotSupportedException.class)
+  public void getCertificate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+    stubErrorResponse("/certificatechoice/pno/EE/31111111111", "requests/certificateChoiceRequest.json", 480);
+    makeGetCertificateRequest();
+  }
+
+  @Test(expected = ClientNotSupportedException.class)
+  public void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+    stubErrorResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", 480);
+    makeCreateSignatureRequest();
+  }
+
+  @Test(expected = ServerMaintenanceException.class)
+  public void getCertificate_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+    stubErrorResponse("/certificatechoice/pno/EE/31111111111", "requests/certificateChoiceRequest.json", 580);
+    makeGetCertificateRequest();
+  }
+
+  @Test(expected = ServerMaintenanceException.class)
+  public void sign_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+    stubErrorResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", 580);
+    makeCreateSignatureRequest();
+  }
+
   @Test
   public void setPollingSleepTimeoutForSignatureCreation() throws Exception {
     stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
@@ -385,6 +419,24 @@ public class SmartIdClientTest {
   @Test(expected = DocumentUnusableException.class)
   public void authenticate_whenDocumentUnusable_shouldThrowException() throws Exception {
     stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenDocumentUnusable.json");
+    makeAuthenticationRequest();
+  }
+
+  @Test(expected = RequestForbiddenException.class)
+  public void authenticate_whenRequestForbidden_shouldThrowException() throws Exception {
+    stubForbiddenResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json");
+    makeAuthenticationRequest();
+  }
+
+  @Test(expected = ClientNotSupportedException.class)
+  public void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+    stubErrorResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json", 480);
+    makeAuthenticationRequest();
+  }
+
+  @Test(expected = ServerMaintenanceException.class)
+  public void authenticate_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+    stubErrorResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json", 580);
     makeAuthenticationRequest();
   }
 
