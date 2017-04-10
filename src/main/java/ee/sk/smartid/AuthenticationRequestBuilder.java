@@ -240,8 +240,8 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     AuthenticationSessionResponse response = getAuthenticationResponse(request);
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
     validateResponse(sessionStatus);
-    SmartIdAuthenticationResponse AuthenticationResponse = createSmartIdAuthenticationResponse(sessionStatus);
-    return AuthenticationResponse;
+    SmartIdAuthenticationResponse authenticationResponse = createSmartIdAuthenticationResponse(sessionStatus);
+    return authenticationResponse;
   }
 
   private AuthenticationSessionResponse getAuthenticationResponse(AuthenticationSessionRequest request) {

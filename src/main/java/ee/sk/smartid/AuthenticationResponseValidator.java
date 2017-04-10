@@ -14,9 +14,12 @@ import javax.naming.ldap.Rdn;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
@@ -25,6 +28,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -45,12 +49,7 @@ public class AuthenticationResponseValidator {
    * @throws TechnicalErrorException when there was an error initializing trusted CA certificates
    */
   public AuthenticationResponseValidator() {
-    try {
-      initializeTrustedCACertificatesFromResources();
-    } catch (IOException | CertificateException e) {
-      logger.error("Error initializing trusted CA certificates");
-      throw new TechnicalErrorException("Error initializing trusted CA certificates", e);
-    }
+      initializeTrustedCACertificatesFromKeyStore();
   }
 
   /**
@@ -162,11 +161,20 @@ public class AuthenticationResponseValidator {
     trustedCACertificates.clear();
   }
 
-  private void initializeTrustedCACertificatesFromResources() throws IOException, CertificateException {
-    URL certificatesLocation = AuthenticationResponseValidator.class.getResource("/trusted_certificates");
-    File certificatesFolder = new File(certificatesLocation.getPath());
-    for (File certificateFile : certificatesFolder.listFiles()) {
-      addTrustedCACertificate(certificateFile);
+  private void initializeTrustedCACertificatesFromKeyStore() {
+    try {
+      InputStream is = AuthenticationResponseValidator.class.getResourceAsStream("/trusted_certificates.jks");
+      KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+      keystore.load(is, "changeit".toCharArray());
+      Enumeration<String> aliases = keystore.aliases();
+      while (aliases.hasMoreElements()) {
+        String alias = aliases.nextElement();
+        X509Certificate certificate = (X509Certificate) keystore.getCertificate(alias);
+        addTrustedCACertificate(certificate);
+      }
+    } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
+      logger.error("Error initializing trusted CA certificates", e);
+      throw new TechnicalErrorException("Error initializing trusted CA certificates", e);
     }
   }
 
