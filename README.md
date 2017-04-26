@@ -8,7 +8,7 @@
 
 ## Introduction
 
-The Smart-ID Java client can be used for easy integration of the Smart-ID solution to information systems or e-services.
+The Smart-ID Java client can be used for easy integration of the [Smart-ID](https://www.smart-id.com) solution to information systems or e-services.
 
 
 ## Features
