@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
  *
  *   SmartIdCertificate certificateResponse = client
- *       .getCertificate()
+ *       .getCert()
  *       .withNationalIdentity(identity)
  *       .fetch();
  *

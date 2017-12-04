@@ -55,9 +55,9 @@ public class SmartIdRestConnectorTest {
   public void getSessionStatus_forSuccessfulCertificateRequest() throws Exception {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
     assertSuccessfulResponse(sessionStatus);
-    assertNotNull(sessionStatus.getCertificate());
-    assertThat(sessionStatus.getCertificate().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
-    assertEquals("QUALIFIED", sessionStatus.getCertificate().getCertificateLevel());
+    assertNotNull(sessionStatus.getCert());
+    assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
+    assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
   }
 
   @Test
@@ -65,7 +65,7 @@ public class SmartIdRestConnectorTest {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
     assertSuccessfulResponse(sessionStatus);
     assertNotNull(sessionStatus.getSignature());
-    assertThat(sessionStatus.getSignature().getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv"));
+    assertThat(sessionStatus.getSignature().getValue(), startsWith("luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv"));
     assertEquals("sha256WithRSAEncryption", sessionStatus.getSignature().getAlgorithm());
   }
 
@@ -104,7 +104,7 @@ public class SmartIdRestConnectorTest {
     CertificateRequest request = createDummyCertificateRequest();
     CertificateChoiceResponse response = connector.getCertificate(identity, request);
     assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
   @Test
@@ -113,7 +113,7 @@ public class SmartIdRestConnectorTest {
     CertificateRequest request = createDummyCertificateRequest();
     CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
   @Test
@@ -124,7 +124,7 @@ public class SmartIdRestConnectorTest {
     request.setNonce("zstOt2umlc");
     CertificateChoiceResponse response = connector.getCertificate(identity, request);
     assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
   @Test
@@ -134,7 +134,7 @@ public class SmartIdRestConnectorTest {
     request.setNonce("zstOt2umlc");
     CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionId());
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
   @Test(expected = CertificateNotFoundException.class)
@@ -193,7 +193,7 @@ public class SmartIdRestConnectorTest {
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionId());
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
   @Test
@@ -203,7 +203,7 @@ public class SmartIdRestConnectorTest {
     request.setDisplayText("Authorize transfer of €10");
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionId());
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
   @Test
@@ -213,7 +213,7 @@ public class SmartIdRestConnectorTest {
     request.setNonce("zstOt2umlc");
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionId());
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
   @Test(expected = UserAccountNotFoundException.class)
@@ -265,7 +265,7 @@ public class SmartIdRestConnectorTest {
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     AuthenticationSessionResponse response = connector.authenticate(identity, request);
     assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
   @Test
@@ -274,7 +274,7 @@ public class SmartIdRestConnectorTest {
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
   @Test
@@ -285,7 +285,7 @@ public class SmartIdRestConnectorTest {
     request.setNonce("g9rp4kjca3");
     AuthenticationSessionResponse response = connector.authenticate(identity, request);
     assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
   @Test
@@ -295,7 +295,7 @@ public class SmartIdRestConnectorTest {
     request.setNonce("g9rp4kjca3");
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
   @Test
@@ -306,7 +306,7 @@ public class SmartIdRestConnectorTest {
     request.setDisplayText("Log into internet banking system");
     AuthenticationSessionResponse response = connector.authenticate(identity, request);
     assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
   @Test
@@ -316,7 +316,7 @@ public class SmartIdRestConnectorTest {
     request.setDisplayText("Log into internet banking system");
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
     assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionId());
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
   @Test(expected = UserAccountNotFoundException.class)

@@ -238,7 +238,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     validateParameters();
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
     AuthenticationSessionResponse response = getAuthenticationResponse(request);
-    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionID());
     validateResponse(sessionStatus);
     SmartIdAuthenticationResponse authenticationResponse = createSmartIdAuthenticationResponse(sessionStatus);
     return authenticationResponse;
@@ -270,7 +270,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
       logger.error("Signature was not present in the response");
       throw new TechnicalErrorException("Signature was not present in the response");
     }
-    if (sessionStatus.getCertificate() == null) {
+    if (sessionStatus.getCert() == null) {
       logger.error("Certificate was not present in the response");
       throw new TechnicalErrorException("Certificate was not present in the response");
     }
@@ -291,13 +291,13 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   private SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus) {
     SessionResult sessionResult = sessionStatus.getResult();
     SessionSignature sessionSignature = sessionStatus.getSignature();
-    SessionCertificate certificate = sessionStatus.getCertificate();
+    SessionCertificate certificate = sessionStatus.getCert();
 
     SmartIdAuthenticationResponse authenticationResponse = new SmartIdAuthenticationResponse();
     authenticationResponse.setEndResult(sessionResult.getEndResult());
     authenticationResponse.setSignedHashInBase64(getHashInBase64());
     authenticationResponse.setHashType(getHashType());
-    authenticationResponse.setSignatureValueInBase64(sessionSignature.getValueInBase64());
+    authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
     authenticationResponse.setAlgorithmName(sessionSignature.getAlgorithm());
     authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     authenticationResponse.setRequestedCertificateLevel(getCertificateLevel());

@@ -1,7 +1,6 @@
 package ee.sk.smartid.rest.dao;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 
@@ -12,8 +11,7 @@ public class SessionStatus implements Serializable {
   private SessionResult result;
   private SessionSignature signature;
 
-  @JsonProperty("cert")
-  private SessionCertificate certificate;
+  private SessionCertificate cert;
 
   public String getState() {
     return state;
@@ -31,12 +29,12 @@ public class SessionStatus implements Serializable {
     this.result = result;
   }
 
-  public SessionCertificate getCertificate() {
-    return certificate;
+  public SessionCertificate getCert() {
+    return cert;
   }
 
-  public void setCertificate(SessionCertificate certificate) {
-    this.certificate = certificate;
+  public void setCert(SessionCertificate cert) {
+    this.cert = cert;
   }
 
   public SessionSignature getSignature() {
