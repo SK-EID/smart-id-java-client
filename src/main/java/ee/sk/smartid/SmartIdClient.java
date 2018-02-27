@@ -241,7 +241,7 @@ public class SmartIdClient {
   public SmartIdConnector getSmartIdConnector() {
     if (null == connector) {
       // Fallback to REST connector when not initialised
-      return new SmartIdRestConnector(hostUrl, networkConnectionConfig);
+      setSmartIdConnector(new SmartIdRestConnector(hostUrl, networkConnectionConfig));
     }
     return connector;
   }
