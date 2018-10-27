@@ -1,14 +1,14 @@
 package ee.sk.smartid;
 
-import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SessionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.*;
 
 public abstract class SmartIdRequestBuilder {
 
@@ -98,6 +98,27 @@ public abstract class SmartIdRequestBuilder {
     }
   }
 
+  protected void validateSessionResult(SessionResult result) {
+    if (result == null) {
+      logger.error("Result is missing in the session status response");
+      throw new TechnicalErrorException("Result is missing in the session status response");
+    }
+    String endResult = result.getEndResult();
+    if (equalsIgnoreCase(endResult, "USER_REFUSED")) {
+      logger.debug("User has refused");
+      throw new UserRefusedException();
+    } else if (equalsIgnoreCase(endResult, "TIMEOUT")) {
+      logger.debug("Session timeout");
+      throw new SessionTimeoutException();
+    } else if (equalsIgnoreCase(endResult, "DOCUMENT_UNUSABLE")) {
+      logger.debug("Document unusable");
+      throw new DocumentUnusableException();
+    } else if (!equalsIgnoreCase(endResult, "OK")) {
+      logger.warn("Session status end result is '" + endResult + "'");
+      throw new TechnicalErrorException("Session status end result is '" + endResult + "'");
+    }
+  }
+
   protected boolean hasNationalIdentity() {
     return nationalIdentity != null || (isNotBlank(countryCode) && isNotBlank(nationalIdentityNumber));
   }
@@ -135,7 +156,7 @@ public abstract class SmartIdRequestBuilder {
     return dataToSign.calculateHashInBase64();
   }
 
-  protected SmartIdConnector getConnector() {
+  public SmartIdConnector getConnector() {
     return connector;
   }
 

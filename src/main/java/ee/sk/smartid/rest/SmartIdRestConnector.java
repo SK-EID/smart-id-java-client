@@ -6,12 +6,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -34,6 +29,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
   private String endpointUrl;
   private ClientConfig clientConfig;
+  private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
+  private long sessionStatusResponseSocketOpenTimeValue;
 
   public SmartIdRestConnector(String endpointUrl) {
     this.endpointUrl = endpointUrl;
@@ -45,8 +42,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   @Override
-  public SessionStatus getSessionStatus(SessionStatusRequest request) throws SessionNotFoundException {
-    logger.debug("Getting session status for " + request.getSessionId());
+  public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
+    logger.debug("Getting session status for " + sessionId);
+    SessionStatusRequest request = createSessionStatusRequest(sessionId);
     UriBuilder uriBuilder = UriBuilder
         .fromUri(endpointUrl)
         .path(SESSION_STATUS_URI);
@@ -120,6 +118,12 @@ public class SmartIdRestConnector implements SmartIdConnector {
     return postAuthenticationRequest(uri, request);
   }
 
+  @Override
+  public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
+    this.sessionStatusResponseSocketOpenTimeUnit = sessionStatusResponseSocketOpenTimeUnit;
+    this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
+  }
+
   private Invocation.Builder prepareClient(URI uri) {
     Client client = clientConfig == null ? ClientBuilder.newClient() : ClientBuilder.newClient(clientConfig);
     Invocation.Builder builder = client
@@ -178,6 +182,15 @@ public class SmartIdRestConnector implements SmartIdConnector {
       }
       throw e;
     }
+  }
+
+
+  private SessionStatusRequest createSessionStatusRequest(String sessionId) {
+    SessionStatusRequest request = new SessionStatusRequest(sessionId);
+    if (sessionStatusResponseSocketOpenTimeUnit != null && sessionStatusResponseSocketOpenTimeValue > 0) {
+      request.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+    }
+    return request;
   }
 
   private void addResponseSocketOpenTimeUrlParameter(SessionStatusRequest request, UriBuilder uriBuilder) {

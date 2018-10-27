@@ -3,18 +3,11 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionCertificate;
-import ee.sk.smartid.rest.dao.SessionResult;
-import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.security.cert.X509Certificate;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
@@ -206,14 +199,47 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
       SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
     logger.debug("Starting to fetch certificate");
     validateParameters();
-    CertificateRequest request = createCertificateRequest();
-    CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
-    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
+    String sessionId = initiateCertificateChoice();
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
     SmartIdCertificate smartIdCertificate = createSmartIdCertificate(sessionStatus);
     return smartIdCertificate;
   }
 
-  private SmartIdCertificate createSmartIdCertificate(SessionStatus sessionStatus) {
+  /**
+   * Send the certificate choice request and get the session Id
+   *
+   * @throws InvalidParametersException when mandatory request parameters are missing
+   * @throws UserAccountNotFoundException when the user account was not found
+   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
+   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
+   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
+   * @throws ServerMaintenanceException when the server is under maintenance
+   *
+   * @return session Id - later to be used for manual session status polling
+   */
+  public String initiateCertificateChoice() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,
+          ClientNotSupportedException, ServerMaintenanceException {
+    validateParameters();
+    CertificateRequest request = createCertificateRequest();
+    CertificateChoiceResponse response = fetchCertificateChoiceSessionResponse(request);
+    return response.getSessionId();
+  }
+
+  /**
+   * Create {@link SmartIdCertificate} from {@link SessionStatus}
+   * <p>
+   * This method uses automatic session status polling internally
+   * and therefore blocks the current thread until certificate choice is concluded/interupted etc.
+   *
+   * @throws UserRefusedException when the user has refused the session
+   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
+   * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
+   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   *
+   * @param sessionStatus session status response
+   * @return the authentication response
+   */
+  public SmartIdCertificate createSmartIdCertificate(SessionStatus sessionStatus) {
     validateCertificateResponse(sessionStatus);
     SessionCertificate certificate = sessionStatus.getCertificate();
     SmartIdCertificate smartIdCertificate = new SmartIdCertificate();
@@ -241,7 +267,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     return request;
   }
 
-  private void validateCertificateResponse(SessionStatus sessionStatus) {
+  public void validateCertificateResponse(SessionStatus sessionStatus) {
+    validateSessionResult(sessionStatus.getResult());
     SessionCertificate certificate = sessionStatus.getCertificate();
     if (certificate == null || isBlank(certificate.getValue())) {
       logger.error("Certificate was not present in the session status response");

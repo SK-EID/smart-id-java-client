@@ -3,13 +3,7 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionCertificate;
-import ee.sk.smartid.rest.dao.SessionResult;
-import ee.sk.smartid.rest.dao.SessionSignature;
-import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,6 +212,9 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Send the authentication request and get the response
+   * <p>
+   * This method uses automatic session status polling internally
+   * and therefore blocks the current thread until authentication is concluded/interupted etc.
    *
    * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
@@ -235,60 +232,47 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    */
   public SmartIdAuthenticationResponse authenticate() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException, UserRefusedException,
       SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
-    validateParameters();
-    AuthenticationSessionRequest request = createAuthenticationSessionRequest();
-    AuthenticationSessionResponse response = getAuthenticationResponse(request);
-    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
-    validateResponse(sessionStatus);
+    String sessionId = initiateAuthentication();
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
     SmartIdAuthenticationResponse authenticationResponse = createSmartIdAuthenticationResponse(sessionStatus);
     return authenticationResponse;
   }
 
-  private AuthenticationSessionResponse getAuthenticationResponse(AuthenticationSessionRequest request) {
-    if (isNotEmpty(getDocumentNumber())) {
-      return getConnector().authenticate(getDocumentNumber(), request);
-    } else {
-      NationalIdentity identity = getNationalIdentity();
-      return getConnector().authenticate(identity, request);
-    }
+  /**
+   * Send the authentication request and get the session Id
+   *
+   * @throws InvalidParametersException when mandatory request parameters are missing
+   * @throws UserAccountNotFoundException when the user account was not found
+   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
+   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
+   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
+   * @throws ServerMaintenanceException when the server is under maintenance
+   *
+   * @return session Id - later to be used for manual session status polling
+   */
+  public String initiateAuthentication() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,
+      ClientNotSupportedException, ServerMaintenanceException {
+    validateParameters();
+    AuthenticationSessionRequest request = createAuthenticationSessionRequest();
+    AuthenticationSessionResponse response = getAuthenticationResponse(request);
+    return response.getSessionId();
   }
 
-  protected void validateParameters() {
-    super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasNationalIdentity()) {
-      logger.error("Either document number or national identity must be set");
-      throw new InvalidParametersException("Either document number or national identity must be set");
-    }
-    if (!isHashSet() && !isSignableDataSet()) {
-      logger.error("Signable data or hash with hash type must be set");
-      throw new InvalidParametersException("Signable data or hash with hash type must be set");
-    }
-  }
+  /**
+   * Create {@link SmartIdAuthenticationResponse} from {@link SessionStatus}
+   *
+   * @throws UserRefusedException when the user has refused the session
+   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
+   * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
+   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   *
+   * @param sessionStatus session status response
+   * @return the authentication response
+   */
+  public SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus) throws UserRefusedException, SessionTimeoutException,
+      DocumentUnusableException, TechnicalErrorException {
+    validateAuthenticationResponse(sessionStatus);
 
-  private void validateResponse(SessionStatus sessionStatus) {
-    if (sessionStatus.getSignature() == null) {
-      logger.error("Signature was not present in the response");
-      throw new TechnicalErrorException("Signature was not present in the response");
-    }
-    if (sessionStatus.getCertificate() == null) {
-      logger.error("Certificate was not present in the response");
-      throw new TechnicalErrorException("Certificate was not present in the response");
-    }
-  }
-
-  private AuthenticationSessionRequest createAuthenticationSessionRequest() {
-    AuthenticationSessionRequest request = new AuthenticationSessionRequest();
-    request.setRelyingPartyUUID(getRelyingPartyUUID());
-    request.setRelyingPartyName(getRelyingPartyName());
-    request.setCertificateLevel(getCertificateLevel());
-    request.setHashType(getHashTypeString());
-    request.setHash(getHashInBase64());
-    request.setDisplayText(getDisplayText());
-    request.setNonce(getNonce());
-    return request;
-  }
-
-  private SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus) {
     SessionResult sessionResult = sessionStatus.getResult();
     SessionSignature sessionSignature = sessionStatus.getSignature();
     SessionCertificate certificate = sessionStatus.getCertificate();
@@ -304,4 +288,50 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
     return authenticationResponse;
   }
+
+  protected void validateParameters() {
+    super.validateParameters();
+    if (isBlank(getDocumentNumber()) && !hasNationalIdentity()) {
+      logger.error("Either document number or national identity must be set");
+      throw new InvalidParametersException("Either document number or national identity must be set");
+    }
+    if (!isHashSet() && !isSignableDataSet()) {
+      logger.error("Signable data or hash with hash type must be set");
+      throw new InvalidParametersException("Signable data or hash with hash type must be set");
+    }
+  }
+
+  private void validateAuthenticationResponse(SessionStatus sessionStatus) {
+    validateSessionResult(sessionStatus.getResult());
+    if (sessionStatus.getSignature() == null) {
+      logger.error("Signature was not present in the response");
+      throw new TechnicalErrorException("Signature was not present in the response");
+    }
+    if (sessionStatus.getCertificate() == null) {
+      logger.error("Certificate was not present in the response");
+      throw new TechnicalErrorException("Certificate was not present in the response");
+    }
+  }
+
+  private AuthenticationSessionResponse getAuthenticationResponse(AuthenticationSessionRequest request) {
+    if (isNotEmpty(getDocumentNumber())) {
+      return getConnector().authenticate(getDocumentNumber(), request);
+    } else {
+      NationalIdentity identity = getNationalIdentity();
+      return getConnector().authenticate(identity, request);
+    }
+  }
+
+  private AuthenticationSessionRequest createAuthenticationSessionRequest() {
+    AuthenticationSessionRequest request = new AuthenticationSessionRequest();
+    request.setRelyingPartyUUID(getRelyingPartyUUID());
+    request.setRelyingPartyName(getRelyingPartyName());
+    request.setCertificateLevel(getCertificateLevel());
+    request.setHashType(getHashTypeString());
+    request.setHash(getHashInBase64());
+    request.setDisplayText(getDisplayText());
+    request.setNonce(getNonce());
+    return request;
+  }
+
 }

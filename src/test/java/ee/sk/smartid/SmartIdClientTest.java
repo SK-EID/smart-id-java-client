@@ -3,6 +3,7 @@ package ee.sk.smartid;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SessionStatus;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Before;
@@ -14,23 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubErrorResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubForbiddenResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubSessionStatusWithState;
+import static ee.sk.smartid.SmartIdRestServiceStubs.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SmartIdClientTest {
 
@@ -155,6 +145,37 @@ public class SmartIdClientTest {
   }
 
   @Test
+  public void getCertificateWithManualSessionStatusRequesting() throws Exception {
+    CertificateRequestBuilder builder = client.getCertificate();
+    String sessionId = builder
+            .withDocumentNumber("PNOEE-31111111111")
+            .withCertificateLevel("ADVANCED")
+            .initiateCertificateChoice();
+
+    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
+    SmartIdCertificate certificate = builder.createSmartIdCertificate(sessionStatus);
+
+    assertCertificateResponseValid(certificate);
+    verify(getRequestedFor(urlEqualTo("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86")));
+  }
+
+  @Test
+  public void getCertificateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() throws Exception {
+    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
+    CertificateRequestBuilder builder = client.getCertificate();
+    String sessionId = builder
+            .withDocumentNumber("PNOEE-31111111111")
+            .withCertificateLevel("ADVANCED")
+            .initiateCertificateChoice();
+
+    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
+    SmartIdCertificate certificate = builder.createSmartIdCertificate(sessionStatus);
+
+    assertCertificateResponseValid(certificate);
+    verify(getRequestedFor(urlEqualTo("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86?timeoutMs=5000")));
+  }
+
+  @Test
   public void sign() throws Exception {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
@@ -208,6 +229,52 @@ public class SmartIdClientTest {
         .sign();
 
     assertValidSignatureCreated(signature);
+  }
+
+  @Test
+  public void signWithManualSessionStatusRequesting() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA256);
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
+    assertEquals("1796", hashToSign.calculateVerificationCode());
+
+    SignatureRequestBuilder builder = client.createSignature();
+    String sessionId = builder
+            .withDocumentNumber("PNOEE-31111111111")
+            .withSignableHash(hashToSign)
+            .withCertificateLevel("ADVANCED")
+            .initiateSigning();
+
+    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
+    SmartIdSignature signature = builder.createSmartIdSignature(sessionStatus);
+
+    assertValidSignatureCreated(signature);
+    verify(getRequestedFor(urlEqualTo("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00")));
+  }
+
+  @Test
+  public void signWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() throws Exception {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashType(HashType.SHA256);
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+
+    assertEquals("1796", hashToSign.calculateVerificationCode());
+
+    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
+    SignatureRequestBuilder builder = client.createSignature();
+    String sessionId = builder
+            .withDocumentNumber("PNOEE-31111111111")
+            .withSignableHash(hashToSign)
+            .withCertificateLevel("ADVANCED")
+            .initiateSigning();
+
+    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
+    SmartIdSignature signature = builder.createSmartIdSignature(sessionStatus);
+
+    assertValidSignatureCreated(signature);
+    verify(getRequestedFor(urlEqualTo("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00?timeoutMs=5000")));
+
   }
 
   @Test(expected = CertificateNotFoundException.class)
@@ -396,6 +463,55 @@ public class SmartIdClientTest {
         .authenticate();
 
     assertAuthenticationResponseValid(authenticationResponse);
+  }
+
+  @Test
+  public void authenticateWithManualSessionStatusRequesting() {
+    NationalIdentity identity = new NationalIdentity("EE", "31111111111");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    assertEquals("4430", authenticationHash.calculateVerificationCode());
+
+    AuthenticationRequestBuilder builder = client.createAuthentication();
+    String sessionId = builder
+            .withNationalIdentity(identity)
+            .withAuthenticationHash(authenticationHash)
+            .withCertificateLevel("ADVANCED")
+            .initiateAuthentication();
+
+    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
+    SmartIdAuthenticationResponse authenticationResponse = builder.createSmartIdAuthenticationResponse(sessionStatus);
+
+    assertAuthenticationResponseValid(authenticationResponse);
+    verify(getRequestedFor(urlEqualTo("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb")));
+  }
+
+  @Test
+  public void authenticateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
+    NationalIdentity identity = new NationalIdentity("EE", "31111111111");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    assertEquals("4430", authenticationHash.calculateVerificationCode());
+
+    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
+    AuthenticationRequestBuilder builder = client.createAuthentication();
+    String sessionId = builder
+            .withNationalIdentity(identity)
+            .withAuthenticationHash(authenticationHash)
+            .withCertificateLevel("ADVANCED")
+            .initiateAuthentication();
+
+    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
+    SmartIdAuthenticationResponse authenticationResponse = builder.createSmartIdAuthenticationResponse(sessionStatus);
+
+    assertAuthenticationResponseValid(authenticationResponse);
+    verify(getRequestedFor(urlEqualTo("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb?timeoutMs=5000")));
   }
 
   @Test(expected = UserAccountNotFoundException.class)

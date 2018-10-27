@@ -6,10 +6,7 @@ import org.junit.Test;
 
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @Ignore("Requires physical interaction with a Smart ID device")
 public class SmartIdIntegrationTest {

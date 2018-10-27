@@ -17,9 +17,7 @@ import java.security.cert.X509Certificate;
 import static ee.sk.smartid.DummyData.createSessionEndResult;
 import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class CertificateRequestBuilderTest {
 

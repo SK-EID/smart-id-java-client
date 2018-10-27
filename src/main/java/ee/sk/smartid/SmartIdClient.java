@@ -1,10 +1,10 @@
 package ee.sk.smartid;
 
 import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import org.glassfish.jersey.client.ClientConfig;
 
-import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -61,14 +61,12 @@ import java.util.concurrent.TimeUnit;
  *
  *   // to display the verificationCode on the web page
  *   String verificationCode = dataToSign.calculateVerificationCode();
-
  *   SmartIdSignature signature = client
  *   .createSignature()
  *   .withDocumentNumber(documentNumber)
  *   .withSignableHash(hashToSign)
  *   .withCertificateLevel("QUALIFIED")
  *   .sign();
-
  *   byte[] signature = signature.getValue();
  * </code></pre>
  * @see <a href="https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it">https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it</a>
@@ -83,6 +81,7 @@ public class SmartIdClient {
   private long pollingSleepTimeout = 1L;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
+  private SmartIdConnector connector;
 
   /**
    * Gets an instance of the certificate request builder
@@ -90,9 +89,8 @@ public class SmartIdClient {
    * @return certificate request builder instance
    */
   public CertificateRequestBuilder getCertificate() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
-    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
-    CertificateRequestBuilder builder = new CertificateRequestBuilder(connector, sessionStatusPoller);
+    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
+    CertificateRequestBuilder builder = new CertificateRequestBuilder(getSmartIdConnector(), sessionStatusPoller);
     populateBuilderFields(builder);
     return builder;
   }
@@ -103,9 +101,8 @@ public class SmartIdClient {
    * @return signature request builder instance
    */
   public SignatureRequestBuilder createSignature() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
-    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
-    SignatureRequestBuilder builder = new SignatureRequestBuilder(connector, sessionStatusPoller);
+    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
+    SignatureRequestBuilder builder = new SignatureRequestBuilder(getSmartIdConnector(), sessionStatusPoller);
     populateBuilderFields(builder);
     return builder;
   }
@@ -116,9 +113,8 @@ public class SmartIdClient {
    * @return authentication request builder instance
    */
   public AuthenticationRequestBuilder createAuthentication() {
-    SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
-    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(connector);
-    AuthenticationRequestBuilder builder = new AuthenticationRequestBuilder(connector, sessionStatusPoller);
+    SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
+    AuthenticationRequestBuilder builder = new AuthenticationRequestBuilder(getSmartIdConnector(), sessionStatusPoller);
     populateBuilderFields(builder);
     return builder;
   }
@@ -233,10 +229,25 @@ public class SmartIdClient {
     builder.withRelyingPartyName(relyingPartyName);
   }
 
-  private SessionStatusPoller createSessionStatusPoller(SmartIdRestConnector connector) {
+  private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
+    connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
     SessionStatusPoller sessionStatusPoller = new SessionStatusPoller(connector);
     sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
-    sessionStatusPoller.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
     return sessionStatusPoller;
+  }
+
+  public SmartIdConnector getSmartIdConnector() {
+    if (null == connector) {
+      // Fallback to REST connector when not initialised
+      SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
+      connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+      setSmartIdConnector(new SmartIdRestConnector(hostUrl, networkConnectionConfig));
+
+    }
+    return connector;
+  }
+
+  public void setSmartIdConnector(SmartIdConnector smartIdConnector) {
+    this.connector = smartIdConnector;
   }
 }
