@@ -14,8 +14,7 @@
     <url>https://github.com/SK-EID/smart-id-java-client</url>
     <licenses>
         <license>
-            <name>GNU Lesser General Public License, Version 3.0</name>
-            <url>https://www.gnu.org/licenses/lgpl-3.0.html</url>
+            <name>MIT License</name>
         </license>
     </licenses>
     <developers>
