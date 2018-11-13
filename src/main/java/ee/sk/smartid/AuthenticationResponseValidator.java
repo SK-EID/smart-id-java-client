@@ -241,7 +241,7 @@ public class AuthenticationResponseValidator {
     return ArrayUtils.addAll(digestInfoPrefix, digest);
   }
 
-  private AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
+  AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
     AuthenticationIdentity identity = new AuthenticationIdentity();
     try {
       LdapName ln = new LdapName(certificate.getSubjectDN().getName());
@@ -251,7 +251,7 @@ public class AuthenticationResponseValidator {
         } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
           identity.setSurName(rdn.getValue().toString());
         } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
-          identity.setIdentityCode(rdn.getValue().toString().split("-")[1]);
+          identity.setIdentityCode(rdn.getValue().toString().split("-", 2)[1]);
         } else if(rdn.getType().equalsIgnoreCase("C")) {
           identity.setCountry(rdn.getValue().toString());
         }
