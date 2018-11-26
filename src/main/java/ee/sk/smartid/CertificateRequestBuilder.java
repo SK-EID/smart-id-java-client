@@ -11,7 +11,6 @@ import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.security.cert.X509Certificate;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -208,14 +207,14 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     validateParameters();
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSessionResponse(request);
-    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(certificateChoiceResponse.getSessionId());
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(certificateChoiceResponse.getSessionID());
     SmartIdCertificate smartIdCertificate = createSmartIdCertificate(sessionStatus);
     return smartIdCertificate;
   }
 
   private SmartIdCertificate createSmartIdCertificate(SessionStatus sessionStatus) {
     validateCertificateResponse(sessionStatus);
-    SessionCertificate certificate = sessionStatus.getCertificate();
+    SessionCertificate certificate = sessionStatus.getCert();
     SmartIdCertificate smartIdCertificate = new SmartIdCertificate();
     smartIdCertificate.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     smartIdCertificate.setCertificateLevel(certificate.getCertificateLevel());
@@ -242,7 +241,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private void validateCertificateResponse(SessionStatus sessionStatus) {
-    SessionCertificate certificate = sessionStatus.getCertificate();
+    SessionCertificate certificate = sessionStatus.getCert();
     if (certificate == null || isBlank(certificate.getValue())) {
       logger.error("Certificate was not present in the session status response");
       throw new TechnicalErrorException("Certificate was not present in the session status response");

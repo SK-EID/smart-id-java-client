@@ -197,7 +197,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = getConnector().sign(getDocumentNumber(), request);
-    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionId());
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionID());
     validateResponse(sessionStatus);
     SmartIdSignature signature = createSmartIdSignature(sessionStatus);
     return signature;
@@ -238,7 +238,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     SessionSignature sessionSignature = sessionStatus.getSignature();
 
     SmartIdSignature signature = new SmartIdSignature();
-    signature.setValueInBase64(sessionSignature.getValueInBase64());
+    signature.setValueInBase64(sessionSignature.getValue());
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
     signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
     return signature;

@@ -37,19 +37,19 @@ public class SmartIdRestIntegrationTest {
   public void getCertificateAndSignHash() throws Exception {
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession();
 
-    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionId());
+    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID());
     assertCertificateChosen(sessionStatus);
 
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
     SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber);
-    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionId());
+    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
     assertSignatureCreated(sessionStatus);
   }
 
   @Test
   public void authenticate() throws Exception {
     AuthenticationSessionResponse authenticationSessionResponse = fetchAuthenticationSession();
-    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionId());
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
     assertAuthenticationResponseCreated(sessionStatus);
   }
 
@@ -57,7 +57,7 @@ public class SmartIdRestIntegrationTest {
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse certificateChoiceResponse = connector.getCertificate(DOCUMENT_NUMBER, request);
     assertNotNull(certificateChoiceResponse);
-    assertThat(certificateChoiceResponse.getSessionId(), not(isEmptyOrNullString()));
+    assertThat(certificateChoiceResponse.getSessionID(), not(isEmptyOrNullString()));
     return certificateChoiceResponse;
   }
 
@@ -72,7 +72,7 @@ public class SmartIdRestIntegrationTest {
   private SignatureSessionResponse fetchSignatureSession(String documentNumber) throws NoSuchAlgorithmException {
     SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
     SignatureSessionResponse signatureSessionResponse = connector.sign(documentNumber, signatureSessionRequest);
-    assertThat(signatureSessionResponse.getSessionId(), not(isEmptyOrNullString()));
+    assertThat(signatureSessionResponse.getSessionID(), not(isEmptyOrNullString()));
     return signatureSessionResponse;
   }
 
@@ -91,7 +91,7 @@ public class SmartIdRestIntegrationTest {
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, request);
     assertNotNull(authenticationSessionResponse);
-    assertThat(authenticationSessionResponse.getSessionId(), not(isEmptyOrNullString()));
+    assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
     return authenticationSessionResponse;
   }
 
@@ -120,23 +120,23 @@ public class SmartIdRestIntegrationTest {
   private void assertSignatureCreated(SessionStatus sessionStatus) {
     assertNotNull(sessionStatus);
     assertNotNull(sessionStatus.getSignature());
-    assertThat(sessionStatus.getSignature().getValueInBase64(), not(isEmptyOrNullString()));
+    assertThat(sessionStatus.getSignature().getValue(), not(isEmptyOrNullString()));
   }
 
   private void assertCertificateChosen(SessionStatus sessionStatus) {
     assertNotNull(sessionStatus);
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
     assertThat(documentNumber, not(isEmptyOrNullString()));
-    assertThat(sessionStatus.getCertificate().getValue(), not(isEmptyOrNullString()));
+    assertThat(sessionStatus.getCert().getValue(), not(isEmptyOrNullString()));
   }
 
   private void assertAuthenticationResponseCreated(SessionStatus sessionStatus) {
     assertNotNull(sessionStatus);
 
     assertThat(sessionStatus.getResult().getEndResult(), not(isEmptyOrNullString()));
-    assertThat(sessionStatus.getSignature().getValueInBase64(), not(isEmptyOrNullString()));
-    assertThat(sessionStatus.getCertificate().getValue(), not(isEmptyOrNullString()));
-    assertThat(sessionStatus.getCertificate().getCertificateLevel(), not(isEmptyOrNullString()));
+    assertThat(sessionStatus.getSignature().getValue(), not(isEmptyOrNullString()));
+    assertThat(sessionStatus.getCert().getValue(), not(isEmptyOrNullString()));
+    assertThat(sessionStatus.getCert().getCertificateLevel(), not(isEmptyOrNullString()));
   }
 
   private String calculateHashInBase64(byte[] dataToSign) throws NoSuchAlgorithmException {
