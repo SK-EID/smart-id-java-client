@@ -225,7 +225,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test(expected = TechnicalErrorException.class)
   public void authenticate_withCertificateMissingInResponse_shouldThrowException() throws Exception {
-    connector.sessionStatusToRespond.setCertificate(null);
+    connector.sessionStatusToRespond.setCert(null);
     makeAuthenticationRequest();
   }
 
@@ -264,13 +264,13 @@ public class AuthenticationRequestBuilderTest {
 
   private AuthenticationSessionResponse createDummyAuthenticationSessionResponse() {
     AuthenticationSessionResponse response = new AuthenticationSessionResponse();
-    response.setSessionId("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+    response.setSessionID("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     return response;
   }
 
   private SessionStatus createDummySessionStatusResponse() {
     SessionSignature signature = new SessionSignature();
-    signature.setValueInBase64("c2FtcGxlIHNpZ25hdHVyZQ0K");
+    signature.setValue("c2FtcGxlIHNpZ25hdHVyZQ0K");
     signature.setAlgorithm("sha512WithRSAEncryption");
 
     SessionCertificate certificate = new SessionCertificate();
@@ -281,7 +281,7 @@ public class AuthenticationRequestBuilderTest {
     status.setState("COMPLETE");
     status.setResult(createSessionEndResult());
     status.setSignature(signature);
-    status.setCertificate(certificate);
+    status.setCert(certificate);
     return status;
   }
 

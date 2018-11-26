@@ -2,8 +2,9 @@ package ee.sk.smartid;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.exception.*;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.SmartIdRestConnector;
+import ee.sk.smartid.rest.dao.*;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Before;
@@ -21,6 +22,8 @@ import static ee.sk.smartid.SmartIdRestServiceStubs.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SmartIdClientTest {
 
@@ -609,6 +612,23 @@ public class SmartIdClientTest {
 
     verify(postRequestedFor(urlEqualTo("/certificatechoice/pno/EE/31111111111"))
         .withHeader(headerName, equalTo(headerValue)));
+  }
+
+  @Test
+  public void verifySmartIdConnector_whenConnectorIsNotProvided() {
+    SmartIdConnector smartIdConnector = client.getSmartIdConnector();
+    assertTrue(smartIdConnector instanceof SmartIdRestConnector);
+  }
+
+  @Test
+  public void verifySmartIdConnector_whenConnectorIsProvided() {
+    final String mock = "MOCK";
+    SessionStatus status = mock(SessionStatus.class);
+    when(status.getState()).thenReturn(mock);
+    SmartIdConnector connector = mock(SmartIdConnector.class);
+    when(connector.getSessionStatus(null)).thenReturn(status);
+    client.setSmartIdConnector(connector);
+    assertEquals(mock, client.getSmartIdConnector().getSessionStatus(null).getState());
   }
 
   private long measureSigningDuration() {

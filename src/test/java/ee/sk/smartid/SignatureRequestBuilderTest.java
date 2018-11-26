@@ -199,7 +199,7 @@ public class SignatureRequestBuilderTest {
 
   private SignatureSessionResponse createDummySignatureSessionResponse() {
     SignatureSessionResponse response = new SignatureSessionResponse();
-    response.setSessionId("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+    response.setSessionID("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     return response;
   }
 
@@ -208,7 +208,7 @@ public class SignatureRequestBuilderTest {
     status.setState("COMPLETE");
     status.setResult(createSessionEndResult());
     SessionSignature signature = new SessionSignature();
-    signature.setValueInBase64("luvjsi1+1iLN9yfDFEh/BE8h");
+    signature.setValue("luvjsi1+1iLN9yfDFEh/BE8h");
     signature.setAlgorithm("sha256WithRSAEncryption");
     status.setSignature(signature);
     return status;

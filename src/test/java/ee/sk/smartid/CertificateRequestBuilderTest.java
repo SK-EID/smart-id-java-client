@@ -135,13 +135,13 @@ public class CertificateRequestBuilderTest {
 
   @Test(expected = TechnicalErrorException.class)
   public void getCertificate_withCertificateResponseWithoutCertificate_shouldThrowException() throws Exception {
-    connector.sessionStatusToRespond.setCertificate(null);
+    connector.sessionStatusToRespond.setCert(null);
     makeCertificateRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
   public void getCertificate_withCertificateResponseContainingEmptyCertificate_shouldThrowException() throws Exception {
-    connector.sessionStatusToRespond.getCertificate().setValue("");
+    connector.sessionStatusToRespond.getCert().setValue("");
     makeCertificateRequest();
   }
 
@@ -188,7 +188,7 @@ public class CertificateRequestBuilderTest {
   private SessionStatus createCertificateSessionStatusCompleteResponse() {
     SessionStatus status = new SessionStatus();
     status.setState("COMPLETE");
-    status.setCertificate(createSessionCertificate());
+    status.setCert(createSessionCertificate());
     status.setResult(createSessionEndResult());
     return status;
   }
@@ -202,7 +202,7 @@ public class CertificateRequestBuilderTest {
 
   private CertificateChoiceResponse createCertificateChoiceResponse() {
     CertificateChoiceResponse certificateChoiceResponse = new CertificateChoiceResponse();
-    certificateChoiceResponse.setSessionId("97f5058e-e308-4c83-ac14-7712b0eb9d86");
+    certificateChoiceResponse.setSessionID("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     return certificateChoiceResponse;
   }
 

@@ -241,7 +241,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    */
   public SmartIdCertificate createSmartIdCertificate(SessionStatus sessionStatus) {
     validateCertificateResponse(sessionStatus);
-    SessionCertificate certificate = sessionStatus.getCertificate();
+    SessionCertificate certificate = sessionStatus.getCert();
     SmartIdCertificate smartIdCertificate = new SmartIdCertificate();
     smartIdCertificate.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     smartIdCertificate.setCertificateLevel(certificate.getCertificateLevel());

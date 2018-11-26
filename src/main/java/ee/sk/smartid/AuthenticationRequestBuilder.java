@@ -307,7 +307,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
       logger.error("Signature was not present in the response");
       throw new TechnicalErrorException("Signature was not present in the response");
     }
-    if (sessionStatus.getCertificate() == null) {
+    if (sessionStatus.getCert() == null) {
       logger.error("Certificate was not present in the response");
       throw new TechnicalErrorException("Certificate was not present in the response");
     }
