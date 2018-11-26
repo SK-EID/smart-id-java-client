@@ -14,8 +14,7 @@
     <url>https://github.com/SK-EID/smart-id-java-client</url>
     <licenses>
         <license>
-            <name>GNU Lesser General Public License, Version 3.0</name>
-            <url>https://www.gnu.org/licenses/lgpl-3.0.html</url>
+            <name>MIT License</name>
         </license>
     </licenses>
     <developers>
@@ -167,6 +166,37 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>1.16</version>
+                <executions>
+                    <execution>
+                        <id>create-license-list</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>aggregate-add-third-party</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <licenseName>mit</licenseName>
+                    <organizationName>SK ID Solutions AS </organizationName>
+                    <projectName>Smart ID sample Java client</projectName>
+                    <inceptionYear>2018</inceptionYear>
+                    <encoding>UTF-8</encoding>
+                    <roots>
+                        <root>src/main/java</root>
+                        <root>src/test/java</root>
+                    </roots>
+                    <licensesOutputDirectory>${project.basedir}/src/license</licensesOutputDirectory>
+                    <fileTemplate>${project.basedir}/src/license/third-party-file-template.ftl</fileTemplate>
+                    <outputDirectory>${project.basedir}</outputDirectory>
+                    <thirdPartyFilename>LICENSE.3RD-PARTY</thirdPartyFilename>
+                </configuration>
             </plugin>
         </plugins>
     </build>
