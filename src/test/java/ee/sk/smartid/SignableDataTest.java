@@ -40,7 +40,7 @@ public class SignableDataTest {
   public static final String SHA256_HASH_IN_BASE64 = "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=";
 
   @Test
-  public void signableData_withDefaultHashType_sha512() throws Exception {
+  public void signableData_withDefaultHashType_sha512() {
     SignableData signableData = new SignableData(DATA_TO_SIGN);
     assertEquals("SHA512", signableData.getHashType().getHashTypeName());
     assertEquals(SHA512_HASH_IN_BASE64, signableData.calculateHashInBase64());
@@ -49,7 +49,7 @@ public class SignableDataTest {
   }
 
   @Test
-  public void signableData_with_sha256() throws Exception {
+  public void signableData_with_sha256() {
     SignableData signableData = new SignableData(DATA_TO_SIGN);
     signableData.setHashType(HashType.SHA256);
     assertEquals("SHA256", signableData.getHashType().getHashTypeName());
@@ -59,7 +59,7 @@ public class SignableDataTest {
   }
 
   @Test
-  public void signableData_with_sha384() throws Exception {
+  public void signableData_with_sha384() {
     SignableData signableData = new SignableData(DATA_TO_SIGN);
     signableData.setHashType(HashType.SHA384);
     assertEquals("SHA384", signableData.getHashType().getHashTypeName());

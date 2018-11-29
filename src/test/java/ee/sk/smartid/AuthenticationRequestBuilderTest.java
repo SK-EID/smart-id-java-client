@@ -50,7 +50,7 @@ public class AuthenticationRequestBuilderTest {
   private AuthenticationRequestBuilder builder;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdConnectorSpy();
     sessionStatusPoller = new SessionStatusPoller(connector);
     connector.authenticationSessionResponseToRespond = createDummyAuthenticationSessionResponse();
@@ -152,7 +152,7 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutDocumentNumberNorNationalIdentity_shouldThrowException() throws Exception {
+  public void authenticateWithoutDocumentNumberNorNationalIdentity_shouldThrowException() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
@@ -166,7 +166,7 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutHash_andWithoutSignableData_shouldThrowException() throws Exception {
+  public void authenticateWithoutHash_andWithoutSignableData_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -176,7 +176,7 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithHash_withoutHashType_shouldThrowException() throws Exception {
+  public void authenticateWithHash_withoutHashType_shouldThrowException() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
 
@@ -190,7 +190,7 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithHash_withoutHash_shouldThrowException() throws Exception {
+  public void authenticateWithHash_withoutHash_shouldThrowException() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashType(HashType.SHA512);
 
@@ -204,7 +204,7 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutRelyingPartyUuid_shouldThrowException() throws Exception {
+  public void authenticateWithoutRelyingPartyUuid_shouldThrowException() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
@@ -218,7 +218,7 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutRelyingPartyName_shouldThrowException() throws Exception {
+  public void authenticateWithoutRelyingPartyName_shouldThrowException() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
@@ -232,25 +232,25 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = UserRefusedException.class)
-  public void authenticate_withUserRefused_shouldThrowException() throws Exception {
+  public void authenticate_withUserRefused_shouldThrowException() {
     connector.sessionStatusToRespond = createUserRefusedSessionStatus();
     makeAuthenticationRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void authenticate_withResultMissingInResponse_shouldThrowException() throws Exception {
+  public void authenticate_withResultMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setResult(null);
     makeAuthenticationRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void authenticate_withSignatureMissingInResponse_shouldThrowException() throws Exception {
+  public void authenticate_withSignatureMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setSignature(null);
     makeAuthenticationRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void authenticate_withCertificateMissingInResponse_shouldThrowException() throws Exception {
+  public void authenticate_withCertificateMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setCert(null);
     makeAuthenticationRequest();
   }

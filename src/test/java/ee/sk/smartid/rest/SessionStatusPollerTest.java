@@ -26,8 +26,6 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.DummyData;
-import ee.sk.smartid.exception.DocumentUnusableException;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
@@ -46,14 +44,14 @@ public class SessionStatusPollerTest {
   private SessionStatusPoller poller;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdConnectorStub();
     poller = new SessionStatusPoller(connector);
     poller.setPollingSleepTime(TimeUnit.MILLISECONDS, 1L);
   }
 
   @Test
-  public void getFirstCompleteResponse() throws Exception {
+  public void getFirstCompleteResponse() {
     connector.responses.add(createCompleteSessionStatus());
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", connector.sessionIdUsed);
@@ -62,7 +60,7 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void pollAndGetThirdCompleteResponse() throws Exception {
+  public void pollAndGetThirdCompleteResponse() {
     connector.responses.add(createRunningSessionStatus());
     connector.responses.add(createRunningSessionStatus());
     connector.responses.add(createCompleteSessionStatus());
@@ -72,7 +70,7 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void setPollingSleepTime() throws Exception {
+  public void setPollingSleepTime() {
     poller.setPollingSleepTime(TimeUnit.MILLISECONDS, 200L);
     addMultipleRunningSessionResponses(5);
     connector.responses.add(createCompleteSessionStatus());
@@ -82,7 +80,7 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void setResponseSocketOpenTime() throws Exception {
+  public void setResponseSocketOpenTime() {
     connector.setSessionStatusResponseSocketOpenTime(TimeUnit.MINUTES, 2L);
     connector.responses.add(createCompleteSessionStatus());
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
@@ -93,7 +91,7 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void responseSocketOpenTimeShouldNotBeSetByDefault() throws Exception {
+  public void responseSocketOpenTimeShouldNotBeSetByDefault() {
     connector.responses.add(createCompleteSessionStatus());
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     assertCompleteStateReceived(status);

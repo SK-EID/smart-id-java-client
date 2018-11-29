@@ -53,12 +53,12 @@ public class SmartIdRestConnectorTest {
   private SmartIdConnector connector;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdRestConnector("http://localhost:18089");
   }
 
   @Test(expected = SessionNotFoundException.class)
-  public void getNotExistingSessionStatus() throws Exception {
+  public void getNotExistingSessionStatus() {
     stubNotFoundResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016");
     SessionStatusRequest request = new SessionStatusRequest("de305d54-75b4-431b-adb2-eb6b9e546016");
     connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");

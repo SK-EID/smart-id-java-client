@@ -49,7 +49,7 @@ public class SignatureRequestBuilderTest {
   private SignatureRequestBuilder builder;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdConnectorSpy();
     sessionStatusPoller = new SessionStatusPoller(connector);
     connector.signatureSessionResponseToRespond = createDummySignatureSessionResponse();
@@ -58,7 +58,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test
-  public void signWithSignableHash() throws Exception {
+  public void signWithSignableHash() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
@@ -77,7 +77,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test
-  public void signWithSignableData() throws Exception {
+  public void signWithSignableData() {
     SignableData dataToSign = new SignableData("Say 'hello' to my little friend!".getBytes());
     dataToSign.setHashType(HashType.SHA256);
 
@@ -95,7 +95,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test
-  public void signWithoutCertificateLevel_shouldPass() throws Exception {
+  public void signWithoutCertificateLevel_shouldPass() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
     hashToSign.setHashType(HashType.SHA256);
@@ -113,7 +113,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithoutDocumentNumber_shouldThrowException() throws Exception {
+  public void signWithoutDocumentNumber_shouldThrowException() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     hashToSign.setHashType(HashType.SHA256);
@@ -127,7 +127,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithoutSignableHash_andWithoutSignableData_shouldThrowException() throws Exception {
+  public void signWithoutSignableHash_andWithoutSignableData_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -137,7 +137,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithSignableHash_withoutHashType_shouldThrowException() throws Exception {
+  public void signWithSignableHash_withoutHashType_shouldThrowException() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
 
@@ -151,7 +151,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithSignableHash_withoutHash_shouldThrowException() throws Exception {
+  public void signWithSignableHash_withoutHash_shouldThrowException() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     builder
@@ -164,7 +164,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithoutRelyingPartyUuid_shouldThrowException() throws Exception {
+  public void signWithoutRelyingPartyUuid_shouldThrowException() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     hashToSign.setHashType(HashType.SHA256);
@@ -178,7 +178,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void signWithoutRelyingPartyName_shouldThrowException() throws Exception {
+  public void signWithoutRelyingPartyName_shouldThrowException() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     hashToSign.setHashType(HashType.SHA256);
@@ -192,13 +192,13 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = UserRefusedException.class)
-  public void sign_withUserRefused_shouldThrowException() throws Exception {
+  public void sign_withUserRefused_shouldThrowException() {
     connector.sessionStatusToRespond = createUserRefusedSessionStatus();
     makeSigningRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void sign_withSignatureMissingInResponse_shouldThrowException() throws Exception {
+  public void sign_withSignatureMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setSignature(null);
     makeSigningRequest();
   }

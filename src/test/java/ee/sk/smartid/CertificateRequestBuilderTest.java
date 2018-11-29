@@ -52,7 +52,7 @@ public class CertificateRequestBuilderTest {
   private CertificateRequestBuilder builder;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdConnectorSpy();
     sessionStatusPoller = new SessionStatusPoller(connector);
     connector.sessionStatusToRespond = createCertificateSessionStatusCompleteResponse();
@@ -61,7 +61,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificate() throws Exception {
+  public void getCertificate() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -75,7 +75,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificateUsingNationalIdentity() throws Exception {
+  public void getCertificateUsingNationalIdentity() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -88,7 +88,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificateUsingDocumentNumber() throws Exception {
+  public void getCertificateUsingDocumentNumber() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -101,7 +101,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificateWithoutCertificateLevel_shouldPass() throws Exception {
+  public void getCertificateWithoutCertificateLevel_shouldPass() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -114,7 +114,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void getCertificate_whenIdentityOrDocumentNumberNotSet_shouldThrowException() throws Exception {
+  public void getCertificate_whenIdentityOrDocumentNumberNotSet_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -123,7 +123,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void getCertificate_withoutRelyingPartyUUID_shouldThrowException() throws Exception {
+  public void getCertificate_withoutRelyingPartyUUID_shouldThrowException() {
     builder
         .withRelyingPartyName("relying-party-name")
         .withCountryCode("EE")
@@ -133,7 +133,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test(expected = InvalidParametersException.class)
-  public void getCertificate_withoutRelyingPartyName_shouldThrowException() throws Exception {
+  public void getCertificate_withoutRelyingPartyName_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withCountryCode("EE")
@@ -143,13 +143,13 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test(expected = UserRefusedException.class)
-  public void getCertificate_whenUserRefuses_shouldThrowException() throws Exception {
+  public void getCertificate_whenUserRefuses_shouldThrowException() {
     connector.sessionStatusToRespond = createUserRefusedSessionStatus();
     makeCertificateRequest();
   }
 
   @Test(expected = UserRefusedException.class)
-  public void getCertificate_withDocumentNumber_whenUserRefuses_shouldThrowException() throws Exception {
+  public void getCertificate_withDocumentNumber_whenUserRefuses_shouldThrowException() {
     connector.sessionStatusToRespond = createUserRefusedSessionStatus();
     builder
         .withRelyingPartyUUID("relying-party-uuid")
@@ -160,25 +160,25 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void getCertificate_withCertificateResponseWithoutCertificate_shouldThrowException() throws Exception {
+  public void getCertificate_withCertificateResponseWithoutCertificate_shouldThrowException() {
     connector.sessionStatusToRespond.setCert(null);
     makeCertificateRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void getCertificate_withCertificateResponseContainingEmptyCertificate_shouldThrowException() throws Exception {
+  public void getCertificate_withCertificateResponseContainingEmptyCertificate_shouldThrowException() {
     connector.sessionStatusToRespond.getCert().setValue("");
     makeCertificateRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void getCertificate_withCertificateResponseWithoutDocumentNumber_shouldThrowException() throws Exception {
+  public void getCertificate_withCertificateResponseWithoutDocumentNumber_shouldThrowException() {
     connector.sessionStatusToRespond.getResult().setDocumentNumber(null);
     makeCertificateRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void getCertificate_withCertificateResponseWithBlankDocumentNumber_shouldThrowException() throws Exception {
+  public void getCertificate_withCertificateResponseWithBlankDocumentNumber_shouldThrowException() {
     connector.sessionStatusToRespond.getResult().setDocumentNumber(" ");
     makeCertificateRequest();
   }

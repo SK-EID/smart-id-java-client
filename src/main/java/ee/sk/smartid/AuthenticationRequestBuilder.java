@@ -281,7 +281,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     validateParameters();
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
     AuthenticationSessionResponse response = getAuthenticationResponse(request);
-    return response.getSessionId();
+    return response.getSessionID();
   }
 
   /**
@@ -301,13 +301,13 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
 
     SessionResult sessionResult = sessionStatus.getResult();
     SessionSignature sessionSignature = sessionStatus.getSignature();
-    SessionCertificate certificate = sessionStatus.getCertificate();
+    SessionCertificate certificate = sessionStatus.getCert();
 
     SmartIdAuthenticationResponse authenticationResponse = new SmartIdAuthenticationResponse();
     authenticationResponse.setEndResult(sessionResult.getEndResult());
     authenticationResponse.setSignedHashInBase64(getHashInBase64());
     authenticationResponse.setHashType(getHashType());
-    authenticationResponse.setSignatureValueInBase64(sessionSignature.getValueInBase64());
+    authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
     authenticationResponse.setAlgorithmName(sessionSignature.getAlgorithm());
     authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     authenticationResponse.setRequestedCertificateLevel(getCertificateLevel());

@@ -41,7 +41,7 @@ public class ClientRequestHeaderFilter implements ClientRequestFilter {
 
   @Override
   public void filter(ClientRequestContext requestContext) {
-    MultivaluedMap headers = requestContext.getHeaders();
+    MultivaluedMap<String, Object> headers = requestContext.getHeaders();
     for (Map.Entry<String, String> entry : headersToAdd.entrySet()) {
       headers.putSingle(entry.getKey(), entry.getValue());
     }

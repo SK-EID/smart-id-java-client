@@ -77,8 +77,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     addResponseSocketOpenTimeUrlParameter(request, uriBuilder);
     URI uri = uriBuilder.build(request.getSessionId());
     try {
-      SessionStatus result = prepareClient(uri).get(SessionStatus.class);
-      return result;
+      return prepareClient(uri).get(SessionStatus.class);
     } catch (NotFoundException e) {
       logger.warn("Session " + request + " not found: " + e.getMessage());
       throw new SessionNotFoundException();
@@ -152,12 +151,11 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
   private Invocation.Builder prepareClient(URI uri) {
     Client client = clientConfig == null ? ClientBuilder.newClient() : ClientBuilder.newClient(clientConfig);
-    Invocation.Builder builder = client
+    return client
         .register(new LoggingFilter())
         .target(uri)
         .request()
         .accept(APPLICATION_JSON_TYPE);
-    return builder;
   }
 
   private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
@@ -187,8 +185,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
     try {
       Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
-      T result = prepareClient(uri).post(requestEntity, responseType);
-      return result;
+      return prepareClient(uri).post(requestEntity, responseType);
     } catch (NotAuthorizedException e) {
       logger.warn("Request is unauthorized for URI " + uri + ": " + e.getMessage());
       throw new UnauthorizedException();

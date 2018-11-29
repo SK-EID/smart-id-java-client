@@ -60,7 +60,7 @@ public class AuthenticationHash extends SignableHash {
   }
 
   private static byte[] getRandomBytes() {
-    byte randBytes[] = new byte[64];
+    byte[] randBytes = new byte[64];
     new SecureRandom().nextBytes(randBytes);
     return randBytes;
   }

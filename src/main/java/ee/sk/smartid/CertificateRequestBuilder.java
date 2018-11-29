@@ -248,7 +248,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     validateParameters();
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse response = fetchCertificateChoiceSessionResponse(request);
-    return response.getSessionId();
+    return response.getSessionID();
   }
 
   /**
@@ -295,7 +295,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   public void validateCertificateResponse(SessionStatus sessionStatus) {
     validateSessionResult(sessionStatus.getResult());
-    SessionCertificate certificate = sessionStatus.getCertificate();
+    SessionCertificate certificate = sessionStatus.getCert();
     if (certificate == null || isBlank(certificate.getValue())) {
       logger.error("Certificate was not present in the session status response");
       throw new TechnicalErrorException("Certificate was not present in the session status response");

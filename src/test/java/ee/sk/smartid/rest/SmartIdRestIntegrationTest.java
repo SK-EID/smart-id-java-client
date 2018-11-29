@@ -53,7 +53,7 @@ public class SmartIdRestIntegrationTest {
   private SmartIdConnector connector;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v1/");
   }
 
@@ -100,7 +100,7 @@ public class SmartIdRestIntegrationTest {
     return signatureSessionResponse;
   }
 
-  private SignatureSessionRequest createSignatureSessionRequest() throws NoSuchAlgorithmException {
+  private SignatureSessionRequest createSignatureSessionRequest() {
     SignatureSessionRequest signatureSessionRequest = new SignatureSessionRequest();
     signatureSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     signatureSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -119,7 +119,7 @@ public class SmartIdRestIntegrationTest {
     return authenticationSessionResponse;
   }
 
-  private AuthenticationSessionRequest createAuthenticationSessionRequest() throws NoSuchAlgorithmException {
+  private AuthenticationSessionRequest createAuthenticationSessionRequest() {
     AuthenticationSessionRequest authenticationSessionRequest = new AuthenticationSessionRequest();
     authenticationSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     authenticationSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);

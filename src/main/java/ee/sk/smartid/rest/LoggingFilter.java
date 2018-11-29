@@ -48,7 +48,7 @@ public class LoggingFilter implements ClientRequestFilter, ClientResponseFilter,
   private static final String LOGGING_OUTPUT_STREAM_PROPERTY = "loggingOutputStream";
 
   @Override
-  public void filter(ClientRequestContext requestContext) throws IOException {
+  public void filter(ClientRequestContext requestContext) {
     if (logger.isDebugEnabled()) {
       logUrl(requestContext);
     }

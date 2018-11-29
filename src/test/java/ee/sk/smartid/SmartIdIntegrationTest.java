@@ -46,7 +46,7 @@ public class SmartIdIntegrationTest {
   private SmartIdClient client;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     client = new SmartIdClient();
     client.setRelyingPartyUUID(RELYING_PARTY_UUID);
     client.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -54,7 +54,7 @@ public class SmartIdIntegrationTest {
   }
 
   @Test
-  public void getCertificateAndSignHash() throws Exception {
+  public void getCertificateAndSignHash() {
     SmartIdCertificate certificateResponse = client
         .getCertificate()
         .withRelyingPartyUUID(RELYING_PARTY_UUID)
@@ -81,7 +81,7 @@ public class SmartIdIntegrationTest {
   }
 
   @Test
-  public void authenticate() throws Exception {
+  public void authenticate() {
     AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
     assertNotNull(authenticationHash.calculateVerificationCode());
 

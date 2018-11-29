@@ -52,8 +52,7 @@ public class SessionStatusPoller {
   public SessionStatus fetchFinalSessionStatus(String sessionId) throws UserRefusedException, SessionTimeoutException, DocumentUnusableException {
     logger.debug("Starting to poll session status for session " + sessionId);
     try {
-      SessionStatus status = pollForFinalSessionStatus(sessionId);
-      return status;
+      return pollForFinalSessionStatus(sessionId);
     } catch (InterruptedException e) {
       logger.error("Failed to poll session status: " + e.getMessage());
       throw new TechnicalErrorException("Failed to poll session status: " + e.getMessage(), e);

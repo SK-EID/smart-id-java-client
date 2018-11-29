@@ -35,21 +35,21 @@ import static org.junit.Assert.assertEquals;
 public class SmartIdSignatureTest {
 
   @Test
-  public void getSignatureValueInBase64() throws Exception {
+  public void getSignatureValueInBase64() {
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64("VGVyZSBNYWFpbG0=");
     assertEquals("VGVyZSBNYWFpbG0=", signature.getValueInBase64());
   }
 
   @Test
-  public void getSignatureValueInBytes() throws Exception {
+  public void getSignatureValueInBytes() {
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64("RGVkZ2Vob2c=");
     assertArrayEquals("Dedgehog".getBytes(), signature.getValue());
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void incorrectBase64StringShouldThrowException() throws Exception {
+  public void incorrectBase64StringShouldThrowException() {
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64("äIsNotValidBase64Character");
     signature.getValue();

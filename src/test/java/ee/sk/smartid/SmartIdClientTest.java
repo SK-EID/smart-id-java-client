@@ -81,7 +81,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateAndSign_fullExample() throws Exception {
+  public void getCertificateAndSign_fullExample() {
     // Provide data bytes to be signed (Default hash type is SHA-512)
     SignableData dataToSign = new SignableData("Hello World!".getBytes());
 
@@ -114,7 +114,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateAndSign_withExistingHash() throws Exception {
+  public void getCertificateAndSign_withExistingHash() {
     SmartIdCertificate certificateResponse = client
         .getCertificate()
         .withCountryCode("EE")
@@ -139,7 +139,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateUsingNationalIdentity() throws Exception {
+  public void getCertificateUsingNationalIdentity() {
     NationalIdentity identity = new NationalIdentity("EE", "31111111111");
     SmartIdCertificate certificate = client
         .getCertificate()
@@ -151,7 +151,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateUsingDocumentNumber() throws Exception {
+  public void getCertificateUsingDocumentNumber() {
     SmartIdCertificate certificate = client
         .getCertificate()
         .withDocumentNumber("PNOEE-31111111111")
@@ -162,7 +162,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateWithNonce() throws Exception {
+  public void getCertificateWithNonce() {
     SmartIdCertificate certificate = client
         .getCertificate()
         .withDocumentNumber("PNOEE-31111111111")
@@ -174,7 +174,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateWithManualSessionStatusRequesting() throws Exception {
+  public void getCertificateWithManualSessionStatusRequesting() {
     CertificateRequestBuilder builder = client.getCertificate();
     String sessionId = builder
             .withDocumentNumber("PNOEE-31111111111")
@@ -189,7 +189,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() throws Exception {
+  public void getCertificateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
     client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
     CertificateRequestBuilder builder = client.getCertificate();
     String sessionId = builder
@@ -205,7 +205,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void sign() throws Exception {
+  public void sign() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
@@ -223,7 +223,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void signWithNonce() throws Exception {
+  public void signWithNonce() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
@@ -242,7 +242,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void signWithDisplayText() throws Exception {
+  public void signWithDisplayText() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
@@ -261,7 +261,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void signWithManualSessionStatusRequesting() throws Exception {
+  public void signWithManualSessionStatusRequesting() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
@@ -283,7 +283,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void signWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() throws Exception {
+  public void signWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
@@ -411,7 +411,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void setSessionStatusResponseSocketTimeout() throws Exception {
+  public void setSessionStatusResponseSocketTimeout() {
     client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
     SmartIdSignature signature = createSignature();
     assertNotNull(signature);
@@ -419,7 +419,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void authenticateUsingDocumentNumber() throws Exception {
+  public void authenticateUsingDocumentNumber() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==\"");
     authenticationHash.setHashType(HashType.SHA512);
@@ -437,7 +437,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void authenticateUsingNationalIdentity() throws Exception {
+  public void authenticateUsingNationalIdentity() {
     NationalIdentity identity = new NationalIdentity("EE", "31111111111");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -457,7 +457,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void authenticateWithNonce() throws Exception {
+  public void authenticateWithNonce() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==\"");
     authenticationHash.setHashType(HashType.SHA512);
@@ -476,7 +476,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void authenticateWithDisplayText() throws Exception {
+  public void authenticateWithDisplayText() {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==\"");
     authenticationHash.setHashType(HashType.SHA512);
@@ -596,7 +596,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void verifyAuthentication_withNetworkConnectionConfigurationHavingCustomHeader() throws Exception {
+  public void verifyAuthentication_withNetworkConnectionConfigurationHavingCustomHeader() {
     String headerName = "custom-header";
     String headerValue = "Hi!";
 
@@ -611,7 +611,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void verifySigning_withNetworkConnectionConfigurationHavingCustomHeader() throws Exception {
+  public void verifySigning_withNetworkConnectionConfigurationHavingCustomHeader() {
     String headerName = "custom-header";
     String headerValue = "Hello?!";
 
@@ -626,7 +626,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void verifyCertificateChoice_withNetworkConnectionConfigurationHavingCustomHeader() throws Exception {
+  public void verifyCertificateChoice_withNetworkConnectionConfigurationHavingCustomHeader() {
     String headerName = "custom-header";
     String headerValue = "Man, come on..";
 
