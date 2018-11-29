@@ -1,5 +1,31 @@
 package ee.sk.smartid;
 
+/*-
+ * #%L
+ * Smart ID sample Java client
+ * %%
+ * Copyright (C) 2018 SK ID Solutions AS
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
+
 import ee.sk.smartid.exception.TechnicalErrorException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
@@ -234,7 +260,7 @@ public class AuthenticationResponseValidator {
     return ArrayUtils.addAll(digestInfoPrefix, digest);
   }
 
-  private AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
+  AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
     AuthenticationIdentity identity = new AuthenticationIdentity();
     try {
       LdapName ln = new LdapName(certificate.getSubjectDN().getName());
@@ -244,7 +270,7 @@ public class AuthenticationResponseValidator {
         } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
           identity.setSurName(rdn.getValue().toString());
         } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
-          identity.setIdentityCode(rdn.getValue().toString().split("-")[1]);
+          identity.setIdentityCode(rdn.getValue().toString().split("-", 2)[1]);
         } else if(rdn.getType().equalsIgnoreCase("C")) {
           identity.setCountry(rdn.getValue().toString());
         }
