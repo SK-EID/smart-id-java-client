@@ -32,7 +32,7 @@ import org.junit.Test;
 public class SignableHashTest {
 
   @Test
-  public void calculateVerificationCodeWithSha256() throws Exception {
+  public void calculateVerificationCodeWithSha256() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
@@ -40,7 +40,7 @@ public class SignableHashTest {
   }
 
   @Test
-  public void calculateVerificationCodeWithSha512() throws Exception {
+  public void calculateVerificationCodeWithSha512() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA512);
     hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));

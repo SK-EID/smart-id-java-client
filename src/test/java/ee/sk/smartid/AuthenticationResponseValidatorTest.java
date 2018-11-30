@@ -232,9 +232,9 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void shouldConstructAuthenticationIdentityEE() throws CertificateException {
-    X509Certificate certificateLv = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_EE));
+    X509Certificate certificateEe = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_EE));
 
-    AuthenticationIdentity authenticationIdentity = validator.constructAuthenticationIdentity(certificateLv);
+    AuthenticationIdentity authenticationIdentity = validator.constructAuthenticationIdentity(certificateEe);
 
     assertThat(authenticationIdentity.getIdentityCode(), is("37308079118"));
     assertThat(authenticationIdentity.getCountry(), is("EE"));
@@ -256,9 +256,9 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void shouldConstructAuthenticationIdentityLT() throws CertificateException {
-    X509Certificate certificateLv = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LT));
+    X509Certificate certificateLt = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LT));
 
-    AuthenticationIdentity authenticationIdentity = validator.constructAuthenticationIdentity(certificateLv);
+    AuthenticationIdentity authenticationIdentity = validator.constructAuthenticationIdentity(certificateLt);
 
     assertThat(authenticationIdentity.getIdentityCode(), is("36009067968"));
     assertThat(authenticationIdentity.getCountry(), is("LT"));
@@ -306,7 +306,7 @@ public class AuthenticationResponseValidatorTest {
     return authenticationResponse;
   }
 
-  private byte[] getX509CertificateBytes(String base64Certificate) throws CertificateException {
+  private byte[] getX509CertificateBytes(String base64Certificate) {
     String caCertificateInPem = CertificateParser.BEGIN_CERT + "\n" + base64Certificate + "\n" + CertificateParser.END_CERT;
     return caCertificateInPem.getBytes();
   }

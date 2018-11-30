@@ -40,9 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 @Ignore("Requires physical interaction with a Smart ID device")
 public class SmartIdRestIntegrationTest {
@@ -55,7 +53,7 @@ public class SmartIdRestIntegrationTest {
   private SmartIdConnector connector;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v1/");
   }
 
@@ -102,7 +100,7 @@ public class SmartIdRestIntegrationTest {
     return signatureSessionResponse;
   }
 
-  private SignatureSessionRequest createSignatureSessionRequest() throws NoSuchAlgorithmException {
+  private SignatureSessionRequest createSignatureSessionRequest() {
     SignatureSessionRequest signatureSessionRequest = new SignatureSessionRequest();
     signatureSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     signatureSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -121,7 +119,7 @@ public class SmartIdRestIntegrationTest {
     return authenticationSessionResponse;
   }
 
-  private AuthenticationSessionRequest createAuthenticationSessionRequest() throws NoSuchAlgorithmException {
+  private AuthenticationSessionRequest createAuthenticationSessionRequest() {
     AuthenticationSessionRequest authenticationSessionRequest = new AuthenticationSessionRequest();
     authenticationSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     authenticationSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -135,8 +133,7 @@ public class SmartIdRestIntegrationTest {
   private SessionStatus pollSessionStatus(String sessionId) throws InterruptedException {
     SessionStatus sessionStatus = null;
     while (sessionStatus == null || StringUtils.equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
-      SessionStatusRequest request = new SessionStatusRequest(sessionId);
-      sessionStatus = connector.getSessionStatus(request);
+      sessionStatus = connector.getSessionStatus(sessionId);
       TimeUnit.SECONDS.sleep(1);
     }
     assertEquals("COMPLETE", sessionStatus.getState());
@@ -165,7 +162,7 @@ public class SmartIdRestIntegrationTest {
     assertThat(sessionStatus.getCert().getCertificateLevel(), not(isEmptyOrNullString()));
   }
 
-  private String calculateHashInBase64(byte[] dataToSign) throws NoSuchAlgorithmException {
+  private String calculateHashInBase64(byte[] dataToSign) {
     byte[] digestValue = DigestCalculator.calculateDigest(dataToSign, HashType.SHA512);
     return Base64.encodeBase64String(digestValue);
   }

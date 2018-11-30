@@ -32,10 +32,7 @@ import org.junit.Test;
 
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @Ignore("Requires physical interaction with a Smart ID device")
 public class SmartIdIntegrationTest {
@@ -49,7 +46,7 @@ public class SmartIdIntegrationTest {
   private SmartIdClient client;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     client = new SmartIdClient();
     client.setRelyingPartyUUID(RELYING_PARTY_UUID);
     client.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -57,7 +54,7 @@ public class SmartIdIntegrationTest {
   }
 
   @Test
-  public void getCertificateAndSignHash() throws Exception {
+  public void getCertificateAndSignHash() {
     SmartIdCertificate certificateResponse = client
         .getCertificate()
         .withRelyingPartyUUID(RELYING_PARTY_UUID)
@@ -84,7 +81,7 @@ public class SmartIdIntegrationTest {
   }
 
   @Test
-  public void authenticate() throws Exception {
+  public void authenticate() {
     AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
     assertNotNull(authenticationHash.calculateVerificationCode());
 

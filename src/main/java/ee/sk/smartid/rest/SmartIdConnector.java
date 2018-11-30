@@ -30,10 +30,11 @@ import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.rest.dao.*;
 
 import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 
 public interface SmartIdConnector extends Serializable {
 
-  SessionStatus getSessionStatus(SessionStatusRequest request) throws SessionNotFoundException;
+  SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException;
 
   CertificateChoiceResponse getCertificate(NationalIdentity identity, CertificateRequest request);
 
@@ -44,5 +45,7 @@ public interface SmartIdConnector extends Serializable {
   AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request);
 
   AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request);
+
+  void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
 
 }

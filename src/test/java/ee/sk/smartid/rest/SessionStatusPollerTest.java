@@ -26,12 +26,7 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.DummyData;
-import ee.sk.smartid.exception.DocumentUnusableException;
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.exception.SessionTimeoutException;
-import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,11 +36,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static ee.sk.smartid.DummyData.createSessionEndResult;
-import static ee.sk.smartid.DummyData.createSessionResult;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class SessionStatusPollerTest {
 
@@ -53,14 +44,14 @@ public class SessionStatusPollerTest {
   private SessionStatusPoller poller;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     connector = new SmartIdConnectorStub();
     poller = new SessionStatusPoller(connector);
     poller.setPollingSleepTime(TimeUnit.MILLISECONDS, 1L);
   }
 
   @Test
-  public void getFirstCompleteResponse() throws Exception {
+  public void getFirstCompleteResponse() {
     connector.responses.add(createCompleteSessionStatus());
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", connector.sessionIdUsed);
@@ -69,7 +60,7 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void pollAndGetThirdCompleteResponse() throws Exception {
+  public void pollAndGetThirdCompleteResponse() {
     connector.responses.add(createRunningSessionStatus());
     connector.responses.add(createRunningSessionStatus());
     connector.responses.add(createCompleteSessionStatus());
@@ -79,7 +70,7 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void setPollingSleepTime() throws Exception {
+  public void setPollingSleepTime() {
     poller.setPollingSleepTime(TimeUnit.MILLISECONDS, 200L);
     addMultipleRunningSessionResponses(5);
     connector.responses.add(createCompleteSessionStatus());
@@ -89,8 +80,8 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void setResponseSocketOpenTime() throws Exception {
-    poller.setResponseSocketOpenTime(TimeUnit.MINUTES, 2L);
+  public void setResponseSocketOpenTime() {
+    connector.setSessionStatusResponseSocketOpenTime(TimeUnit.MINUTES, 2L);
     connector.responses.add(createCompleteSessionStatus());
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     assertCompleteStateReceived(status);
@@ -100,45 +91,11 @@ public class SessionStatusPollerTest {
   }
 
   @Test
-  public void responseSocketOpenTimeShouldNotBeSetByDefault() throws Exception {
+  public void responseSocketOpenTimeShouldNotBeSetByDefault() {
     connector.responses.add(createCompleteSessionStatus());
     SessionStatus status = poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
     assertCompleteStateReceived(status);
     assertFalse(connector.requestUsed.isResponseSocketOpenTimeSet());
-  }
-
-  @Test(expected = UserRefusedException.class)
-  public void getUserRefusedResponse_shouldThrowException() throws Exception {
-    connector.responses.add(DummyData.createUserRefusedSessionStatus());
-    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
-  }
-
-  @Test(expected = SessionTimeoutException.class)
-  public void getUserTimeoutResponse_shouldThrowException() throws Exception {
-    connector.responses.add(DummyData.createTimeoutSessionStatus());
-    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
-  }
-
-  @Test(expected = DocumentUnusableException.class)
-  public void getDocumentUnusableResponse_shouldThrowException() throws Exception {
-    connector.responses.add(DummyData.createDocumentUnusableSessionStatus());
-    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
-  }
-
-  @Test(expected = TechnicalErrorException.class)
-  public void getUnknownEndResult_shouldThrowException() throws Exception {
-    SessionStatus status = createCompleteSessionStatus();
-    status.setResult(createSessionResult("BLAH"));
-    connector.responses.add(status);
-    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
-  }
-
-  @Test(expected = TechnicalErrorException.class)
-  public void getMissingEndResult_shouldThrowException() throws Exception {
-    SessionStatus status = createCompleteSessionStatus();
-    status.setResult(null);
-    connector.responses.add(status);
-    poller.fetchFinalSessionStatus("97f5058e-e308-4c83-ac14-7712b0eb9d86");
   }
 
   private long measurePollingDuration() {
@@ -177,12 +134,19 @@ public class SessionStatusPollerTest {
     SessionStatusRequest requestUsed;
     List<SessionStatus> responses = new ArrayList<>();
     int responseNumber = 0;
+    private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
+    private long sessionStatusResponseSocketOpenTimeValue;
 
     @Override
-    public SessionStatus getSessionStatus(SessionStatusRequest request) throws SessionNotFoundException {
-      sessionIdUsed = request.getSessionId();
-      requestUsed = request;
+    public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
+      sessionIdUsed = sessionId;
+      requestUsed = createSessionStatusRequest(sessionId);
       return responses.get(responseNumber++);
+    }
+    @Override
+    public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
+      this.sessionStatusResponseSocketOpenTimeUnit = sessionStatusResponseSocketOpenTimeUnit;
+      this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
     }
 
     @Override
@@ -208,6 +172,14 @@ public class SessionStatusPollerTest {
     @Override
     public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
       return null;
+    }
+
+    private SessionStatusRequest createSessionStatusRequest(String sessionId) {
+      SessionStatusRequest request = new SessionStatusRequest(sessionId);
+      if (sessionStatusResponseSocketOpenTimeUnit != null && sessionStatusResponseSocketOpenTimeValue > 0) {
+        request.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+      }
+      return request;
     }
   }
 }

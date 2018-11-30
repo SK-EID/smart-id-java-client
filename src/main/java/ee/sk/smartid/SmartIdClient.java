@@ -87,14 +87,12 @@ import java.util.concurrent.TimeUnit;
  *
  *   // to display the verificationCode on the web page
  *   String verificationCode = dataToSign.calculateVerificationCode();
-
  *   SmartIdSignature signature = client
  *   .createSignature()
  *   .withDocumentNumber(documentNumber)
  *   .withSignableHash(hashToSign)
  *   .withCertificateLevel("QUALIFIED")
  *   .sign();
-
  *   byte[] signature = signature.getValue();
  * </code></pre>
  * @see <a href="https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it">https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it</a>
@@ -258,16 +256,19 @@ public class SmartIdClient {
   }
 
   private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
+    connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
     SessionStatusPoller sessionStatusPoller = new SessionStatusPoller(connector);
     sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
-    sessionStatusPoller.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
     return sessionStatusPoller;
   }
 
   public SmartIdConnector getSmartIdConnector() {
     if (null == connector) {
       // Fallback to REST connector when not initialised
+      SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
+      connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
       setSmartIdConnector(new SmartIdRestConnector(hostUrl, networkConnectionConfig));
+
     }
     return connector;
   }

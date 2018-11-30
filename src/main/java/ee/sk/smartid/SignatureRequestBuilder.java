@@ -29,15 +29,11 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.SessionSignature;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * Class for building signature request and getting the response
@@ -203,6 +199,9 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   /**
    * Send the signature request and get the response
+   * <p>
+   * This method uses automatic session status polling internally
+   * and therefore blocks the current thread until signing is concluded/interupted etc.
    *
    * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
@@ -221,11 +220,51 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   public SmartIdSignature sign() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,UserRefusedException,
       SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
     validateParameters();
+    String sessionId = initiateSigning();
+    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
+    SmartIdSignature signature = createSmartIdSignature(sessionStatus);
+    return signature;
+  }
+
+  /**
+   * Send the signature request and get the session Id
+   *
+   * @throws InvalidParametersException when mandatory request parameters are missing
+   * @throws UserAccountNotFoundException when the user account was not found
+   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
+   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
+   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
+   * @throws ServerMaintenanceException when the server is under maintenance
+   *
+   * @return session Id - later to be used for manual session status polling
+   */
+  public String initiateSigning() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,
+          ClientNotSupportedException, ServerMaintenanceException {
+    validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = getConnector().sign(getDocumentNumber(), request);
-    SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(response.getSessionID());
-    validateResponse(sessionStatus);
-    SmartIdSignature signature = createSmartIdSignature(sessionStatus);
+    return response.getSessionID();
+  }
+
+  /**
+   * Get {@link SmartIdSignature} from {@link SessionStatus}
+   *
+   * @throws UserRefusedException when the user has refused the session
+   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
+   * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
+   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   *
+   * @param sessionStatus session status response
+   * @return the authentication response
+   */
+  public SmartIdSignature createSmartIdSignature(SessionStatus sessionStatus) {
+    validateSignatureResponse(sessionStatus);
+    SessionSignature sessionSignature = sessionStatus.getSignature();
+
+    SmartIdSignature signature = new SmartIdSignature();
+    signature.setValueInBase64(sessionSignature.getValue());
+    signature.setAlgorithmName(sessionSignature.getAlgorithm());
+    signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
     return signature;
   }
 
@@ -241,7 +280,8 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     }
   }
 
-  private void validateResponse(SessionStatus sessionStatus) {
+  private void validateSignatureResponse(SessionStatus sessionStatus) {
+    validateSessionResult(sessionStatus.getResult());
     if (sessionStatus.getSignature() == null) {
       logger.error("Signature was not present in the response");
       throw new TechnicalErrorException("Signature was not present in the response");
@@ -258,15 +298,5 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
     return request;
-  }
-
-  private SmartIdSignature createSmartIdSignature(SessionStatus sessionStatus) {
-    SessionSignature sessionSignature = sessionStatus.getSignature();
-
-    SmartIdSignature signature = new SmartIdSignature();
-    signature.setValueInBase64(sessionSignature.getValue());
-    signature.setAlgorithmName(sessionSignature.getAlgorithm());
-    signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
-    return signature;
   }
 }

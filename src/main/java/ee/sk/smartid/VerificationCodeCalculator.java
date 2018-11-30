@@ -27,8 +27,6 @@ package ee.sk.smartid;
  */
 
 import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class VerificationCodeCalculator {
 

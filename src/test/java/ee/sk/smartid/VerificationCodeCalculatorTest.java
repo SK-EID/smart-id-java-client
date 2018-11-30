@@ -40,7 +40,7 @@ public class VerificationCodeCalculatorTest {
   }
 
   @Test
-  public void calculateCorrectVerificationCode() throws Exception {
+  public void calculateCorrectVerificationCode() {
     assertVerificationCode("7712", "Hello World!");
     assertVerificationCode("4612", "Hedgehogs – why can't they just share the hedge?");
     assertVerificationCode("7782", "Go ahead, make my day.");

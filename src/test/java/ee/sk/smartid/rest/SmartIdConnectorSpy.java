@@ -29,6 +29,8 @@ package ee.sk.smartid.rest;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.rest.dao.*;
 
+import java.util.concurrent.TimeUnit;
+
 public class SmartIdConnectorSpy implements SmartIdConnector {
 
   public SessionStatus sessionStatusToRespond;
@@ -43,9 +45,10 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   public SignatureSessionRequest signatureSessionRequestUsed;
   public AuthenticationSessionRequest authenticationSessionRequestUsed;
 
+
   @Override
-  public SessionStatus getSessionStatus(SessionStatusRequest request) throws SessionNotFoundException {
-    sessionIdUsed = request.getSessionId();
+  public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
+    sessionIdUsed = sessionId;
     return sessionStatusToRespond;
   }
 
@@ -83,4 +86,10 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
     authenticationSessionRequestUsed = request;
     return authenticationSessionResponseToRespond;
   }
+
+  @Override
+  public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
+
+  }
+
 }

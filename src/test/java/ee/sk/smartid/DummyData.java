@@ -45,18 +45,6 @@ public class DummyData {
     return status;
   }
 
-  public static SessionStatus createTimeoutSessionStatus() {
-    SessionStatus status = createCompleteSessionStatus();
-    status.setResult(createSessionResult("TIMEOUT"));
-    return status;
-  }
-
-  public static SessionStatus createDocumentUnusableSessionStatus() {
-    SessionStatus status = createCompleteSessionStatus();
-    status.setResult(createSessionResult("DOCUMENT_UNUSABLE"));
-    return status;
-  }
-
   public static SessionResult createSessionResult(String endResult) {
     SessionResult result = new SessionResult();
     result.setEndResult(endResult);
