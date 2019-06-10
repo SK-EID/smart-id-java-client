@@ -32,6 +32,6 @@ You can use the library as a Maven dependency from the Maven Central (http://mvn
 <dependency>
     <groupId>ee.sk.smartid</groupId>
     <artifactId>smart-id-java-client</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
