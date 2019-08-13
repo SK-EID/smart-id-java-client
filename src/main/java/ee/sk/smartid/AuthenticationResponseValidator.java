@@ -181,8 +181,7 @@ public class AuthenticationResponseValidator {
   }
 
   private void initializeTrustedCACertificatesFromKeyStore() {
-    try {
-      InputStream is = AuthenticationResponseValidator.class.getResourceAsStream("/trusted_certificates.jks");
+    try (InputStream is = AuthenticationResponseValidator.class.getResourceAsStream("/trusted_certificates.jks")) {
       KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
       keystore.load(is, "changeit".toCharArray());
       Enumeration<String> aliases = keystore.aliases();

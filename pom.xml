@@ -206,6 +206,12 @@
                     <thirdPartyFilename>LICENSE.3RD-PARTY</thirdPartyFilename>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>3.1.12</version>
+            </plugin>
         </plugins>
     </build>
 
