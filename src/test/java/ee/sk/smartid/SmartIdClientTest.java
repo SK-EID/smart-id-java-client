@@ -433,6 +433,7 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .authenticate();
 
+    assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
     assertAuthenticationResponseValid(authenticationResponse);
   }
 
@@ -774,6 +775,7 @@ public class SmartIdClientTest {
     assertNotNull(authenticationResponse.getCertificate());
     assertThat(authenticationResponse.getSignatureValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
     assertEquals("sha256WithRSAEncryption", authenticationResponse.getAlgorithmName());
+    assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
   }
 
 }

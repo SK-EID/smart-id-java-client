@@ -42,6 +42,7 @@ public class SmartIdAuthenticationResponse implements Serializable {
   private X509Certificate certificate;
   private String requestedCertificateLevel;
   private String certificateLevel;
+  private String documentNumber;
 
   public byte[] getSignatureValue() {
     if (!Base64.isBase64(signatureValueInBase64)) {
@@ -112,5 +113,13 @@ public class SmartIdAuthenticationResponse implements Serializable {
 
   public void setRequestedCertificateLevel(String requestedCertificateLevel) {
     this.requestedCertificateLevel = requestedCertificateLevel;
+  }
+
+  public String getDocumentNumber() {
+    return documentNumber;
+  }
+
+  public void setDocumentNumber(String documentNumber) {
+    this.documentNumber = documentNumber;
   }
 }
