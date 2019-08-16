@@ -205,6 +205,38 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Sets the request's personal semantics identifier
+   * <p>
+   * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
+   * Either use
+   * {@link #withSemanticsIdentifierAsString(String)} (String)}
+   * or use {@link #withSemanticsIdentifier(SemanticsIdentifier)}
+   *
+   * @param semanticsIdentifier semantics identifier for a person
+   * @return this builder
+   */
+  public CertificateRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifier) {
+    super.withSemanticsIdentifierAsString(semanticsIdentifier);
+    return this;
+  }
+
+  /**
+   * Sets the request's personal semantics identifier
+   * <p>
+   * Semantics identifier consists of identity type, country code, and the identifier.
+   * Either use
+   * {@link #withSemanticsIdentifier(SemanticsIdentifier)}
+   * or use {@link #withSemanticsIdentifierAsString(String)}}
+   *
+   * @param semanticsIdentifier semantics identifier for a person
+   * @return this builder
+   */
+  public CertificateRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
+    super.withSemanticsIdentifier(semanticsIdentifier);
+    return this;
+  }
+
+  /**
    * Send the certificate choice request and get the response
    *x
    * @throws InvalidParametersException when mandatory request parameters are missing
@@ -278,6 +310,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   private CertificateChoiceResponse fetchCertificateChoiceSessionResponse(CertificateRequest request) {
     if (isNotEmpty(getDocumentNumber())) {
       return getConnector().getCertificate(getDocumentNumber(), request);
+    } else if(getSemanticsIdentifier() != null) {
+      return getConnector().getCertificate(getSemanticsIdentifier(), request);
     } else {
       NationalIdentity identity = getNationalIdentity();
       return getConnector().getCertificate(identity, request);
@@ -308,9 +342,9 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasNationalIdentity()) {
-      logger.error("Either document number or national identity must be set");
-      throw new InvalidParametersException("Either document number or national identity must be set");
+    if (isBlank(getDocumentNumber()) && !hasNationalIdentity() && !hasSemanticsIdentifier()) {
+      logger.error("Either document number, national identity or semantics identifier must be set");
+      throw new InvalidParametersException("Either document number, national identity or semantics identifier must be set");
     }
   }
 
