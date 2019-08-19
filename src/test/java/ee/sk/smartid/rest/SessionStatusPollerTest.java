@@ -160,7 +160,19 @@ public class SessionStatusPollerTest {
     }
 
     @Override
+    public CertificateChoiceResponse getCertificate(SemanticsIdentifier identifier,
+        CertificateRequest request) {
+      return null;
+    }
+
+    @Override
     public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
+      return null;
+    }
+
+    @Override
+    public SignatureSessionResponse sign(SemanticsIdentifier identifier,
+        SignatureSessionRequest request) {
       return null;
     }
 
@@ -171,6 +183,12 @@ public class SessionStatusPollerTest {
 
     @Override
     public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
+      return null;
+    }
+
+    @Override
+    public AuthenticationSessionResponse authenticate(SemanticsIdentifier identity,
+        AuthenticationSessionRequest request) {
       return null;
     }
 
