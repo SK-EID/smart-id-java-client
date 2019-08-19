@@ -54,7 +54,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
   private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
   private String endpointUrl;
-  private ClientConfig clientConfig;
+  private transient ClientConfig clientConfig;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
 

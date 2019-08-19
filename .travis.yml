@@ -8,3 +8,4 @@ after_success:
 script:
   - mvn test
   - mvn org.owasp:dependency-check-maven:check
+  - mvn spotbugs:check

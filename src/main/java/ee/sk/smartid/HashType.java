@@ -39,7 +39,7 @@ public enum HashType {
   HashType(String algorithmName, String hashTypeName, byte[] digestInfoPrefix) {
     this.algorithmName = algorithmName;
     this.hashTypeName = hashTypeName;
-    this.digestInfoPrefix = digestInfoPrefix;
+    this.digestInfoPrefix = digestInfoPrefix.clone();
   }
 
   public String getAlgorithmName() {
@@ -51,6 +51,6 @@ public enum HashType {
   }
 
   public byte[] getDigestInfoPrefix() {
-    return digestInfoPrefix;
+    return digestInfoPrefix.clone();
   }
 }
