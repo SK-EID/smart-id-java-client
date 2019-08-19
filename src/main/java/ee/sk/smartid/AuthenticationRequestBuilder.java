@@ -312,6 +312,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     authenticationResponse.setRequestedCertificateLevel(getCertificateLevel());
     authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
+    authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
     return authenticationResponse;
   }
 
