@@ -153,6 +153,38 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Sets the request's personal semantics identifier
+   * <p>
+   * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
+   * Either use
+   * {@link #withSemanticsIdentifierAsString(String)}
+   * or use {@link #withSemanticsIdentifier(SemanticsIdentifier)}
+   *
+   * @param semanticsIdentifier semantics identifier for a person
+   * @return this builder
+   */
+  public AuthenticationRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifier) {
+    super.withSemanticsIdentifierAsString(semanticsIdentifier);
+    return this;
+  }
+
+  /**
+   * Sets the request's personal semantics identifier
+   * <p>
+   * Semantics identifier consists of identity type, country code, and the identifier.
+   * Either use
+   * {@link #withSemanticsIdentifier(SemanticsIdentifier)}
+   * or use {@link #withSemanticsIdentifierAsString(String)}}
+   *
+   * @param semanticsIdentifier semantics identifier for a person
+   * @return this builder
+   */
+  public AuthenticationRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
+    super.withSemanticsIdentifier(semanticsIdentifier);
+    return this;
+  }
+
+  /**
    * Sets the request's country code
    * <p>
    * National identity consists of country code and national
@@ -312,14 +344,15 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     authenticationResponse.setRequestedCertificateLevel(getCertificateLevel());
     authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
+    authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
     return authenticationResponse;
   }
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasNationalIdentity()) {
-      logger.error("Either document number or national identity must be set");
-      throw new InvalidParametersException("Either document number or national identity must be set");
+    if (isBlank(getDocumentNumber()) && !hasNationalIdentity() && !hasSemanticsIdentifier()) {
+      logger.error("Either document number, national identity or semantics identifier must be set");
+      throw new InvalidParametersException("Either document number, national identity or semantics identifier must be set");
     }
     if (!isHashSet() && !isSignableDataSet()) {
       logger.error("Signable data or hash with hash type must be set");
@@ -340,11 +373,14 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private AuthenticationSessionResponse getAuthenticationResponse(AuthenticationSessionRequest request) {
+    NationalIdentity identity = getNationalIdentity();
+    SemanticsIdentifier semanticsIdentifier = getSemanticsIdentifier();
     if (isNotEmpty(getDocumentNumber())) {
       return getConnector().authenticate(getDocumentNumber(), request);
-    } else {
-      NationalIdentity identity = getNationalIdentity();
+    } else if (identity != null) {
       return getConnector().authenticate(identity, request);
+    } else {
+      return getConnector().authenticate(semanticsIdentifier, request);
     }
   }
 

@@ -31,6 +31,9 @@ import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier.CountryCode;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier.IdentityType;
+
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Before;
@@ -71,12 +74,21 @@ public class SmartIdClientTest {
     stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithSha512.json", "responses/signatureSessionResponse.json");
     stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
     stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithDisplayText.json", "responses/signatureSessionResponse.json");
+    stubRequestWithResponse("/signature/etsi/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+    stubRequestWithResponse("/signature/etsi/PASEE-987654321012", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+    stubRequestWithResponse("/signature/etsi/IDCEE-AA3456789", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
     stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
     stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
     stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/authentication/etsi/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/authentication/etsi/PASEE-987654321012", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/authentication/etsi/IDCEE-AA3456789", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     stubRequestWithResponse("/authentication/pno/EE/31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
     stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
+    stubRequestWithResponse("/certificatechoice/etsi/PASEE-987654321012", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+    stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+    stubRequestWithResponse("/certificatechoice/etsi/IDCEE-AA3456789", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json");
   }
 
@@ -433,6 +445,7 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .authenticate();
 
+    assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
     assertAuthenticationResponseValid(authenticationResponse);
   }
 
@@ -657,6 +670,150 @@ public class SmartIdClientTest {
     assertEquals(mock, client.getSmartIdConnector().getSessionStatus(null).getState());
   }
 
+  @Test
+  public void getCertificateByETSIPNO_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
+    SmartIdCertificate cer = client
+        .getCertificate()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
+        .withCertificateLevel("ADVANCED")
+        .fetch();
+
+    assertCertificateResponseValid(cer);
+  }
+
+  @Test
+  public void getCertificateByETSIPAS_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
+    SmartIdCertificate cer = client
+        .getCertificate()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+        .withCertificateLevel("ADVANCED")
+        .fetch();
+
+    assertCertificateResponseValid(cer);
+  }
+
+  @Test
+  public void getCertificateByETSIIDC_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
+    SmartIdCertificate cer = client
+        .getCertificate()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
+        .withCertificateLevel("ADVANCED")
+        .fetch();
+
+    assertCertificateResponseValid(cer);
+  }
+
+  @Test
+  public void getAuthentictionByETSIPNO_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    SmartIdAuthenticationResponse authResponse = client
+        .createAuthentication()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
+        .withCertificateLevel("ADVANCED")
+        .withAuthenticationHash(authenticationHash)
+        .authenticate();
+
+    assertAuthenticationResponseValid(authResponse);
+  }
+
+  @Test
+  public void getAuthentictionByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    SmartIdAuthenticationResponse authResponse = client
+        .createAuthentication()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+        .withCertificateLevel("ADVANCED")
+        .withAuthenticationHash(authenticationHash)
+        .authenticate();
+
+    assertAuthenticationResponseValid(authResponse);
+  }
+
+  @Test
+  public void getAuthentictionByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    SmartIdAuthenticationResponse authResponse = client
+        .createAuthentication()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
+        .withCertificateLevel("ADVANCED")
+        .withAuthenticationHash(authenticationHash)
+        .authenticate();
+
+    assertAuthenticationResponseValid(authResponse);
+  }
+
+  @Test
+  public void getSignatureByETSIPNO_ValidSemanticsIdentifier_ShouldReturnSuccessfulSignature() {
+
+    SignableHash signableHash = new SignableHash();
+    signableHash.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    signableHash.setHashType(HashType.SHA256);
+
+    SmartIdSignature signResponse = client
+        .createSignature()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
+        .withCertificateLevel("ADVANCED")
+        .withSignableHash(signableHash)
+        .sign();
+
+    assertValidSignatureCreated(signResponse);
+  }
+
+  @Test
+  public void getSignatureByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulSignature() {
+
+    SignableHash signableHash = new SignableHash();
+    signableHash.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    signableHash.setHashType(HashType.SHA256);
+
+    SmartIdSignature signResponse = client
+        .createSignature()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+        .withCertificateLevel("ADVANCED")
+        .withSignableHash(signableHash)
+        .sign();
+
+    assertValidSignatureCreated(signResponse);
+  }
+
+  @Test
+  public void getSignatureByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulSignature() {
+
+    SignableHash signableHash = new SignableHash();
+    signableHash.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    signableHash.setHashType(HashType.SHA256);
+
+    SmartIdSignature signResponse = client
+        .createSignature()
+        .withSemanticsIdentifier(
+            new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
+        .withCertificateLevel("ADVANCED")
+        .withSignableHash(signableHash)
+        .sign();
+
+    assertValidSignatureCreated(signResponse);
+  }
+
   private long measureSigningDuration() {
     long startTime = System.currentTimeMillis();
     SmartIdSignature signature = createSignature();
@@ -774,6 +931,7 @@ public class SmartIdClientTest {
     assertNotNull(authenticationResponse.getCertificate());
     assertThat(authenticationResponse.getSignatureValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
     assertEquals("sha256WithRSAEncryption", authenticationResponse.getAlgorithmName());
+    assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
   }
 
 }

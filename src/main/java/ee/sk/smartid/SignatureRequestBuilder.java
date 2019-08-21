@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * Class for building signature request and getting the response
@@ -113,6 +114,38 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    */
   public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
     super.withDocumentNumber(documentNumber);
+    return this;
+  }
+
+  /**
+   * Sets the request's personal semantics identifier
+   * <p>
+   * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
+   * Either use
+   * {@link #withSemanticsIdentifierAsString(String)}
+   * or use {@link #withSemanticsIdentifier(SemanticsIdentifier)}
+   *
+   * @param semanticsIdentifier semantics identifier for a person
+   * @return this builder
+   */
+  public SignatureRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifier) {
+    super.withSemanticsIdentifierAsString(semanticsIdentifier);
+    return this;
+  }
+
+  /**
+   * Sets the request's personal semantics identifier
+   * <p>
+   * Semantics identifier consists of identity type, country code, and the identifier.
+   * Either use
+   * {@link #withSemanticsIdentifier(SemanticsIdentifier)}
+   * or use {@link #withSemanticsIdentifierAsString(String)}}
+   *
+   * @param semanticsIdentifier semantics identifier for a person
+   * @return this builder
+   */
+  public SignatureRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
+    super.withSemanticsIdentifier(semanticsIdentifier);
     return this;
   }
 
@@ -242,8 +275,17 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
           ClientNotSupportedException, ServerMaintenanceException {
     validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
-    SignatureSessionResponse response = getConnector().sign(getDocumentNumber(), request);
+    SignatureSessionResponse response = getSignatureResponse(request);
     return response.getSessionID();
+  }
+
+  private SignatureSessionResponse getSignatureResponse(SignatureSessionRequest request) {
+    if (isNotEmpty(getDocumentNumber())) {
+      return getConnector().sign(getDocumentNumber(), request);
+    }
+    else {
+      return getConnector().sign(getSemanticsIdentifier(), request);
+    }
   }
 
   /**
@@ -270,9 +312,9 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber())) {
-      logger.error("Document number must be set");
-      throw new InvalidParametersException("Document number must be set");
+    if (isBlank(getDocumentNumber()) && !hasSemanticsIdentifier()) {
+      logger.error("Document number or semantics identifier must be set");
+      throw new InvalidParametersException("Document number or semantics identifier must be set");
     }
     if (!isHashSet() && !isSignableDataSet()) {
       logger.error("Signable data or hash with hash type must be set");

@@ -51,7 +51,7 @@ public class SignableData implements Serializable {
   private HashType hashType = HashType.SHA512;
 
   public SignableData(byte[] dataToSign) {
-    this.dataToSign = dataToSign;
+    this.dataToSign = dataToSign.clone();
   }
 
   public String calculateHashInBase64() {

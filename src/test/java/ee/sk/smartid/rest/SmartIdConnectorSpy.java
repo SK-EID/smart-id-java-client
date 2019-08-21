@@ -40,6 +40,7 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
 
   public String sessionIdUsed;
   public NationalIdentity identityUsed;
+  public SemanticsIdentifier identifierUsed;
   public String documentNumberUsed;
   public CertificateRequest certificateRequestUsed;
   public SignatureSessionRequest signatureSessionRequestUsed;
@@ -67,8 +68,21 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   }
 
   @Override
+  public CertificateChoiceResponse getCertificate(SemanticsIdentifier identifier,
+      CertificateRequest request) {
+    return certificateChoiceToRespond;
+  }
+
+  @Override
   public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
     documentNumberUsed = documentNumber;
+    signatureSessionRequestUsed = request;
+    return signatureSessionResponseToRespond;
+  }
+
+  @Override
+  public SignatureSessionResponse sign(SemanticsIdentifier identifier, SignatureSessionRequest request) {
+    identifierUsed = identifier;
     signatureSessionRequestUsed = request;
     return signatureSessionResponseToRespond;
   }
@@ -83,6 +97,13 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   @Override
   public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
     identityUsed = identity;
+    authenticationSessionRequestUsed = request;
+    return authenticationSessionResponseToRespond;
+  }
+
+  @Override
+  public AuthenticationSessionResponse authenticate(SemanticsIdentifier identifier, AuthenticationSessionRequest request) {
+    identifierUsed = identifier;
     authenticationSessionRequestUsed = request;
     return authenticationSessionResponseToRespond;
   }

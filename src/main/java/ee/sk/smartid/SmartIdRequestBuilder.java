@@ -30,6 +30,7 @@ import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ public abstract class SmartIdRequestBuilder {
   private String countryCode;
   private String nationalIdentityNumber;
   private NationalIdentity nationalIdentity;
+  private SemanticsIdentifier semanticsIdentifier;
   private String documentNumber;
   private String certificateLevel;
   private SignableData dataToSign;
@@ -80,6 +82,18 @@ public abstract class SmartIdRequestBuilder {
 
   protected SmartIdRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
     this.nationalIdentityNumber = nationalIdentityNumber;
+    return this;
+  }
+
+  public SmartIdRequestBuilder withSemanticsIdentifierAsString(
+      String semanticsIdentifier) {
+    this.semanticsIdentifier = new SemanticsIdentifier(semanticsIdentifier);
+    return this;
+  }
+
+  public SmartIdRequestBuilder withSemanticsIdentifier(
+      SemanticsIdentifier semanticsIdentifier) {
+    this.semanticsIdentifier = semanticsIdentifier;
     return this;
   }
 
@@ -149,9 +163,16 @@ public abstract class SmartIdRequestBuilder {
     return nationalIdentity != null || (isNotBlank(countryCode) && isNotBlank(nationalIdentityNumber));
   }
 
+  protected boolean hasSemanticsIdentifier() {
+    return semanticsIdentifier != null;
+  }
+
   protected NationalIdentity getNationalIdentity() {
     if (nationalIdentity != null) {
       return nationalIdentity;
+    }
+    if(countryCode == null || nationalIdentityNumber == null) {
+      return null;
     }
     return new NationalIdentity(countryCode, nationalIdentityNumber);
   }
@@ -213,4 +234,6 @@ public abstract class SmartIdRequestBuilder {
   protected String getDisplayText() {
     return displayText;
   }
+
+  public SemanticsIdentifier getSemanticsIdentifier() { return semanticsIdentifier; }
 }

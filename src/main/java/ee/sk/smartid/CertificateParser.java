@@ -27,6 +27,7 @@ package ee.sk.smartid;
  */
 
 import ee.sk.smartid.exception.TechnicalErrorException;
+import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,8 @@ public class CertificateParser {
     String certificateString = BEGIN_CERT + "\n" + certificateValue + "\n" + END_CERT;
     try {
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateString.getBytes()));
+      return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateString.getBytes(
+          StandardCharsets.UTF_8)));
     } catch (CertificateException e) {
       logger.error("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage());
       throw new TechnicalErrorException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);

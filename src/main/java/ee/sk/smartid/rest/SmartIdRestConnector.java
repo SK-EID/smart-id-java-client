@@ -50,11 +50,14 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private static final String SESSION_STATUS_URI = "/session/{sessionId}";
   private static final String CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH = "/certificatechoice/pno/{country}/{nationalIdentityNumber}";
   private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
+  private static final String CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/certificatechoice/etsi/{semanticsIdentifier}";
   private static final String SIGNATURE_BY_DOCUMENT_NUMBER_PATH = "/signature/document/{documentNumber}";
+  private static final String SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/signature/etsi/{semanticsIdentifier}";
   private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
   private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
+  private static final String AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/authentication/etsi/{semanticsIdentifier}";
   private String endpointUrl;
-  private ClientConfig clientConfig;
+  private transient ClientConfig clientConfig;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
 
@@ -106,6 +109,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   @Override
+  public CertificateChoiceResponse getCertificate(SemanticsIdentifier semanticsIdentifier,
+      CertificateRequest request) {
+    logger.debug("Getting certificate for identifier " + semanticsIdentifier.getIdentifier());
+    URI uri = UriBuilder
+        .fromUri(endpointUrl)
+        .path(CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
+        .build(semanticsIdentifier.getIdentifier());
+    System.out.println(uri);
+    return postCertificateRequest(uri, request);
+  }
+
+  @Override
   public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
     logger.debug("Signing for document " + documentNumber);
     URI uri = UriBuilder
@@ -116,6 +131,25 @@ public class SmartIdRestConnector implements SmartIdConnector {
       return postRequest(uri, request, SignatureSessionResponse.class);
     } catch (NotFoundException e) {
       logger.warn("User account not found for signing with document " + documentNumber);
+      throw new UserAccountNotFoundException();
+    } catch (ForbiddenException e) {
+      logger.warn("No permission to issue the request");
+      throw new RequestForbiddenException();
+    }
+  }
+
+  @Override
+  public SignatureSessionResponse sign(SemanticsIdentifier semanticsIdentifier,
+      SignatureSessionRequest request) {
+    logger.debug("Signing for semantics identifier " + semanticsIdentifier);
+    URI uri = UriBuilder
+        .fromUri(endpointUrl)
+        .path(SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
+        .build(semanticsIdentifier.getIdentifier());
+    try {
+      return postRequest(uri, request, SignatureSessionResponse.class);
+    } catch (NotFoundException e) {
+      logger.warn("User account not found for semantics identifier " + semanticsIdentifier.getIdentifier());
       throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
       logger.warn("No permission to issue the request");
@@ -140,6 +174,16 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .fromUri(endpointUrl)
         .path(AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH)
         .build(identity.getCountryCode(), identity.getNationalIdentityNumber());
+    return postAuthenticationRequest(uri, request);
+  }
+
+  @Override
+  public AuthenticationSessionResponse authenticate(SemanticsIdentifier semanticsIdentifier, AuthenticationSessionRequest request) {
+    logger.debug("Authenticating for " + semanticsIdentifier);
+    URI uri = UriBuilder
+        .fromUri(endpointUrl)
+        .path(AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
+        .build(semanticsIdentifier.getIdentifier());
     return postAuthenticationRequest(uri, request);
   }
 

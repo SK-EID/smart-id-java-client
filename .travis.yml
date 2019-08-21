@@ -5,3 +5,7 @@ before_install:
 install: true
 after_success:
   - codecov
+script:
+  - mvn test
+  - mvn org.owasp:dependency-check-maven:check
+  - mvn spotbugs:check
