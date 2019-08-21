@@ -49,7 +49,7 @@ public class SignableHash implements Serializable {
   private HashType hashType;
 
   public void setHash(byte[] hash) {
-    this.hash = hash;
+    this.hash = hash.clone();
   }
 
   public void setHashInBase64(String hashInBase64) {
