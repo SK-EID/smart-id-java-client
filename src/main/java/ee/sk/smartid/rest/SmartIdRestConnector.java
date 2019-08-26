@@ -60,6 +60,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private transient ClientConfig clientConfig;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
+  private static final long serialVersionUID = 42L;
 
   public SmartIdRestConnector(String endpointUrl) {
     this.endpointUrl = endpointUrl;
