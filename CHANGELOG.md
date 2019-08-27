@@ -1,19 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.2] - 2019-08-21
+## [1.2] - 2019-08-26
 ### Added
-- added maven dependency check plugin for continuous security ([DDS-2685](https://jira.sk.ee/browse/DDS-2685)) 
-- added spotbugs plugin for continuous bug detection
-- added support for new rp api endpoints ([DDS-2694](https://jira.sk.ee/browse/DDS-2694))
+- added maven dependency check plugin for continuous security [#11][i11]
+- added spotbugs plugin for continuous bug detection [#1][i1]
+- added support for new rp api endpoints [#13][i13]
 
 ###Fixed
-- Add document number to authentication responses ([DDS-2695](https://jira.sk.ee/browse/DDS-2695))
+- Add document number to authentication responses [#2][i2]
 
-## [1.1] - 10 December 2018
+[i1]: https://github.com/SK-EID/smart-id-java-client/issues/1
+[i2]: https://github.com/SK-EID/smart-id-java-client/issues/2
+[i11]: https://github.com/SK-EID/smart-id-java-client/pull/11
+[i13]: https://github.com/SK-EID/smart-id-java-client/issues/13
+
+## [1.1] - 2018-12-10
 
 ### Added
 - SmartIdClient.getSmartIdConnector()
