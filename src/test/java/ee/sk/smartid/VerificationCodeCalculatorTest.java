@@ -28,6 +28,8 @@ package ee.sk.smartid;
 
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.junit.Assert.assertEquals;
 
 public class VerificationCodeCalculatorTest {
@@ -49,7 +51,7 @@ public class VerificationCodeCalculatorTest {
   }
 
   private void assertVerificationCode(String verificationCode, String dataString) {
-    byte[] data = dataString.getBytes();
+    byte[] data = dataString.getBytes(StandardCharsets.UTF_8);
     byte[] hash = DigestCalculator.calculateDigest(data, HashType.SHA256);
     assertEquals(verificationCode, VerificationCodeCalculator.calculate(hash));
   }
