@@ -38,6 +38,7 @@ public class SessionStatus implements Serializable {
   private SessionSignature signature;
 
   private SessionCertificate cert;
+  private String[] ignoredProperties;
 
   public String getState() {
     return state;
@@ -69,5 +70,13 @@ public class SessionStatus implements Serializable {
 
   public void setSignature(SessionSignature signature) {
     this.signature = signature;
+  }
+
+  public String[] getIgnoredProperties() {
+    return ignoredProperties;
+  }
+
+  public void setIgnoredProperties(String[] ignoredProperties) {
+    this.ignoredProperties = ignoredProperties;
   }
 }
