@@ -29,6 +29,7 @@ package ee.sk.smartid.rest.dao;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionStatus implements Serializable {
@@ -73,10 +74,10 @@ public class SessionStatus implements Serializable {
   }
 
   public String[] getIgnoredProperties() {
-    return ignoredProperties;
+    return Arrays.copyOf(ignoredProperties, ignoredProperties.length);
   }
 
   public void setIgnoredProperties(String[] ignoredProperties) {
-    this.ignoredProperties = ignoredProperties;
+    this.ignoredProperties = Arrays.copyOf(ignoredProperties, ignoredProperties.length);
   }
 }
