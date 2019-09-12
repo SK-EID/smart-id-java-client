@@ -31,6 +31,7 @@ import ee.sk.smartid.exception.TechnicalErrorException;
 import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
+import ee.sk.smartid.rest.dao.Capability;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
@@ -69,6 +70,7 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
+        .withCapabilities(Capability.SK_RA_RP_ONLY, Capability.BALTIC_BANKS)
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");
@@ -87,6 +89,7 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableData(dataToSign)
         .withDocumentNumber("PNOEE-31111111111")
+        .withCapabilities("QUALIFIED")
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");

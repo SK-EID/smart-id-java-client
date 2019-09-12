@@ -26,12 +26,12 @@ The Smart-ID Java client can be used for easy integration of the [Smart-ID](http
 Take a look at the [examples](https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it)
 
 ## Maven
-You can use the library as a Maven dependency from the [Maven Central](https://search.maven.org/search?q=g:ee.sk.smartid%20AND%20a:smart-id-java-client&core=gav)
+You can use the library as a Maven dependency from the Maven Central (http://mvnrepository.com/artifact/ee.sk.smartid/smart-id-java-client)
 
 ```xml
 <dependency>
     <groupId>ee.sk.smartid</groupId>
     <artifactId>smart-id-java-client</artifactId>
-    <version>1.2</version>
+    <version>1.1</version>
 </dependency>
 ```

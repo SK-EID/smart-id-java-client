@@ -29,11 +29,16 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.Capability;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -54,6 +59,7 @@ public abstract class SmartIdRequestBuilder {
   private SignableHash hashToSign;
   private String nonce;
   private String displayText;
+  private Set<String> capabilities;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
@@ -114,6 +120,20 @@ public abstract class SmartIdRequestBuilder {
 
   protected SmartIdRequestBuilder withCertificateLevel(String certificateLevel) {
     this.certificateLevel = certificateLevel;
+    return this;
+  }
+
+  protected SmartIdRequestBuilder withCapabilities(Capability... capabilities) {
+    HashSet<String> capabilitySet = new HashSet<>();
+    for (Capability capability : capabilities) {
+      capabilitySet.add(capability.toString());
+    }
+    this.capabilities = capabilitySet;
+    return this;
+  }
+
+  protected SmartIdRequestBuilder withCapabilities(String... capabilities) {
+    this.capabilities = new HashSet<>(Arrays.asList(capabilities));
     return this;
   }
 
@@ -236,4 +256,7 @@ public abstract class SmartIdRequestBuilder {
   }
 
   public SemanticsIdentifier getSemanticsIdentifier() { return semanticsIdentifier; }
+
+  public Set<String> getCapabilities() { return capabilities; }
+
 }
