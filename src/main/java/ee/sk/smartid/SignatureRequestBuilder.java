@@ -262,6 +262,19 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     super.withCapabilities(capabilities);
     return this;
   }
+ 
+  /**
+   * Sets the request's request properties
+   * <p>
+   * Optional. Additional request properties
+   *
+   * @param requestProperties request properties of the request
+   * @return this builder
+   */
+  public SignatureRequestBuilder withRequestProperties(RequestProperties requestProperties) {
+    super.withRequestProperties(requestProperties);
+    return this;
+  }
 
   /**
    * Send the signature request and get the response
@@ -373,6 +386,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
+    request.setRequestProperties(getRequestProperties());
     return request;
   }
 }

@@ -302,6 +302,19 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Sets the request's request properties
+   * <p>
+   * Optional. Additional request properties
+   *
+   * @param requestProperties request properties of the request
+   * @return this builder
+   */
+  protected AuthenticationRequestBuilder withRequestProperties(RequestProperties requestProperties) {
+    super.withRequestProperties(requestProperties);
+    return this;
+  }
+
+  /**
    * Send the authentication request and get the response
    * <p>
    * This method uses automatic session status polling internally
@@ -427,6 +440,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
+    request.setRequestProperties(getRequestProperties());
     return request;
   }
 

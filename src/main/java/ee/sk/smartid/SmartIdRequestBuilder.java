@@ -31,6 +31,7 @@ import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.Capability;
 import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionResult;
 import org.slf4j.Logger;
@@ -60,6 +61,7 @@ public abstract class SmartIdRequestBuilder {
   private String nonce;
   private String displayText;
   private Set<String> capabilities;
+  private RequestProperties requestProperties;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
@@ -144,6 +146,11 @@ public abstract class SmartIdRequestBuilder {
 
   protected SmartIdRequestBuilder withDisplayText(String displayText) {
     this.displayText = displayText;
+    return this;
+  }
+
+  protected SmartIdRequestBuilder withRequestProperties(RequestProperties requestProperties) {
+    this.requestProperties = requestProperties;
     return this;
   }
 
@@ -259,4 +266,7 @@ public abstract class SmartIdRequestBuilder {
 
   public Set<String> getCapabilities() { return capabilities; }
 
+  public RequestProperties getRequestProperties() {
+    return requestProperties;
+  }
 }
