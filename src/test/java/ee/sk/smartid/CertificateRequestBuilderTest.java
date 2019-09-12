@@ -82,8 +82,7 @@ public class CertificateRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
         .withCertificateLevel("QUALIFIED")
-        .withCapabilities(Capability.SK_RA_RP_ONLY,
-                Capability.BALTIC_BANKS,
+        .withCapabilities(Capability.ADVANCED,
                 Capability.QUALIFIED)
         .fetch();
     assertCertificateResponseValid(certificate);
@@ -98,7 +97,7 @@ public class CertificateRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withDocumentNumber("PNOEE-31111111111")
         .withCertificateLevel("QUALIFIED")
-        .withCapabilities("BALTIC_BANKS")
+        .withCapabilities("ADVANCED")
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();

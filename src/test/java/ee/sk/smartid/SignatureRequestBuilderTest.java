@@ -70,7 +70,7 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
-        .withCapabilities(Capability.SK_RA_RP_ONLY, Capability.BALTIC_BANKS)
+        .withCapabilities(Capability.ADVANCED)
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");

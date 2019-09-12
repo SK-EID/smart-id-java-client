@@ -238,7 +238,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * a restricted Smart ID user
    * {@link #withCapabilities(String...)}
    * @param capabilities are specified capabilities for a restricted Smart ID user
-   *                     and is one of [SK_RA_RP_ONLY, QUALIFIED, BALTIC_BANKS]
+   *                     and is one of [QUALIFIED, ADVANCED]
    * @return this builder
    */
   public SignatureRequestBuilder withCapabilities(Capability... capabilities) {
@@ -255,7 +255,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * a restricted Smart ID user
    * {@link #withCapabilities(Capability...)}
    * @param capabilities are specified capabilities for a restricted Smart ID user
-   *                     and is one of ["SK_RA_RP_ONLY", "QUALIFIED", "BALTIC_BANKS"]
+   *                     and is one of ["QUALIFIED", "ADVANCED"]
    * @return this builder
    */
   public SignatureRequestBuilder withCapabilities(String... capabilities) {
