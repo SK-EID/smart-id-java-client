@@ -45,7 +45,7 @@ public class SignatureSessionRequest implements Serializable {
   private String nonce;
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private Set capabilities;
-  private RequestProperties requestProperties;ü
+  private RequestProperties requestProperties;
 
   public String getCertificateLevel() {
     return certificateLevel;
@@ -102,7 +102,7 @@ public class SignatureSessionRequest implements Serializable {
   public void setNonce(String nonce) {
     this.nonce = nonce;
   }
-ü
+
   public Set getCapabilities() {
     return capabilities;
   }
