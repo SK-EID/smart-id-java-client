@@ -72,6 +72,17 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
+  public void getRunningSessionStatus_withIgnoredProperties() throws Exception {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunningWithIgnoredProperties.json");
+    assertNotNull(sessionStatus);
+    assertEquals("RUNNING", sessionStatus.getState());
+    assertNotNull(sessionStatus.getIgnoredProperties());
+    assertEquals(2, sessionStatus.getIgnoredProperties().length);
+    assertEquals("testingIgnored", sessionStatus.getIgnoredProperties()[0]);
+    assertEquals("testingIgnoredTwo", sessionStatus.getIgnoredProperties()[1]);
+  }
+
+  @Test
   public void getSessionStatus_forSuccessfulCertificateRequest() throws Exception {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
     assertSuccessfulResponse(sessionStatus);
@@ -235,6 +246,20 @@ public class SmartIdRestConnectorTest {
     assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
+  @Test
+  public void sign_withRequestProperties_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithRequestProperties.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setVcChoice(true);
+    request.setRequestProperties(requestProperties);
+
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
+  }
+
   @Test(expected = UserAccountNotFoundException.class)
   public void sign_whenDocumentNumberNotFound_shouldThrowException() throws Exception {
     stubNotFoundResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
@@ -333,6 +358,35 @@ public class SmartIdRestConnectorTest {
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     request.setDisplayText("Log into internet banking system");
+    AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
+  }
+
+  @Test
+  public void authenticate_withRequestProperties_usingNationalIdentityNumber() throws Exception {
+    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithRequestProperties.json", "responses/authenticationSessionResponse.json");
+    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setVcChoice(true);
+    request.setRequestProperties(requestProperties);
+
+    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
+  }
+
+  @Test
+  public void authenticate_withRequestProperties_usingDocumentNumber() throws Exception {
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithRequestProperties.json", "responses/authenticationSessionResponse.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setVcChoice(true);
+    request.setRequestProperties(requestProperties);
+
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
     assertNotNull(response);
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());

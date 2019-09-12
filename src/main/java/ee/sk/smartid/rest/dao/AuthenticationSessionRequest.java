@@ -42,6 +42,8 @@ public class AuthenticationSessionRequest implements Serializable {
   private String displayText;
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String nonce;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private RequestProperties requestProperties;
 
   public String getCertificateLevel() {
     return certificateLevel;
@@ -97,5 +99,13 @@ public class AuthenticationSessionRequest implements Serializable {
 
   public void setNonce(String nonce) {
     this.nonce = nonce;
+  }
+
+  public RequestProperties getRequestProperties() {
+    return requestProperties;
+  }
+
+  public void setRequestProperties(RequestProperties requestProperties) {
+    this.requestProperties = requestProperties;
   }
 }

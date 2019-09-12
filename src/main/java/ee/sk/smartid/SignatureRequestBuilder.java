@@ -231,6 +231,19 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Sets the request's request properties
+   * <p>
+   * Optional. Additional request properties
+   *
+   * @param requestProperties request properties of the request
+   * @return this builder
+   */
+  public SignatureRequestBuilder withRequestProperties(RequestProperties requestProperties) {
+    super.withRequestProperties(requestProperties);
+    return this;
+  }
+
+  /**
    * Send the signature request and get the response
    * <p>
    * This method uses automatic session status polling internally
@@ -339,6 +352,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setHash(getHashInBase64());
     request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
+    request.setRequestProperties(getRequestProperties());
     return request;
   }
 }
