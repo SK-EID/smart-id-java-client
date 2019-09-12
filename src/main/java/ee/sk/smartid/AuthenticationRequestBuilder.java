@@ -269,6 +269,39 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Specifies capabilities of the user
+   * <p>
+   * By default there are no specified capabilities.
+   * The capabilities need to be specified in case of
+   * a restricted Smart ID user
+   * {@link #withCapabilities(String...)}
+   * @param capabilities are specified capabilities for a restricted Smart ID user
+   *                     and is one of [QUALIFIED, ADVANCED]
+   * @return this builder
+   */
+  public AuthenticationRequestBuilder withCapabilities(Capability... capabilities) {
+    super.withCapabilities(capabilities);
+    return this;
+  }
+
+  /**
+   * Specifies capabilities of the user
+   * <p>
+   *
+   * By default there are no specified capabilities.
+   * The capabilities need to be specified in case of
+   * a restricted Smart ID user
+   * {@link #withCapabilities(Capability...)}
+   * @param capabilities are specified capabilities for a restricted Smart ID user
+   *                     and is one of ["QUALIFIED", "ADVANCED"]
+   * @return this builder
+   */
+  public AuthenticationRequestBuilder withCapabilities(String... capabilities) {
+    super.withCapabilities(capabilities);
+    return this;
+  }
+
+  /**
    * Sets the request's request properties
    * <p>
    * Optional. Additional request properties
@@ -406,6 +439,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     request.setHash(getHashInBase64());
     request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
+    request.setCapabilities(getCapabilities());
     request.setRequestProperties(getRequestProperties());
     return request;
   }

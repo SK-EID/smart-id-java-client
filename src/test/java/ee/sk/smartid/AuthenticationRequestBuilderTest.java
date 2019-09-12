@@ -87,6 +87,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
+        .withCapabilities("ADVANCED")
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==", "QUALIFIED");
@@ -132,6 +133,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withNationalIdentityNumber("31111111111")
         .withCountryCode("EE")
+        .withCapabilities(Capability.ADVANCED)
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithNationalIdentity(authenticationHash.getHashInBase64(), "QUALIFIED");

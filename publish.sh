@@ -1,7 +1,7 @@
 #!/bin/bash
 
 project="smart-id-java-client"
-version="1.2"
+version="1.1"
 staging_url="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 repositoryId="ossrh"
 
