@@ -107,6 +107,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withNationalIdentityNumber("31111111111")
         .withCountryCode("EE")
+        .withCapabilities(SmartIdRequestBuilder.Capability.BALTIC_BANKS)
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithNationalIdentity(authenticationHash.getHashInBase64(), "QUALIFIED");

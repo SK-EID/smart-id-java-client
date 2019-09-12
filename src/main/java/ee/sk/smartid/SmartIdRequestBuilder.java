@@ -32,8 +32,11 @@ import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionResult;
+import jersey.repackaged.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -54,6 +57,7 @@ public abstract class SmartIdRequestBuilder {
   private SignableHash hashToSign;
   private String nonce;
   private String displayText;
+  private Set<Capability> capabilities;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
@@ -114,6 +118,11 @@ public abstract class SmartIdRequestBuilder {
 
   protected SmartIdRequestBuilder withCertificateLevel(String certificateLevel) {
     this.certificateLevel = certificateLevel;
+    return this;
+  }
+
+  protected SmartIdRequestBuilder withCapabilities(Capability ...capabilities) {
+    this.capabilities = Sets.newHashSet(capabilities);
     return this;
   }
 
@@ -236,4 +245,10 @@ public abstract class SmartIdRequestBuilder {
   }
 
   public SemanticsIdentifier getSemanticsIdentifier() { return semanticsIdentifier; }
+
+  protected Set<Capability> getCapabilities() { return capabilities; }
+
+  public enum Capability{
+    SK_RA_RP_ONLY, QUALIFIED, BALTIC_BANKS
+  }
 }

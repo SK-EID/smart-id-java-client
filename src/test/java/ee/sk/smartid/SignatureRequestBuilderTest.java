@@ -69,6 +69,7 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
+        .withCapabilities(SmartIdRequestBuilder.Capability.SK_RA_RP_ONLY, SmartIdRequestBuilder.Capability.BALTIC_BANKS)
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");

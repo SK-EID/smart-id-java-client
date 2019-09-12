@@ -231,6 +231,21 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Specifies capabilities of the user
+   * <p>
+   * By default there are no specified capabilities.
+   * The capabilities need to be specified in case of
+   * a restricted SID user
+   * </p>
+   * @param capabilities capabilities
+   * @return this builder
+   */
+  protected SignatureRequestBuilder withCapabilities(Capability... capabilities) {
+    super.withCapabilities(capabilities);
+    return this;
+  }
+
+  /**
    * Send the signature request and get the response
    * <p>
    * This method uses automatic session status polling internally
@@ -339,6 +354,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setHash(getHashInBase64());
     request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
+    request.setCapabilities(getCapabilities());
     return request;
   }
 }

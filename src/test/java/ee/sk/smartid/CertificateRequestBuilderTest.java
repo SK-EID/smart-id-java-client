@@ -81,6 +81,9 @@ public class CertificateRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
         .withCertificateLevel("QUALIFIED")
+        .withCapabilities(SmartIdRequestBuilder.Capability.SK_RA_RP_ONLY,
+                SmartIdRequestBuilder.Capability.BALTIC_BANKS,
+                SmartIdRequestBuilder.Capability.QUALIFIED)
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();

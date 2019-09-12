@@ -205,6 +205,21 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Specifies capabilities of the user
+   * <p>
+   * By default there are no specified capabilities.
+   * The capabilities need to be specified in case of
+   * a restricted SID user
+   * </p>
+   * @param capabilities capabilities
+   * @return this builder
+   */
+  public CertificateRequestBuilder withCapabilities(Capability... capabilities) {
+    super.withCapabilities(capabilities);
+    return this;
+  }
+
+  /**
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
@@ -324,6 +339,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     request.setRelyingPartyName(getRelyingPartyName());
     request.setCertificateLevel(getCertificateLevel());
     request.setNonce(getNonce());
+    request.setCapabilities(getCapabilities());
     return request;
   }
 

@@ -269,6 +269,21 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Specifies capabilities of the user
+   * <p>
+   * By default there are no specified capabilities.
+   * The capabilities need to be specified in case of
+   * a restricted SID user
+   * </p>
+   * @param capabilities capabilities
+   * @return this builder
+   */
+  public AuthenticationRequestBuilder withCapabilities(Capability... capabilities) {
+    super.withCapabilities(capabilities);
+    return this;
+  }
+
+  /**
    * Send the authentication request and get the response
    * <p>
    * This method uses automatic session status polling internally
