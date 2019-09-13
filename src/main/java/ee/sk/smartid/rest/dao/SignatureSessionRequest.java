@@ -45,6 +45,7 @@ public class SignatureSessionRequest implements Serializable {
   private String nonce;
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private Set capabilities;
+  @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private RequestProperties requestProperties;
 
   public String getCertificateLevel() {
