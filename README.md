@@ -10,7 +10,6 @@
 
 The Smart-ID Java client can be used for easy integration of the [Smart-ID](https://www.smart-id.com) solution to information systems or e-services.
 
-
 ## Features
 
 * Simple interface for user authentication
@@ -23,15 +22,26 @@ The Smart-ID Java client can be used for easy integration of the [Smart-ID](http
 
 ## How to use it
 
-Take a look at the [examples](https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it)
+Take a look at the [examples](https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it) 
 
-## Maven
-You can use the library as a Maven dependency from the Maven Central (http://mvnrepository.com/artifact/ee.sk.smartid/smart-id-java-client)
+## Getting the library
+
+### Maven
+You can use the library as a Maven dependency from the [Maven Central](https://search.maven.org/search?q=a:smart-id-java-client).
 
 ```xml
 <dependency>
     <groupId>ee.sk.smartid</groupId>
     <artifactId>smart-id-java-client</artifactId>
-    <version>1.1</version>
+    <version>INSERT_VERSION_HERE</version>
 </dependency>
 ```
+
+### Gradle
+
+`implementation 'ee.sk.smartid:smart-id-java-client:INSERT_VERSION_HERE'`
+
+### Changes
+
+* Listed in [changelog](CHANGELOG.md)
+

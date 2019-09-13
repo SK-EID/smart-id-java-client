@@ -1,19 +1,20 @@
 # Changelog
 All notable changes to this project will be documented in this file.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.3] - 2019-09-13
+### Added
+- Capabilities parameter ([#25](https://github.com/SK-EID/smart-id-java-client/pull/25))
+- [Request properties](https://github.com/SK-EID/smart-id-documentation#416-request-properties) (vcChoice) for authentication and signing ([#21](https://github.com/SK-EID/smart-id-java-client/pull/21)) 
 
 ## [1.2] - 2019-08-21
 ### Added
-- added maven dependency check plugin for continuous security ([DDS-2685](https://jira.sk.ee/browse/DDS-2685)) 
-- added spotbugs plugin for continuous bug detection
-- added support for new rp api endpoints ([DDS-2694](https://jira.sk.ee/browse/DDS-2694))
+- Support for [Semantics Identifier](https://github.com/SK-EID/smart-id-documentation#412-rest-object-references) ([#17](https://github.com/SK-EID/smart-id-java-client/pull/17))
+- Document number to authentication responses ([#14](https://github.com/SK-EID/smart-id-java-client/issues/14))
+- Maven dependency check plugin for continuous security
+- SpotBugs plugin for continuous bug detection
 
-###Fixed
-- Add document number to authentication responses ([DDS-2695](https://jira.sk.ee/browse/DDS-2695))
-
-## [1.1] - 10 December 2018
+## [1.1] - 2018-12-10
 
 ### Added
 - SmartIdClient.getSmartIdConnector()
