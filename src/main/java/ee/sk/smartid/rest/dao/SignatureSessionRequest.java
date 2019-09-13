@@ -29,6 +29,7 @@ package ee.sk.smartid.rest.dao;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.io.Serializable;
+import java.util.Set;
 
 public class SignatureSessionRequest implements Serializable {
 
@@ -42,6 +43,10 @@ public class SignatureSessionRequest implements Serializable {
   private String displayText;
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String nonce;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Set capabilities;
+  @JsonInclude(JsonInclude.Include.NON_EMPTY)
+  private RequestProperties requestProperties;
 
   public String getCertificateLevel() {
     return certificateLevel;
@@ -97,5 +102,21 @@ public class SignatureSessionRequest implements Serializable {
 
   public void setNonce(String nonce) {
     this.nonce = nonce;
+  }
+
+  public Set getCapabilities() {
+    return capabilities;
+  }
+
+  public void setCapabilities(Set capabilities) {
+    this.capabilities = capabilities;
+  }
+
+  public RequestProperties getRequestProperties() {
+    return requestProperties;
+  }
+
+  public void setRequestProperties(RequestProperties requestProperties) {
+    this.requestProperties = requestProperties;
   }
 }

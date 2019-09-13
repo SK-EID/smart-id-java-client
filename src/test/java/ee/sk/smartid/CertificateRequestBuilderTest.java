@@ -35,6 +35,7 @@ import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.NationalIdentity;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,6 +82,8 @@ public class CertificateRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
         .withCertificateLevel("QUALIFIED")
+        .withCapabilities(Capability.ADVANCED,
+                Capability.QUALIFIED)
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
@@ -94,6 +97,7 @@ public class CertificateRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withDocumentNumber("PNOEE-31111111111")
         .withCertificateLevel("QUALIFIED")
+        .withCapabilities("ADVANCED")
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();

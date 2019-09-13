@@ -38,6 +38,7 @@ import org.junit.Test;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
@@ -65,16 +66,60 @@ public class SmartIdRestIntegrationTest {
     assertCertificateChosen(sessionStatus);
 
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
-    SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber);
+    SignatureSessionResponse signatureSessionResponse = createRequestAndFetchSignatureSession(documentNumber);
     sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
     assertSignatureCreated(sessionStatus);
   }
 
   @Test
   public void authenticate() throws Exception {
-    AuthenticationSessionResponse authenticationSessionResponse = fetchAuthenticationSession();
+    AuthenticationSessionResponse authenticationSessionResponse = createRequestAndFetchAuthenticationSession();
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
     assertAuthenticationResponseCreated(sessionStatus);
+  }
+
+  //Verification code choice is not presented in app when the selection has already been done for a document.
+  //Test accounts also ignore vcChoice, making this test fail
+  @Test
+  public void getIgnoredProperties_withSign() throws Exception {
+    CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession();
+
+    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID());
+    assertCertificateChosen(sessionStatus);
+
+    String documentNumber = sessionStatus.getResult().getDocumentNumber();
+
+    RequestProperties requestProperties = getRequestPropertiesWithIgnoredProperties();
+
+    SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
+    signatureSessionRequest.setRequestProperties(requestProperties);
+
+    SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber, signatureSessionRequest);
+    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
+    assertSignatureCreated(sessionStatus);
+    assertNotNull(sessionStatus.getIgnoredProperties());
+    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(2));
+    assertThat(sessionStatus.getIgnoredProperties()[0], equalTo("testingIgnored"));
+    assertThat(sessionStatus.getIgnoredProperties()[1], equalTo("testingIgnoredTwo"));
+  }
+
+  //Verification code choice is not presented in app when the selection has already been done for a document.
+  //Test accounts also ignore vcChoice, making this test fail
+  @Test
+  public void getIgnoredProperties_withAuthenticate() throws Exception {
+    AuthenticationSessionRequest authenticationSessionRequest = createAuthenticationSessionRequest();
+
+    RequestProperties requestProperties = getRequestPropertiesWithIgnoredProperties();
+
+    authenticationSessionRequest.setRequestProperties(requestProperties);
+
+    AuthenticationSessionResponse authenticationSessionResponse = fetchAuthenticationSession(authenticationSessionRequest);
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+    assertAuthenticationResponseCreated(sessionStatus);
+    assertNotNull(sessionStatus.getIgnoredProperties());
+    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(2));
+    assertThat(sessionStatus.getIgnoredProperties()[0], equalTo("testingIgnored"));
+    assertThat(sessionStatus.getIgnoredProperties()[1], equalTo("testingIgnoredTwo"));
   }
 
   private CertificateChoiceResponse fetchCertificateChoiceSession() {
@@ -93,8 +138,12 @@ public class SmartIdRestIntegrationTest {
     return request;
   }
 
-  private SignatureSessionResponse fetchSignatureSession(String documentNumber) throws NoSuchAlgorithmException {
+  private SignatureSessionResponse createRequestAndFetchSignatureSession(String documentNumber) throws NoSuchAlgorithmException {
     SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
+    return fetchSignatureSession(documentNumber, signatureSessionRequest);
+  }
+
+  private SignatureSessionResponse fetchSignatureSession(String documentNumber, SignatureSessionRequest signatureSessionRequest) {
     SignatureSessionResponse signatureSessionResponse = connector.sign(documentNumber, signatureSessionRequest);
     assertThat(signatureSessionResponse.getSessionID(), not(isEmptyOrNullString()));
     return signatureSessionResponse;
@@ -111,8 +160,12 @@ public class SmartIdRestIntegrationTest {
     return signatureSessionRequest;
   }
 
-  private AuthenticationSessionResponse fetchAuthenticationSession() throws NoSuchAlgorithmException {
+  private AuthenticationSessionResponse createRequestAndFetchAuthenticationSession() throws NoSuchAlgorithmException {
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
+    return fetchAuthenticationSession(request);
+  }
+
+  private AuthenticationSessionResponse fetchAuthenticationSession(AuthenticationSessionRequest request) throws NoSuchAlgorithmException {
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, request);
     assertNotNull(authenticationSessionResponse);
     assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
@@ -165,5 +218,28 @@ public class SmartIdRestIntegrationTest {
   private String calculateHashInBase64(byte[] dataToSign) {
     byte[] digestValue = DigestCalculator.calculateDigest(dataToSign, HashType.SHA512);
     return Base64.encodeBase64String(digestValue);
+  }
+
+  private RequestProperties getRequestPropertiesWithIgnoredProperties() {
+    return new RequestProperties() {
+      private String testingIgnored = "random value";
+      private String testingIgnoredTwo = "random value";
+
+      public void setTestingIgnoredTwo(String testingIgnoredTwo) {
+        this.testingIgnoredTwo = testingIgnoredTwo;
+      }
+
+      public String getTestingIgnoredTwo() {
+        return testingIgnoredTwo;
+      }
+
+      public void setTestingIgnored(String testingIgnored) {
+        this.testingIgnored = testingIgnored;
+      }
+
+      public String getTestingIgnored() {
+        return testingIgnored;
+      }
+    };
   }
 }

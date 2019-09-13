@@ -31,6 +31,8 @@ import ee.sk.smartid.exception.TechnicalErrorException;
 import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
+import ee.sk.smartid.rest.dao.Capability;
+import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureSessionResponse;
@@ -69,6 +71,7 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
+        .withCapabilities(Capability.ADVANCED)
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");
@@ -87,11 +90,36 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableData(dataToSign)
         .withDocumentNumber("PNOEE-31111111111")
+        .withCapabilities("QUALIFIED")
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
+  }
+
+  @Test
+  public void signWithSignableData_andRequestProperties() {
+    SignableData dataToSign = new SignableData("Say 'hello' to my little friend!".getBytes());
+    dataToSign.setHashType(HashType.SHA256);
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setVcChoice(true);
+
+    SmartIdSignature signature = builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withCertificateLevel("QUALIFIED")
+            .withSignableData(dataToSign)
+            .withDocumentNumber("PNOEE-31111111111")
+            .withRequestProperties(requestProperties)
+            .sign();
+
+    assertCorrectSignatureRequestMade("QUALIFIED");
+    assertCorrectSessionRequestMade();
+    assertSignatureCorrect(signature);
+    assertNotNull(connector.signatureSessionRequestUsed.getRequestProperties());
+    assertEquals(true, connector.signatureSessionRequestUsed.getRequestProperties().isVcChoice());
   }
 
   @Test
