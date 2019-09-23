@@ -37,6 +37,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
@@ -57,7 +58,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
   private static final String AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/authentication/etsi/{semanticsIdentifier}";
   private String endpointUrl;
-  private transient ClientConfig clientConfig;
+  private transient Configuration clientConfig;
+  private transient Client configuredClient;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
   private static final long serialVersionUID = 42L;
@@ -66,9 +68,14 @@ public class SmartIdRestConnector implements SmartIdConnector {
     this.endpointUrl = endpointUrl;
   }
 
-  public SmartIdRestConnector(String endpointUrl, ClientConfig clientConfig) {
+  public SmartIdRestConnector(String endpointUrl, Configuration clientConfig) {
     this(endpointUrl);
     this.clientConfig = clientConfig;
+  }
+
+  public SmartIdRestConnector(String endpointUrl, Client configuredClient) {
+    this(endpointUrl);
+    this.configuredClient = configuredClient;
   }
 
   @Override
@@ -195,7 +202,14 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   private Invocation.Builder prepareClient(URI uri) {
-    Client client = clientConfig == null ? ClientBuilder.newClient() : ClientBuilder.newClient(clientConfig);
+    Client client;
+    if (this.configuredClient == null) {
+      client = clientConfig == null ? ClientBuilder.newClient() : ClientBuilder.newClient(clientConfig);
+    }
+    else {
+      client = this.configuredClient;
+    }
+
     return client
         .register(new LoggingFilter())
         .target(uri)
