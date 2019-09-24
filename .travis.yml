@@ -1,11 +1,16 @@
 language: java
+jdk:
+  - openjdk8
 sudo: false
+env:
+  global:
+    secure: eHAA7IATXKGVff+5Ny10MQlqk51yAunaYphOqcWC3V4GXrHFriQXswrHeCe+8yT5Ply2HYbI1/a1f9rjSQVGiUGCgJfkHJWsEmEnRSimMJpP9es9oWn35jJgec8oFlR/l0fleWWLKGQRo8d5IDyOrKt9qzlUMddza6GFFHtZdg2azxT4u4JC/2HyOyKZEwvB5+kOENTT/dbyoVevBRRbqqD2POBF7imn8OYii9DpH8wI2BZyCuuViSGbZayPtva3vKW5hC56lgV05FG5JmDTxJurMSU5fYRrQHL4FRNH+sMNhGrR0ehsydA8q2sO2nrLnPUuHefXGS+svFWKk0/W5uG75cb43I4H7BodrHeGdo6Grwu8sOSaNJlKt7AseR1BG3ipK3ogqDmCnJYZT9R9j1MH7vl2PGDhx5UlKbtiSwOYbRXhdinvPiv1L/p+cVbnar4jXSg3x3AlUOa4KSWs8Q3PKibViW960YST4AEqLXBiYdswI2iETVMPlYWr59ocKRnH8aDAQRF9I+q2HvRQKV2LqlGq1yGQ9JX37S6jYPEbnDN8RFDM3WRZkA9dZAF5FbKw/3ygL2ESxZBCO8BcE7TishkXNCnd6zzT+lC71+aFaf2Vy2L9paY7Z3hmWL2MdQom7U4wKh92j5fHTyJwqNmjx3BWx70LzH7hMjWisr8=
 before_install:
-  - pip install --user codecov
+- openssl aes-256-cbc -K $encrypted_90f62b3c4a37_key -iv $encrypted_90f62b3c4a37_iv
+  -in private.key.enc -out private.key -d
+- pip install --user codecov
 install: true
 after_success:
-  - codecov
+- codecov
 script:
-  - mvn test
-  - mvn org.owasp:dependency-check-maven:check
-  - mvn spotbugs:check
+- "./travis.sh"
