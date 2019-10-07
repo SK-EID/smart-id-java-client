@@ -23,4 +23,4 @@ gpg -ab $artifact-javadoc.jar
 
 jar -cvf bundle.jar ../pom.xml ../pom.xml.asc $artifact.jar $artifact.jar.asc $artifact-javadoc.jar $artifact-javadoc.jar.asc $artifact-sources.jar $artifact-sources.jar.asc
 
-curl -ujorlina2 -u andreasv:$OSSRHPW --request POST -F "file=@bundle.jar" "https://oss.sonatype.org/service/local/staging/bundle_upload"
+curl -ujorlina2 -u $SONATYPEUN:$SONATYPEPW --request POST -F "file=@bundle.jar" "https://oss.sonatype.org/service/local/staging/bundle_upload"
