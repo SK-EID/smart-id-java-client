@@ -29,8 +29,9 @@ package ee.sk.smartid;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
-import org.glassfish.jersey.client.ClientConfig;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configuration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -102,7 +103,8 @@ public class SmartIdClient {
   private String relyingPartyUUID;
   private String relyingPartyName;
   private String hostUrl;
-  private ClientConfig networkConnectionConfig;
+  private Configuration networkConnectionConfig;
+  private Client configuredClient;
   private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
   private long pollingSleepTimeout = 1L;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
@@ -208,8 +210,12 @@ public class SmartIdClient {
    *
    * @param networkConnectionConfig Jersey's network connection configuration instance
    */
-  public void setNetworkConnectionConfig(ClientConfig networkConnectionConfig) {
+  public void setNetworkConnectionConfig(Configuration networkConnectionConfig) {
     this.networkConnectionConfig = networkConnectionConfig;
+  }
+
+  public void setConfiguredClient(Client configuredClient) {
+    this.configuredClient = configuredClient;
   }
 
   /**
@@ -265,7 +271,7 @@ public class SmartIdClient {
   public SmartIdConnector getSmartIdConnector() {
     if (null == connector) {
       // Fallback to REST connector when not initialised
-      SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, networkConnectionConfig);
+      SmartIdRestConnector connector = configuredClient != null ? new SmartIdRestConnector(hostUrl, configuredClient) : new SmartIdRestConnector(hostUrl, networkConnectionConfig);
       connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
       setSmartIdConnector(new SmartIdRestConnector(hostUrl, networkConnectionConfig));
 
