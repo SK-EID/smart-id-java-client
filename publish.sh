@@ -1,23 +1,28 @@
 #!/bin/bash
 
 project="smart-id-java-client"
-version="1.3"
+
+version=$TRAVIS_TAG
+
 staging_url="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 repositoryId="ossrh"
 
-# Starting GPG agent to store GPG passphrase so we wouldn't have to enter the passphrase every time
-eval $(gpg-agent --daemon --no-grab)
-export GPG_TTY=$(tty)
-export GPG_AGENT_INFO
+artifact=$project-$version
 
-artifact="target/$project-$version"
+gpg --import ./private.key
 
-echo "Deploying $project-$version"
+mvn versions:set -DnewVersion=$TRAVIS_TAG
 
-mvn gpg:sign-and-deploy-file -DpomFile=pom.xml -Dfile=$artifact.jar -Durl=$staging_url -DrepositoryId=$repositoryId
-mvn gpg:sign-and-deploy-file -DpomFile=pom.xml -Dfile=$artifact-sources.jar -Dclassifier=sources -Durl=$staging_url -DrepositoryId=$repositoryId
-mvn gpg:sign-and-deploy-file -DpomFile=pom.xml -Dfile=$artifact-javadoc.jar -Dclassifier=javadoc -Durl=$staging_url -DrepositoryId=$repositoryId
+mvn package
 
-echo "Finished deployment"
+gpg -ab pom.xml
 
-killall gpg-agent
+cd target
+
+gpg -ab $artifact.jar
+gpg -ab $artifact-sources.jar
+gpg -ab $artifact-javadoc.jar
+
+jar -cvf bundle.jar ../pom.xml ../pom.xml.asc $artifact.jar $artifact.jar.asc $artifact-javadoc.jar $artifact-javadoc.jar.asc $artifact-sources.jar $artifact-sources.jar.asc
+
+curl -ujorlina2 -u $SONATYPEUN:$SONATYPEPW --request POST -F "file=@bundle.jar" "https://oss.sonatype.org/service/local/staging/bundle_upload"
