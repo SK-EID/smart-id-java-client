@@ -271,7 +271,7 @@ public class SmartIdClient {
   public SmartIdConnector getSmartIdConnector() {
     if (null == connector) {
       // Fallback to REST connector when not initialised
-      SmartIdRestConnector connector = configuredClient == null ? new SmartIdRestConnector(hostUrl, configuredClient) : new SmartIdRestConnector(hostUrl, networkConnectionConfig);
+      SmartIdRestConnector connector = configuredClient != null ? new SmartIdRestConnector(hostUrl, configuredClient) : new SmartIdRestConnector(hostUrl, networkConnectionConfig);
       connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
       setSmartIdConnector(new SmartIdRestConnector(hostUrl, networkConnectionConfig));
 

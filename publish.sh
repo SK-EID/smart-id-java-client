@@ -1,7 +1,9 @@
 #!/bin/bash
 
 project="smart-id-java-client"
+
 version=$TRAVIS_TAG
+
 staging_url="https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 repositoryId="ossrh"
 
