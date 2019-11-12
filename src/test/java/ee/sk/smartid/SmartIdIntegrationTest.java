@@ -117,6 +117,7 @@ public class SmartIdIntegrationTest {
         assertAuthenticationResultValid(authenticationResult);
     }
 
+    @Test
     public void makeRequestToApi_useDefaultSSLContext_sslHandshakeSucceedsFetchesCertificate() {
         client
              .getCertificate()
