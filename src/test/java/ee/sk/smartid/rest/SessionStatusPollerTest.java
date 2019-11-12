@@ -90,7 +90,7 @@ public class SessionStatusPollerTest {
     connector.responses.add(createCompleteSessionStatus());
     long duration = measurePollingDuration();
     assertTrue(duration > 1000L);
-    assertTrue(duration < 1100L);
+    assertTrue(duration < 1500L);
   }
 
   @Test
