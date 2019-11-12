@@ -2,6 +2,21 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.5] - 2019-11-12
+### Added
+- SSL pinning to verify, that the client is communicating with SK environment.
+- SmartIdClient.addTrustedSSLCertificates(String ...sslCertificate) - add ssl certificates when Sk starts to use new certs
+- SmartIdClient.setTrustedSSLCertificates(String ...sslCertificates)
+- SmartIdClient.useDemoEnvSSLCertificates() - uses only demo env ssl certificates
+- SmartIdClient.useLiveEnvSSLCertificates() - uses only live env ssl certificates
+- SmartIdClient.loadSslCertificatesFromKeystore(KeyStore keyStore) - loads only the certificates from keystore
+
+## [1.4] - 2019-09-23
+### Added
+- Client configuration on different JAX-WS implementations. 
+- SmartIdClient.setConfiguredClient()
+- SmartIdClient.setNetworkConnectionConfig()
+
 ## [1.3] - 2019-09-13
 ### Added
 - Capabilities parameter ([#25](https://github.com/SK-EID/smart-id-java-client/pull/25))

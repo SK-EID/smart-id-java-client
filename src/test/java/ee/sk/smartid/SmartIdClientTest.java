@@ -26,33 +26,52 @@ package ee.sk.smartid;
  * #L%
  */
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import ee.sk.smartid.exception.*;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.SmartIdRestConnector;
-import ee.sk.smartid.rest.dao.*;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier.CountryCode;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier.IdentityType;
-
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubErrorResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubForbiddenResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubSessionStatusWithState;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static ee.sk.smartid.SmartIdRestServiceStubs.*;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import ee.sk.smartid.exception.CertificateNotFoundException;
+import ee.sk.smartid.exception.ClientNotSupportedException;
+import ee.sk.smartid.exception.DocumentUnusableException;
+import ee.sk.smartid.exception.RequestForbiddenException;
+import ee.sk.smartid.exception.ServerMaintenanceException;
+import ee.sk.smartid.exception.SessionTimeoutException;
+import ee.sk.smartid.exception.UserAccountNotFoundException;
+import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.SmartIdRestConnector;
+import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier.CountryCode;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier.IdentityType;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class SmartIdClientTest {
 

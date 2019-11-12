@@ -26,11 +26,21 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.*;
-
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 
 public interface SmartIdConnector extends Serializable {
 
@@ -53,5 +63,7 @@ public interface SmartIdConnector extends Serializable {
   AuthenticationSessionResponse authenticate(SemanticsIdentifier identity, AuthenticationSessionRequest request);
 
   void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
+
+  void setSslContext(SSLContext sslContext);
 
 }
