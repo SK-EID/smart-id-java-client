@@ -305,22 +305,27 @@ public class SmartIdClient {
 
   private SSLContext createSslContext() {
     try {
-      SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-      KeyStore keyStore = KeyStore.getInstance("JKS");
-      keyStore.load(null);
-      CertificateFactory factory = CertificateFactory.getInstance("X509");
-      int i = 0;
-      for (String sslCertificate : this.sslCertificates) {
-        Certificate certificate = factory.generateCertificate(new ByteArrayInputStream(sslCertificate.getBytes(StandardCharsets.UTF_8)));
-        keyStore.setCertificateEntry("sid_api_ssl_cert_" + (++i), certificate);
-      }
-      TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
-      trustManagerFactory.init(keyStore);
-      sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-      return sslContext;
+      return createSslContext(this.sslCertificates);
     } catch (CertificateException | IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
       throw new SmartIdException(e.getMessage());
     }
+  }
+
+  public static SSLContext createSslContext(List<String> sslCertificates)
+       throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, KeyManagementException {
+    SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+    KeyStore keyStore = KeyStore.getInstance("JKS");
+    keyStore.load(null);
+    CertificateFactory factory = CertificateFactory.getInstance("X509");
+    int i = 0;
+    for (String sslCertificate : sslCertificates) {
+      Certificate certificate = factory.generateCertificate(new ByteArrayInputStream(sslCertificate.getBytes(StandardCharsets.UTF_8)));
+      keyStore.setCertificateEntry("sid_api_ssl_cert_" + (++i), certificate);
+    }
+    TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
+    trustManagerFactory.init(keyStore);
+    sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+    return sslContext;
   }
 
   public void addTrustedSSLCertificates(String ...sslCertificate) {
