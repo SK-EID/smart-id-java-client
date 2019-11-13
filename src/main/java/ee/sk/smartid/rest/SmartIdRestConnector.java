@@ -26,13 +26,18 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
-import ee.sk.smartid.rest.dao.*;
-import org.glassfish.jersey.client.ClientConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
-import javax.ws.rs.*;
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -40,10 +45,27 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import ee.sk.smartid.exception.CertificateNotFoundException;
+import ee.sk.smartid.exception.ClientNotSupportedException;
+import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.RequestForbiddenException;
+import ee.sk.smartid.exception.ServerMaintenanceException;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.UnauthorizedException;
+import ee.sk.smartid.exception.UserAccountNotFoundException;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SessionStatusRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SmartIdRestConnector implements SmartIdConnector {
 
@@ -63,6 +85,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
   private static final long serialVersionUID = 42L;
+  private transient SSLContext sslContext;
 
   public SmartIdRestConnector(String endpointUrl) {
     this.endpointUrl = endpointUrl;
@@ -124,7 +147,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .fromUri(endpointUrl)
         .path(CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
         .build(semanticsIdentifier.getIdentifier());
-    System.out.println(uri);
     return postCertificateRequest(uri, request);
   }
 
@@ -204,7 +226,14 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private Invocation.Builder prepareClient(URI uri) {
     Client client;
     if (this.configuredClient == null) {
-      client = clientConfig == null ? ClientBuilder.newClient() : ClientBuilder.newClient(clientConfig);
+      ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+      if (null != this.clientConfig) {
+        clientBuilder.withConfig(this.clientConfig);
+      }
+      if (null != this.sslContext) {
+        clientBuilder.sslContext(this.sslContext);
+      }
+      client = clientBuilder.build();
     }
     else {
       client = this.configuredClient;
@@ -282,5 +311,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
       long queryTimeoutInMilliseconds = timeUnit.toMillis(timeValue);
       uriBuilder.queryParam("timeoutMs", queryTimeoutInMilliseconds);
     }
+  }
+
+  @Override
+  public void setSslContext(SSLContext sslContext) {
+    this.sslContext = sslContext;
   }
 }
