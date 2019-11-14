@@ -26,17 +26,31 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.*;
-import org.junit.Before;
-import org.junit.Test;
+import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static ee.sk.smartid.DummyData.createSessionEndResult;
-import static org.junit.Assert.*;
+import javax.net.ssl.SSLContext;
+
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SessionStatusRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import org.junit.Before;
+import org.junit.Test;
 
 public class SessionStatusPollerTest {
 
@@ -76,7 +90,7 @@ public class SessionStatusPollerTest {
     connector.responses.add(createCompleteSessionStatus());
     long duration = measurePollingDuration();
     assertTrue(duration > 1000L);
-    assertTrue(duration < 1100L);
+    assertTrue(duration < 1500L);
   }
 
   @Test
@@ -198,6 +212,11 @@ public class SessionStatusPollerTest {
         request.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
       }
       return request;
+    }
+
+    @Override
+    public void setSslContext(SSLContext sslContext) {
+
     }
   }
 }
