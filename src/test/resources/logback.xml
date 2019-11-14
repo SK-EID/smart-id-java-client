@@ -6,8 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="ee.sk.smartid" level="DEBUG"/>
-    <logger name="ee.sk.smartid.rest.LoggingFilter" level="TRACE"/>
+    <logger name="ee.sk.smartid" level="INFO"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>
