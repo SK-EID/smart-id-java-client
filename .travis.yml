@@ -9,11 +9,11 @@ env:
     - secure: UdKNfC2Yb8kHKDwE+iR90HBhvDzX0g8HukSQi6XFExe1LLOgrySMxYYDUiYuuwhYKySstvOmoB5ji46IiL8aPS96AbDq2AElqcqhGZjVwyHurPULDuIh6PZtjtKlElNIZPrZBqPfz2MJxGELnd68PdzYB7ZXmDkJFLoADFw8AxAWhnhjdUX5HaQBxfyMbCY0dmPOGj33C1pmsFevCRVB5lqy188TbMrIewu1rotC4ZZ0yh7VbNg0VkKif0lQK1NLfl4Bn2WVmONhzZt6EHxhoYj8GLumdhaAe5RczDqzUNjfvb90DC+j+XvyDGD+Jg0W6QKokgFbWgIUBvQYezoayDjLuOAhMe1+XcqtU7V8isOqZ+BtWJYjqI0llRjCr4ndt6/q5G7vBTtapV794QScGSJcIaBeu8NjTEDXbeGx4e3zllx+pzYoevJ4FX6bdSuSv3bFD2+x3yPui0GO8COoJmzl/2X4X8JEWzELRbM+kMb6AbUWdbxpcqhwGrA4gGCuVbFgDsCvXd6LxRB5NoMp1gZb1rK3O1NMbg40tCLlcCeDbVkV0nDdIsuhj7pamHIR3hAGhCrCu9gd/i+BjvcyxIuYYb2vdTtVKofUNwHyuArb9pIp5BqvZy0t2gZUn24GF4yX9L5tJxSFp8/v1tg9ekKknMMJPKGQvD6QbvVMRqM=
     - secure: SD+RQAe2lnmOj4UiqLqSHZVMKyH4QaP+CHwjYtcpFubiSjp0yIHZSjIFI2sRldaXePcPGwdKnSQI3iBAPVH/NROdhXwD0JPS4b4cvMtCJ+e0j9A/dRC38YwUulfYUJwqNtjxs0Ovn66oRwWV9zvISE6a12gu946cLwUhdutL6IcmtYS7DWqm4c2soJnVeyUHVofCOC5JscuiN+pR24b5u8hT+BpMurTKQ8xXeWaIckSiPHHZ4I07aMAIv/AKgsB1WsLYVDhxcfjStX+UfxpQV9YKL+pDfpRFvvEvy44SWkVNz11XEx/D2HBq7imguRGyHEmS4kzrFopllH5+AJjviD2T2UF34A4AgWVz/kIfFwfDuyrNMr0WpMxiYBUy/hmIMHajZ5asZy/pQNi7wnZCF3NJSGx8yRC2uEhBDBUNKAbw87feHEYNAds3Ph/rB4ZVVTv3CMYKxROxt5Zwz0jpO6UjyupwUb/39SoatbGqwr7Ney3+lGySK3NW5lcGpfNxGNCdkMa/d/HppQ3JlpxWj4C+hBvgRTUMaet/+Wv07GvybeuG/haWS2m918TssJ8OLdLZKKR2yt8R3YEV3BvTrVVckL0HnQnyYLeSLl/lybLruM8j35UY1Hr/gpHtNRwFFpC30++EAnXK3N0R9uD90eHi8UUm7O2+5v8Nyc4Osi0=
 before_install:
-  - openssl aes-256-cbc -K $encrypted_key -iv $encrypted_iv -in private.key.enc -out private.key -d
+  - eval $(openssl aes-256-cbc -K $encrypted_key -iv $encrypted_iv -in private.key.enc -out private.key -d)
   - chmod +x travis.sh
   - pip install --user codecov
 install: true
 after_success:
-- codecov
+  - codecov
 script:
-- "./travis.sh"
+  - "./travis.sh"
