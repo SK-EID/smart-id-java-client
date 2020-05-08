@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.5.1] - 2020-05-08
+### Security
+- Bumped jackson-databind from 2.9.10.1 to 2.9.10.4
+- Updated Maven Dependency Check plugin version.
+
+### Changed
+- AuthenticationRequestBuilder method withRequestProperties access modifier changed to public
+
+### Added
+- Maven wrapper to project
+
 ## [1.5] - 2019-11-12
 ### Security
 - CVE-2019-16943

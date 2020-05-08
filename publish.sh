@@ -11,9 +11,9 @@ artifact=$project-$version
 
 gpg --import ./private.key
 
-mvn versions:set -DnewVersion=$TRAVIS_TAG
+./mvnw versions:set -DnewVersion=$TRAVIS_TAG
 
-mvn package
+./mvnw package
 
 gpg -ab pom.xml
 
