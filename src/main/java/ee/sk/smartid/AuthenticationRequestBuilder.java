@@ -309,7 +309,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @param requestProperties request properties of the request
    * @return this builder
    */
-  protected AuthenticationRequestBuilder withRequestProperties(RequestProperties requestProperties) {
+  public AuthenticationRequestBuilder withRequestProperties(RequestProperties requestProperties) {
     super.withRequestProperties(requestProperties);
     return this;
   }

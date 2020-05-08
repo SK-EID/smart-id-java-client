@@ -8,7 +8,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ]; then
   ./publish.sh
   echo "Finished"
 else
-  mvn test
-  mvn org.owasp:dependency-check-maven:check
-  mvn spotbugs:check
+  ./mvnw test
+  ./mvnw org.owasp:dependency-check-maven:check
+  ./mvnw spotbugs:check
 fi
