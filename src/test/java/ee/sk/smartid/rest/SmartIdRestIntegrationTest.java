@@ -32,25 +32,22 @@ import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-@Ignore("Requires physical interaction with a Smart ID device")
 public class SmartIdRestIntegrationTest {
 
   private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
   private static final String RELYING_PARTY_NAME = "DEMO";
-  private static final String DOCUMENT_NUMBER = "PNOEE-31111111111-K0DD-NQ";
+  private static final String DOCUMENT_NUMBER = "PNOEE-10101010005-Z1B2-Q";
+  private static final String DOCUMENT_NUMBER_LT = "PNOLT-10101010005-Z52N-Q";
   private static final String DATA_TO_SIGN = "Hello World!";
-  private static final String CERTIFICATE_LEVEL = "ADVANCED";
+  private static final String CERTIFICATE_LEVEL = "QUALIFIED";
   private SmartIdConnector connector;
 
   @Before
@@ -60,7 +57,7 @@ public class SmartIdRestIntegrationTest {
 
   @Test
   public void getCertificateAndSignHash() throws Exception {
-    CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession();
+    CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession(DOCUMENT_NUMBER_LT);
 
     SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID());
     assertCertificateChosen(sessionStatus);
@@ -72,17 +69,37 @@ public class SmartIdRestIntegrationTest {
   }
 
   @Test
-  public void authenticate() throws Exception {
-    AuthenticationSessionResponse authenticationSessionResponse = createRequestAndFetchAuthenticationSession();
+  public void authenticate_withNationalIdentityNumber() throws Exception {
+    NationalIdentity nationalIdentity = new NationalIdentity();
+    nationalIdentity.setCountryCode("LV");
+    nationalIdentity.setNationalIdentityNumber("010101-10006");
+
+    AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
+    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(nationalIdentity, request);
+
+    assertNotNull(authenticationSessionResponse);
+    assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
     assertAuthenticationResponseCreated(sessionStatus);
   }
 
-  //Verification code choice is not presented in app when the selection has already been done for a document.
-  //Test accounts also ignore vcChoice, making this test fail
   @Test
-  public void getIgnoredProperties_withSign() throws Exception {
-    CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession();
+  public void authenticate_withDocumentNumber() throws Exception {
+    AuthenticationSessionRequest request = createAuthenticationSessionRequest();
+    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, request);
+
+    assertNotNull(authenticationSessionResponse);
+    assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+
+    assertAuthenticationResponseCreated(sessionStatus);
+  }
+
+  @Test
+  public void getIgnoredProperties_withSign_getIgnoredProperties_withAuthenticate_testAccountsIgnoreVcChoice() throws Exception {
+    CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession(DOCUMENT_NUMBER);
 
     SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID());
     assertCertificateChosen(sessionStatus);
@@ -98,33 +115,38 @@ public class SmartIdRestIntegrationTest {
     sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
     assertSignatureCreated(sessionStatus);
     assertNotNull(sessionStatus.getIgnoredProperties());
-    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(2));
-    assertThat(sessionStatus.getIgnoredProperties()[0], equalTo("testingIgnored"));
-    assertThat(sessionStatus.getIgnoredProperties()[1], equalTo("testingIgnoredTwo"));
+    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(3));
+
+    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("vcChoice", "testingIgnored", "testingIgnoredTwo"));
   }
 
-  //Verification code choice is not presented in app when the selection has already been done for a document.
-  //Test accounts also ignore vcChoice, making this test fail
   @Test
-  public void getIgnoredProperties_withAuthenticate() throws Exception {
+  public void getIgnoredProperties_withAuthenticate_testAccountsIgnoreVcChoice() throws Exception {
     AuthenticationSessionRequest authenticationSessionRequest = createAuthenticationSessionRequest();
 
     RequestProperties requestProperties = getRequestPropertiesWithIgnoredProperties();
 
     authenticationSessionRequest.setRequestProperties(requestProperties);
 
-    AuthenticationSessionResponse authenticationSessionResponse = fetchAuthenticationSession(authenticationSessionRequest);
+    NationalIdentity nationalIdentity = new NationalIdentity();
+    nationalIdentity.setCountryCode("LV");
+    nationalIdentity.setNationalIdentityNumber("010101-10006");
+
+    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(nationalIdentity, authenticationSessionRequest);
+
+    assertNotNull(authenticationSessionResponse);
+    assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
     assertAuthenticationResponseCreated(sessionStatus);
     assertNotNull(sessionStatus.getIgnoredProperties());
-    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(2));
-    assertThat(sessionStatus.getIgnoredProperties()[0], equalTo("testingIgnored"));
-    assertThat(sessionStatus.getIgnoredProperties()[1], equalTo("testingIgnoredTwo"));
+
+    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("vcChoice", "testingIgnored", "testingIgnoredTwo"));
   }
 
-  private CertificateChoiceResponse fetchCertificateChoiceSession() {
+  private CertificateChoiceResponse fetchCertificateChoiceSession(String documentNumber) {
     CertificateRequest request = createCertificateRequest();
-    CertificateChoiceResponse certificateChoiceResponse = connector.getCertificate(DOCUMENT_NUMBER, request);
+    CertificateChoiceResponse certificateChoiceResponse = connector.getCertificate(documentNumber, request);
     assertNotNull(certificateChoiceResponse);
     assertThat(certificateChoiceResponse.getSessionID(), not(isEmptyOrNullString()));
     return certificateChoiceResponse;
@@ -138,7 +160,7 @@ public class SmartIdRestIntegrationTest {
     return request;
   }
 
-  private SignatureSessionResponse createRequestAndFetchSignatureSession(String documentNumber) throws NoSuchAlgorithmException {
+  private SignatureSessionResponse createRequestAndFetchSignatureSession(String documentNumber) {
     SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
     return fetchSignatureSession(documentNumber, signatureSessionRequest);
   }
@@ -158,18 +180,6 @@ public class SmartIdRestIntegrationTest {
     String hashInBase64 = calculateHashInBase64(DATA_TO_SIGN.getBytes());
     signatureSessionRequest.setHash(hashInBase64);
     return signatureSessionRequest;
-  }
-
-  private AuthenticationSessionResponse createRequestAndFetchAuthenticationSession() throws NoSuchAlgorithmException {
-    AuthenticationSessionRequest request = createAuthenticationSessionRequest();
-    return fetchAuthenticationSession(request);
-  }
-
-  private AuthenticationSessionResponse fetchAuthenticationSession(AuthenticationSessionRequest request) throws NoSuchAlgorithmException {
-    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, request);
-    assertNotNull(authenticationSessionResponse);
-    assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
-    return authenticationSessionResponse;
   }
 
   private AuthenticationSessionRequest createAuthenticationSessionRequest() {
