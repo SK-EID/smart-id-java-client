@@ -29,16 +29,13 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.Capability;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.RequestProperties;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.*;
@@ -59,9 +56,9 @@ public abstract class SmartIdRequestBuilder {
   private SignableData dataToSign;
   private SignableHash hashToSign;
   private String nonce;
-  private String displayText;
   private Set<String> capabilities;
   private RequestProperties requestProperties;
+  private List<AllowedInteraction> allowedInteractionsOrder;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
@@ -144,13 +141,13 @@ public abstract class SmartIdRequestBuilder {
     return this;
   }
 
-  protected SmartIdRequestBuilder withDisplayText(String displayText) {
-    this.displayText = displayText;
+  protected SmartIdRequestBuilder withRequestProperties(RequestProperties requestProperties) {
+    this.requestProperties = requestProperties;
     return this;
   }
 
-  protected SmartIdRequestBuilder withRequestProperties(RequestProperties requestProperties) {
-    this.requestProperties = requestProperties;
+  protected SmartIdRequestBuilder withAllowedInteractionsOrder(List<AllowedInteraction> allowedInteractionsOrder) {
+    this.allowedInteractionsOrder = allowedInteractionsOrder;
     return this;
   }
 
@@ -258,10 +255,6 @@ public abstract class SmartIdRequestBuilder {
     return nonce;
   }
 
-  protected String getDisplayText() {
-    return displayText;
-  }
-
   public SemanticsIdentifier getSemanticsIdentifier() { return semanticsIdentifier; }
 
   public Set<String> getCapabilities() { return capabilities; }
@@ -269,4 +262,9 @@ public abstract class SmartIdRequestBuilder {
   public RequestProperties getRequestProperties() {
     return requestProperties;
   }
+
+  public List<AllowedInteraction> getAllowedInteractionsOrder() {
+    return allowedInteractionsOrder;
+  }
+
 }

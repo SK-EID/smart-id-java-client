@@ -26,6 +26,16 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.SmartIdException;
+import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.SmartIdRestConnector;
+import org.apache.commons.codec.binary.Base64;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configuration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -43,17 +53,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Configuration;
-
-import ee.sk.smartid.exception.SmartIdException;
-import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.SmartIdRestConnector;
-import org.apache.commons.codec.binary.Base64;
-
 /**
  * Class that can be used to configure and get different types of request builders
  * <p>
@@ -63,7 +62,7 @@ import org.apache.commons.codec.binary.Base64;
  *   SmartIdClient client = new SmartIdClient();
  *   client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
  *   client.setRelyingPartyName("DEMO");
- *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v1/");
+ *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
  *
  *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
  *
@@ -90,7 +89,7 @@ import org.apache.commons.codec.binary.Base64;
  *   SmartIdClient client = new SmartIdClient();
  *   client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
  *   client.setRelyingPartyName("DEMO");
- *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v1/");
+ *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
  *
  *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
  *

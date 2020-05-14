@@ -33,6 +33,8 @@ import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -234,17 +236,10 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Sets the request's display text
-   * <p>
-   * Optional. It's the text to display for authentication consent dialog
-   * on the mobile device.
-   *
-   * @param displayText text to display
-   * @return this builder
+   * This functionality has moved in Smart-ID API 2.0. See ee.sk.smartid.AuthenticationRequestBuilder.withAllowedInteractionsOrder()
    */
-  public AuthenticationRequestBuilder withDisplayText(String displayText) {
-    super.withDisplayText(displayText);
-    return this;
+  private void withDisplayText(String displayText) {
+    throw new UnsupportedOperationException("Method is removed in Smart-ID API 2.0. Use: withAllowedInteractionsOrder()");
   }
 
   /**
@@ -311,6 +306,16 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    */
   public AuthenticationRequestBuilder withRequestProperties(RequestProperties requestProperties) {
     super.withRequestProperties(requestProperties);
+    return this;
+  }
+
+  /**
+   * @param allowedInteractionsOrder Preferred order of what dialog to present to user. What actually gets displayed depends on user's device and its software version.
+   *                                 First option from this list that the device is capable of handling is displayed to the user.
+   * @return this builder
+   */
+  public AuthenticationRequestBuilder withAllowedInteractionsOrder(List<AllowedInteraction> allowedInteractionsOrder) {
+    super.withAllowedInteractionsOrder(allowedInteractionsOrder);
     return this;
   }
 
@@ -437,10 +442,10 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     request.setCertificateLevel(getCertificateLevel());
     request.setHashType(getHashTypeString());
     request.setHash(getHashInBase64());
-    request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
     request.setRequestProperties(getRequestProperties());
+    request.setAllowedInteractionsOrder(getAllowedInteractionsOrder());
     return request;
   }
 

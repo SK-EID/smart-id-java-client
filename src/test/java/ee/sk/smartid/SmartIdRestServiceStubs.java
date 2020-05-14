@@ -46,23 +46,23 @@ public class SmartIdRestServiceStubs {
             .withBody("Not found")));
   }
 
-  public static void stubNotFoundResponse(String url, String requestFile) throws IOException {
+  public static void stubNotFoundResponse(String url, String requestFile) {
     stubErrorResponse(url, requestFile, 404);
   }
 
-  public static void stubUnauthorizedResponse(String url, String requestFile) throws IOException {
+  public static void stubUnauthorizedResponse(String url, String requestFile) {
     stubErrorResponse(url, requestFile, 401);
   }
 
-  public static void stubBadRequestResponse(String url, String requestFile) throws IOException {
+  public static void stubBadRequestResponse(String url, String requestFile) {
     stubErrorResponse(url, requestFile, 400);
   }
 
-  public static void stubForbiddenResponse(String url, String requestFile) throws IOException {
+  public static void stubForbiddenResponse(String url, String requestFile) {
     stubErrorResponse(url, requestFile, 403);
   }
 
-  public static void stubErrorResponse(String url, String requestFile, int errorStatus) throws IOException {
+  public static void stubErrorResponse(String url, String requestFile, int errorStatus) {
     stubFor(post(urlEqualTo(url))
         .withHeader("Accept", equalTo("application/json"))
         .withRequestBody(equalToJson(readFileBody(requestFile)))
@@ -72,7 +72,7 @@ public class SmartIdRestServiceStubs {
             .withBody("Not found")));
   }
 
-  public static void stubRequestWithResponse(String urlEquals, String responseFile) throws IOException {
+  public static void stubRequestWithResponse(String urlEquals, String responseFile) {
     stubFor(get(urlPathEqualTo(urlEquals))
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse()
@@ -81,7 +81,7 @@ public class SmartIdRestServiceStubs {
             .withBody(readFileBody(responseFile))));
   }
 
-  public static void stubRequestWithResponse(String url, String requestFile, String responseFile) throws IOException {
+  public static void stubRequestWithResponse(String url, String requestFile, String responseFile) {
     stubFor(post(urlEqualTo(url))
         .withHeader("Accept", equalTo("application/json"))
         .withRequestBody(equalToJson(readFileBody(requestFile)))
@@ -91,7 +91,7 @@ public class SmartIdRestServiceStubs {
             .withBody(readFileBody(responseFile))));
   }
 
-  public static void stubSessionStatusWithState(String sessionId, String responseFile, String startState, String endState) throws IOException {
+  public static void stubSessionStatusWithState(String sessionId, String responseFile, String startState, String endState) {
     String urlEquals = "/session/" + sessionId;
     stubFor(get(urlEqualTo(urlEquals))
         .inScenario("session status")
@@ -105,11 +105,15 @@ public class SmartIdRestServiceStubs {
     );
   }
 
-  private static String readFileBody(String fileName) throws IOException {
+  private static String readFileBody(String fileName) {
     ClassLoader classLoader = SmartIdRestServiceStubs.class.getClassLoader();
     URL resource = classLoader.getResource(fileName);
     assertNotNull("File not found: " + fileName, resource);
     File file = new File(resource.getFile());
-    return FileUtils.readFileToString(file, "UTF-8");
+    try {
+      return FileUtils.readFileToString(file, "UTF-8");
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

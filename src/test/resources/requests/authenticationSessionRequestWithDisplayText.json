@@ -4,5 +4,10 @@
   "certificateLevel": "ADVANCED",
   "hash": "K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==",
   "hashType": "SHA512",
-  "displayText": "Log into internet banking system"
+  "allowedInteractionsOrder": [
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Log into internet banking system"
+    }
+  ]
 }

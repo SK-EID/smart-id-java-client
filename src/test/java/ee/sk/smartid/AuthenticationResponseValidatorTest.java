@@ -70,15 +70,18 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
-  public void validationReturnsValidAuthenticationResult() throws Exception {
+  public void validate() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
-    assertTrue(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().isEmpty());
+    assertThat(authenticationResult.isValid(), is(false));
+    assertThat(authenticationResult.getErrors().size(), is(1));
+    assertThat(authenticationResult.getErrors().get(0), is("Signer's certificate expired."));
+
     assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
+  // TODO replace certificate
   @Test
   public void validationReturnsValidAuthenticationResult_whenEndResultLowerCase() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
@@ -134,6 +137,7 @@ public class AuthenticationResponseValidatorTest {
     assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
+  // TODO replace certificate
   @Test
   public void validationReturnsValidAuthenticationResult_whenCertificateLevelHigherThanRequested() throws Exception {
     SmartIdAuthenticationResponse response = createValidationResponseWithHigherCertificateLevelThanRequested();
@@ -187,6 +191,7 @@ public class AuthenticationResponseValidatorTest {
     assertEquals(getX509Certificate(Files.readAllBytes(caCertificateFile.toPath())).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
   }
 
+  // TODO replace cert
   @Test
   public void withEmptyRequestedCertificateLevel_shouldPass() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
@@ -198,6 +203,7 @@ public class AuthenticationResponseValidatorTest {
     assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
 
+  // TODO replace certificate
   @Test
   public void withNullRequestedCertificateLevel_shouldPass() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();

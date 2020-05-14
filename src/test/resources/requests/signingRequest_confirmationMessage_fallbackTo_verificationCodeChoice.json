@@ -6,8 +6,12 @@
   "hashType": "SHA256",
   "allowedInteractionsOrder": [
     {
-      "type": "displayTextAndPIN",
-      "displayText60": "Authorize transfer of €10"
+      "type": "confirmationMessage",
+      "displayText200": "Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?"
+    },
+    {
+      "type": "verificationCodeChoice",
+      "displayText60": "Transfer 707 BSD to Oceanic Airlines?"
     }
   ]
 }

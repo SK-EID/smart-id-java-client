@@ -96,31 +96,6 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test
-  public void authenticateWithHash_andRequestProperties() throws Exception {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    RequestProperties requestProperties = new RequestProperties();
-    requestProperties.setVcChoice(true);
-
-    SmartIdAuthenticationResponse authenticationResponse = builder
-            .withRelyingPartyUUID("relying-party-uuid")
-            .withRelyingPartyName("relying-party-name")
-            .withCertificateLevel("QUALIFIED")
-            .withAuthenticationHash(authenticationHash)
-            .withDocumentNumber("PNOEE-31111111111")
-            .withRequestProperties(requestProperties)
-            .authenticate();
-
-    assertCorrectAuthenticationRequestMadeWithDocumentNumber("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==", "QUALIFIED");
-    assertCorrectSessionRequestMade();
-    assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    assertNotNull(connector.authenticationSessionRequestUsed.getRequestProperties());
-    assertEquals(true, connector.authenticationSessionRequestUsed.getRequestProperties().isVcChoice());
-  }
-
-  @Test
   public void authenticateUsingNationalIdentityNumberAndCountryCode() throws Exception {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");

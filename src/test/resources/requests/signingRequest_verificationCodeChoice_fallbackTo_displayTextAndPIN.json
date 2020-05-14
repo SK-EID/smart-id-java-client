@@ -6,8 +6,12 @@
   "hashType": "SHA256",
   "allowedInteractionsOrder": [
     {
+      "type": "verificationCodeChoice",
+      "displayText60": "Transfer 444 BSD to Oceanic Airlines?"
+    },
+    {
       "type": "displayTextAndPIN",
-      "displayText60": "Authorize transfer of €10"
+      "displayText60": "Transfer 444 BSD to Oceanic Airlines?"
     }
   ]
 }

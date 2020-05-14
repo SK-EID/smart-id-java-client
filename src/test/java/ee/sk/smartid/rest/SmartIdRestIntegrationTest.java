@@ -38,9 +38,7 @@ import org.junit.Test;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 @Ignore("Requires physical interaction with a Smart ID device")
@@ -55,7 +53,7 @@ public class SmartIdRestIntegrationTest {
 
   @Before
   public void setUp() {
-    connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v1/");
+    connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v2");
   }
 
   @Test
