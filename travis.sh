@@ -11,8 +11,10 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ] && ["$TRAVIS
   echo "Starting to publish"
   ./publish.sh
   echo "Finished"
-else
+elif ["$TRAVIS_JDK_VERSION" == "openjdk8"]; then
   ./mvnw test
   ./mvnw org.owasp:dependency-check-maven:check
   ./mvnw spotbugs:check
+else
+  ./mvnw test
 fi
