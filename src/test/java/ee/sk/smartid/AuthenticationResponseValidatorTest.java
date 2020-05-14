@@ -78,6 +78,16 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
+  public void validate_invalidSignatureValue() {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    response.setSignatureValueInBase64("invalid");
+    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+
+    assertFalse(authenticationResult.isValid());
+    assertTrue(authenticationResult.getErrors().contains("Signature verification failed."));
+  }
+
+  @Test
   public void validationReturnsValidAuthenticationResult_whenEndResultLowerCase() throws Exception {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setEndResult("ok");
