@@ -26,6 +26,16 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.SmartIdException;
+import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.SmartIdRestConnector;
+import org.apache.commons.codec.binary.Base64;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Configuration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,17 +52,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Configuration;
-
-import ee.sk.smartid.exception.SmartIdException;
-import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.SmartIdRestConnector;
-import org.apache.commons.codec.binary.Base64;
 
 /**
  * Class that can be used to configure and get different types of request builders
@@ -307,7 +306,7 @@ public class SmartIdClient {
     try {
       return createSslContext(this.sslCertificates);
     } catch (CertificateException | IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-      throw new SmartIdException(e.getMessage());
+      throw new SmartIdException("Failed to createSslContext", e);
     }
   }
 
