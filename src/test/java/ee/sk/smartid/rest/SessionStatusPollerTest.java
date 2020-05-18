@@ -26,31 +26,22 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import static ee.sk.smartid.DummyData.createSessionEndResult;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.rest.dao.*;
+import org.junit.Before;
+import org.junit.Test;
 
+import javax.net.ssl.SSLContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLContext;
-
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
-import org.junit.Before;
-import org.junit.Test;
+import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.junit.Assert.*;
 
 public class SessionStatusPollerTest {
 
@@ -89,8 +80,8 @@ public class SessionStatusPollerTest {
     addMultipleRunningSessionResponses(5);
     connector.responses.add(createCompleteSessionStatus());
     long duration = measurePollingDuration();
-    assertTrue(duration > 1000L);
-    assertTrue(duration < 1500L);
+    assertThat(duration, is(greaterThanOrEqualTo(1000L)));
+    assertThat(duration, is(lessThanOrEqualTo(1500L)));
   }
 
   @Test
