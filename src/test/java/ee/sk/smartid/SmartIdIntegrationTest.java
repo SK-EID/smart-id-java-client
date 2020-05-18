@@ -232,8 +232,8 @@ public class SmartIdIntegrationTest {
     }
 
     @Test(expected = CertificateNotFoundException.class)
-    public void makeRequestToLiveEnvApi_useDefaultSslContext_sslHandshakeSucceedsButThrowsCertificateNotFound() {
-        client.setHostUrl("https://rp-api.smart-id.com");
+    public void makeRequestToDemoEnv_useDefaultSslContext_sslHandshakeSucceedsButThrowsCertificateNotFound() {
+        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v1/");
         client
              .getCertificate()
              .withRelyingPartyUUID(RELYING_PARTY_UUID)
@@ -292,44 +292,6 @@ public class SmartIdIntegrationTest {
     @Test
     public void makeRequestToApi_useDemoEnvCertificates_sslHandshakeSuccessFetchesCertificate() {
         client.useDemoEnvSSLCertificates();
-
-        client
-             .getCertificate()
-             .withRelyingPartyUUID(RELYING_PARTY_UUID)
-             .withRelyingPartyName(RELYING_PARTY_NAME)
-             .withDocumentNumber(DOCUMENT_NUMBER)
-             .fetch();
-    }
-
-    @Test(expected = ProcessingException.class)
-    public void makeRequestToLiveApi_useDemoEnvCertificates_sslHandshakeFails() {
-        client.useDemoEnvSSLCertificates();
-        client.setHostUrl("https://rp-api.smart-id.com");
-
-        client
-             .getCertificate()
-             .withRelyingPartyUUID(RELYING_PARTY_UUID)
-             .withRelyingPartyName(RELYING_PARTY_NAME)
-             .withDocumentNumber(DOCUMENT_NUMBER)
-             .fetch();
-    }
-
-    @Test(expected = ProcessingException.class)
-    public void makeRequestToApi_useLiveEnvCertificates_sslHandshakeFailThrowsException() {
-        client.useLiveEnvSSLCertificates();
-
-        client
-             .getCertificate()
-             .withRelyingPartyUUID(RELYING_PARTY_UUID)
-             .withRelyingPartyName(RELYING_PARTY_NAME)
-             .withDocumentNumber(DOCUMENT_NUMBER)
-             .fetch();
-    }
-
-    @Test(expected = CertificateNotFoundException.class)
-    public void makeRequestToLiveApi_useLiveEnvCertificates_sslHandshakeSuccess() {
-        client.useLiveEnvSSLCertificates();
-        client.setHostUrl("https://rp-api.smart-id.com");
 
         client
              .getCertificate()
