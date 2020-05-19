@@ -24,6 +24,12 @@ The Smart-ID Java client can be used for easy integration of the [Smart-ID](http
 
 Take a look at the [examples](https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it) 
 
+To log requests going to Smart-ID API set ee.sk.smartid.rest.LoggingFilter to log at trace level.
+For applications on Spring Boot this can be done by adding following line to application.yml:
+```
+logging.level.ee.sk.smartid.rest.LoggingFilter: trace
+ ```
+
 ## Getting the library
 
 ### Maven
