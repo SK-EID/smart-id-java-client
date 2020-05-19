@@ -96,6 +96,12 @@ public class SmartIdClientTest {
   }
 
   @Test
+  public void testSetup() {
+    assertThat(client.getRelyingPartyUUID(), is("de305d54-75b4-431b-adb2-eb6b9e546014"));
+    assertThat(client.getRelyingPartyName(), is("BANK123"));
+  }
+
+  @Test
   public void getCertificateAndSign_fullExample() {
     // Provide data bytes to be signed (Default hash type is SHA-512)
     SignableData dataToSign = new SignableData("Hello World!".getBytes());
@@ -686,7 +692,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateByETSIPAS_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
+  public void getCertificateByETSIPAS_ValidSemanticsIdentifierAsString_ShouldReturnValidCertificate() {
     SmartIdCertificate cer = client
         .getCertificate()
         .withSemanticsIdentifier(
@@ -728,7 +734,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getAuthentictionByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
+  public void getAuthenticationByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
@@ -746,7 +752,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getAuthentictionByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
+  public void getAuthenticationByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");

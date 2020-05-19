@@ -306,7 +306,7 @@ public class SmartIdClient {
     try {
       return createSslContext(this.sslCertificates);
     } catch (CertificateException | IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-      throw new SmartIdException(e.getMessage());
+      throw new SmartIdException("Failed to createSslContext", e);
     }
   }
 

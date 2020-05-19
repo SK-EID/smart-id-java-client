@@ -26,18 +26,13 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
-
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
+import ee.sk.smartid.exception.*;
+import ee.sk.smartid.rest.dao.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ClientErrorException;
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -45,27 +40,10 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
-import ee.sk.smartid.exception.CertificateNotFoundException;
-import ee.sk.smartid.exception.ClientNotSupportedException;
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.RequestForbiddenException;
-import ee.sk.smartid.exception.ServerMaintenanceException;
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.exception.UnauthorizedException;
-import ee.sk.smartid.exception.UserAccountNotFoundException;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 public class SmartIdRestConnector implements SmartIdConnector {
 
@@ -250,10 +228,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
     try {
       return postRequest(uri, request, CertificateChoiceResponse.class);
     } catch (NotFoundException e) {
-      logger.warn("Certificate not found for URI " + uri + ": " + e.getMessage());
+      logger.warn("Certificate not found for URI " + uri, e);
       throw new CertificateNotFoundException();
     } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
+      logger.warn("No permission to issue the request", e);
       throw new RequestForbiddenException();
     }
   }
@@ -262,10 +240,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
     try {
       return postRequest(uri, request, AuthenticationSessionResponse.class);
     } catch (NotFoundException e) {
-      logger.warn("User account not found for URI " + uri + ": " + e.getMessage());
+      logger.warn("User account not found for URI " + uri, e);
       throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
+      logger.warn("No permission to issue the request", e);
       throw new RequestForbiddenException();
     }
   }
@@ -275,10 +253,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
       Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
       return prepareClient(uri).post(requestEntity, responseType);
     } catch (NotAuthorizedException e) {
-      logger.warn("Request is unauthorized for URI " + uri + ": " + e.getMessage());
+      logger.warn("Request is unauthorized for URI " + uri, e);
       throw new UnauthorizedException();
     } catch (BadRequestException e) {
-      logger.warn("Request is invalid for URI " + uri + ": " + e.getMessage());
+      logger.warn("Request is invalid for URI " + uri, e);
       throw new InvalidParametersException();
     } catch (ClientErrorException e) {
       if (e.getResponse().getStatus() == 480) {
@@ -288,7 +266,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
       throw e;
     } catch (ServerErrorException e) {
       if (e.getResponse().getStatus() == 580) {
-        logger.warn("Server is under maintenance, retry later");
+        logger.warn("Server is under maintenance, retry later", e);
         throw new ServerMaintenanceException();
       }
       throw e;
