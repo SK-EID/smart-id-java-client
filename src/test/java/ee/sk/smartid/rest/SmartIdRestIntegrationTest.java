@@ -52,7 +52,8 @@ public class SmartIdRestIntegrationTest {
 
   @Before
   public void setUp() {
-    connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v2");
+    // TODO switch to v2
+    connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v1/");
   }
 
   @Test
@@ -115,9 +116,11 @@ public class SmartIdRestIntegrationTest {
     sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
     assertSignatureCreated(sessionStatus);
     assertNotNull(sessionStatus.getIgnoredProperties());
-    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(3));
 
-    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("vcChoice", "testingIgnored", "testingIgnoredTwo"));
+    // TODO vcChoice
+    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("testingIgnored", "testingIgnoredTwo"));
+    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(2));
+
   }
 
   @Test
@@ -141,7 +144,7 @@ public class SmartIdRestIntegrationTest {
     assertAuthenticationResponseCreated(sessionStatus);
     assertNotNull(sessionStatus.getIgnoredProperties());
 
-    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("vcChoice", "testingIgnored", "testingIgnoredTwo"));
+    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("testingIgnored", "testingIgnoredTwo"));
   }
 
   private CertificateChoiceResponse fetchCertificateChoiceSession(String documentNumber) {
@@ -160,7 +163,7 @@ public class SmartIdRestIntegrationTest {
     return request;
   }
 
-  private SignatureSessionResponse createRequestAndFetchSignatureSession(String documentNumber) throws NoSuchAlgorithmException {
+  private SignatureSessionResponse createRequestAndFetchSignatureSession(String documentNumber) {
     SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
     return fetchSignatureSession(documentNumber, signatureSessionRequest);
   }

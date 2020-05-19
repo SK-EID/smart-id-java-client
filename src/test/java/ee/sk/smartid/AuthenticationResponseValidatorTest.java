@@ -69,12 +69,12 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void validate() throws Exception {
-    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    SmartIdAuthenticationResponse response = createValidationResponseWithInvalidSignature();
     SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
     assertThat(authenticationResult.isValid(), is(false));
     assertThat(authenticationResult.getErrors().size(), is(1));
-    assertThat(authenticationResult.getErrors().get(0), is("Signer's certificate expired."));
+    assertThat(authenticationResult.getErrors().get(0), is("Signature verification failed."));
 
     assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
   }
