@@ -102,15 +102,21 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getSessionStatus_whenUserHasRefused() {
+  public void getSessionStatus_userHasRefused() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasRefused.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
   }
 
   @Test
-  public void getSessionStatus_whenTimeout() {
+  public void getSessionStatus_timeout() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenTimeout.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "TIMEOUT");
+  }
+
+  @Test
+  public void getSessionStatus_userHasSelectedWrongVcCode() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
   }
 
   @Test
@@ -562,7 +568,6 @@ public class SmartIdRestConnectorTest {
 
   private void assertSessionStatusErrorWithEndResult(SessionStatus sessionStatus, String endResult) {
     assertEquals("COMPLETE", sessionStatus.getState());
-    assertEquals("PNOEE-372123456", sessionStatus.getResult().getDocumentNumber());
     assertEquals(endResult, sessionStatus.getResult().getEndResult());
   }
 

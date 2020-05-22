@@ -292,6 +292,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
    *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
    * @throws UserRefusedException when the user has refused the session
+   * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
@@ -302,7 +303,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return the signature response
    */
   public SmartIdSignature sign() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,UserRefusedException,
-      SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
+      UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
     validateParameters();
     String sessionId = initiateSigning();
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);

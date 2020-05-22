@@ -29,6 +29,7 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.TechnicalErrorException;
 import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.exception.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.*;
@@ -38,8 +39,7 @@ import org.junit.Test;
 
 import java.security.cert.CertificateEncodingException;
 
-import static ee.sk.smartid.DummyData.createSessionEndResult;
-import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
+import static ee.sk.smartid.DummyData.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -234,25 +234,31 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test(expected = UserRefusedException.class)
-  public void authenticate_withUserRefused_shouldThrowException() {
+  public void authenticate_userRefused_shouldThrowException() {
     connector.sessionStatusToRespond = createUserRefusedSessionStatus();
     makeAuthenticationRequest();
   }
 
+  @Test(expected = UserSelectedWrongVerificationCodeException.class)
+  public void authenticate_userSelectedWrongVerificationCode_shouldThrowException() {
+    connector.sessionStatusToRespond = createUserSelectedWrongVerificationCode();
+    makeAuthenticationRequest();
+  }
+
   @Test(expected = TechnicalErrorException.class)
-  public void authenticate_withResultMissingInResponse_shouldThrowException() {
+  public void authenticate_resultMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setResult(null);
     makeAuthenticationRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void authenticate_withSignatureMissingInResponse_shouldThrowException() {
+  public void authenticate_signatureMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setSignature(null);
     makeAuthenticationRequest();
   }
 
   @Test(expected = TechnicalErrorException.class)
-  public void authenticate_withCertificateMissingInResponse_shouldThrowException() {
+  public void authenticate_certificateMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setCert(null);
     makeAuthenticationRequest();
   }

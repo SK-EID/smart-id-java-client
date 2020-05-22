@@ -29,17 +29,14 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.InvalidParametersException;
 import ee.sk.smartid.exception.TechnicalErrorException;
 import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.exception.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
-import ee.sk.smartid.rest.dao.Capability;
-import ee.sk.smartid.rest.dao.SessionSignature;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import static ee.sk.smartid.DummyData.createSessionEndResult;
-import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
+import static ee.sk.smartid.DummyData.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -95,6 +92,30 @@ public class SignatureRequestBuilderTest {
     assertCorrectSignatureRequestMade("QUALIFIED");
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
+  }
+
+  @Test
+  public void signWithSignableData_andRequestProperties() {
+    SignableData dataToSign = new SignableData("Say 'hello' to my little friend!".getBytes());
+    dataToSign.setHashType(HashType.SHA256);
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setVcChoice(true);
+
+    SmartIdSignature signature = builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withCertificateLevel("QUALIFIED")
+            .withSignableData(dataToSign)
+            .withDocumentNumber("PNOEE-31111111111")
+            .withRequestProperties(requestProperties)
+            .sign();
+
+    assertCorrectSignatureRequestMade("QUALIFIED");
+    assertCorrectSessionRequestMade();
+    assertSignatureCorrect(signature);
+    assertNotNull(connector.signatureSessionRequestUsed.getRequestProperties());
+    assertEquals(true, connector.signatureSessionRequestUsed.getRequestProperties().isVcChoice());
   }
 
   @Test
@@ -195,13 +216,20 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test(expected = UserRefusedException.class)
-  public void sign_withUserRefused_shouldThrowException() {
+  public void sign_userRefused_shouldThrowException() {
     connector.sessionStatusToRespond = createUserRefusedSessionStatus();
     makeSigningRequest();
   }
 
+
+  @Test(expected = UserSelectedWrongVerificationCodeException.class)
+  public void sign_userSelectedWrongVerificationCode_shouldThrowException() {
+    connector.sessionStatusToRespond = createUserSelectedWrongVerificationCode();
+    makeSigningRequest();
+  }
+
   @Test(expected = TechnicalErrorException.class)
-  public void sign_withSignatureMissingInResponse_shouldThrowException() {
+  public void sign_signatureMissingInResponse_shouldThrowException() {
     connector.sessionStatusToRespond.setSignature(null);
     makeSigningRequest();
   }

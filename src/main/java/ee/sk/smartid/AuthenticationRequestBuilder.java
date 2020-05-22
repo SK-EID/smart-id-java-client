@@ -323,13 +323,14 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * Send the authentication request and get the response
    * <p>
    * This method uses automatic session status polling internally
-   * and therefore blocks the current thread until authentication is concluded/interupted etc.
+   * and therefore blocks the current thread until authentication is concluded/interrupted etc.
    *
    * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
    * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
    *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
    * @throws UserRefusedException when the user has refused the session
+   * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
@@ -340,7 +341,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return the authentication response
    */
   public SmartIdAuthenticationResponse authenticate() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException, UserRefusedException,
-      SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
+      UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
     String sessionId = initiateAuthentication();
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
     SmartIdAuthenticationResponse authenticationResponse = createSmartIdAuthenticationResponse(sessionStatus);
@@ -371,15 +372,16 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * Create {@link SmartIdAuthenticationResponse} from {@link SessionStatus}
    *
    * @throws UserRefusedException when the user has refused the session
-   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
+   * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
+   * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given time frame
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
    *
    * @param sessionStatus session status response
    * @return the authentication response
    */
-  public SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus) throws UserRefusedException, SessionTimeoutException,
-      DocumentUnusableException, TechnicalErrorException {
+  public SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus) throws UserRefusedException, UserSelectedWrongVerificationCodeException,
+          SessionTimeoutException, DocumentUnusableException, TechnicalErrorException {
     validateAuthenticationResponse(sessionStatus);
 
     SessionResult sessionResult = sessionStatus.getResult();
