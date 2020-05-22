@@ -101,19 +101,25 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getSessionStatus_whenUserHasRefused() throws Exception {
+  public void getSessionStatus_userHasRefused() throws Exception {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasRefused.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
   }
 
   @Test
-  public void getSessionStatus_whenTimeout() throws Exception {
+  public void getSessionStatus_userHasSelectedWrongVcCode() throws Exception {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
+  }
+
+  @Test
+  public void getSessionStatus_timeout() throws Exception {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenTimeout.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "TIMEOUT");
   }
 
   @Test
-  public void getSessionStatus_whenDocumentUnusable() throws Exception {
+  public void getSessionStatus_documentUnusable() throws Exception {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenDocumentUnusable.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
   }

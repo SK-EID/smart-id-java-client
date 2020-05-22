@@ -2,7 +2,12 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [1.5.1] - 2020-05-08
+## [1.6] - 2020-05-25
+
+### Added
+- UserSelectedWrongVerificationCodeException is now thrown when user selects wrong verification code from three-choice selection.
+
+## [1.5.1] - 2020-05-18
 ### Security
 - Bumped jackson-databind from 2.9.10.1 to 2.9.10.4
 - Updated Maven Dependency Check plugin version.

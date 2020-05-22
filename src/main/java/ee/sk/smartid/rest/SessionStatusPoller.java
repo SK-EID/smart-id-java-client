@@ -26,10 +26,7 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.DocumentUnusableException;
-import ee.sk.smartid.exception.SessionTimeoutException;
-import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +46,7 @@ public class SessionStatusPoller {
     this.connector = connector;
   }
 
-  public SessionStatus fetchFinalSessionStatus(String sessionId) throws UserRefusedException, SessionTimeoutException, DocumentUnusableException {
+  public SessionStatus fetchFinalSessionStatus(String sessionId) throws UserRefusedException, UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
     logger.debug("Starting to poll session status for session " + sessionId);
     try {
       return pollForFinalSessionStatus(sessionId);
