@@ -29,11 +29,7 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.Capability;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.RequestProperties;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +37,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public abstract class SmartIdRequestBuilder {
 
@@ -171,16 +168,23 @@ public abstract class SmartIdRequestBuilder {
       throw new TechnicalErrorException("Result is missing in the session status response");
     }
     String endResult = result.getEndResult();
-    if (equalsIgnoreCase(endResult, "USER_REFUSED")) {
+    if ("USER_REFUSED".equalsIgnoreCase(endResult)) {
       logger.debug("User has refused");
       throw new UserRefusedException();
-    } else if (equalsIgnoreCase(endResult, "TIMEOUT")) {
+    }
+    else if ("WRONG_VC".equalsIgnoreCase(endResult)) {
+      logger.debug("User did not choose the correct verification code from three-choice verification codes");
+      throw new UserSelectedWrongVerificationCodeException();
+    }
+    else if ("TIMEOUT".equalsIgnoreCase(endResult)) {
       logger.debug("Session timeout");
       throw new SessionTimeoutException();
-    } else if (equalsIgnoreCase(endResult, "DOCUMENT_UNUSABLE")) {
+    }
+    else if ("DOCUMENT_UNUSABLE".equalsIgnoreCase(endResult)) {
       logger.debug("Document unusable");
       throw new DocumentUnusableException();
-    } else if (!equalsIgnoreCase(endResult, "OK")) {
+    }
+    else if (!"OK".equalsIgnoreCase(endResult)) {
       logger.warn("Session status end result is '" + endResult + "'");
       throw new TechnicalErrorException("Session status end result is '" + endResult + "'");
     }
