@@ -1,7 +1,6 @@
 {
   "state": "COMPLETE",
   "result": {
-    "endResult": "TIMEOUT",
-    "documentNumber": "PNOEE-372123456"
+    "endResult": "TIMEOUT"
   }
 }
