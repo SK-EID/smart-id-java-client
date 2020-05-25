@@ -28,10 +28,10 @@ package ee.sk.smartid.rest;
 
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.dao.*;
-import org.glassfish.jersey.client.ClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -63,6 +63,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
   private static final long serialVersionUID = 42L;
+  private transient SSLContext sslContext;
 
   public SmartIdRestConnector(String endpointUrl) {
     this.endpointUrl = endpointUrl;
@@ -124,7 +125,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .fromUri(endpointUrl)
         .path(CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
         .build(semanticsIdentifier.getIdentifier());
-    System.out.println(uri);
     return postCertificateRequest(uri, request);
   }
 
@@ -204,7 +204,14 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private Invocation.Builder prepareClient(URI uri) {
     Client client;
     if (this.configuredClient == null) {
-      client = clientConfig == null ? ClientBuilder.newClient() : ClientBuilder.newClient(clientConfig);
+      ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+      if (null != this.clientConfig) {
+        clientBuilder.withConfig(this.clientConfig);
+      }
+      if (null != this.sslContext) {
+        clientBuilder.sslContext(this.sslContext);
+      }
+      client = clientBuilder.build();
     }
     else {
       client = this.configuredClient;
@@ -221,10 +228,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
     try {
       return postRequest(uri, request, CertificateChoiceResponse.class);
     } catch (NotFoundException e) {
-      logger.warn("Certificate not found for URI " + uri + ": " + e.getMessage());
+      logger.warn("Certificate not found for URI " + uri, e);
       throw new CertificateNotFoundException();
     } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
+      logger.warn("No permission to issue the request", e);
       throw new RequestForbiddenException();
     }
   }
@@ -233,10 +240,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
     try {
       return postRequest(uri, request, AuthenticationSessionResponse.class);
     } catch (NotFoundException e) {
-      logger.warn("User account not found for URI " + uri + ": " + e.getMessage());
+      logger.warn("User account not found for URI " + uri, e);
       throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
+      logger.warn("No permission to issue the request", e);
       throw new RequestForbiddenException();
     }
   }
@@ -246,10 +253,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
       Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
       return prepareClient(uri).post(requestEntity, responseType);
     } catch (NotAuthorizedException e) {
-      logger.warn("Request is unauthorized for URI " + uri + ": " + e.getMessage());
+      logger.warn("Request is unauthorized for URI " + uri, e);
       throw new UnauthorizedException();
     } catch (BadRequestException e) {
-      logger.warn("Request is invalid for URI " + uri + ": " + e.getMessage());
+      logger.warn("Request is invalid for URI " + uri, e);
       throw new InvalidParametersException();
     } catch (ClientErrorException e) {
       if (e.getResponse().getStatus() == 480) {
@@ -259,7 +266,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
       throw e;
     } catch (ServerErrorException e) {
       if (e.getResponse().getStatus() == 580) {
-        logger.warn("Server is under maintenance, retry later");
+        logger.warn("Server is under maintenance, retry later", e);
         throw new ServerMaintenanceException();
       }
       throw e;
@@ -282,5 +289,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
       long queryTimeoutInMilliseconds = timeUnit.toMillis(timeValue);
       uriBuilder.queryParam("timeoutMs", queryTimeoutInMilliseconds);
     }
+  }
+
+  @Override
+  public void setSslContext(SSLContext sslContext) {
+    this.sslContext = sslContext;
   }
 }

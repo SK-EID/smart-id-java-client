@@ -31,11 +31,16 @@ import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.net.ssl.SSLContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.*;
 
 public class SessionStatusPollerTest {
@@ -75,8 +80,8 @@ public class SessionStatusPollerTest {
     addMultipleRunningSessionResponses(5);
     connector.responses.add(createCompleteSessionStatus());
     long duration = measurePollingDuration();
-    assertTrue(duration > 1000L);
-    assertTrue(duration < 1100L);
+    assertThat(duration, is(greaterThanOrEqualTo(1000L)));
+    assertThat(duration, is(lessThanOrEqualTo(1500L)));
   }
 
   @Test
@@ -198,6 +203,11 @@ public class SessionStatusPollerTest {
         request.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
       }
       return request;
+    }
+
+    @Override
+    public void setSslContext(SSLContext sslContext) {
+
     }
   }
 }

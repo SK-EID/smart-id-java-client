@@ -1,6 +1,6 @@
 {
   "state": "COMPLETE",
   "result": {
-    "endResult": "USER_REFUSED"
+    "endResult": "WRONG_VC"
   }
 }

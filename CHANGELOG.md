@@ -2,6 +2,43 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.6] - 2020-05-25
+
+### Added
+- UserSelectedWrongVerificationCodeException is now thrown when user selects wrong verification code from three-choice selection.
+
+## [1.5.1] - 2020-05-18
+### Security
+- Bumped jackson-databind from 2.9.10.1 to 2.9.10.4
+- Updated Maven Dependency Check plugin version.
+
+### Changed
+- AuthenticationRequestBuilder method withRequestProperties access modifier changed to public
+
+### Added
+- Maven wrapper to project
+
+## [1.5] - 2019-11-12
+### Security
+- CVE-2019-16943
+- CVE-2019-17531
+- CVE-2019-16942
+- CVE-2019-16335
+- CVE-2019-14540
+### Added
+- SSL pinning to verify, that the client is communicating with SK environment [#3](https://github.com/SK-EID/smart-id-java-client/issues/3)
+- SmartIdClient.addTrustedSSLCertificates(String ...sslCertificate) - add ssl certificates when Sk starts to use new certs
+- SmartIdClient.setTrustedSSLCertificates(String ...sslCertificates) - set specific ssl certificates to trust
+- SmartIdClient.useDemoEnvSSLCertificates() - uses only demo env ssl certificates
+- SmartIdClient.useLiveEnvSSLCertificates() - uses only live env ssl certificates
+- SmartIdClient.loadSslCertificatesFromKeystore(KeyStore keyStore) - loads only the certificates from keystore
+
+## [1.4] - 2019-09-23
+### Added
+- Client configuration on different JAX-WS implementations. [#22](https://github.com/SK-EID/smart-id-java-client/issues/22), [#11](https://github.com/SK-EID/mid-rest-java-client/issues/11)
+- SmartIdClient.setConfiguredClient()
+- SmartIdClient.setNetworkConnectionConfig()
+
 ## [1.3] - 2019-09-13
 ### Added
 - Capabilities parameter ([#25](https://github.com/SK-EID/smart-id-java-client/pull/25))

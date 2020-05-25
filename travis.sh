@@ -1,14 +1,20 @@
 #!/bin/bash
 
-echo $TRAVIS_PULL_REQUEST
-echo $TRAVIS_TAG
+# Fail on first error
+set -e
 
-if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ]; then
+echo "Is pull request: $TRAVIS_PULL_REQUEST"
+echo "Tag:             $TRAVIS_TAG"
+echo "JDK version:     $TRAVIS_JDK_VERSION"
+
+if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ] && [ "$TRAVIS_JDK_VERSION" == "openjdk8" ]; then
   echo "Starting to publish"
   ./publish.sh
   echo "Finished"
+elif [ "$TRAVIS_JDK_VERSION" == "openjdk8" ]; then
+  ./mvnw test
+  ./mvnw org.owasp:dependency-check-maven:check
+  ./mvnw spotbugs:check
 else
-  mvn test
-  mvn org.owasp:dependency-check-maven:check
-  mvn spotbugs:check
+  ./mvnw test
 fi

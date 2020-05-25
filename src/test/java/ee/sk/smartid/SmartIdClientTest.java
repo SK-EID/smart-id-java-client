@@ -30,10 +30,11 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.NationalIdentity;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier.CountryCode;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier.IdentityType;
-
+import ee.sk.smartid.rest.dao.SessionStatus;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Before;
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static ee.sk.smartid.SmartIdRestServiceStubs.*;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.*;
@@ -90,6 +92,12 @@ public class SmartIdClientTest {
     stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/certificatechoice/etsi/IDCEE-AA3456789", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json");
+  }
+
+  @Test
+  public void testSetup() {
+    assertThat(client.getRelyingPartyUUID(), is("de305d54-75b4-431b-adb2-eb6b9e546014"));
+    assertThat(client.getRelyingPartyName(), is("BANK123"));
   }
 
   @Test
@@ -683,11 +691,10 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getCertificateByETSIPAS_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
+  public void getCertificateByETSIPAS_ValidSemanticsIdentifierAsString_ShouldReturnValidCertificate() {
     SmartIdCertificate cer = client
         .getCertificate()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+        .withSemanticsIdentifierAsString("PASEE-987654321012")
         .withCertificateLevel("ADVANCED")
         .fetch();
 
@@ -725,7 +732,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getAuthentictionByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
+  public void getAuthenticationByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
@@ -733,8 +740,7 @@ public class SmartIdClientTest {
 
     SmartIdAuthenticationResponse authResponse = client
         .createAuthentication()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+        .withSemanticsIdentifierAsString("PASEE-987654321012")
         .withCertificateLevel("ADVANCED")
         .withAuthenticationHash(authenticationHash)
         .authenticate();
@@ -743,7 +749,7 @@ public class SmartIdClientTest {
   }
 
   @Test
-  public void getAuthentictionByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
+  public void getAuthenticationByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
