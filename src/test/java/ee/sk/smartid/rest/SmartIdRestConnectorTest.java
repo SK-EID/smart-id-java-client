@@ -36,6 +36,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,8 +105,38 @@ public class SmartIdRestConnectorTest {
 
   @Test
   public void getSessionStatus_userHasRefused() {
-    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasRefused.json");
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedConfirmationMessage() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessage.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedRefusedConfirmationMessageWithVerificationCodeChoice() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessageWithVerificationCodeChoice.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedWhenUserRefusedDisplayTextAndPin() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedDisplayTextAndPin.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_DISPLAYTEXTANDPIN");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedWhenUserRefusedGeneral() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedWhenUserRefusedVerificationCodeChoice() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedVerificationCodeChoice.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_VC_CHOICE");
   }
 
   @Test
@@ -135,16 +167,6 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getCertificate_usingNationalIdentityNumber() {
-    stubRequestWithResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    CertificateRequest request = createDummyCertificateRequest();
-    CertificateChoiceResponse response = connector.getCertificate(identity, request);
-    assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
-  }
-
-  @Test
   public void getCertificate_usingDocumentNumber() {
     stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     CertificateRequest request = createDummyCertificateRequest();
@@ -154,12 +176,25 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getCertificate_withNonce_usingNationalIdentityNumber() {
-    stubRequestWithResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+  public void getCertificate_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/certificatechoice/etsi/PASKZ-987654321012", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PASKZ-987654321012");
+
     CertificateRequest request = createDummyCertificateRequest();
-    request.setNonce("zstOt2umlc");
-    CertificateChoiceResponse response = connector.getCertificate(identity, request);
+    CertificateChoiceResponse response = connector.getCertificate(semanticsIdentifier, request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
+  }
+
+  @Test
+  public void getCertificate_usingPrivateDocumentIdentifier() {
+    stubRequestWithResponse("/certificatechoice/private/JIO/JIOIDNR-1234567890123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+
+    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("JIO", "JIOIDNR-1234567890123456");
+
+    CertificateRequest request = createDummyCertificateRequest();
+    CertificateChoiceResponse response = connector.getCertificate(privateCompanyIdentifier, request);
     assertNotNull(response);
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
@@ -174,12 +209,26 @@ public class SmartIdRestConnectorTest {
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
-  @Test(expected = CertificateNotFoundException.class)
-  public void getCertificate_whenNationalIdentityNumberNotFound_shouldThrowException() {
-    stubNotFoundResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequest.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+  @Test
+  public void getCertificate_withNonce_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/certificatechoice/etsi/IDCCZ-1234567890", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, "CZ", "1234567890");
     CertificateRequest request = createDummyCertificateRequest();
-    connector.getCertificate(identity, request);
+    request.setNonce("zstOt2umlc");
+    CertificateChoiceResponse response = connector.getCertificate(semanticsIdentifier, request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
+  }
+
+  @Test
+  public void getCertificate_withNonce_usingPrivateCompanyIdentifier() {
+    stubRequestWithResponse("/certificatechoice/private/ATM/1234567890123456", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("ATM", "1234567890123456");
+    CertificateRequest request = createDummyCertificateRequest();
+    request.setNonce("zstOt2umlc");
+    CertificateChoiceResponse response = connector.getCertificate(privateCompanyIdentifier, request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
   @Test(expected = CertificateNotFoundException.class)
@@ -188,6 +237,27 @@ public class SmartIdRestConnectorTest {
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
   }
+
+  @Test(expected = CertificateNotFoundException.class)
+  public void getCertificate_semanticsIdentifierNotFound_shouldThrowException() {
+    stubNotFoundResponse("/certificatechoice/etsi/IDCCZ-1234567890", "requests/certificateChoiceRequest.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("IDCCZ-1234567890");
+
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate(semanticsIdentifier, request);
+  }
+
+  @Test(expected = CertificateNotFoundException.class)
+  public void getCertificate_privateCompanyIdentifierNotFound_shouldThrowException() {
+    stubNotFoundResponse("/certificatechoice/private/JIO/JIOIDNR-1234567890123456", "requests/certificateChoiceRequest.json");
+
+    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("JIO", "JIOIDNR-1234567890123456");
+
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate(privateCompanyIdentifier, request);
+  }
+
 
   @Test(expected = UnauthorizedException.class)
   public void getCertificate_withWrongAuthenticationParams_shuldThrowException() {
@@ -233,31 +303,13 @@ public class SmartIdRestConnectorTest {
     assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
-  @Test
-  public void sign_withDisplayText_usingDocumentNumber() {
-    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithDisplayText.json", "responses/signatureSessionResponse.json");
-    SignatureSessionRequest request = createDummySignatureSessionRequest();
-    request.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Authorize transfer of €10")));
-    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
-    assertNotNull(response);
-    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
-  }
+
 
   @Test
   public void sign_withNonce_usingDocumentNumber() {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     request.setNonce("zstOt2umlc");
-    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
-    assertNotNull(response);
-    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
-  }
-
-  @Test
-  public void sign_withRequestProperties() {
-    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithRequestProperties.json", "responses/signatureSessionResponse.json");
-    SignatureSessionRequest request = createDummySignatureSessionRequest();
-    request.setRequestProperties(new RequestProperties());
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
     assertNotNull(response);
     assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
@@ -378,16 +430,6 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void authenticate_usingNationalIdentityNumber() {
-    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    AuthenticationSessionResponse response = connector.authenticate(identity, request);
-    assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
-  }
-
-  @Test
   public void authenticate_usingDocumentNumber() {
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
@@ -397,12 +439,25 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void authenticate_withNonce_usingNationalIdentityNumber() {
-    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+  public void authenticate_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/authentication/etsi/PASKZ-987654321012", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, "KZ", "987654321012");
+
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    request.setNonce("g9rp4kjca3");
-    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    AuthenticationSessionResponse response = connector.authenticate(semanticsIdentifier, request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
+  }
+
+  @Test
+  public void authenticate_usingPrivateCompanyIdentifier() {
+    stubRequestWithResponse("/authentication/private/ISSUER_CODE/SERIAL-NUMBER-BB45", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+
+    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("ISSUER_CODE", "SERIAL-NUMBER-BB45");
+
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    AuthenticationSessionResponse response = connector.authenticate(privateCompanyIdentifier, request);
     assertNotNull(response);
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
@@ -418,20 +473,37 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void authenticate_withDisplayText_usingNationalIdentityNumber() {
-    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    request.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log into internet banking system")));
+  public void authenticate_withNonce_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/authentication/etsi/PASEE-48308230504", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
 
-    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, SemanticsIdentifier.CountryCode.EE, "48308230504");
+
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    request.setNonce("g9rp4kjca3");
+    AuthenticationSessionResponse response = connector.authenticate(semanticsIdentifier, request);
     assertNotNull(response);
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
+
   @Test
-  public void authenticate_withDisplayText_usingDocumentNumber() {
-    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
+  public void authenticate_withSingleAllowedInteraction_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/authentication/etsi/PNOLT-48010010101", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOLT-48010010101");
+
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    request.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log into internet banking system")));
+
+    AuthenticationSessionResponse response = connector.authenticate(semanticsIdentifier, request);
+    assertNotNull(response);
+    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
+  }
+
+
+  @Test
+  public void authenticate_withSingleAllowedInteraction_usingDocumentNumber() {
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     request.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log into internet banking system")));
 
@@ -441,18 +513,31 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test(expected = UserAccountNotFoundException.class)
-  public void authenticate_whenNationalIdentityNumberNotFound_shoudThrowException() {
-    stubNotFoundResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequest.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    connector.authenticate(identity, request);
-  }
-
-  @Test(expected = UserAccountNotFoundException.class)
-  public void authenticate_whenDocumentNumberNotFound_shoudThrowException() {
+  public void authenticate_whenDocumentNumberNotFound_shouldThrowException() {
     stubNotFoundResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
+  }
+
+  @Test(expected = UserAccountNotFoundException.class)
+  public void authenticate_whenSemanticsIdentifierNotFound_shouldThrowException() {
+    stubNotFoundResponse("/authentication/etsi/IDCLV-230883-19894", "requests/authenticationSessionRequest.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, SemanticsIdentifier.CountryCode.LV, "230883-19894");
+
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate(semanticsIdentifier, request);
+  }
+
+  @Test(expected = UserAccountNotFoundException.class)
+  public void authenticate_whenPrivateCompanyIdentifierNotFound_shouldThrowException() throws UnsupportedEncodingException {
+    stubNotFoundResponse("/authentication/private/mailCompany/mail%2540example.com", "requests/authenticationSessionRequest.json");
+
+    String urlEncodedId = URLEncoder.encode("mail@example.com", "UTF-8");
+    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("mailCompany", urlEncodedId);
+
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate(privateCompanyIdentifier, request);
   }
 
   @Test(expected = UnauthorizedException.class)
@@ -591,6 +676,10 @@ public class SmartIdRestConnectorTest {
     request.setCertificateLevel("ADVANCED");
     request.setHash("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     request.setHashType("SHA256");
+    request.setAllowedInteractionsOrder(asList(
+            AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+            AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+    );
     return request;
   }
 
@@ -601,6 +690,10 @@ public class SmartIdRestConnectorTest {
     request.setCertificateLevel("ADVANCED");
     request.setHash("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
     request.setHashType("SHA512");
+    request.setAllowedInteractionsOrder(asList(
+            AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+            AllowedInteraction.displayTextAndPIN("Log in?"))
+    );
     return request;
   }
 }

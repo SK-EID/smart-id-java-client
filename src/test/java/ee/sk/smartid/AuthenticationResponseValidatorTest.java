@@ -26,17 +26,23 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.CertificateLevelMismatchException;
+import ee.sk.smartid.exception.SmartIdResponseValidationException;
 import ee.sk.smartid.exception.TechnicalErrorException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.time.DateUtils;
+import org.hamcrest.core.StringContains;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -44,7 +50,8 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -62,112 +69,103 @@ public class AuthenticationResponseValidatorTest {
 
   private AuthenticationResponseValidator validator;
 
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
+
   @Before
   public void setUp() {
     validator = new AuthenticationResponseValidator();
   }
 
   @Test
-  public void validate() throws Exception {
-    SmartIdAuthenticationResponse response = createValidationResponseWithInvalidSignature();
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
-
-    assertThat(authenticationResult.isValid(), is(false));
-    assertThat(authenticationResult.getErrors().size(), is(1));
-    assertThat(authenticationResult.getErrors().get(0), is("Signature verification failed."));
-
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+  public void validate() {
+    SmartIdAuthenticationResponse response = createValidValidationResponse();
+    AuthenticationIdentity authenticationIdentity = validator.validate(response);
+    
+    assertAuthenticationIdentityValid(authenticationIdentity, response.getCertificate());
   }
 
-  // TODO replace certificate
   @Test
   public void validate_invalidSignatureValue() {
+    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expectMessage(StringContains.containsString("Failed to verify validity of signature returned by Smart-ID"));
+
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setSignatureValueInBase64("invalid");
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
-
-    assertFalse(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().contains("Signature verification failed."));
+    
+    validator.validate(response);
   }
 
   @Test
-  public void validationReturnsValidAuthenticationResult_whenEndResultLowerCase() throws Exception {
+  public void validationReturnsValidAuthenticationResult_whenEndResultLowerCase_shouldPass() {
+
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setEndResult("ok");
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+    AuthenticationIdentity authenticationIdentity = validator.validate(response);
 
-    assertTrue(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().isEmpty());
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationIdentity, response.getCertificate());
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenEndResultNotOk() throws Exception {
+  public void validationReturnsInvalidAuthenticationResult_whenEndResultNotOk() {
+    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expectMessage(StringContains.containsString("Smart-ID API returned end result code 'NOT OK'"));
+
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidEndResult();
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
-
-    assertFalse(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.INVALID_END_RESULT.getMessage()));
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    validator.validate(response);
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenSignatureVerificationFails() throws Exception {
+  public void validationReturnsInvalidAuthenticationResult_whenSignatureVerificationFails() {
+    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expectMessage(StringContains.containsString("Failed to verify validity of signature returned by Smart-ID"));
+
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidSignature();
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
-
-    assertFalse(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE.getMessage()));
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    validator.validate(response);
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenSignersCertExpired() throws Exception {
+  public void validationReturnsInvalidAuthenticationResult_whenSignersCertExpired() {
+    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expectMessage(StringContains.containsString("Signer's certificate has expired"));
+
     SmartIdAuthenticationResponse response = createValidationResponseWithExpiredCertificate();
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
-
-    assertFalse(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_EXPIRED.getMessage()));
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    validator.validate(response);
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenSignersCertNotTrusted() throws Exception {
+  public void validationReturnsInvalidAuthenticationResult_whenSignersCertNotTrusted() throws CertificateException {
+    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expectMessage(StringContains.containsString("Signer's certificate is not trusted"));
+
     SmartIdAuthenticationResponse response = createValidValidationResponse();
 
     AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
     validator.clearTrustedCACertificates();
     validator.addTrustedCACertificate(Base64.decodeBase64(AUTH_CERTIFICATE_EE));
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
 
-    assertFalse(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_NOT_TRUSTED.getMessage()));
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
-  }
-
-  // TODO replace certificate
-  @Test
-  public void validationReturnsValidAuthenticationResult_whenCertificateLevelHigherThanRequested() throws Exception {
-    SmartIdAuthenticationResponse response = createValidationResponseWithHigherCertificateLevelThanRequested();
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
-
-    assertTrue(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().isEmpty());
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    validator.validate(response);
   }
 
   @Test
-  public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelLowerThanRequested() throws Exception {
+  public void validationReturnsValidAuthenticationResult_whenCertificateLevelHigherThanRequested_shouldPass() {
+       SmartIdAuthenticationResponse response = createValidationResponseWithHigherCertificateLevelThanRequested();
+    AuthenticationIdentity authenticationIdentity = validator.validate(response);
+
+    assertAuthenticationIdentityValid(authenticationIdentity, response.getCertificate());
+  }
+
+  @Test
+  public void validationReturnsInvalidAuthenticationResult_whenCertificateLevelLowerThanRequested() {
+    expectedException.expect(CertificateLevelMismatchException.class);
+    expectedException.expectMessage(StringContains.containsString("Signer's certificate is below requested certificate level"));
+
     SmartIdAuthenticationResponse response = createValidationResponseWithLowerCertificateLevelThanRequested();
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
-
-    assertFalse(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().contains(SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH.getMessage()));
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    validator.validate(response);
   }
 
   @Test
-  public void testTrustedCACertificateLoadingInPEMFormat() throws Exception {
+  public void testTrustedCACertificateLoadingInPEMFormat() throws CertificateException {
     byte[] caCertificateInPem = getX509CertificateBytes(AUTH_CERTIFICATE_EE);
 
     AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
@@ -178,7 +176,7 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
-  public void testTrustedCACertificateLoadingInDERFormat() throws Exception {
+  public void testTrustedCACertificateLoadingInDERFormat() throws CertificateException {
     byte[] caCertificateInDER = Base64.decodeBase64(AUTH_CERTIFICATE_EE);
 
     AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
@@ -189,7 +187,7 @@ public class AuthenticationResponseValidatorTest {
   }
 
   @Test
-  public void testTrustedCACertificateLoadingFromFile() throws Exception {
+  public void testTrustedCACertificateLoadingFromFile() throws IOException, CertificateException {
     File caCertificateFile = new File(AuthenticationResponseValidatorTest.class.getResource("/trusted_certificates/TEST_of_EID-SK_2016.pem.crt").getFile());
 
     AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
@@ -199,28 +197,22 @@ public class AuthenticationResponseValidatorTest {
     assertEquals(getX509Certificate(Files.readAllBytes(caCertificateFile.toPath())).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
   }
 
-  // TODO replace cert
   @Test
-  public void withEmptyRequestedCertificateLevel_shouldPass() throws Exception {
+  public void withEmptyRequestedCertificateLevel_shouldPass() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setRequestedCertificateLevel("");
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+    AuthenticationIdentity authenticationIdentity = validator.validate(response);
 
-    assertTrue(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().isEmpty());
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationIdentity, response.getCertificate());
   }
 
-  // TODO replace certificate
   @Test
-  public void withNullRequestedCertificateLevel_shouldPass() throws Exception {
+  public void withNullRequestedCertificateLevel_shouldPass() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setRequestedCertificateLevel(null);
-    SmartIdAuthenticationResult authenticationResult = validator.validate(response);
+    AuthenticationIdentity authenticationIdentity = validator.validate(response);
 
-    assertTrue(authenticationResult.isValid());
-    assertTrue(authenticationResult.getErrors().isEmpty());
-    assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity(), response.getCertificate());
+    assertAuthenticationIdentityValid(authenticationIdentity, response.getCertificate());
   }
 
   @Test(expected = TechnicalErrorException.class)
@@ -330,8 +322,13 @@ public class AuthenticationResponseValidatorTest {
     return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
   }
 
-  private void assertAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity, X509Certificate certificate) throws InvalidNameException {
-    LdapName ln = new LdapName(certificate.getSubjectDN().getName());
+  private void assertAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity, X509Certificate certificate) {
+    LdapName ln;
+    try {
+      ln = new LdapName(certificate.getSubjectDN().getName());
+    } catch (InvalidNameException e) {
+      throw new RuntimeException(e);
+    }
     for(Rdn rdn : ln.getRdns()) {
       if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {
         assertEquals(rdn.getValue().toString(), authenticationIdentity.getGivenName());

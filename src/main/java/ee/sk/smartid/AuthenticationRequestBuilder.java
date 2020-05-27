@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
@@ -46,7 +45,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
  * <li><b>Host url</b> - can be set on the {@link ee.sk.smartid.SmartIdClient} level</li>
  * <li><b>Relying party uuid</b> - can either be set on the client or builder level</li>
  * <li><b>Relying party name</b> - can either be set on the client or builder level</li>
- * <li>Either <b>Document number</b> or <b>National identity</b></li>
+ * <li>Either <b>Document number</b> or <b>semantics identifier</b> or <b>private company identifier</b></li>
  * <li><b>Authentication hash</b></li>
  * </ul>
  * Optional request parameters:
@@ -110,8 +109,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * <p>
    * Document number is unique for the user's certificate/device
    * that is used for the authentication.
-   * To authenticate with person's national identity use:
-   * {@link #withNationalIdentity(NationalIdentity)}
    *
    * @param documentNumber document number of the certificate/device to be authenticated
    * @return this builder
@@ -122,45 +119,9 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Sets the request's national identity
-   * <p>
-   * The national identity of the person to be authenticated
-   * consists of country code and national identity number.
-   * To authenticate with document number use:
-   * {@link #withDocumentNumber(String)}}
-   *
-   * @param nationalIdentity national identity of the person to be authenticated
-   * @return this builder
-   */
-  public AuthenticationRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
-    super.withNationalIdentity(nationalIdentity);
-    return this;
-  }
-
-  /**
-   * Sets the request's national identity number
-   * <p>
-   * National identity consists of country code and national
-   * identity number. Either use
-   * {@link #withNationalIdentity(NationalIdentity)}
-   * or use {@link #withNationalIdentityNumber(String)}
-   * and {@link #withCountryCode(String)} separately.
-   *
-   * @param nationalIdentityNumber national identity number of the national identity
-   * @return this builder
-   */
-  public AuthenticationRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
-    super.withNationalIdentityNumber(nationalIdentityNumber);
-    return this;
-  }
-
-  /**
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
-   * Either use
-   * {@link #withSemanticsIdentifierAsString(String)}
-   * or use {@link #withSemanticsIdentifier(SemanticsIdentifier)}
    *
    * @param semanticsIdentifier semantics identifier for a person
    * @return this builder
@@ -174,9 +135,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, and the identifier.
-   * Either use
-   * {@link #withSemanticsIdentifier(SemanticsIdentifier)}
-   * or use {@link #withSemanticsIdentifierAsString(String)}}
    *
    * @param semanticsIdentifier semantics identifier for a person
    * @return this builder
@@ -187,19 +145,14 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Sets the request's country code
+   * Set person identifier, that has been issued by a private company
    * <p>
-   * National identity consists of country code and national
-   * identity number. Either use
-   * {@link #withNationalIdentity(NationalIdentity)}
-   * or use {@link #withNationalIdentityNumber(String)}
-   * and {@link #withCountryCode(String)} separately.
    *
-   * @param countryCode country code of the national identity
+   * @param privateCompanyIdentifier identifier issued by private company
    * @return this builder
    */
-  public AuthenticationRequestBuilder withCountryCode(String countryCode) {
-    super.withCountryCode(countryCode);
+  public AuthenticationRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
+    super.withPrivateCompanyIdentifier(privateCompanyIdentifier);
     return this;
   }
 
@@ -329,7 +282,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @throws UserAccountNotFoundException when the user account was not found
    * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
    *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws UserRefusedException when the user has refused the session
+   * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
@@ -344,8 +297,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
       UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
     String sessionId = initiateAuthentication();
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
-    SmartIdAuthenticationResponse authenticationResponse = createSmartIdAuthenticationResponse(sessionStatus);
-    return authenticationResponse;
+    return createSmartIdAuthenticationResponse(sessionStatus);
   }
 
   /**
@@ -371,7 +323,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Create {@link SmartIdAuthenticationResponse} from {@link SessionStatus}
    *
-   * @throws UserRefusedException when the user has refused the session
+   * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given time frame
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
@@ -398,19 +350,14 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     authenticationResponse.setRequestedCertificateLevel(getCertificateLevel());
     authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
     authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
+    authenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+
     return authenticationResponse;
   }
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasNationalIdentity() && !hasSemanticsIdentifier()) {
-      logger.error("Either document number, national identity or semantics identifier must be set");
-      throw new InvalidParametersException("Either document number, national identity or semantics identifier must be set");
-    }
-    if (!isHashSet() && !isSignableDataSet()) {
-      logger.error("Signable data or hash with hash type must be set");
-      throw new InvalidParametersException("Signable data or hash with hash type must be set");
-    }
+    super.validateAuthSignParameters();
   }
 
   private void validateAuthenticationResponse(SessionStatus sessionStatus) {
@@ -426,13 +373,14 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   private AuthenticationSessionResponse getAuthenticationResponse(AuthenticationSessionRequest request) {
-    NationalIdentity identity = getNationalIdentity();
     SemanticsIdentifier semanticsIdentifier = getSemanticsIdentifier();
     if (isNotEmpty(getDocumentNumber())) {
       return getConnector().authenticate(getDocumentNumber(), request);
-    } else if (identity != null) {
-      return getConnector().authenticate(identity, request);
-    } else {
+    }
+    else if (getPrivateCompanyIdentifier() != null) {
+      return getConnector().authenticate(getPrivateCompanyIdentifier(), request);
+    }
+    else {
       return getConnector().authenticate(semanticsIdentifier, request);
     }
   }

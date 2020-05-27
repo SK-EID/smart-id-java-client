@@ -49,14 +49,19 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
   private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
   private static final String SESSION_STATUS_URI = "/session/{sessionId}";
-  private static final String CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH = "/certificatechoice/pno/{country}/{nationalIdentityNumber}";
+
   private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
   private static final String CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/certificatechoice/etsi/{semanticsIdentifier}";
+  private static final String CERTIFICATE_CHOICE_BY_PRIVATE_COMPANY_IDENTIFIER = "/certificatechoice/private/{issuer}/{encodedIdentifier}";
+
   private static final String SIGNATURE_BY_DOCUMENT_NUMBER_PATH = "/signature/document/{documentNumber}";
   private static final String SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/signature/etsi/{semanticsIdentifier}";
+  private static final String SIGNATURE_BY_PRIVATE_COMPANY_IDENTIFIER = "/signature/private/{issuer}/{encodedIdentifier}";
+
   private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
-  private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
   private static final String AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/authentication/etsi/{semanticsIdentifier}";
+  private static final String AUTHENTICATE_BY_PRIVATE_COMPANY_IDENTIFIER = "/authentication/private/{issuer}/{encodedIdentifier}";
+
   private String endpointUrl;
   private transient Configuration clientConfig;
   private transient Client configuredClient;
@@ -98,16 +103,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   @Override
-  public CertificateChoiceResponse getCertificate(NationalIdentity identity, CertificateRequest request) {
-    logger.debug("Getting certificate for " + identity);
-    URI uri = UriBuilder
-        .fromUri(endpointUrl)
-        .path(CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH)
-        .build(identity.getCountryCode(), identity.getNationalIdentityNumber());
-    return postCertificateRequest(uri, request);
-  }
-
-  @Override
   public CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request) {
     logger.debug("Getting certificate for document " + documentNumber);
     URI uri = UriBuilder
@@ -128,6 +123,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
     return postCertificateRequest(uri, request);
   }
 
+
+  @Override
+  public CertificateChoiceResponse getCertificate(PrivateCompanyIdentifier privateCompanyIdentifier, CertificateRequest request) {
+    logger.debug("Getting certificate for " + privateCompanyIdentifier);
+    URI uri = UriBuilder
+            .fromUri(endpointUrl)
+            .path(CERTIFICATE_CHOICE_BY_PRIVATE_COMPANY_IDENTIFIER)
+            .build(privateCompanyIdentifier.getIssuer(), privateCompanyIdentifier.getEncodedIdentifier());
+    return postCertificateRequest(uri, request);
+  }
+
+
   @Override
   public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
     logger.debug("Signing for document " + documentNumber);
@@ -135,34 +142,30 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .fromUri(endpointUrl)
         .path(SIGNATURE_BY_DOCUMENT_NUMBER_PATH)
         .build(documentNumber);
-    try {
-      return postRequest(uri, request, SignatureSessionResponse.class);
-    } catch (NotFoundException e) {
-      logger.warn("User account not found for signing with document " + documentNumber);
-      throw new UserAccountNotFoundException();
-    } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
-      throw new RequestForbiddenException();
-    }
+
+    return postSigningRequest(uri, request);
   }
 
   @Override
-  public SignatureSessionResponse sign(SemanticsIdentifier semanticsIdentifier,
-      SignatureSessionRequest request) {
-    logger.debug("Signing for semantics identifier " + semanticsIdentifier);
+  public SignatureSessionResponse sign(SemanticsIdentifier semanticsIdentifier, SignatureSessionRequest request) {
+    logger.debug("Signing for " + semanticsIdentifier);
     URI uri = UriBuilder
         .fromUri(endpointUrl)
         .path(SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
         .build(semanticsIdentifier.getIdentifier());
-    try {
-      return postRequest(uri, request, SignatureSessionResponse.class);
-    } catch (NotFoundException e) {
-      logger.warn("User account not found for semantics identifier " + semanticsIdentifier.getIdentifier());
-      throw new UserAccountNotFoundException();
-    } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
-      throw new RequestForbiddenException();
-    }
+
+    return postSigningRequest(uri, request);
+  }
+
+  @Override
+  public SignatureSessionResponse sign(PrivateCompanyIdentifier privateCompanyIdentifier, SignatureSessionRequest request) {
+    logger.debug("Signing for " + privateCompanyIdentifier);
+    URI uri = UriBuilder
+        .fromUri(endpointUrl)
+        .path(SIGNATURE_BY_PRIVATE_COMPANY_IDENTIFIER)
+        .build(privateCompanyIdentifier.getIssuer(), privateCompanyIdentifier.getEncodedIdentifier());
+
+    return postSigningRequest(uri, request);
   }
 
   @Override
@@ -176,22 +179,22 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   @Override
-  public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
-    logger.debug("Authenticating for " + identity);
-    URI uri = UriBuilder
-        .fromUri(endpointUrl)
-        .path(AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH)
-        .build(identity.getCountryCode(), identity.getNationalIdentityNumber());
-    return postAuthenticationRequest(uri, request);
-  }
-
-  @Override
   public AuthenticationSessionResponse authenticate(SemanticsIdentifier semanticsIdentifier, AuthenticationSessionRequest request) {
     logger.debug("Authenticating for " + semanticsIdentifier);
     URI uri = UriBuilder
         .fromUri(endpointUrl)
         .path(AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
         .build(semanticsIdentifier.getIdentifier());
+    return postAuthenticationRequest(uri, request);
+  }
+
+  @Override
+  public AuthenticationSessionResponse authenticate(PrivateCompanyIdentifier privateCompanyIdentifier, AuthenticationSessionRequest request) {
+    logger.debug("Authenticating for " + privateCompanyIdentifier);
+    URI uri = UriBuilder
+            .fromUri(endpointUrl)
+            .path(AUTHENTICATE_BY_PRIVATE_COMPANY_IDENTIFIER)
+            .build(privateCompanyIdentifier.getIssuer(), privateCompanyIdentifier.getEncodedIdentifier());
     return postAuthenticationRequest(uri, request);
   }
 
@@ -239,6 +242,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private AuthenticationSessionResponse postAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
     try {
       return postRequest(uri, request, AuthenticationSessionResponse.class);
+    } catch (NotFoundException e) {
+      logger.warn("User account not found for URI " + uri, e);
+      throw new UserAccountNotFoundException();
+    } catch (ForbiddenException e) {
+      logger.warn("No permission to issue the request", e);
+      throw new RequestForbiddenException();
+    }
+  }
+
+  private SignatureSessionResponse postSigningRequest(URI uri, SignatureSessionRequest request) {
+    try {
+      return postRequest(uri, request, SignatureSessionResponse.class);
     } catch (NotFoundException e) {
       logger.warn("User account not found for URI " + uri, e);
       throw new UserAccountNotFoundException();

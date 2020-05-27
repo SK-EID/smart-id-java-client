@@ -26,36 +26,39 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.exception.UserRefusedException;
-import ee.sk.smartid.exception.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.security.cert.CertificateEncodingException;
+import java.util.Collections;
 
 import static ee.sk.smartid.DummyData.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class AuthenticationRequestBuilderTest {
 
   private SmartIdConnectorSpy connector;
-  private SessionStatusPoller sessionStatusPoller;
   private AuthenticationRequestBuilder builder;
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
     connector = new SmartIdConnectorSpy();
-    sessionStatusPoller = new SessionStatusPoller(connector);
     connector.authenticationSessionResponseToRespond = createDummyAuthenticationSessionResponse();
     connector.sessionStatusToRespond = createDummySessionStatusResponse();
-    builder = new AuthenticationRequestBuilder(connector, sessionStatusPoller);
+    builder = new AuthenticationRequestBuilder(connector, new SessionStatusPoller(connector));
   }
 
   @Test
@@ -68,6 +71,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), "QUALIFIED");
@@ -88,6 +92,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .withCapabilities("ADVANCED")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==", "QUALIFIED");
@@ -96,7 +101,7 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test
-  public void authenticateUsingNationalIdentityNumberAndCountryCode() throws Exception {
+  public void authenticate_usingSemanticsIdentifier() throws Exception {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
@@ -106,33 +111,55 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
-        .withNationalIdentityNumber("31111111111")
-        .withCountryCode("EE")
+        .withSemanticsIdentifier(new SemanticsIdentifier("IDCCZ-1234567890"))
         .withCapabilities(Capability.ADVANCED)
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
-    assertCorrectAuthenticationRequestMadeWithNationalIdentity(authenticationHash.getHashInBase64(), "QUALIFIED");
+    assertCorrectAuthenticationRequestMadeWithSemanticsIdentifier(authenticationHash.getHashInBase64(), "QUALIFIED");
     assertCorrectSessionRequestMade();
     assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
   }
 
   @Test
-  public void authenticateUsingNationalIdentity() throws Exception {
+  public void authenticate_usingSemanticsIdentifierAsString() throws Exception {
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
 
-    NationalIdentity identity = new NationalIdentity("EE", "31111111111");
+    SmartIdAuthenticationResponse authenticationResponse = builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withCertificateLevel("QUALIFIED")
+            .withAuthenticationHash(authenticationHash)
+            .withSemanticsIdentifierAsString("IDCCZ-1234567890")
+            .withCapabilities(Capability.ADVANCED)
+            .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+            .authenticate();
+
+    assertCorrectAuthenticationRequestMadeWithSemanticsIdentifier(authenticationHash.getHashInBase64(), "QUALIFIED");
+    assertCorrectSessionRequestMade();
+    assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+  }
+
+  @Test
+  public void authenticate_usingPrivateCompanyIdentifier() throws Exception {
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("JIO", "JIOIDNR-1234567890123456");
 
     SmartIdAuthenticationResponse authenticationResponse = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
-        .withNationalIdentity(identity)
+        .withPrivateCompanyIdentifier(privateCompanyIdentifier)
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
-    assertCorrectAuthenticationRequestMadeWithNationalIdentity(authenticationHash.getHashInBase64(), "QUALIFIED");
+    assertCorrectAuthenticationRequestMadeWithPrivateCompanyIdentifier(authenticationHash.getHashInBase64(), "QUALIFIED");
     assertCorrectSessionRequestMade();
     assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
   }
@@ -146,6 +173,7 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), null);
@@ -153,8 +181,11 @@ public class AuthenticationRequestBuilderTest {
     assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutDocumentNumberNorNationalIdentity_shouldThrowException() {
+  @Test
+  public void authenticate_withoutDocumentNumber_withoutSemanticsIdentifier_withoutPrivateCompanyIdentifier_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
@@ -164,21 +195,49 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void authenticateWithoutHash_andWithoutSignableData_shouldThrowException() {
+  @Test
+  public void authenticate_withDocumentNumberAndWithSemanticsIdentifier_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withDocumentNumber("PNOEE-31111111111")
+        .withSemanticsIdentifierAsString("IDCCZ-1234567890")
+        .withCertificateLevel("QUALIFIED")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .authenticate();
+  }
+
+  @Test
+  public void authenticate_withoutHashAndWithoutDataToSign_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
+
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test
   public void authenticateWithHash_withoutHashType_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
+
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
 
@@ -188,11 +247,15 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test
   public void authenticateWithHash_withoutHash_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
+
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashType(HashType.SHA512);
 
@@ -202,11 +265,15 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test
   public void authenticateWithoutRelyingPartyUuid_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Parameter relyingPartyUUID must be set");
+
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
@@ -216,11 +283,15 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test
   public void authenticateWithoutRelyingPartyName_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Parameter relyingPartyName must be set");
+
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
     authenticationHash.setHashType(HashType.SHA512);
@@ -230,35 +301,216 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
-  @Test(expected = UserRefusedException.class)
+  @Test
+  public void authenticate_withTooLongNonce_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Nonce cannot be longer that 30 chars. You supplied: 'THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890'");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("QUALIFIED")
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withNonce("THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890")
+        .authenticate();
+  }
+
+  @Test
+  public void authenticate_missingAllowedInteractionOrder_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Missing or empty mandatory parameter allowedInteractionsOrder");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("QUALIFIED")
+        .withDocumentNumber("PNOEE-31111111111")
+        .authenticate();
+  }
+
+  @Test
+  public void authenticate_displayTextAndPinTextTooLong_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("displayText60 must not be longer than 60 characters");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("QUALIFIED")
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                AllowedInteraction.displayTextAndPIN("This text here is longer than 60 characters allowed for displayTextAndPIN"))
+        )
+        .authenticate();
+  }
+
+  @Test
+  public void authenticate_verificationCodeChoiceTextTooLong_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("displayText60 must not be longer than 60 characters");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("QUALIFIED")
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                AllowedInteraction.verificationCodeChoice("This text here is longer than 60 characters allowed for verificationCodeChoice"))
+        )
+        .authenticate();
+  }
+
+  @Test
+  public void authenticate_confirmationMessageTextTooLong_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("displayText200 must not be longer than 200 characters");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("QUALIFIED")
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                AllowedInteraction.confirmationMessage("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                        "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
+                        "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
+                        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
+                        "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."))
+        )
+        .authenticate();
+  }
+
+  @Test
+  public void authenticate_confirmationMessageAndVerificationCodeChoiceTextTooLong_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("displayText200 must not be longer than 200 characters");
+
+    AuthenticationHash authenticationHash = new AuthenticationHash();
+    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    authenticationHash.setHashType(HashType.SHA512);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withAuthenticationHash(authenticationHash)
+        .withCertificateLevel("QUALIFIED")
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                        "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
+                        "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
+                        "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
+                        "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."))
+        )
+        .authenticate();
+  }
+
+  @Test
   public void authenticate_userRefused_shouldThrowException() {
-    connector.sessionStatusToRespond = createUserRefusedSessionStatus();
+    expectedException.expect(UserRefusedException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED");
     makeAuthenticationRequest();
   }
 
-  @Test(expected = UserSelectedWrongVerificationCodeException.class)
+  @Test
+  public void authenticate_userRefusedCertChoice_shouldThrowException() {
+    expectedException.expect(UserRefusedCertChoiceException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_CERT_CHOICE");
+    makeAuthenticationRequest();
+  }
+
+  @Test
+  public void authenticate_userRefusedDisplayTextAndPin_shouldThrowException() {
+    expectedException.expect(UserRefusedDisplayTextAndPinException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_DISPLAYTEXTANDPIN");
+    makeAuthenticationRequest();
+  }
+
+  @Test
+  public void authenticate_userRefusedVerificationChoice_shouldThrowException() {
+    expectedException.expect(UserRefusedVerificationChoiceException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_VC_CHOICE");
+    makeAuthenticationRequest();
+  }
+
+  @Test
+  public void authenticate_userRefusedConfirmationMessage_shouldThrowException() {
+    expectedException.expect(UserRefusedConfirmationMessageException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_CONFIRMATIONMESSAGE");
+    makeAuthenticationRequest();
+  }
+
+  @Test
+  public void authenticate_userRefusedConfirmationMessageWithVerificationChoice_shouldThrowException() {
+    expectedException.expect(UserRefusedConfirmationMessageWithVerificationChoiceException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
+    makeAuthenticationRequest();
+  }
+
+  @Test
   public void authenticate_userSelectedWrongVerificationCode_shouldThrowException() {
+    expectedException.expect(UserSelectedWrongVerificationCodeException.class);
+
     connector.sessionStatusToRespond = createUserSelectedWrongVerificationCode();
     makeAuthenticationRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test
   public void authenticate_resultMissingInResponse_shouldThrowException() {
+    expectedException.expect(TechnicalErrorException.class);
+
     connector.sessionStatusToRespond.setResult(null);
     makeAuthenticationRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test
   public void authenticate_signatureMissingInResponse_shouldThrowException() {
+    expectedException.expect(TechnicalErrorException.class);
+
     connector.sessionStatusToRespond.setSignature(null);
     makeAuthenticationRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test
   public void authenticate_certificateMissingInResponse_shouldThrowException() {
+    expectedException.expect(TechnicalErrorException.class);
+
     connector.sessionStatusToRespond.setCert(null);
     makeAuthenticationRequest();
   }
@@ -272,9 +524,18 @@ public class AuthenticationRequestBuilderTest {
     assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
   }
 
-  private void assertCorrectAuthenticationRequestMadeWithNationalIdentity(String expectedHashToSignInBase64, String expectedCertificateLevel) {
-    assertEquals("31111111111", connector.identityUsed.getNationalIdentityNumber());
-    assertEquals("EE", connector.identityUsed.getCountryCode());
+  private void assertCorrectAuthenticationRequestMadeWithSemanticsIdentifier(String expectedHashToSignInBase64, String expectedCertificateLevel) {
+    assertEquals("IDCCZ-1234567890", connector.semanticsIdentifierUsed.getIdentifier());
+    assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
+    assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
+    assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
+    assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
+    assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
+  }
+
+  private void assertCorrectAuthenticationRequestMadeWithPrivateCompanyIdentifier(String expectedHashToSignInBase64, String expectedCertificateLevel) {
+    assertEquals("JIO", connector.privateCompanyIdentifierUsed.getIssuer());
+    assertEquals("JIOIDNR-1234567890123456", connector.privateCompanyIdentifierUsed.getEncodedIdentifier());
     assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
     assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
@@ -294,6 +555,8 @@ public class AuthenticationRequestBuilderTest {
     assertEquals("sha512WithRSAEncryption", authenticationResponse.getAlgorithmName());
     assertEquals(DummyData.CERTIFICATE, Base64.encodeBase64String(authenticationResponse.getCertificate().getEncoded()));
     assertEquals("QUALIFIED", authenticationResponse.getCertificateLevel());
+
+    assertThat(authenticationResponse.getInteractionFlowUsed(), is("displayTextAndPIN"));
   }
 
   private AuthenticationSessionResponse createDummyAuthenticationSessionResponse() {
@@ -316,6 +579,7 @@ public class AuthenticationRequestBuilderTest {
     status.setResult(createSessionEndResult());
     status.setSignature(signature);
     status.setCert(certificate);
+    status.setInteractionFlowUsed("displayTextAndPIN");
     return status;
   }
 
@@ -330,6 +594,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to self-service?")))
         .authenticate();
   }
 

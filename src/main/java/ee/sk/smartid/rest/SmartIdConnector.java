@@ -26,41 +26,34 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import java.io.Serializable;
-import java.util.concurrent.TimeUnit;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.rest.dao.*;
 
 import javax.net.ssl.SSLContext;
-
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import java.io.Serializable;
+import java.util.concurrent.TimeUnit;
 
 public interface SmartIdConnector extends Serializable {
 
   SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException;
 
-  CertificateChoiceResponse getCertificate(NationalIdentity identity, CertificateRequest request);
-
   CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request);
 
   CertificateChoiceResponse getCertificate(SemanticsIdentifier identifier, CertificateRequest request);
+
+  CertificateChoiceResponse getCertificate(PrivateCompanyIdentifier identity, CertificateRequest request);
 
   SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request);
 
   SignatureSessionResponse sign(SemanticsIdentifier identifier, SignatureSessionRequest request);
 
+  SignatureSessionResponse sign(PrivateCompanyIdentifier identifier, SignatureSessionRequest request);
+
   AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request);
 
-  AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request);
-
   AuthenticationSessionResponse authenticate(SemanticsIdentifier identity, AuthenticationSessionRequest request);
+
+  AuthenticationSessionResponse authenticate(PrivateCompanyIdentifier identity, AuthenticationSessionRequest request);
 
   void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
 

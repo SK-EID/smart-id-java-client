@@ -26,6 +26,8 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.CertificateLevelMismatchException;
+import ee.sk.smartid.exception.SmartIdResponseValidationException;
 import ee.sk.smartid.exception.TechnicalErrorException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
@@ -50,6 +52,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
+import static java.util.Arrays.asList;
+
 /**
  * Class used to validate the authentication
  */
@@ -58,7 +62,6 @@ public class AuthenticationResponseValidator {
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseValidator.class);
 
   private List<X509Certificate> trustedCACertificates = new ArrayList<>();
-
   /**
    * Constructs a new {@code AuthenticationResponseValidator}.
    * <p>
@@ -72,39 +75,47 @@ public class AuthenticationResponseValidator {
   }
 
   /**
+   * Constructs a new {@code AuthenticationResponseValidator}.
+   * <p>
+   * The constructed instance is initialized passed in certificates
+   *
+   * @throws TechnicalErrorException when there was an error initializing trusted CA certificates
+   */
+  public AuthenticationResponseValidator(X509Certificate[] trustedCertificates) {
+    trustedCACertificates.addAll(asList(trustedCertificates));
+  }
+
+  /**
    * Validates the authentication response and returns the its result
    *
-   * @throws TechnicalErrorException when there was an error validating the response
+   * Performs following validations:
+   * "result.endResult" has the value "OK"
+   * "signature.value" is the valid signature over the same "hash", which was submitted by the RP.
+   * "signature.value" is the valid signature, verifiable with the public key inside the certificate of the user, given in the field "cert.value"
+   * The person's certificate given in the "cert.value" is valid (not expired, signed by trusted CA and with correct (i.e. the same as in response structure, greater than or equal to that in the original request) level).
    *
    * @param authenticationResponse authentication response to be validated
    * @return authentication result
    */
-  public SmartIdAuthenticationResult validate(SmartIdAuthenticationResponse authenticationResponse) {
+  public AuthenticationIdentity validate(SmartIdAuthenticationResponse authenticationResponse) {
     validateAuthenticationResponse(authenticationResponse);
-    SmartIdAuthenticationResult authenticationResult = new SmartIdAuthenticationResult();
     AuthenticationIdentity identity = constructAuthenticationIdentity(authenticationResponse.getCertificate());
-    authenticationResult.setAuthenticationIdentity(identity);
     if (!verifyResponseEndResult(authenticationResponse)) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.INVALID_END_RESULT);
+      throw new SmartIdResponseValidationException("Smart-ID API returned end result code '" + authenticationResponse.getEndResult() + "'");
     }
     if (!verifySignature(authenticationResponse)) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE);
+      throw new SmartIdResponseValidationException("Failed to verify validity of signature returned by Smart-ID");
     }
     if (!verifyCertificateExpiry(authenticationResponse.getCertificate())) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.CERTIFICATE_EXPIRED);
+      throw new SmartIdResponseValidationException("Signer's certificate has expired");
     }
     if (!isCertificateTrusted(authenticationResponse.getCertificate())) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.CERTIFICATE_NOT_TRUSTED);
+      throw new SmartIdResponseValidationException("Signer's certificate is not trusted");
     }
     if (!verifyCertificateLevel(authenticationResponse)) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH);
+      throw new CertificateLevelMismatchException();
     }
-    return authenticationResult;
+    return identity;
   }
 
   /**
@@ -239,11 +250,8 @@ public class AuthenticationResponseValidator {
       try {
         certificate.verify(trustedCACertificate.getPublicKey());
         return true;
-      } catch (SignatureException e) {
-        continue;
       } catch (GeneralSecurityException e) {
         logger.warn("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCACertificate.getSubjectDN(), e);
-        continue;
       }
     }
     return false;

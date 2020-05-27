@@ -36,6 +36,7 @@ public class SmartIdSignature implements Serializable {
   private String valueInBase64;
   private String algorithmName;
   private String documentNumber;
+  private String interactionFlowUsed;
 
   public byte[] getValue() {
     if (!Base64.isBase64(valueInBase64)) {
@@ -67,4 +68,13 @@ public class SmartIdSignature implements Serializable {
   public void setDocumentNumber(String documentNumber) {
     this.documentNumber = documentNumber;
   }
+
+  public String getInteractionFlowUsed() {
+    return interactionFlowUsed;
+  }
+
+  public void setInteractionFlowUsed(String interactionFlowUsed) {
+    this.interactionFlowUsed = interactionFlowUsed;
+  }
+
 }

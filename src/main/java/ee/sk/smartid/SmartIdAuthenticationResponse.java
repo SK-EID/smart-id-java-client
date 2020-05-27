@@ -43,6 +43,7 @@ public class SmartIdAuthenticationResponse implements Serializable {
   private String requestedCertificateLevel;
   private String certificateLevel;
   private String documentNumber;
+  private String interactionFlowUsed;
 
   public byte[] getSignatureValue() {
     if (!Base64.isBase64(signatureValueInBase64)) {
@@ -121,5 +122,13 @@ public class SmartIdAuthenticationResponse implements Serializable {
 
   public void setDocumentNumber(String documentNumber) {
     this.documentNumber = documentNumber;
+  }
+
+  public String getInteractionFlowUsed() {
+    return interactionFlowUsed;
+  }
+
+  public void setInteractionFlowUsed(String interactionFlowUsed) {
+    this.interactionFlowUsed = interactionFlowUsed;
   }
 }

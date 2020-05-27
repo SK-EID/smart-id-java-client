@@ -26,20 +26,11 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import java.util.concurrent.TimeUnit;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.rest.dao.*;
 
 import javax.net.ssl.SSLContext;
-
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import java.util.concurrent.TimeUnit;
 
 public class SmartIdConnectorSpy implements SmartIdConnector {
 
@@ -49,8 +40,8 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   public AuthenticationSessionResponse authenticationSessionResponseToRespond;
 
   public String sessionIdUsed;
-  public NationalIdentity identityUsed;
-  public SemanticsIdentifier identifierUsed;
+  public SemanticsIdentifier semanticsIdentifierUsed;
+  public PrivateCompanyIdentifier privateCompanyIdentifierUsed;
   public String documentNumberUsed;
   public CertificateRequest certificateRequestUsed;
   public SignatureSessionRequest signatureSessionRequestUsed;
@@ -64,13 +55,6 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   }
 
   @Override
-  public CertificateChoiceResponse getCertificate(NationalIdentity identity, CertificateRequest request) {
-    identityUsed = identity;
-    certificateRequestUsed = request;
-    return certificateChoiceToRespond;
-  }
-
-  @Override
   public CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request) {
     documentNumberUsed = documentNumber;
     certificateRequestUsed = request;
@@ -78,8 +62,16 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   }
 
   @Override
-  public CertificateChoiceResponse getCertificate(SemanticsIdentifier identifier,
-      CertificateRequest request) {
+  public CertificateChoiceResponse getCertificate(SemanticsIdentifier identifier, CertificateRequest request) {
+    semanticsIdentifierUsed = identifier;
+    certificateRequestUsed = request;
+    return certificateChoiceToRespond;
+  }
+
+  @Override
+  public CertificateChoiceResponse getCertificate(PrivateCompanyIdentifier identifier, CertificateRequest request) {
+    privateCompanyIdentifierUsed = identifier;
+    certificateRequestUsed = request;
     return certificateChoiceToRespond;
   }
 
@@ -92,7 +84,14 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
 
   @Override
   public SignatureSessionResponse sign(SemanticsIdentifier identifier, SignatureSessionRequest request) {
-    identifierUsed = identifier;
+    semanticsIdentifierUsed = identifier;
+    signatureSessionRequestUsed = request;
+    return signatureSessionResponseToRespond;
+  }
+
+  @Override
+  public SignatureSessionResponse sign(PrivateCompanyIdentifier identifier, SignatureSessionRequest request) {
+    privateCompanyIdentifierUsed = identifier;
     signatureSessionRequestUsed = request;
     return signatureSessionResponseToRespond;
   }
@@ -105,15 +104,15 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   }
 
   @Override
-  public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
-    identityUsed = identity;
+  public AuthenticationSessionResponse authenticate(SemanticsIdentifier identifier, AuthenticationSessionRequest request) {
+    semanticsIdentifierUsed = identifier;
     authenticationSessionRequestUsed = request;
     return authenticationSessionResponseToRespond;
   }
 
   @Override
-  public AuthenticationSessionResponse authenticate(SemanticsIdentifier identifier, AuthenticationSessionRequest request) {
-    identifierUsed = identifier;
+  public AuthenticationSessionResponse authenticate(PrivateCompanyIdentifier identifier, AuthenticationSessionRequest request) {
+    privateCompanyIdentifierUsed = identifier;
     authenticationSessionRequestUsed = request;
     return authenticationSessionResponseToRespond;
   }

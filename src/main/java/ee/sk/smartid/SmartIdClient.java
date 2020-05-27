@@ -47,76 +47,9 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Class that can be used to configure and get different types of request builders
- * <p>
- * Basic example of authentication:
- * <pre class="code"><code class="java">
- *   // Client setup. Note that these values are demo environment specific.
- *   SmartIdClient client = new SmartIdClient();
- *   client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
- *   client.setRelyingPartyName("DEMO");
- *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
- *
- *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
- *
- *   // For security reasons a new hash value must be created for each new authentication request
- *   AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
- *
- *   // verification code should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify
- *   // if the verification code displayed on the phone matches with the one shown on the web page.
- *   String verificationCode = authenticationHash.calculateVerificationCode());
- *
- *   SmartIdAuthenticationResponse authenticationResponse = client
- *       .createAuthentication()
- *       .withNationalIdentity(identity)
- *       .withAuthenticationHash(authenticationHash)
- *       .authenticate();
- *
- * // The authenticationResponse should also be validated with
- * // AuthenticationResponseValidator's validate(SmartIdAuthenticationResponse) method afterwards.
- * </code></pre>
- * <p>
- * Basic example of choosing a (device) certificate and then creating signature with it:
- * <pre class="code"><code class="java">
- *   // Client setup. Note that these values are demo environment specific.
- *   SmartIdClient client = new SmartIdClient();
- *   client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
- *   client.setRelyingPartyName("DEMO");
- *   client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
- *
- *   NationalIdentity identity = new NationalIdentity("EE", "31111111111");
- *
- *   SmartIdCertificate certificateResponse = client
- *       .getCert()
- *       .withNationalIdentity(identity)
- *       .fetch();
- *
- *   // get the document number for creating signature
- *   String documentNumber = certificateResponse.getDocumentNumber();
- *
- *   SignableHash hashToSign = new SignableHash();
- *   hashToSign.setHashType(HashType.SHA256);
- *   hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");;
- *
- *   // to display the verificationCode on the web page
- *   String verificationCode = dataToSign.calculateVerificationCode();
- *   SmartIdSignature signature = client
- *   .createSignature()
- *   .withDocumentNumber(documentNumber)
- *   .withSignableHash(hashToSign)
- *   .withCertificateLevel("QUALIFIED")
- *   .sign();
- *   byte[] signature = signature.getValue();
- * </code></pre>
- * @see <a href="https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it">https://github.com/SK-EID/smart-id-java-client/wiki/Examples-of-using-it</a>
- */
 public class SmartIdClient {
 
   private String relyingPartyUUID;
@@ -336,15 +269,22 @@ public class SmartIdClient {
       this.sslCertificates.addAll(Arrays.asList(sslCertificates));
   }
 
+  /**
+   * Only trust SSL certificate of SK Demo environment
+   */
   public void useDemoEnvSSLCertificates() {
       this.sslCertificates.clear();
-      this.sslCertificates.addAll(Arrays.asList(DEMO_HOST_SSL_CERTIFICATE_VALID_FROM_2017_08_01_TO_2020_10_02));
+      this.sslCertificates.addAll(Collections.singletonList(DEMO_HOST_SSL_CERTIFICATE_VALID_FROM_2017_08_01_TO_2020_10_02));
   }
 
-    public void useLiveEnvSSLCertificates() {
-        this.sslCertificates.clear();
-        this.sslCertificates.addAll(Arrays.asList(SSL_CERT_VALID_FROM_2019_11_01_TO_2021_11_05, SSL_CERT_VALID_FROM_2016_12_20_TO_2020_01_19));
-    }
+  /**
+   * Only trust SSL certificate of SK Production environment.
+   * NB! Before certificate expires (05.11.2021) you need to update this library version to get new cert.
+   */
+  public void useLiveEnvSSLCertificates() {
+      this.sslCertificates.clear();
+      this.sslCertificates.addAll(Collections.singletonList(SSL_CERT_VALID_FROM_2019_11_01_TO_2021_11_05));
+  }
 
   public void loadSslCertificatesFromKeystore(KeyStore keyStore) {
     try {

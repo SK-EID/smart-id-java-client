@@ -41,6 +41,8 @@ public class SessionStatus implements Serializable {
   private SessionCertificate cert;
   private String[] ignoredProperties;
 
+  private String interactionFlowUsed;
+
   public String getState() {
     return state;
   }
@@ -74,10 +76,19 @@ public class SessionStatus implements Serializable {
   }
 
   public String[] getIgnoredProperties() {
-    return Arrays.copyOf(ignoredProperties, ignoredProperties.length);
+    return ignoredProperties;
   }
 
   public void setIgnoredProperties(String[] ignoredProperties) {
     this.ignoredProperties = Arrays.copyOf(ignoredProperties, ignoredProperties.length);
   }
+
+  public String getInteractionFlowUsed() {
+    return interactionFlowUsed;
+  }
+
+  public void setInteractionFlowUsed(String interactionFlowUsed) {
+    this.interactionFlowUsed = interactionFlowUsed;
+  }
+
 }

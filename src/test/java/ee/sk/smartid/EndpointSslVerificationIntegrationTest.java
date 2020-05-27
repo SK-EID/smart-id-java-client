@@ -2,6 +2,7 @@ package ee.sk.smartid;
 
 
 import ee.sk.smartid.exception.UnauthorizedException;
+import ee.sk.test.smartid.integration.SmartIdIntegrationTest;
 import org.hamcrest.core.StringContains;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,7 +23,7 @@ import static org.junit.Assert.assertThat;
 
 public class EndpointSslVerificationIntegrationTest {
 
-    private static final String DEMO_HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v1/";
+    private static final String DEMO_HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v2/";
     private static final String LIVE_HOST_URL = "https://rp-api.smart-id.com/v1";
     private static final String DEMO_RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
     private static final String DEMO_RELYING_PARTY_NAME = "DEMO";
@@ -40,6 +41,7 @@ public class EndpointSslVerificationIntegrationTest {
     public void makeRequestToDemoApi_useLiveEnvCertificates_sslHandshakeFails() {
         expectedException.expect(ProcessingException.class);
         expectedException.expectMessage(StringContains.containsString("unable to find valid certification path to requested target"));
+
         SmartIdClient client = new SmartIdClient();
         client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
         client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);

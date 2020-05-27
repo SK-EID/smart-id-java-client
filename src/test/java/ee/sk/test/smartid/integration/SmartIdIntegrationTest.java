@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.test.smartid.integration;
 
 /*-
  * #%L
@@ -26,11 +26,15 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.*;
+import ee.sk.smartid.rest.dao.AllowedInteraction;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.security.cert.CertificateEncodingException;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
@@ -39,7 +43,7 @@ import static org.junit.Assert.*;
 
 public class SmartIdIntegrationTest {
 
-    private static final String HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v1/";
+    private static final String HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v2/";
     private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
     private static final String RELYING_PARTY_NAME = "DEMO";
     private static final String DOCUMENT_NUMBER = "PNOEE-10101010005-Z1B2-Q";
@@ -57,14 +61,14 @@ public class SmartIdIntegrationTest {
     }
 
     @Test
-    public void getCertificate_byNationalIdentityNubmerAndCountryCode() throws CertificateEncodingException {
+    public void getCertificate_bySemanticsIdentifier() throws CertificateEncodingException {
         SmartIdCertificate certificateResponse = client
                 .getCertificate()
                 .withRelyingPartyUUID(RELYING_PARTY_UUID)
                 .withRelyingPartyName(RELYING_PARTY_NAME)
-                .withCountryCode("EE")
-                .withNationalIdentityNumber("10101010005")
+                .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "10101010005"))
                 .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+                .withNonce("012345678901234567890123456789")
                 .fetch();
 
         assertThat(certificateResponse.getDocumentNumber(), is("PNOEE-10101010005-Z1B2-Q"));
@@ -110,6 +114,9 @@ public class SmartIdIntegrationTest {
              .withDocumentNumber(documentNumber)
              .withSignableData(dataToSign)
              .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+             .withAllowedInteractionsOrder(
+                     Collections.singletonList(AllowedInteraction.displayTextAndPIN("012345678901234567890123456789012345678901234567890123456789"))
+             )
              .sign();
 
         assertSignatureCreated(signature);
@@ -127,13 +134,18 @@ public class SmartIdIntegrationTest {
              .withDocumentNumber(DOCUMENT_NUMBER)
              .withAuthenticationHash(authenticationHash)
              .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+             .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
              .authenticate();
 
         assertAuthenticationResponseCreated(authenticationResponse, authenticationHash.getHashInBase64());
 
         AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
-        SmartIdAuthenticationResult authenticationResult = authenticationResponseValidator.validate(authenticationResponse);
-        assertAuthenticationResultValid(authenticationResult);
+        AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(authenticationResponse);
+
+        assertThat(authenticationIdentity.getGivenName(), is("DEMO"));
+        assertThat(authenticationIdentity.getSurName(), is("SMART-ID"));
+        assertThat(authenticationIdentity.getIdentityCode(), is("10101010005"));
+        assertThat(authenticationIdentity.getCountry(), is("EE"));
     }
 
     private void assertSignatureCreated(SmartIdSignature signature) {
@@ -156,16 +168,4 @@ public class SmartIdIntegrationTest {
         assertNotNull(authenticationResponse.getCertificateLevel());
     }
 
-    private void assertAuthenticationResultValid(SmartIdAuthenticationResult authenticationResult) {
-        assertTrue(authenticationResult.isValid());
-        assertTrue(authenticationResult.getErrors().isEmpty());
-        assertAuthenticationIdentityValid(authenticationResult.getAuthenticationIdentity());
-    }
-
-    private void assertAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity) {
-        assertThat(authenticationIdentity.getGivenName(), not(isEmptyOrNullString()));
-        assertThat(authenticationIdentity.getSurName(), not(isEmptyOrNullString()));
-        assertThat(authenticationIdentity.getIdentityCode(), not(isEmptyOrNullString()));
-        assertThat(authenticationIdentity.getCountry(), not(isEmptyOrNullString()));
-    }
 }

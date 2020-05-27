@@ -2,17 +2,21 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.0.0] - 2020-05
+## [2.0-RC1] - 2020-05
 
 ### Changed
 - Changed to using Smart-ID API 2.0
-- Removed requestProperties.setVcChoice(). Migrate this code to allowedInteractionsOrder.
+- If authenticationResponseValidator.validate() fails it throws an exception and returns AuthenticationIdentity if validation passes.
+- Exception thrown is SmartIdResponseValidationException or its subclass CertificateLevelMismatchException (if signer's certificate is below requested level) 
+- Minimum Java level raised to Java 8
 
 ### Added
-- allowedInteractionsOrder support
+- New parameter allowedInteractionsOrder added to authentication and signing requests. It replaces parameters displayText and requestProperties.vcChoice
+- New parameter interactionFlowUsed added into session status response message.
+- If user refuses then a dedicated exception is thrown that indicates exact screen where user pressed cancel. Thrown exception is subclass of UserRefusedException.
 
-### Security
-- 
+### Removed
+- all endpoints using NationalIdentityNumber as this functionality has been removed from Smart-ID API 2.0
 
 ## [1.6] - 2020-05-25
 

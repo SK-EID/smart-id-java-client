@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Set;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 public abstract class SmartIdRequestBuilder {
 
@@ -48,10 +47,9 @@ public abstract class SmartIdRequestBuilder {
   private SessionStatusPoller sessionStatusPoller;
   private String relyingPartyUUID;
   private String relyingPartyName;
-  private String countryCode;
-  private String nationalIdentityNumber;
-  private NationalIdentity nationalIdentity;
   private SemanticsIdentifier semanticsIdentifier;
+  private PrivateCompanyIdentifier privateCompanyIdentifier;
+
   private String documentNumber;
   private String certificateLevel;
   private SignableData dataToSign;
@@ -81,13 +79,8 @@ public abstract class SmartIdRequestBuilder {
     return this;
   }
 
-  protected SmartIdRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
-    this.nationalIdentity = nationalIdentity;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
-    this.nationalIdentityNumber = nationalIdentityNumber;
+  protected SmartIdRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
+    this.privateCompanyIdentifier = privateCompanyIdentifier;
     return this;
   }
 
@@ -100,11 +93,6 @@ public abstract class SmartIdRequestBuilder {
   public SmartIdRequestBuilder withSemanticsIdentifier(
       SemanticsIdentifier semanticsIdentifier) {
     this.semanticsIdentifier = semanticsIdentifier;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withCountryCode(String countryCode) {
-    this.countryCode = countryCode;
     return this;
   }
 
@@ -154,13 +142,62 @@ public abstract class SmartIdRequestBuilder {
 
   protected void validateParameters() {
     if (isBlank(relyingPartyUUID)) {
-      logger.error("Relying Party UUID parameter must be set");
-      throw new InvalidParametersException("Relying Party UUID parameter must be set");
+      logger.error("Parameter relyingPartyUUID must be set");
+      throw new InvalidParametersException("Parameter relyingPartyUUID must be set");
     }
     if (isBlank(relyingPartyName)) {
-      logger.error("Relying Party Name parameter must be set");
-      throw new InvalidParametersException("Relying Party Name parameter must be set");
+      logger.error("Parameter relyingPartyName must be set");
+      throw new InvalidParametersException("Parameter relyingPartyName must be set");
     }
+    if (nonce != null && nonce.length() > 30) {
+      throw new InvalidParametersException("Nonce cannot be longer that 30 chars. You supplied: '" + nonce + "'");
+    }
+
+    int identifierCount = getIdentifiersCount();
+
+    if (identifierCount == 0) {
+      logger.error("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+      throw new InvalidParametersException("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    }
+    else if (identifierCount > 1 ) {
+      logger.error("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+      throw new InvalidParametersException("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    }
+  }
+
+  protected void validateAuthSignParameters() {
+    if (!isHashSet() && !isSignableDataSet()) {
+      logger.error("Either dataToSign or hash with hashType must be set");
+      throw new InvalidParametersException("Either dataToSign or hash with hashType must be set");
+    }
+    validateAllowedInteractionOrder();
+  }
+
+  private void validateAllowedInteractionOrder() {
+    if (getAllowedInteractionsOrder() == null || getAllowedInteractionsOrder().isEmpty()) {
+      logger.error("Missing or empty mandatory parameter allowedInteractionsOrder");
+      throw new InvalidParametersException("Missing or empty mandatory parameter allowedInteractionsOrder");
+    }
+    for (AllowedInteraction allowedInteraction : getAllowedInteractionsOrder()) {
+      allowedInteraction.validate();
+    }
+
+
+
+  }
+
+  private int getIdentifiersCount() {
+    int identifierCount = 0;
+    if (!isBlank(getDocumentNumber())) {
+      identifierCount++;
+    }
+    if (hasSemanticsIdentifier()) {
+      identifierCount++;
+    }
+    if (getPrivateCompanyIdentifier() != null) {
+      identifierCount++;
+    }
+    return identifierCount;
   }
 
   protected void validateSessionResult(SessionResult result) {
@@ -168,45 +205,40 @@ public abstract class SmartIdRequestBuilder {
       logger.error("Result is missing in the session status response");
       throw new TechnicalErrorException("Result is missing in the session status response");
     }
-    String endResult = result.getEndResult();
-    if ("USER_REFUSED".equalsIgnoreCase(endResult)) {
-      logger.debug("User has refused");
-      throw new UserRefusedException();
-    }
-    else if ("WRONG_VC".equalsIgnoreCase(endResult)) {
-      logger.debug("User did not choose the correct verification code from three-choice verification codes");
-      throw new UserSelectedWrongVerificationCodeException();
-    }
-    else if ("TIMEOUT".equalsIgnoreCase(endResult)) {
-      logger.debug("Session timeout");
-      throw new SessionTimeoutException();
-    }
-    else if ("DOCUMENT_UNUSABLE".equalsIgnoreCase(endResult)) {
-      logger.debug("Document unusable");
-      throw new DocumentUnusableException();
-    }
-    else if (!"OK".equalsIgnoreCase(endResult)) {
-      logger.warn("Session status end result is '" + endResult + "'");
-      throw new TechnicalErrorException("Session status end result is '" + endResult + "'");
-    }
-  }
+    String endResult = result.getEndResult().toUpperCase();
 
-  protected boolean hasNationalIdentity() {
-    return nationalIdentity != null || (isNotBlank(countryCode) && isNotBlank(nationalIdentityNumber));
+    logger.debug("Smart-ID end result code is '{}' ", endResult);
+
+    switch (endResult) {
+      case "OK":
+        return;
+      case "USER_REFUSED":
+        throw new UserRefusedException();
+      case "TIMEOUT":
+        throw new SessionTimeoutException();
+      case "DOCUMENT_UNUSABLE":
+        throw new DocumentUnusableException();
+      case "WRONG_VC":
+        throw new UserSelectedWrongVerificationCodeException();
+      case "REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP":
+        throw new RequiredInteractionNotSupportedByAppException();
+      case "USER_REFUSED_CERT_CHOICE":
+        throw new UserRefusedCertChoiceException();
+      case "USER_REFUSED_DISPLAYTEXTANDPIN":
+        throw new UserRefusedDisplayTextAndPinException();
+      case "USER_REFUSED_VC_CHOICE":
+        throw new UserRefusedVerificationChoiceException();
+      case "USER_REFUSED_CONFIRMATIONMESSAGE":
+        throw new UserRefusedConfirmationMessageException();
+      case "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE":
+        throw new UserRefusedConfirmationMessageWithVerificationChoiceException();
+      default:
+        throw new TechnicalErrorException("Session status end result is '" + endResult + "'");
+    }
   }
 
   protected boolean hasSemanticsIdentifier() {
     return semanticsIdentifier != null;
-  }
-
-  protected NationalIdentity getNationalIdentity() {
-    if (nationalIdentity != null) {
-      return nationalIdentity;
-    }
-    if(countryCode == null || nationalIdentityNumber == null) {
-      return null;
-    }
-    return new NationalIdentity(countryCode, nationalIdentityNumber);
   }
 
   protected boolean isHashSet() {
@@ -275,4 +307,7 @@ public abstract class SmartIdRequestBuilder {
     return allowedInteractionsOrder;
   }
 
+  public PrivateCompanyIdentifier getPrivateCompanyIdentifier() {
+    return privateCompanyIdentifier;
+  }
 }
