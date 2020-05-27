@@ -76,7 +76,7 @@ public class SessionStatus implements Serializable {
   }
 
   public String[] getIgnoredProperties() {
-    return ignoredProperties;
+    return Arrays.copyOf(ignoredProperties, ignoredProperties.length);
   }
 
   public void setIgnoredProperties(String[] ignoredProperties) {

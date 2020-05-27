@@ -31,9 +31,6 @@ package ee.sk.smartid.exception;
  */
 public class SmartIdClientException extends RuntimeException {
 
-  public SmartIdClientException() {
-  }
-
   public SmartIdClientException(String message) {
     super(message);
   }
