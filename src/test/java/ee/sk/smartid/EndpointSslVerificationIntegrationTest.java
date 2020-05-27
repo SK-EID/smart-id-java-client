@@ -100,7 +100,7 @@ public class EndpointSslVerificationIntegrationTest {
         client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
         client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
         client.setHostUrl(DEMO_HOST_URL);
-        client.addTrustedSSLCertificates(DEMO_HOST_SSL_CERTIFICATE);
+        client.setTrustedSSLCertificates(DEMO_HOST_SSL_CERTIFICATE);
 
         SmartIdCertificate cert = client
                 .getCertificate()
