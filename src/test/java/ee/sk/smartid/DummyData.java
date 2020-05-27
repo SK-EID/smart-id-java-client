@@ -46,7 +46,9 @@ public class DummyData {
   }
 
   public static SessionStatus createUserSelectedWrongVerificationCode() {
-    return createUserRefusedSessionStatus("WRONG_VC");
+    SessionStatus status = createCompleteSessionStatus();
+    status.setResult(createSessionResult("WRONG_VC"));
+    return status;
   }
 
   public static SessionResult createSessionResult(String endResult) {

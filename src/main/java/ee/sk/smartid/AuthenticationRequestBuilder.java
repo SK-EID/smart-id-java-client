@@ -275,17 +275,12 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * This method uses automatic session status polling internally
    * and therefore blocks the current thread until authentication is concluded/interrupted etc.
    *
-   * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
    * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return the authentication response
@@ -320,10 +315,9 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * Create {@link SmartIdAuthenticationResponse} from {@link SessionStatus}
    *
    * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
-   * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given time frame
+   * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
    *
    * @param sessionStatus session status response
    * @return the authentication response
