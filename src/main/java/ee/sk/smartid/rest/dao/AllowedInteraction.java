@@ -5,10 +5,12 @@ import ee.sk.smartid.exception.InvalidParametersException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
+
 import static ee.sk.smartid.rest.dao.AllowedInteractionType.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AllowedInteraction {
+public class AllowedInteraction implements Serializable {
 
     private static final Logger logger = LoggerFactory.getLogger(AllowedInteraction.class);
 

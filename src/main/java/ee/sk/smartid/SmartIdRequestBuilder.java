@@ -33,8 +33,6 @@ import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -45,99 +43,23 @@ public abstract class SmartIdRequestBuilder {
   private static final Logger logger = LoggerFactory.getLogger(SmartIdRequestBuilder.class);
   private SmartIdConnector connector;
   private SessionStatusPoller sessionStatusPoller;
-  private String relyingPartyUUID;
-  private String relyingPartyName;
-  private SemanticsIdentifier semanticsIdentifier;
-  private PrivateCompanyIdentifier privateCompanyIdentifier;
+  protected String relyingPartyUUID;
+  protected String relyingPartyName;
+  protected SemanticsIdentifier semanticsIdentifier;
+  protected PrivateCompanyIdentifier privateCompanyIdentifier;
 
-  private String documentNumber;
-  private String certificateLevel;
-  private SignableData dataToSign;
-  private SignableHash hashToSign;
-  private String nonce;
-  private Set<String> capabilities;
-  private RequestProperties requestProperties;
-  private List<AllowedInteraction> allowedInteractionsOrder;
+  protected String documentNumber;
+  protected String certificateLevel;
+  protected SignableData dataToSign;
+  protected SignableHash hashToSign;
+  protected String nonce;
+  protected Set<String> capabilities;
+  protected RequestProperties requestProperties;
+  protected List<AllowedInteraction> allowedInteractionsOrder;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
     this.sessionStatusPoller = sessionStatusPoller;
-  }
-
-  protected SmartIdRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
-    this.relyingPartyUUID = relyingPartyUUID;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withRelyingPartyName(String relyingPartyName) {
-    this.relyingPartyName = relyingPartyName;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
-    this.privateCompanyIdentifier = privateCompanyIdentifier;
-    return this;
-  }
-
-  public SmartIdRequestBuilder withSemanticsIdentifierAsString(
-      String semanticsIdentifier) {
-    this.semanticsIdentifier = new SemanticsIdentifier(semanticsIdentifier);
-    return this;
-  }
-
-  public SmartIdRequestBuilder withSemanticsIdentifier(
-      SemanticsIdentifier semanticsIdentifier) {
-    this.semanticsIdentifier = semanticsIdentifier;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withSignableData(SignableData dataToSign) {
-    this.dataToSign = dataToSign;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withSignableHash(SignableHash hashToSign) {
-    this.hashToSign = hashToSign;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withCertificateLevel(String certificateLevel) {
-    this.certificateLevel = certificateLevel;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withCapabilities(Capability... capabilities) {
-    HashSet<String> capabilitySet = new HashSet<>();
-    for (Capability capability : capabilities) {
-      capabilitySet.add(capability.toString());
-    }
-    this.capabilities = capabilitySet;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withCapabilities(String... capabilities) {
-    this.capabilities = new HashSet<>(Arrays.asList(capabilities));
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withNonce(String nonce) {
-    this.nonce = nonce;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withRequestProperties(RequestProperties requestProperties) {
-    this.requestProperties = requestProperties;
-    return this;
-  }
-
-  protected SmartIdRequestBuilder withAllowedInteractionsOrder(List<AllowedInteraction> allowedInteractionsOrder) {
-    this.allowedInteractionsOrder = allowedInteractionsOrder;
-    return this;
   }
 
   protected void validateParameters() {
@@ -178,12 +100,7 @@ public abstract class SmartIdRequestBuilder {
       logger.error("Missing or empty mandatory parameter allowedInteractionsOrder");
       throw new InvalidParametersException("Missing or empty mandatory parameter allowedInteractionsOrder");
     }
-    for (AllowedInteraction allowedInteraction : getAllowedInteractionsOrder()) {
-      allowedInteraction.validate();
-    }
-
-
-
+    getAllowedInteractionsOrder().forEach(AllowedInteraction::validate);
   }
 
   private int getIdentifiersCount() {

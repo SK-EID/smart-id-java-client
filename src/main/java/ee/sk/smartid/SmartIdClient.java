@@ -26,6 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.SmartIdClientException;
 import ee.sk.smartid.exception.SmartIdException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
@@ -75,7 +76,8 @@ public class SmartIdClient {
   public CertificateRequestBuilder getCertificate() {
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
     CertificateRequestBuilder builder = new CertificateRequestBuilder(getSmartIdConnector(), sessionStatusPoller);
-    populateBuilderFields(builder);
+    builder.withRelyingPartyUUID(this.getRelyingPartyUUID());
+    builder.withRelyingPartyName(this.getRelyingPartyName());
     return builder;
   }
 
@@ -87,7 +89,8 @@ public class SmartIdClient {
   public SignatureRequestBuilder createSignature() {
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
     SignatureRequestBuilder builder = new SignatureRequestBuilder(getSmartIdConnector(), sessionStatusPoller);
-    populateBuilderFields(builder);
+    builder.withRelyingPartyUUID(this.getRelyingPartyUUID());
+    builder.withRelyingPartyName(this.getRelyingPartyName());
     return builder;
   }
 
@@ -99,7 +102,8 @@ public class SmartIdClient {
   public AuthenticationRequestBuilder createAuthentication() {
     SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
     AuthenticationRequestBuilder builder = new AuthenticationRequestBuilder(getSmartIdConnector(), sessionStatusPoller);
-    populateBuilderFields(builder);
+    builder.withRelyingPartyUUID(this.getRelyingPartyUUID());
+    builder.withRelyingPartyName(this.getRelyingPartyName());
     return builder;
   }
 
@@ -212,11 +216,6 @@ public class SmartIdClient {
     pollingSleepTimeout = timeout;
   }
 
-  private void populateBuilderFields(SmartIdRequestBuilder builder) {
-    builder.withRelyingPartyUUID(relyingPartyUUID);
-    builder.withRelyingPartyName(relyingPartyName);
-  }
-
   private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
     connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
     SessionStatusPoller sessionStatusPoller = new SessionStatusPoller(connector);
@@ -239,7 +238,7 @@ public class SmartIdClient {
     try {
       return createSslContext(this.sslCertificates);
     } catch (CertificateException | IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-      throw new SmartIdException("Failed to createSslContext", e);
+      throw new SmartIdClientException("Failed to createSslContext", e);
     }
   }
 

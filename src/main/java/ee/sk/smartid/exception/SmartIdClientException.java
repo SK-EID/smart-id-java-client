@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.exception;
 
 /*-
  * #%L
@@ -26,22 +26,19 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
+/**
+ * This exception is thrown if client (this library) has configuration errors.
+ */
+public class SmartIdClientException extends RuntimeException {
 
-public class NationalIdentity implements Serializable {
-
-  /**
-   * NationalIdentity removed in Smart-ID API v2.0. Instead use:
-   * @see ee.sk.smartid.rest.dao.SemanticsIdentifier
-   */
-  private NationalIdentity() {
+  public SmartIdClientException() {
   }
 
-  /**
-   * NationalIdentity removed in Smart-ID API v2.0. Instead use:
-   * @see ee.sk.smartid.rest.dao.SemanticsIdentifier
-   */
-  private NationalIdentity(String countryCode, String nationalIdentityNumber) {
+  public SmartIdClientException(String message) {
+    super(message);
   }
 
+  public SmartIdClientException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

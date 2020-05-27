@@ -33,7 +33,11 @@ import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -83,7 +87,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
-    super.withRelyingPartyUUID(relyingPartyUUID);
+    this.relyingPartyUUID = relyingPartyUUID;
     return this;
   }
 
@@ -100,7 +104,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withRelyingPartyName(String relyingPartyName) {
-    super.withRelyingPartyName(relyingPartyName);
+    this.relyingPartyName = relyingPartyName;
     return this;
   }
 
@@ -114,7 +118,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withDocumentNumber(String documentNumber) {
-    super.withDocumentNumber(documentNumber);
+    this.documentNumber = documentNumber;
     return this;
   }
 
@@ -127,7 +131,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifier) {
-    super.withSemanticsIdentifierAsString(semanticsIdentifier);
+    this.semanticsIdentifier = new SemanticsIdentifier(semanticsIdentifier);
     return this;
   }
 
@@ -140,7 +144,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
-    super.withSemanticsIdentifier(semanticsIdentifier);
+    this.semanticsIdentifier = semanticsIdentifier;
     return this;
   }
 
@@ -152,7 +156,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
-    super.withPrivateCompanyIdentifier(privateCompanyIdentifier);
+    this.privateCompanyIdentifier = privateCompanyIdentifier;
     return this;
   }
 
@@ -169,7 +173,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withAuthenticationHash(AuthenticationHash authenticationHash) {
-    super.withSignableHash(authenticationHash);
+    this.hashToSign = authenticationHash;
     return this;
   }
 
@@ -184,15 +188,8 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withCertificateLevel(String certificateLevel) {
-    super.withCertificateLevel(certificateLevel);
+    this.certificateLevel = certificateLevel;
     return this;
-  }
-
-  /**
-   * This functionality has moved in Smart-ID API 2.0. See ee.sk.smartid.AuthenticationRequestBuilder.withAllowedInteractionsOrder()
-   */
-  private void withDisplayText(String displayText) {
-    throw new UnsupportedOperationException("Method is removed in Smart-ID API 2.0. Use: withAllowedInteractionsOrder()");
   }
 
   /**
@@ -212,7 +209,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withNonce(String nonce) {
-    super.withNonce(nonce);
+    this.nonce = nonce;
     return this;
   }
 
@@ -228,7 +225,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withCapabilities(Capability... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = Arrays.stream(capabilities).map(Objects::toString).collect(Collectors.toSet());
     return this;
   }
 
@@ -245,7 +242,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withCapabilities(String... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = new HashSet<>(Arrays.asList(capabilities));
     return this;
   }
 
@@ -258,7 +255,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withRequestProperties(RequestProperties requestProperties) {
-    super.withRequestProperties(requestProperties);
+    this.requestProperties = requestProperties;
     return this;
   }
 
@@ -268,7 +265,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public AuthenticationRequestBuilder withAllowedInteractionsOrder(List<AllowedInteraction> allowedInteractionsOrder) {
-    super.withAllowedInteractionsOrder(allowedInteractionsOrder);
+    this.allowedInteractionsOrder = allowedInteractionsOrder;
     return this;
   }
 
@@ -293,8 +290,8 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    *
    * @return the authentication response
    */
-  public SmartIdAuthenticationResponse authenticate() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException, UserRefusedException,
-      UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
+  public SmartIdAuthenticationResponse authenticate() throws UserAccountNotFoundException, UserRefusedException,
+      UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException, ServerMaintenanceException {
     String sessionId = initiateAuthentication();
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
     return createSmartIdAuthenticationResponse(sessionStatus);
@@ -312,8 +309,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    *
    * @return session Id - later to be used for manual session status polling
    */
-  public String initiateAuthentication() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,
-      ClientNotSupportedException, ServerMaintenanceException {
+  public String initiateAuthentication() throws UserAccountNotFoundException, ServerMaintenanceException {
     validateParameters();
     AuthenticationSessionRequest request = createAuthenticationSessionRequest();
     AuthenticationSessionResponse response = getAuthenticationResponse(request);
@@ -333,7 +329,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * @return the authentication response
    */
   public SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus) throws UserRefusedException, UserSelectedWrongVerificationCodeException,
-          SessionTimeoutException, DocumentUnusableException, TechnicalErrorException {
+          SessionTimeoutException, DocumentUnusableException {
     validateAuthenticationResponse(sessionStatus);
 
     SessionResult sessionResult = sessionStatus.getResult();

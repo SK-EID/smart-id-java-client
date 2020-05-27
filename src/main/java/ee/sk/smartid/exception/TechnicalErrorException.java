@@ -25,7 +25,9 @@ package ee.sk.smartid.exception;
  * THE SOFTWARE.
  * #L%
  */
-
+/**
+ * This exception is thrown if client (this library) cannot handle Smart-ID API response.
+ */
 public class TechnicalErrorException extends SmartIdException {
 
   public TechnicalErrorException(String message, Throwable cause) {

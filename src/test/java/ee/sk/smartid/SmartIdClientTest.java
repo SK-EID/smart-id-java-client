@@ -440,6 +440,12 @@ public class SmartIdClientTest {
     makeGetCertificateRequest();
   }
 
+  @Test(expected = TechnicalErrorException.class)
+  public void getCertificate_whenUnknownErrorCode_shouldThrowException() {
+    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenUnknownErrorCode.json");
+    makeGetCertificateRequest();
+  }
+
   @Test(expected = DocumentUnusableException.class)
   public void sign_whenDocumentUnusable_shouldThrowException() {
     stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenDocumentUnusable.json");

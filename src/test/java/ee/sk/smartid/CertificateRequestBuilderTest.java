@@ -97,7 +97,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificateUsingDocumentNumber() {
+  public void getCertificate_usingDocumentNumber() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -108,6 +108,22 @@ public class CertificateRequestBuilderTest {
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
     assertValidCertificateRequestMadeWithDocumentNumber("QUALIFIED");
+  }
+
+  @Test
+  public void getCertificate_withoutAnyIdentifier_shouldThrowException() {
+    expectedException.expect(InvalidParametersException.class);
+    expectedException.expectMessage("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
+    builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withCertificateLevel("QUALIFIED")
+            .fetch();
   }
 
   @Test

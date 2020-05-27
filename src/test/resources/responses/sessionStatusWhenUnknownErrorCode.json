@@ -1,0 +1,7 @@
+{
+  "state": "COMPLETE",
+  "result": {
+    "endResult": "UNKNOWN_ERROR_CODE"
+  },
+  "unknownField462859":  "this field is added to verify that client doesn't fail when new fields are added in future"
+}

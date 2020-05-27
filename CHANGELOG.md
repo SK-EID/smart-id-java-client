@@ -5,18 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.0-RC1] - 2020-05
 
 ### Changed
-- Changed to using Smart-ID API 2.0
-- If authenticationResponseValidator.validate() fails it throws an exception and returns AuthenticationIdentity if validation passes.
-- Exception thrown is SmartIdResponseValidationException or its subclass CertificateLevelMismatchException (if signer's certificate is below requested level) 
+- Switch to Smart-ID API 2.0
+- `AuthenticationResponseValidator.validate()` returns AuthenticationIdentity if validation passes.
+  If validation fails then `SmartIdResponseValidationException` or its subclass `CertificateLevelMismatchException` (if signer's certificate is below requested level) is thrown.
 - Minimum Java level raised to Java 8
 
 ### Added
-- New parameter allowedInteractionsOrder added to authentication and signing requests. It replaces parameters displayText and requestProperties.vcChoice
-- New parameter interactionFlowUsed added into session status response message.
-- If user refuses then a dedicated exception is thrown that indicates exact screen where user pressed cancel. Thrown exception is subclass of UserRefusedException.
+- New parameter `allowedInteractionsOrder` added to authentication and signing requests. It replaces parameters displayText and requestProperties.vcChoice
+- New parameter `interactionFlowUsed` added into session status response message.
+- If user refuses then a dedicated exception is thrown that indicates exact screen where user pressed cancel. Thrown exception is subclass of `UserRefusedException`.
 
 ### Removed
-- all endpoints using NationalIdentityNumber as this functionality has been removed from Smart-ID API 2.0
+- all endpoints using `NationalIdentityNumber` are now removed as this functionality has been removed from Smart-ID API 2.0
+- errors that the caller cannot recover from are now removed from method throws list.
 
 ## [1.6] - 2020-05-25
 

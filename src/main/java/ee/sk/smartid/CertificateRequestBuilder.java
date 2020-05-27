@@ -33,6 +33,11 @@ import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -80,7 +85,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
-    super.withRelyingPartyUUID(relyingPartyUUID);
+    super.relyingPartyUUID = relyingPartyUUID;
     return this;
   }
 
@@ -97,7 +102,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
-    super.withRelyingPartyName(relyingPartyName);
+    super.relyingPartyName = relyingPartyName;
     return this;
   }
 
@@ -111,7 +116,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withDocumentNumber(String documentNumber) {
-    super.withDocumentNumber(documentNumber);
+    super.documentNumber = documentNumber;
     return this;
   }
 
@@ -123,7 +128,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
-    super.withPrivateCompanyIdentifier(privateCompanyIdentifier);
+    super.privateCompanyIdentifier = privateCompanyIdentifier;
     return this;
   }
 
@@ -138,7 +143,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withCertificateLevel(String certificateLevel) {
-    super.withCertificateLevel(certificateLevel);
+    super.certificateLevel = certificateLevel;
     return this;
   }
 
@@ -159,7 +164,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withNonce(String nonce) {
-    super.withNonce(nonce);
+    super.nonce = nonce;
     return this;
   }
 
@@ -175,7 +180,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withCapabilities(Capability... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = Arrays.stream(capabilities).map(Objects::toString).collect(Collectors.toSet());
     return this;
   }
 
@@ -192,7 +197,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withCapabilities(String... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = new HashSet<>(Arrays.asList(capabilities));
     return this;
   }
 
@@ -201,11 +206,11 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * <p>
    * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
    *
-   * @param semanticsIdentifier semantics identifier for a person
+   * @param semanticsIdentifierAsString semantics identifier for a person
    * @return this builder
    */
-  public CertificateRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifier) {
-    super.withSemanticsIdentifierAsString(semanticsIdentifier);
+  public CertificateRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifierAsString) {
+    super.semanticsIdentifier = new SemanticsIdentifier(semanticsIdentifierAsString);
     return this;
   }
 
@@ -218,23 +223,18 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
-    super.withSemanticsIdentifier(semanticsIdentifier);
+    super.semanticsIdentifier = semanticsIdentifier;
     return this;
   }
 
   /**
    * Send the certificate choice request and get the response
    *x
-   * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws CertificateNotFoundException when the certificate was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
+   * @throws UserRefusedException when the user has refused the session.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return the certificate choice response
@@ -251,11 +251,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Send the certificate choice request and get the session Id
    *
-   * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return session Id - later to be used for manual session status polling
@@ -277,7 +273,6 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
    *
    * @param sessionStatus session status response
    * @return the authentication response

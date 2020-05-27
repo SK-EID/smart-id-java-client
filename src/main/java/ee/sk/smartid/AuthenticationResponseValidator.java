@@ -27,6 +27,7 @@ package ee.sk.smartid;
  */
 
 import ee.sk.smartid.exception.CertificateLevelMismatchException;
+import ee.sk.smartid.exception.SmartIdClientException;
 import ee.sk.smartid.exception.SmartIdResponseValidationException;
 import ee.sk.smartid.exception.TechnicalErrorException;
 import org.apache.commons.codec.binary.Base64;
@@ -203,7 +204,7 @@ public class AuthenticationResponseValidator {
       }
     } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
       logger.error("Error initializing trusted CA certificates", e);
-      throw new TechnicalErrorException("Error initializing trusted CA certificates", e);
+      throw new SmartIdClientException("Error initializing trusted CA certificates", e);
     }
   }
 
@@ -286,7 +287,7 @@ public class AuthenticationResponseValidator {
       return identity;
     } catch (InvalidNameException e) {
       logger.error("Error getting authentication identity from the certificate", e);
-      throw new TechnicalErrorException("Error getting authentication identity from the certificate", e);
+      throw new SmartIdClientException("Error getting authentication identity from the certificate", e);
     }
   }
 }
