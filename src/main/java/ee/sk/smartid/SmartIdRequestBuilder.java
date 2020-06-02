@@ -29,7 +29,10 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.AllowedInteraction;
+import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +49,6 @@ public abstract class SmartIdRequestBuilder {
   protected String relyingPartyUUID;
   protected String relyingPartyName;
   protected SemanticsIdentifier semanticsIdentifier;
-  protected PrivateCompanyIdentifier privateCompanyIdentifier;
 
   protected String documentNumber;
   protected String certificateLevel;
@@ -78,12 +80,12 @@ public abstract class SmartIdRequestBuilder {
     int identifierCount = getIdentifiersCount();
 
     if (identifierCount == 0) {
-      logger.error("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
-      throw new InvalidParametersException("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+      logger.error("Either documentNumber or semanticsIdentifier must be set");
+      throw new InvalidParametersException("Either documentNumber or semanticsIdentifier must be set");
     }
     else if (identifierCount > 1 ) {
-      logger.error("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
-      throw new InvalidParametersException("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+      logger.error("Exactly one of documentNumber or semanticsIdentifier must be set");
+      throw new InvalidParametersException("Exactly one of documentNumber or semanticsIdentifier must be set");
     }
   }
 
@@ -109,9 +111,6 @@ public abstract class SmartIdRequestBuilder {
       identifierCount++;
     }
     if (hasSemanticsIdentifier()) {
-      identifierCount++;
-    }
-    if (getPrivateCompanyIdentifier() != null) {
       identifierCount++;
     }
     return identifierCount;
@@ -224,7 +223,4 @@ public abstract class SmartIdRequestBuilder {
     return allowedInteractionsOrder;
   }
 
-  public PrivateCompanyIdentifier getPrivateCompanyIdentifier() {
-    return privateCompanyIdentifier;
-  }
 }

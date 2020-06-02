@@ -143,28 +143,6 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test
-  public void authenticate_usingPrivateCompanyIdentifier() throws Exception {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("JIO", "JIOIDNR-1234567890123456");
-
-    SmartIdAuthenticationResponse authenticationResponse = builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("QUALIFIED")
-        .withPrivateCompanyIdentifier(privateCompanyIdentifier)
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
-        .authenticate();
-
-    assertCorrectAuthenticationRequestMadeWithPrivateCompanyIdentifier(authenticationHash.getHashInBase64(), "QUALIFIED");
-    assertCorrectSessionRequestMade();
-    assertAuthenticationResponseCorrect(authenticationResponse, "7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
-  }
-
-  @Test
   public void authenticateWithoutCertificateLevel_shouldPass() throws Exception {
     AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
 
@@ -182,9 +160,9 @@ public class AuthenticationRequestBuilderTest {
   }
 
   @Test
-  public void authenticate_withoutDocumentNumber_withoutSemanticsIdentifier_withoutPrivateCompanyIdentifier_shouldThrowException() {
+  public void authenticate_withoutDocumentNumber_withoutSemanticsIdentifier_shouldThrowException() {
     expectedException.expect(InvalidParametersException.class);
-    expectedException.expectMessage("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
@@ -202,7 +180,7 @@ public class AuthenticationRequestBuilderTest {
   @Test
   public void authenticate_withDocumentNumberAndWithSemanticsIdentifier_shouldThrowException() {
     expectedException.expect(InvalidParametersException.class);
-    expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
     authenticationHash.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
@@ -526,16 +504,6 @@ public class AuthenticationRequestBuilderTest {
 
   private void assertCorrectAuthenticationRequestMadeWithSemanticsIdentifier(String expectedHashToSignInBase64, String expectedCertificateLevel) {
     assertEquals("IDCCZ-1234567890", connector.semanticsIdentifierUsed.getIdentifier());
-    assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
-    assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
-    assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
-    assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
-    assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
-  }
-
-  private void assertCorrectAuthenticationRequestMadeWithPrivateCompanyIdentifier(String expectedHashToSignInBase64, String expectedCertificateLevel) {
-    assertEquals("JIO", connector.privateCompanyIdentifierUsed.getIssuer());
-    assertEquals("JIOIDNR-1234567890123456", connector.privateCompanyIdentifierUsed.getEncodedIdentifier());
     assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
     assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());

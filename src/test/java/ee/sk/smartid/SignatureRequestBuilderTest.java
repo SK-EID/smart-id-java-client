@@ -126,7 +126,7 @@ public class SignatureRequestBuilderTest {
   @Test
   public void signWithoutDocumentNumber_shouldThrowException() {
     expectedException.expect(InvalidParametersException.class);
-    expectedException.expectMessage("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
 
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
@@ -143,7 +143,7 @@ public class SignatureRequestBuilderTest {
   @Test
   public void sign_withDocumentNumberAndWithSemanticsIdentifier_shouldThrowException() {
     expectedException.expect(InvalidParametersException.class);
-    expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier must be set");
 
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
@@ -154,26 +154,6 @@ public class SignatureRequestBuilderTest {
           .withRelyingPartyName("relying-party-name")
           .withSignableHash(hashToSign)
           .withDocumentNumber("PNOEE-31111111111")
-          .withSemanticsIdentifierAsString("IDCCZ-1234567890")
-          .withCertificateLevel("QUALIFIED")
-          .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
-          .sign();
-  }
-
-  @Test
-  public void sign_withPrivateCompanyIdentifierAndSemanticsIdentifier_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
-    expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
-
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    hashToSign.setHashType(HashType.SHA256);
-
-    builder
-          .withRelyingPartyUUID("relying-party-uuid")
-          .withRelyingPartyName("relying-party-name")
-          .withSignableHash(hashToSign)
-          .withPrivateCompanyIdentifier(new PrivateCompanyIdentifier("IDCCZ", "1234567890"))
           .withSemanticsIdentifierAsString("IDCCZ-1234567890")
           .withCertificateLevel("QUALIFIED")
           .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))

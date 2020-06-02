@@ -149,18 +149,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Set person identifier, that has been issued by a private company
-   * <p>
-   *
-   * @param privateCompanyIdentifier identifier issued by private company
-   * @return this builder
-   */
-  public AuthenticationRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
-    this.privateCompanyIdentifier = privateCompanyIdentifier;
-    return this;
-  }
-
-  /**
    * Sets the request's authentication hash
    * <p>
    * It is the hash that is signed by a person's device
@@ -366,9 +354,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     SemanticsIdentifier semanticsIdentifier = getSemanticsIdentifier();
     if (isNotEmpty(getDocumentNumber())) {
       return getConnector().authenticate(getDocumentNumber(), request);
-    }
-    else if (getPrivateCompanyIdentifier() != null) {
-      return getConnector().authenticate(getPrivateCompanyIdentifier(), request);
     }
     else {
       return getConnector().authenticate(semanticsIdentifier, request);

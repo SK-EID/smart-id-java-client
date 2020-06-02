@@ -52,15 +52,12 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
   private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
   private static final String CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/certificatechoice/etsi/{semanticsIdentifier}";
-  private static final String CERTIFICATE_CHOICE_BY_PRIVATE_COMPANY_IDENTIFIER = "/certificatechoice/private/{issuer}/{encodedIdentifier}";
 
   private static final String SIGNATURE_BY_DOCUMENT_NUMBER_PATH = "/signature/document/{documentNumber}";
   private static final String SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/signature/etsi/{semanticsIdentifier}";
-  private static final String SIGNATURE_BY_PRIVATE_COMPANY_IDENTIFIER = "/signature/private/{issuer}/{encodedIdentifier}";
 
   private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
   private static final String AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/authentication/etsi/{semanticsIdentifier}";
-  private static final String AUTHENTICATE_BY_PRIVATE_COMPANY_IDENTIFIER = "/authentication/private/{issuer}/{encodedIdentifier}";
 
   private String endpointUrl;
   private transient Configuration clientConfig;
@@ -123,18 +120,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
     return postCertificateRequest(uri, request);
   }
 
-
-  @Override
-  public CertificateChoiceResponse getCertificate(PrivateCompanyIdentifier privateCompanyIdentifier, CertificateRequest request) {
-    logger.debug("Getting certificate for " + privateCompanyIdentifier);
-    URI uri = UriBuilder
-            .fromUri(endpointUrl)
-            .path(CERTIFICATE_CHOICE_BY_PRIVATE_COMPANY_IDENTIFIER)
-            .build(privateCompanyIdentifier.getIssuer(), privateCompanyIdentifier.getEncodedIdentifier());
-    return postCertificateRequest(uri, request);
-  }
-
-
   @Override
   public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
     logger.debug("Signing for document " + documentNumber);
@@ -158,17 +143,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   @Override
-  public SignatureSessionResponse sign(PrivateCompanyIdentifier privateCompanyIdentifier, SignatureSessionRequest request) {
-    logger.debug("Signing for " + privateCompanyIdentifier);
-    URI uri = UriBuilder
-        .fromUri(endpointUrl)
-        .path(SIGNATURE_BY_PRIVATE_COMPANY_IDENTIFIER)
-        .build(privateCompanyIdentifier.getIssuer(), privateCompanyIdentifier.getEncodedIdentifier());
-
-    return postSigningRequest(uri, request);
-  }
-
-  @Override
   public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
     logger.debug("Authenticating for document " + documentNumber);
     URI uri = UriBuilder
@@ -185,16 +159,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .fromUri(endpointUrl)
         .path(AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
         .build(semanticsIdentifier.getIdentifier());
-    return postAuthenticationRequest(uri, request);
-  }
-
-  @Override
-  public AuthenticationSessionResponse authenticate(PrivateCompanyIdentifier privateCompanyIdentifier, AuthenticationSessionRequest request) {
-    logger.debug("Authenticating for " + privateCompanyIdentifier);
-    URI uri = UriBuilder
-            .fromUri(endpointUrl)
-            .path(AUTHENTICATE_BY_PRIVATE_COMPANY_IDENTIFIER)
-            .build(privateCompanyIdentifier.getIssuer(), privateCompanyIdentifier.getEncodedIdentifier());
     return postAuthenticationRequest(uri, request);
   }
 

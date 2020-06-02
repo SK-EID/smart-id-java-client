@@ -121,18 +121,6 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Set person identifier, that has been issued by a private company
-   * <p>
-   *
-   * @param privateCompanyIdentifier identifier issued by private company
-   * @return this builder
-   */
-  public CertificateRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
-    super.privateCompanyIdentifier = privateCompanyIdentifier;
-    return this;
-  }
-
-  /**
    * Sets the request's certificate level
    * <p>
    * Defines the minimum required level of the certificate.
@@ -295,7 +283,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
       return getConnector().getCertificate(getSemanticsIdentifier(), request);
     }
     else {
-      return getConnector().getCertificate(getPrivateCompanyIdentifier(), request);
+      throw new IllegalStateException("Either set semanticsIdentifier or documentNumber");
     }
   }
 
@@ -324,9 +312,9 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasSemanticsIdentifier() && getPrivateCompanyIdentifier() == null) {
-      logger.error("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
-      throw new InvalidParametersException("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    if (isBlank(getDocumentNumber()) && !hasSemanticsIdentifier()) {
+      logger.error("Either documentNumber or semanticsIdentifier must be set");
+      throw new InvalidParametersException("Either documentNumber or semanticsIdentifier must be set");
     }
   }
 

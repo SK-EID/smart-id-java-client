@@ -36,8 +36,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -188,18 +186,6 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getCertificate_usingPrivateDocumentIdentifier() {
-    stubRequestWithResponse("/certificatechoice/private/JIO/JIOIDNR-1234567890123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("JIO", "JIOIDNR-1234567890123456");
-
-    CertificateRequest request = createDummyCertificateRequest();
-    CertificateChoiceResponse response = connector.getCertificate(privateCompanyIdentifier, request);
-    assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
-  }
-
-  @Test
   public void getCertificate_withNonce_usingDocumentNumber() {
     stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
     CertificateRequest request = createDummyCertificateRequest();
@@ -220,17 +206,6 @@ public class SmartIdRestConnectorTest {
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
-  @Test
-  public void getCertificate_withNonce_usingPrivateCompanyIdentifier() {
-    stubRequestWithResponse("/certificatechoice/private/ATM/1234567890123456", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("ATM", "1234567890123456");
-    CertificateRequest request = createDummyCertificateRequest();
-    request.setNonce("zstOt2umlc");
-    CertificateChoiceResponse response = connector.getCertificate(privateCompanyIdentifier, request);
-    assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
-  }
-
   @Test(expected = CertificateNotFoundException.class)
   public void getCertificate_whenDocumentNumberNotFound_shoudThrowException() {
     stubNotFoundResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
@@ -247,17 +222,6 @@ public class SmartIdRestConnectorTest {
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate(semanticsIdentifier, request);
   }
-
-  @Test(expected = CertificateNotFoundException.class)
-  public void getCertificate_privateCompanyIdentifierNotFound_shouldThrowException() {
-    stubNotFoundResponse("/certificatechoice/private/JIO/JIOIDNR-1234567890123456", "requests/certificateChoiceRequest.json");
-
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("JIO", "JIOIDNR-1234567890123456");
-
-    CertificateRequest request = createDummyCertificateRequest();
-    connector.getCertificate(privateCompanyIdentifier, request);
-  }
-
 
   @Test(expected = UnauthorizedException.class)
   public void getCertificate_withWrongAuthenticationParams_shuldThrowException() {
@@ -451,18 +415,6 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void authenticate_usingPrivateCompanyIdentifier() {
-    stubRequestWithResponse("/authentication/private/ISSUER_CODE/SERIAL-NUMBER-BB45", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("ISSUER_CODE", "SERIAL-NUMBER-BB45");
-
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    AuthenticationSessionResponse response = connector.authenticate(privateCompanyIdentifier, request);
-    assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
-  }
-
-  @Test
   public void authenticate_withNonce_usingDocumentNumber() {
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
@@ -527,17 +479,6 @@ public class SmartIdRestConnectorTest {
 
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate(semanticsIdentifier, request);
-  }
-
-  @Test(expected = UserAccountNotFoundException.class)
-  public void authenticate_whenPrivateCompanyIdentifierNotFound_shouldThrowException() throws UnsupportedEncodingException {
-    stubNotFoundResponse("/authentication/private/mailCompany/mail%2540example.com", "requests/authenticationSessionRequest.json");
-
-    String urlEncodedId = URLEncoder.encode("mail@example.com", "UTF-8");
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("mailCompany", urlEncodedId);
-
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    connector.authenticate(privateCompanyIdentifier, request);
   }
 
   @Test(expected = UnauthorizedException.class)

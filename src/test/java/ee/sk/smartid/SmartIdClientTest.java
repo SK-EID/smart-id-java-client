@@ -31,7 +31,6 @@ import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import ee.sk.smartid.rest.dao.AllowedInteraction;
-import ee.sk.smartid.rest.dao.PrivateCompanyIdentifier;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier.CountryCode;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier.IdentityType;
@@ -87,7 +86,6 @@ public class SmartIdClientTest {
     stubRequestWithResponse("/authentication/etsi/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     stubRequestWithResponse("/authentication/etsi/PASEE-987654321012", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     stubRequestWithResponse("/authentication/etsi/IDCEE-AA3456789", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    stubRequestWithResponse("/authentication/private/ISSUER_ID/56946313", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
 
     stubRequestWithResponse("/certificatechoice/etsi/PASEE-987654321012", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
@@ -253,32 +251,6 @@ public class SmartIdClientTest {
     SmartIdSignature signature = client
         .createSignature()
         .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signature);
-  }
-
-  @Test
-  public void sign_withPrivateCompanyIdentifier() {
-    stubRequestWithResponse("/signature/private/ISSUER-COMP/ABC1233", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    assertEquals("1796", hashToSign.calculateVerificationCode());
-
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("ISSUER-COMP", "ABC1233");
-
-    SmartIdSignature signature = client
-        .createSignature()
-        .withPrivateCompanyIdentifier(privateCompanyIdentifier)
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
@@ -564,33 +536,6 @@ public class SmartIdClientTest {
 
     assertAuthenticationResponseValid(authenticationResponse);
   }
-
-  @Test
-  public void authenticate_usingPrivateCompanyIdentifier() {
-    stubRequestWithResponse("/authentication/private/ISSUER_ID/56946313", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-
-    PrivateCompanyIdentifier privateCompanyIdentifier = new PrivateCompanyIdentifier("ISSUER_ID", "56946313");
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    assertEquals("4430", authenticationHash.calculateVerificationCode());
-
-    SmartIdAuthenticationResponse authenticationResponse = client
-        .createAuthentication()
-        .withPrivateCompanyIdentifier(privateCompanyIdentifier)
-        .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-
-    assertAuthenticationResponseValid(authenticationResponse);
-  }
-
 
   @Test
   public void authenticateWithNonce() {

@@ -123,18 +123,6 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Set person identifier, that has been issued by a private company
-   * <p>
-   *
-   * @param privateCompanyIdentifier identifier issued by private company
-   * @return this builder
-   */
-  public SignatureRequestBuilder withPrivateCompanyIdentifier(PrivateCompanyIdentifier privateCompanyIdentifier) {
-    this.privateCompanyIdentifier = privateCompanyIdentifier;
-    return this;
-  }
-
-  /**
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
@@ -325,9 +313,6 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   private SignatureSessionResponse getSignatureResponse(SignatureSessionRequest request) {
     if (isNotEmpty(getDocumentNumber())) {
       return getConnector().sign(getDocumentNumber(), request);
-    }
-    else if (getPrivateCompanyIdentifier() != null) {
-      return getConnector().sign(getPrivateCompanyIdentifier(), request);
     }
     else {
       return getConnector().sign(getSemanticsIdentifier(), request);

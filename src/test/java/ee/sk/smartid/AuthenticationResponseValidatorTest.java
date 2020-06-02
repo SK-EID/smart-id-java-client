@@ -242,10 +242,10 @@ public class AuthenticationResponseValidatorTest {
 
     AuthenticationIdentity authenticationIdentity = validator.constructAuthenticationIdentity(certificateEe);
 
-    assertThat(authenticationIdentity.getIdentityCode(), is("10101010005"));
+    assertThat(authenticationIdentity.getIdentityNumber(), is("10101010005"));
     assertThat(authenticationIdentity.getCountry(), is("EE"));
     assertThat(authenticationIdentity.getGivenName(), is("DEMO"));
-    assertThat(authenticationIdentity.getSurName(), is("SMART-ID"));
+    assertThat(authenticationIdentity.getSurname(), is("SMART-ID"));
   }
 
   @Test
@@ -254,10 +254,10 @@ public class AuthenticationResponseValidatorTest {
 
     AuthenticationIdentity authenticationIdentity = validator.constructAuthenticationIdentity(certificateLv);
 
-    assertThat(authenticationIdentity.getIdentityCode(), is("010117-21234"));
+    assertThat(authenticationIdentity.getIdentityNumber(), is("010117-21234"));
     assertThat(authenticationIdentity.getCountry(), is("LV"));
     assertThat(authenticationIdentity.getGivenName(), is("FORENAME-010117-21234"));
-    assertThat(authenticationIdentity.getSurName(), is("SURNAME-010117-21234"));
+    assertThat(authenticationIdentity.getSurname(), is("SURNAME-010117-21234"));
   }
 
   @Test
@@ -266,10 +266,10 @@ public class AuthenticationResponseValidatorTest {
 
     AuthenticationIdentity authenticationIdentity = validator.constructAuthenticationIdentity(certificateLt);
 
-    assertThat(authenticationIdentity.getIdentityCode(), is("36009067968"));
+    assertThat(authenticationIdentity.getIdentityNumber(), is("36009067968"));
     assertThat(authenticationIdentity.getCountry(), is("LT"));
     assertThat(authenticationIdentity.getGivenName(), is("FORENAMEPNOLT-36009067968"));
-    assertThat(authenticationIdentity.getSurName(), is("SURNAMEPNOLT-36009067968"));
+    assertThat(authenticationIdentity.getSurname(), is("SURNAMEPNOLT-36009067968"));
   }
 
   private SmartIdAuthenticationResponse createValidValidationResponse() {
@@ -333,9 +333,9 @@ public class AuthenticationResponseValidatorTest {
       if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {
         assertEquals(rdn.getValue().toString(), authenticationIdentity.getGivenName());
       } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
-        assertEquals(rdn.getValue().toString(), authenticationIdentity.getSurName());
+        assertEquals(rdn.getValue().toString(), authenticationIdentity.getSurname());
       } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
-        assertEquals(rdn.getValue().toString().split("-", 2)[1], authenticationIdentity.getIdentityCode());
+        assertEquals(rdn.getValue().toString().split("-", 2)[1], authenticationIdentity.getIdentityNumber());
       } else if(rdn.getType().equalsIgnoreCase("C")) {
         assertEquals(rdn.getValue().toString(), authenticationIdentity.getCountry());
       }

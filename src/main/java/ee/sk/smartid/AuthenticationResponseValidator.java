@@ -250,9 +250,11 @@ public class AuthenticationResponseValidator {
     for (X509Certificate trustedCACertificate : trustedCACertificates) {
       try {
         certificate.verify(trustedCACertificate.getPublicKey());
+        logger.info("Certificate verification passed for '{}' against CA certificate '{}' ", certificate.getSubjectDN() ,trustedCACertificate.getSubjectDN() );
+
         return true;
       } catch (GeneralSecurityException e) {
-        logger.warn("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCACertificate.getSubjectDN(), e);
+        logger.debug("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCACertificate.getSubjectDN(), e);
       }
     }
     return false;
@@ -276,9 +278,9 @@ public class AuthenticationResponseValidator {
         if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {
           identity.setGivenName(rdn.getValue().toString());
         } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
-          identity.setSurName(rdn.getValue().toString());
+          identity.setSurname(rdn.getValue().toString());
         } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
-          identity.setIdentityCode(rdn.getValue().toString().split("-", 2)[1]);
+          identity.setIdentityNumber(rdn.getValue().toString().split("-", 2)[1]);
         } else if(rdn.getType().equalsIgnoreCase("C")) {
           identity.setCountry(rdn.getValue().toString());
         }

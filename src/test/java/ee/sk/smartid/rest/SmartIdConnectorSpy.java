@@ -41,7 +41,6 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
 
   public String sessionIdUsed;
   public SemanticsIdentifier semanticsIdentifierUsed;
-  public PrivateCompanyIdentifier privateCompanyIdentifierUsed;
   public String documentNumberUsed;
   public CertificateRequest certificateRequestUsed;
   public SignatureSessionRequest signatureSessionRequestUsed;
@@ -69,13 +68,6 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   }
 
   @Override
-  public CertificateChoiceResponse getCertificate(PrivateCompanyIdentifier identifier, CertificateRequest request) {
-    privateCompanyIdentifierUsed = identifier;
-    certificateRequestUsed = request;
-    return certificateChoiceToRespond;
-  }
-
-  @Override
   public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
     documentNumberUsed = documentNumber;
     signatureSessionRequestUsed = request;
@@ -90,13 +82,6 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   }
 
   @Override
-  public SignatureSessionResponse sign(PrivateCompanyIdentifier identifier, SignatureSessionRequest request) {
-    privateCompanyIdentifierUsed = identifier;
-    signatureSessionRequestUsed = request;
-    return signatureSessionResponseToRespond;
-  }
-
-  @Override
   public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
     documentNumberUsed = documentNumber;
     authenticationSessionRequestUsed = request;
@@ -106,13 +91,6 @@ public class SmartIdConnectorSpy implements SmartIdConnector {
   @Override
   public AuthenticationSessionResponse authenticate(SemanticsIdentifier identifier, AuthenticationSessionRequest request) {
     semanticsIdentifierUsed = identifier;
-    authenticationSessionRequestUsed = request;
-    return authenticationSessionResponseToRespond;
-  }
-
-  @Override
-  public AuthenticationSessionResponse authenticate(PrivateCompanyIdentifier identifier, AuthenticationSessionRequest request) {
-    privateCompanyIdentifierUsed = identifier;
     authenticationSessionRequestUsed = request;
     return authenticationSessionResponseToRespond;
   }

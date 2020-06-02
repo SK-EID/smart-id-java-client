@@ -143,8 +143,8 @@ public class SmartIdIntegrationTest {
         AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(authenticationResponse);
 
         assertThat(authenticationIdentity.getGivenName(), is("DEMO"));
-        assertThat(authenticationIdentity.getSurName(), is("SMART-ID"));
-        assertThat(authenticationIdentity.getIdentityCode(), is("10101010005"));
+        assertThat(authenticationIdentity.getSurname(), is("SMART-ID"));
+        assertThat(authenticationIdentity.getIdentityNumber(), is("10101010005"));
         assertThat(authenticationIdentity.getCountry(), is("EE"));
     }
 

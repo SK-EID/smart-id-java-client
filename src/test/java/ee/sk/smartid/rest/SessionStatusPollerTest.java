@@ -166,11 +166,6 @@ public class SessionStatusPollerTest {
     }
 
     @Override
-    public CertificateChoiceResponse getCertificate(PrivateCompanyIdentifier identity, CertificateRequest request) {
-      return null;
-    }
-
-    @Override
     public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
       return null;
     }
@@ -182,11 +177,6 @@ public class SessionStatusPollerTest {
     }
 
     @Override
-    public SignatureSessionResponse sign(PrivateCompanyIdentifier identifier, SignatureSessionRequest request) {
-      return null;
-    }
-
-    @Override
     public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
       return null;
     }
@@ -194,11 +184,6 @@ public class SessionStatusPollerTest {
     @Override
     public AuthenticationSessionResponse authenticate(SemanticsIdentifier identity,
         AuthenticationSessionRequest request) {
-      return null;
-    }
-
-    @Override
-    public AuthenticationSessionResponse authenticate(PrivateCompanyIdentifier identity, AuthenticationSessionRequest request) {
       return null;
     }
 

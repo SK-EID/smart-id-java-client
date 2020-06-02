@@ -29,8 +29,8 @@ package ee.sk.smartid;
 public class AuthenticationIdentity {
 
   private String givenName;
-  private String surName;
-  private String identityCode;
+  private String surname;
+  private String identityNumber;
   private String country;
 
   public String getGivenName() {
@@ -41,20 +41,38 @@ public class AuthenticationIdentity {
     this.givenName = givenName;
   }
 
-  public String getSurName() {
-    return surName;
+  public String getSurname() {
+    return surname;
   }
 
-  public void setSurName(String surName) {
-    this.surName = surName;
+  public void setSurname(String surname) {
+    this.surname = surname;
+  }
+
+  @Deprecated
+  public String getSurName() {
+    return surname;
+  }
+
+  @Deprecated
+  public void setSurName(String surname) {
+    this.surname = surname;
+  }
+
+  public String getIdentityNumber() {
+    return identityNumber;
+  }
+
+  public void setIdentityNumber(String identityNumber) {
+    this.identityNumber = identityNumber;
   }
 
   public String getIdentityCode() {
-    return identityCode;
+    return identityNumber;
   }
 
   public void setIdentityCode(String identityCode) {
-    this.identityCode = identityCode;
+    this.identityNumber = identityCode;
   }
 
   public String getCountry() {

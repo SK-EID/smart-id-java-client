@@ -31,7 +31,10 @@ import ee.sk.smartid.exception.TechnicalErrorException;
 import ee.sk.smartid.exception.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionStatus;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -77,26 +80,6 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificate_usingPrivateCompanyIdentifier() {
-    SmartIdCertificate certificate = builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withPrivateCompanyIdentifier(new PrivateCompanyIdentifier("ISSUER_ID", "ENCODED_IDENTIFIER-123"))
-        .withCertificateLevel("QUALIFIED")
-        .withCapabilities(Capability.ADVANCED, Capability.QUALIFIED)
-        .fetch();
-    assertCertificateResponseValid(certificate);
-    assertCorrectSessionRequestMade();
-
-    assertThat(connector.privateCompanyIdentifierUsed.getIssuer(), is("ISSUER_ID"));
-    assertThat(connector.privateCompanyIdentifierUsed.getEncodedIdentifier(), is("ENCODED_IDENTIFIER-123"));
-
-    assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
-    assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
-    assertEquals("QUALIFIED", connector.certificateRequestUsed.getCertificateLevel());
-  }
-
-  @Test
   public void getCertificate_usingDocumentNumber() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
@@ -113,7 +96,7 @@ public class CertificateRequestBuilderTest {
   @Test
   public void getCertificate_withoutAnyIdentifier_shouldThrowException() {
     expectedException.expect(InvalidParametersException.class);
-    expectedException.expectMessage("Either documentNumber or semanticsIdentifier or privateCompanyIdentifier must be set");
+    expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
 
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");

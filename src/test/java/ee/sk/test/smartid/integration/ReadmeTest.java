@@ -244,8 +244,8 @@ public class ReadmeTest {
         AuthenticationIdentity authIdentity = authenticationResponseValidator.validate(authenticationResponse);
 
         String givenName = authIdentity.getGivenName(); // e.g. Mari-Liis"
-        String surName = authIdentity.getSurName(); // e.g. "Männik"
-        String identityCode = authIdentity.getIdentityCode(); // e.g. "47101010033"
+        String surName = authIdentity.getSurname(); // e.g. "Männik"
+        String identityCode = authIdentity.getIdentityNumber(); // e.g. "47101010033"
         String country = authIdentity.getCountry(); // e.g. "EE"
 
     }
