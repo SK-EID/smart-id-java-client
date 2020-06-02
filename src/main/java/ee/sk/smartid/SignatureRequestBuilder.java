@@ -266,7 +266,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    *                                 First option from this list that the device is capable of handling is displayed to the user.
    * @return this builder
    */
-  public SignatureRequestBuilder withAllowedInteractionsOrder(List<AllowedInteraction> allowedInteractionsOrder) {
+  public SignatureRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
     this.allowedInteractionsOrder = allowedInteractionsOrder;
     return this;
   }

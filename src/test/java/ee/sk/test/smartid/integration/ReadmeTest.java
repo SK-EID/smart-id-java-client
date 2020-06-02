@@ -3,7 +3,8 @@ package ee.sk.test.smartid.integration;
 import ee.sk.smartid.*;
 import ee.sk.smartid.exception.RequiredInteractionNotSupportedByAppException;
 import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.rest.dao.AllowedInteraction;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.InteractionFlow;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import org.apache.http.client.config.RequestConfig;
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
@@ -22,6 +23,7 @@ import javax.ws.rs.client.ClientBuilder;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +42,9 @@ public class ReadmeTest {
 
     SmartIdAuthenticationResponse authenticationResponse;
 
+    SignableHash hashToSign;
+
+
     @Before
     public void setUp() {
         client = new SmartIdClient();
@@ -48,6 +53,12 @@ public class ReadmeTest {
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
 
         authenticationResponse = new SmartIdAuthenticationResponse();
+
+        hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA256);
+        // calculate hash from the document you want to sign (i.e. use Digidoc4J or other libraries)
+        // this class also has a method to set hash as bite array
+        hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
 
     }
 
@@ -173,7 +184,7 @@ public class ReadmeTest {
                 .withCertificateLevel("QUALIFIED") // Certificate level can either be "QUALIFIED" or "ADVANCED"
                 // Smart-ID app will display verification code to the user and user must insert PIN1
                 .withAllowedInteractionsOrder(
-                        Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to self-service?")
+                        Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")
                 ))
                 .authenticate();
 
@@ -214,7 +225,7 @@ public class ReadmeTest {
                 .withAllowedInteractionsOrder(Collections.singletonList(
                         // Smart-ID app will show 3 different verification codes to user and user must choose correct verification code
                         // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
-                        AllowedInteraction.verificationCodeChoice("Log in to self-service?")
+                        Interaction.verificationCodeChoice("Log in to self-service?")
                 ))
                 .authenticate();
     }
@@ -244,7 +255,7 @@ public class ReadmeTest {
         AuthenticationIdentity authIdentity = authenticationResponseValidator.validate(authenticationResponse);
 
         String givenName = authIdentity.getGivenName(); // e.g. Mari-Liis"
-        String surName = authIdentity.getSurname(); // e.g. "Männik"
+        String surname = authIdentity.getSurname(); // e.g. "Männik"
         String identityCode = authIdentity.getIdentityNumber(); // e.g. "47101010033"
         String country = authIdentity.getCountry(); // e.g. "EE"
 
@@ -316,8 +327,8 @@ public class ReadmeTest {
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
-                        AllowedInteraction.confirmationMessage("Long text (up to 200 characters) goes here."),
-                        AllowedInteraction.displayTextAndPIN("Shorter text for less capable devices")
+                        Interaction.confirmationMessage("Long text (up to 200 characters) goes here."),
+                        Interaction.displayTextAndPIN("Shorter text for less capable devices")
                 ))
                 .sign();
 
@@ -326,6 +337,175 @@ public class ReadmeTest {
         String usedFlow = smartIdSignature.getInteractionFlowUsed();// which interaction was used
 
     }
+
+    /*
+
+# Setting the order of preferred interactions for displaying text and asking PIN
+
+An app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
+Different interaction flows can support different amount of data to display information to user.
+
+Available interactions:
+* `displayTextAndPIN` with `displayText60`. The simplest interaction with max 60 chars of text and PIN entry on a single screen. Every app has this interaction available.
+* `verificationCodeChoice` with `displayText60`. On first screen user must choose the correct verification code that was displayed to him from 3 verification codes. Then second screen is displayed with max 60 chars text and PIN input.
+* `confirmationMessage` with `displayText200`. First screen is for text only (max 200 chars) and has Confirm and Cancel buttons. Second screen is for PIN.
+* `confirmationMessageAndVerificationCodeChoice` with `displayText200`. First screen combines text and Verification Code choice. Second screen is for PIN.
+
+RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
+The Smart-ID server is aware of which app installations support which interactions. When processing an RP request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
+The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
+If an app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
+
+`displayText60`, `displayText200` - Text to display for authentication consent dialog on the mobile device. Limited to 60 and 200 characters respectively.
+
+## Parameter allowedInteractionsOrder most common examples
+
+Following allowedInteractionsOrder combinations are most likely to be used.
+
+### Short confirmation message with PIN
+
+If confirmation message fits to 60 characters then this is the most common choice.
+Every Smart-ID app supports this interaction flow and there is no need to provide any fallbacks to this interaction.
+
+*/
+    @Test
+    public void documentInteractionOrderMostCommon() {
+        SmartIdSignature smartIdSignature = client
+                .createSignature()
+                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withSignableHash(hashToSign)
+                .withCertificateLevel("QUALIFIED")
+                .withAllowedInteractionsOrder(Collections.singletonList(
+                        Interaction.displayTextAndPIN("My confirmation message that is no more than 60 chars")
+                ))
+                .sign();
+    }
+
+    /*
+### Verification code choice
+
+This is more secure than previous example as the app forces user to look up the verification code displayed to him and
+pick the same verification code from 3 different codes displayed in Smart-ID app and thus tries to assure that user is not interacting with some other service.
+
+If user picks wrong verification code then the session is cancelled and library throws `UserSelectedWrongVerificationCodeException`.
+
+If user's app doesn't support displaying verification code choice then system falls back to displaying text and PIN input.
+
+     */
+
+
+    @Test
+    public void documentInteractionOrderVerificationChoice() {
+        SmartIdSignature smartIdSignature = client
+                .createSignature()
+                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withSignableHash(hashToSign)
+                .withCertificateLevel("QUALIFIED")
+                .withAllowedInteractionsOrder(Arrays.asList(
+                        Interaction.verificationCodeChoice("My confirmation message that is no more than 60 chars"),
+                        Interaction.displayTextAndPIN("My confirmation message that is no more than 60 chars")
+                ))
+                .sign();
+    }
+
+    /*
+
+
+### Long confirmation message with fallback to PIN
+
+Relying Party first choice is confirmationMessage that can be up to 200 characters long.
+If the Smart-ID app in user's smart device doesn't support this feature then the app falls back to displayTextAndPIN interaction.
+
+*/
+
+    @Test
+    public void documentInteractionOrderConfirmationWithFallbackToPin() {
+        SmartIdSignature smartIdSignature = client
+                .createSignature()
+                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withSignableHash(hashToSign)
+                .withCertificateLevel("QUALIFIED")
+                .withAllowedInteractionsOrder(asList(
+                        Interaction.confirmationMessage("Long text (up to 200 characters) goes here."),
+                        Interaction.displayTextAndPIN("Shorter text for less capable devices")
+                ))
+                .sign();
+
+        if (InteractionFlow.CONFIRMATION_MESSAGE.is(smartIdSignature.getInteractionFlowUsed())) {
+            System.out.println("Smart-ID app was able to display full text to user");
+        }
+        else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteractionFlowUsed())) {
+            System.out.println("Smart-ID app displayed shorter text to user");
+        }
+
+    }
+
+/*
+### Long confirmation message together with verification code choice with fallback to verification code choice.
+
+Relying Party first choice is confirmationMessage followed by verification code choice.
+If this is not available then only verification code choice with shorter text is displayed.
+
+If user picks wrong verification code then the session is cancelled and library throws `UserSelectedWrongVerificationCodeException`.
+
+*/
+
+    @Test
+    public void documentInteractionOrder2() {
+        SmartIdSignature smartIdSignature = client
+                .createSignature()
+                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withSignableHash(hashToSign)
+                .withCertificateLevel("QUALIFIED")
+                .withAllowedInteractionsOrder(asList(
+                        Interaction.confirmationMessageAndVerificationCodeChoice("Long text (up to 200 characters) goes here."),
+                        Interaction.verificationCodeChoice("Shorter text for less capable devices"),
+                        Interaction.displayTextAndPIN("Shorter text for less capable devices")
+                ))
+                .sign();
+
+        if (InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE.is(smartIdSignature.getInteractionFlowUsed())) {
+            System.out.println("Smart-ID app was able to display full text on separate screen and verification code choice.");
+        }
+        else if (InteractionFlow.VERIFICATION_CODE_CHOICE.is(smartIdSignature.getInteractionFlowUsed())) {
+            System.out.println("Smart-ID app displayed shorter text together with verification choice.");
+        }
+        else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteractionFlowUsed())) {
+            System.out.println("Smart-ID app displayed shorter text to user with PIN input.");
+        }
+
+    }
+    /*
+
+### Listing interactions with longer text without fallback
+
+Relying Party can require interactions without fallback.
+If End User's phone doesn't support required flow the library throws `RequiredInteractionNotSupportedByAppException`.
+
+
+     */
+    @Test
+    public void documentInteractionOrderWithoutFallback() {
+
+        try {
+            client
+                .createSignature()
+                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withSignableHash(hashToSign)
+                .withCertificateLevel("QUALIFIED")
+                .withAllowedInteractionsOrder(Collections.singletonList(
+                        Interaction.confirmationMessage("Long text (up to 200 characters) goes here.")
+                ))
+                .sign();
+        }
+        catch (RequiredInteractionNotSupportedByAppException interactionNotSupported) {
+            System.out.println("User's Smart-ID app is not capable of displaying required interaction");
+        }
+
+
+
+    }
+
 
     /*
     ## Network connection configuration of the client

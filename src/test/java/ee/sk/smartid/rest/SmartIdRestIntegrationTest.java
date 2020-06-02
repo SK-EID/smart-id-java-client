@@ -109,8 +109,8 @@ public class SmartIdRestIntegrationTest {
     authenticationSessionRequest.setHash(calculateHashInBase64(DATA_TO_SIGN.getBytes()));
 
     authenticationSessionRequest.setAllowedInteractionsOrder(
-            asList(AllowedInteraction.confirmationMessage("Do you want to log in to internet banking system of Oceanic Bank?"),
-                    AllowedInteraction.displayTextAndPIN("Log into internet banking system?")));
+            asList(Interaction.confirmationMessage("Do you want to log in to internet banking system of Oceanic Bank?"),
+                    Interaction.displayTextAndPIN("Log into internet banking system?")));
 
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, authenticationSessionRequest);
 
@@ -212,7 +212,7 @@ public class SmartIdRestIntegrationTest {
     signatureSessionRequest.setHashType("SHA512");
     String hashInBase64 = calculateHashInBase64(DATA_TO_SIGN.getBytes());
     signatureSessionRequest.setHash(hashInBase64);
-    signatureSessionRequest.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to bank?")));
+    signatureSessionRequest.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to bank?")));
     return signatureSessionRequest;
   }
 
@@ -225,7 +225,7 @@ public class SmartIdRestIntegrationTest {
     String hashInBase64 = calculateHashInBase64(DATA_TO_SIGN.getBytes());
     authenticationSessionRequest.setHash(hashInBase64);
 
-    authenticationSessionRequest.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log into internet banking system")));
+    authenticationSessionRequest.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
 
     return authenticationSessionRequest;
   }

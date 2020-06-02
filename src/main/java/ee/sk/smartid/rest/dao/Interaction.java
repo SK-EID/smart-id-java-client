@@ -7,51 +7,51 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 
-import static ee.sk.smartid.rest.dao.AllowedInteractionType.*;
+import static ee.sk.smartid.rest.dao.InteractionFlow.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AllowedInteraction implements Serializable {
+public class Interaction implements Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(AllowedInteraction.class);
+    private static final Logger logger = LoggerFactory.getLogger(Interaction.class);
 
-    private AllowedInteractionType type;
+    private InteractionFlow type;
 
     private String displayText60;
     private String displayText200;
 
-    private AllowedInteraction(AllowedInteractionType type) {
+    private Interaction(InteractionFlow type) {
         this.type = type;
     }
 
-    public static AllowedInteraction displayTextAndPIN(String displayText60) {
-        AllowedInteraction allowedInteraction = new AllowedInteraction(DISPLAY_TEXT_AND_PIN);
-        allowedInteraction.displayText60 = displayText60;
-        return allowedInteraction;
+    public static Interaction displayTextAndPIN(String displayText60) {
+        Interaction interaction = new Interaction(DISPLAY_TEXT_AND_PIN);
+        interaction.displayText60 = displayText60;
+        return interaction;
     }
 
-    public static AllowedInteraction verificationCodeChoice(String displayText60) {
-        AllowedInteraction allowedInteraction = new AllowedInteraction(VERIFICATION_CODE_CHOICE);
-        allowedInteraction.displayText60 = displayText60;
-        return allowedInteraction;
+    public static Interaction verificationCodeChoice(String displayText60) {
+        Interaction interaction = new Interaction(VERIFICATION_CODE_CHOICE);
+        interaction.displayText60 = displayText60;
+        return interaction;
     }
 
-    public static AllowedInteraction confirmationMessage(String displayText200) {
-        AllowedInteraction allowedInteraction = new AllowedInteraction(AllowedInteractionType.CONFIRMATION_MESSAGE);
-        allowedInteraction.displayText200 = displayText200;
-        return allowedInteraction;
+    public static Interaction confirmationMessage(String displayText200) {
+        Interaction interaction = new Interaction(InteractionFlow.CONFIRMATION_MESSAGE);
+        interaction.displayText200 = displayText200;
+        return interaction;
     }
 
-    public static AllowedInteraction confirmationMessageAndVerificationCodeChoice(String displayText200) {
-        AllowedInteraction allowedInteraction = new AllowedInteraction(AllowedInteractionType.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
-        allowedInteraction.displayText200 = displayText200;
-        return allowedInteraction;
+    public static Interaction confirmationMessageAndVerificationCodeChoice(String displayText200) {
+        Interaction interaction = new Interaction(InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
+        interaction.displayText200 = displayText200;
+        return interaction;
     }
 
-    public AllowedInteractionType getType() {
+    public InteractionFlow getType() {
         return type;
     }
 
-    public void setType(AllowedInteractionType type) {
+    public void setType(InteractionFlow type) {
         this.type = type;
     }
 

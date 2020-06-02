@@ -11,9 +11,9 @@ public class AuthenticationIdentityTest {
     @Test
     public void setSurName() {
         AuthenticationIdentity authenticationIdentity = new AuthenticationIdentity();
-        authenticationIdentity.setSurName("surName");
+        authenticationIdentity.setSurName("surname1");
 
-        assertThat(authenticationIdentity.getSurname(), is("surName"));
+        assertThat(authenticationIdentity.getSurname(), is("surname1"));
     }
 
     @SuppressWarnings( "deprecation" )

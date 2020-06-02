@@ -29,7 +29,7 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.AllowedInteraction;
+import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionResult;
@@ -57,7 +57,7 @@ public abstract class SmartIdRequestBuilder {
   protected String nonce;
   protected Set<String> capabilities;
   protected RequestProperties requestProperties;
-  protected List<AllowedInteraction> allowedInteractionsOrder;
+  protected List<Interaction> allowedInteractionsOrder;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
@@ -102,7 +102,7 @@ public abstract class SmartIdRequestBuilder {
       logger.error("Missing or empty mandatory parameter allowedInteractionsOrder");
       throw new InvalidParametersException("Missing or empty mandatory parameter allowedInteractionsOrder");
     }
-    getAllowedInteractionsOrder().forEach(AllowedInteraction::validate);
+    getAllowedInteractionsOrder().forEach(Interaction::validate);
   }
 
   private int getIdentifiersCount() {
@@ -219,7 +219,7 @@ public abstract class SmartIdRequestBuilder {
     return requestProperties;
   }
 
-  public List<AllowedInteraction> getAllowedInteractionsOrder() {
+  public List<Interaction> getAllowedInteractionsOrder() {
     return allowedInteractionsOrder;
   }
 

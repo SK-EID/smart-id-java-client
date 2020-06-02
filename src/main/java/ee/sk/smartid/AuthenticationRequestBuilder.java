@@ -252,7 +252,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    *                                 First option from this list that the device is capable of handling is displayed to the user.
    * @return this builder
    */
-  public AuthenticationRequestBuilder withAllowedInteractionsOrder(List<AllowedInteraction> allowedInteractionsOrder) {
+  public AuthenticationRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
     this.allowedInteractionsOrder = allowedInteractionsOrder;
     return this;
   }

@@ -284,8 +284,8 @@ public class SmartIdRestConnectorTest {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_fallbackTo_displayTextAndPIN.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
 
-    AllowedInteraction confirmationMessageInteraction = AllowedInteraction.confirmationMessage("Do you want to transfer 200 Bison dollars from savings account to Oceanic Airlines?");
-    AllowedInteraction fallbackInteraction = AllowedInteraction.displayTextAndPIN("Transfer 200 BSD to Oceanic Airlines?");
+    Interaction confirmationMessageInteraction = Interaction.confirmationMessage("Do you want to transfer 200 Bison dollars from savings account to Oceanic Airlines?");
+    Interaction fallbackInteraction = Interaction.displayTextAndPIN("Transfer 200 BSD to Oceanic Airlines?");
     request.setAllowedInteractionsOrder(asList(confirmationMessageInteraction, fallbackInteraction));
 
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
@@ -298,7 +298,7 @@ public class SmartIdRestConnectorTest {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_noFallback.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
 
-    AllowedInteraction confi = AllowedInteraction.confirmationMessage("Do you want to transfer 999 Bison dollars from savings account to Oceanic Airlines?");
+    Interaction confi = Interaction.confirmationMessage("Do you want to transfer 999 Bison dollars from savings account to Oceanic Airlines?");
     request.setAllowedInteractionsOrder(Collections.singletonList(confi));
 
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
@@ -311,8 +311,8 @@ public class SmartIdRestConnectorTest {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_verificationCodeChoice_fallbackTo_displayTextAndPIN.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
 
-    AllowedInteraction verificationCodeChoice = AllowedInteraction.verificationCodeChoice("Transfer 444 BSD to Oceanic Airlines?");
-    AllowedInteraction fallbackToDisplayTextAndPIN = AllowedInteraction.displayTextAndPIN("Transfer 444 BSD to Oceanic Airlines?");
+    Interaction verificationCodeChoice = Interaction.verificationCodeChoice("Transfer 444 BSD to Oceanic Airlines?");
+    Interaction fallbackToDisplayTextAndPIN = Interaction.displayTextAndPIN("Transfer 444 BSD to Oceanic Airlines?");
     request.setAllowedInteractionsOrder(asList(verificationCodeChoice, fallbackToDisplayTextAndPIN));
 
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
@@ -325,8 +325,8 @@ public class SmartIdRestConnectorTest {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_fallbackTo_verificationCodeChoice.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
 
-    AllowedInteraction confirmationMessage = AllowedInteraction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
-    AllowedInteraction fallbackToVerificationCodeChoice = AllowedInteraction.verificationCodeChoice("Transfer 707 BSD to Oceanic Airlines?");
+    Interaction confirmationMessage = Interaction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
+    Interaction fallbackToVerificationCodeChoice = Interaction.verificationCodeChoice("Transfer 707 BSD to Oceanic Airlines?");
     request.setAllowedInteractionsOrder(asList(confirmationMessage, fallbackToVerificationCodeChoice));
 
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
@@ -339,8 +339,8 @@ public class SmartIdRestConnectorTest {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessageAndVerificationCodeChoice_fallbackTo_verificationCodeChoice.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
 
-    AllowedInteraction confirmationMessage = AllowedInteraction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
-    AllowedInteraction fallbackToVerificationCodeChoice = AllowedInteraction.verificationCodeChoice("Transfer 707 BSD to Oceanic Airlines?");
+    Interaction confirmationMessage = Interaction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
+    Interaction fallbackToVerificationCodeChoice = Interaction.verificationCodeChoice("Transfer 707 BSD to Oceanic Airlines?");
     request.setAllowedInteractionsOrder(asList(confirmationMessage, fallbackToVerificationCodeChoice));
 
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
@@ -445,7 +445,7 @@ public class SmartIdRestConnectorTest {
     SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOLT-48010010101");
 
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    request.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log into internet banking system")));
+    request.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
 
     AuthenticationSessionResponse response = connector.authenticate(semanticsIdentifier, request);
     assertNotNull(response);
@@ -457,7 +457,7 @@ public class SmartIdRestConnectorTest {
   public void authenticate_withSingleAllowedInteraction_usingDocumentNumber() {
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    request.setAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log into internet banking system")));
+    request.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
 
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
     assertNotNull(response);
@@ -618,8 +618,8 @@ public class SmartIdRestConnectorTest {
     request.setHash("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     request.setHashType("SHA256");
     request.setAllowedInteractionsOrder(asList(
-            AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-            AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+            Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+            Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
     );
     return request;
   }
@@ -632,8 +632,8 @@ public class SmartIdRestConnectorTest {
     request.setHash("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
     request.setHashType("SHA512");
     request.setAllowedInteractionsOrder(asList(
-            AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-            AllowedInteraction.displayTextAndPIN("Log in?"))
+            Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+            Interaction.displayTextAndPIN("Log in?"))
     );
     return request;
   }

@@ -71,7 +71,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), "QUALIFIED");
@@ -92,7 +92,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
         .withCapabilities("ADVANCED")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==", "QUALIFIED");
@@ -113,7 +113,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withSemanticsIdentifier(new SemanticsIdentifier("IDCCZ-1234567890"))
         .withCapabilities(Capability.ADVANCED)
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithSemanticsIdentifier(authenticationHash.getHashInBase64(), "QUALIFIED");
@@ -134,7 +134,7 @@ public class AuthenticationRequestBuilderTest {
             .withAuthenticationHash(authenticationHash)
             .withSemanticsIdentifierAsString("IDCCZ-1234567890")
             .withCapabilities(Capability.ADVANCED)
-            .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
             .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithSemanticsIdentifier(authenticationHash.getHashInBase64(), "QUALIFIED");
@@ -151,7 +151,7 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), null);
@@ -173,7 +173,7 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
@@ -193,7 +193,7 @@ public class AuthenticationRequestBuilderTest {
         .withDocumentNumber("PNOEE-31111111111")
         .withSemanticsIdentifierAsString("IDCCZ-1234567890")
         .withCertificateLevel("QUALIFIED")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
@@ -207,7 +207,7 @@ public class AuthenticationRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
@@ -225,7 +225,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
@@ -243,7 +243,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withAuthenticationHash(authenticationHash)
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
@@ -261,7 +261,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
@@ -279,7 +279,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .authenticate();
   }
 
@@ -298,7 +298,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
         .withNonce("THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890")
         .authenticate();
   }
@@ -337,7 +337,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .withAllowedInteractionsOrder(Collections.singletonList(
-                AllowedInteraction.displayTextAndPIN("This text here is longer than 60 characters allowed for displayTextAndPIN"))
+                Interaction.displayTextAndPIN("This text here is longer than 60 characters allowed for displayTextAndPIN"))
         )
         .authenticate();
   }
@@ -358,7 +358,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .withAllowedInteractionsOrder(Collections.singletonList(
-                AllowedInteraction.verificationCodeChoice("This text here is longer than 60 characters allowed for verificationCodeChoice"))
+                Interaction.verificationCodeChoice("This text here is longer than 60 characters allowed for verificationCodeChoice"))
         )
         .authenticate();
   }
@@ -379,7 +379,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .withAllowedInteractionsOrder(Collections.singletonList(
-                AllowedInteraction.confirmationMessage("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                Interaction.confirmationMessage("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
                         "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
                         "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
                         "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
@@ -404,7 +404,7 @@ public class AuthenticationRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
         .withAllowedInteractionsOrder(Collections.singletonList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                Interaction.confirmationMessageAndVerificationCodeChoice("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
                         "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
                         "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
                         "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
@@ -562,7 +562,7 @@ public class AuthenticationRequestBuilderTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("QUALIFIED")
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to self-service?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")))
         .authenticate();
   }
 

@@ -55,7 +55,7 @@ public class AuthenticationSessionRequest implements Serializable {
   private RequestProperties requestProperties;
 
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
-  private List<AllowedInteraction> allowedInteractionsOrder;
+  private List<Interaction> allowedInteractionsOrder;
 
   public String getCertificateLevel() {
     return certificateLevel;
@@ -125,11 +125,11 @@ public class AuthenticationSessionRequest implements Serializable {
     this.requestProperties = requestProperties;
   }
 
-  public List<AllowedInteraction> getAllowedInteractionsOrder() {
+  public List<Interaction> getAllowedInteractionsOrder() {
     return allowedInteractionsOrder;
   }
 
-  public void setAllowedInteractionsOrder(List<AllowedInteraction> allowedInteractionsOrder) {
+  public void setAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
     this.allowedInteractionsOrder = allowedInteractionsOrder;
   }
 }

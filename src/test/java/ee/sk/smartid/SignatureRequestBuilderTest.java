@@ -74,8 +74,8 @@ public class SignatureRequestBuilderTest {
         .withDocumentNumber("PNOEE-31111111111")
         .withCapabilities(Capability.ADVANCED)
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Sign hash?"),
-                AllowedInteraction.verificationCodeChoice("Sign hash?")))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Sign hash?"),
+                Interaction.verificationCodeChoice("Sign hash?")))
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");
@@ -95,7 +95,7 @@ public class SignatureRequestBuilderTest {
         .withSignableData(dataToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .withCapabilities("QUALIFIED")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.verificationCodeChoice("Do you want to say hello?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Do you want to say hello?")))
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");
@@ -114,8 +114,8 @@ public class SignatureRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(asList(AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Sign the contract?"),
-                AllowedInteraction.verificationCodeChoice("Sign hash?")))
+        .withAllowedInteractionsOrder(asList(Interaction.confirmationMessageAndVerificationCodeChoice("Sign the contract?"),
+                Interaction.verificationCodeChoice("Sign hash?")))
         .sign();
 
     assertCorrectSignatureRequestMade(null);
@@ -156,7 +156,7 @@ public class SignatureRequestBuilderTest {
           .withDocumentNumber("PNOEE-31111111111")
           .withSemanticsIdentifierAsString("IDCCZ-1234567890")
           .withCertificateLevel("QUALIFIED")
-          .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+          .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
           .sign();
   }
 
@@ -276,7 +276,7 @@ public class SignatureRequestBuilderTest {
             .withCertificateLevel("QUALIFIED")
             .withDocumentNumber("PNOEE-31111111111")
             .withAllowedInteractionsOrder(Collections.singletonList(
-                    AllowedInteraction.displayTextAndPIN("This text here is longer than 60 characters allowed for displayTextAndPIN"))
+                    Interaction.displayTextAndPIN("This text here is longer than 60 characters allowed for displayTextAndPIN"))
             )
             .sign();
   }
@@ -297,7 +297,7 @@ public class SignatureRequestBuilderTest {
             .withCertificateLevel("QUALIFIED")
             .withDocumentNumber("PNOEE-31111111111")
             .withAllowedInteractionsOrder(Collections.singletonList(
-                    AllowedInteraction.verificationCodeChoice("This text here is longer than 60 characters allowed for verificationCodeChoice"))
+                    Interaction.verificationCodeChoice("This text here is longer than 60 characters allowed for verificationCodeChoice"))
             )
             .sign();
   }
@@ -318,7 +318,7 @@ public class SignatureRequestBuilderTest {
             .withCertificateLevel("QUALIFIED")
             .withDocumentNumber("PNOEE-31111111111")
             .withAllowedInteractionsOrder(Collections.singletonList(
-                    AllowedInteraction.confirmationMessage("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                    Interaction.confirmationMessage("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
                             "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
                             "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
                             "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
@@ -343,7 +343,7 @@ public class SignatureRequestBuilderTest {
             .withCertificateLevel("QUALIFIED")
             .withDocumentNumber("PNOEE-31111111111")
             .withAllowedInteractionsOrder(Collections.singletonList(
-                    AllowedInteraction.confirmationMessageAndVerificationCodeChoice("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                    Interaction.confirmationMessageAndVerificationCodeChoice("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
                             "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
                             "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
                             "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
@@ -470,7 +470,7 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
-        .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Transfer amount X to Y?")))
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Transfer amount X to Y?")))
         .sign();
   }
 }

@@ -30,7 +30,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.exception.*;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
-import ee.sk.smartid.rest.dao.AllowedInteraction;
+import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier.CountryCode;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier.IdentityType;
@@ -124,8 +124,8 @@ public class SmartIdClientTest {
         .withSignableData(dataToSign)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?")))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?")))
         .sign();
 
     byte[] signatureValue = signature.getValue();
@@ -157,8 +157,8 @@ public class SmartIdClientTest {
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
 
@@ -254,8 +254,8 @@ public class SmartIdClientTest {
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
 
@@ -278,8 +278,8 @@ public class SmartIdClientTest {
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
 
@@ -301,8 +301,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withNonce("zstOt2umlc")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
 
@@ -323,8 +323,8 @@ public class SmartIdClientTest {
             .withSignableHash(hashToSign)
             .withCertificateLevel("ADVANCED")
             .withAllowedInteractionsOrder(asList(
-                    AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                    AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                    Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                    Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
             )
             .initiateSigning();
 
@@ -350,8 +350,8 @@ public class SmartIdClientTest {
             .withSignableHash(hashToSign)
             .withCertificateLevel("ADVANCED")
             .withAllowedInteractionsOrder(asList(
-                    AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                    AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                    Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                    Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
             )
             .initiateSigning();
 
@@ -506,8 +506,8 @@ public class SmartIdClientTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                Interaction.displayTextAndPIN("Log in?"))
         )
         .authenticate();
 
@@ -529,8 +529,8 @@ public class SmartIdClientTest {
             .withAuthenticationHash(authenticationHash)
             .withCertificateLevel("ADVANCED")
             .withAllowedInteractionsOrder(asList(
-                    AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                    AllowedInteraction.displayTextAndPIN("Log in?"))
+                    Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                    Interaction.displayTextAndPIN("Log in?"))
             )
             .authenticate();
 
@@ -555,8 +555,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withNonce("g9rp4kjca3")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                Interaction.displayTextAndPIN("Log in?"))
         )
         .authenticate();
 
@@ -579,8 +579,8 @@ public class SmartIdClientTest {
             .withAuthenticationHash(authenticationHash)
             .withCertificateLevel("ADVANCED")
             .withAllowedInteractionsOrder(asList(
-                    AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                    AllowedInteraction.displayTextAndPIN("Log in?"))
+                    Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                    Interaction.displayTextAndPIN("Log in?"))
             )
             .initiateAuthentication();
 
@@ -608,8 +608,8 @@ public class SmartIdClientTest {
             .withAuthenticationHash(authenticationHash)
             .withCertificateLevel("ADVANCED")
             .withAllowedInteractionsOrder(asList(
-                    AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                    AllowedInteraction.displayTextAndPIN("Log in?"))
+                    Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                    Interaction.displayTextAndPIN("Log in?"))
             )
             .initiateAuthentication();
 
@@ -788,8 +788,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withAuthenticationHash(authenticationHash)
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                Interaction.displayTextAndPIN("Log in?"))
         )
         .authenticate();
 
@@ -810,8 +810,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withAuthenticationHash(authenticationHash)
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                Interaction.displayTextAndPIN("Log in?"))
         )
         .authenticate();
 
@@ -832,8 +832,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withAuthenticationHash(authenticationHash)
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                Interaction.displayTextAndPIN("Log in?"))
         )
         .authenticate();
 
@@ -854,8 +854,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withSignableHash(signableHash)
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
 
@@ -876,8 +876,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withSignableHash(signableHash)
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
 
@@ -898,8 +898,8 @@ public class SmartIdClientTest {
         .withCertificateLevel("ADVANCED")
         .withSignableHash(signableHash)
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
 
@@ -924,8 +924,8 @@ public class SmartIdClientTest {
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
   }
@@ -949,8 +949,8 @@ public class SmartIdClientTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                Interaction.displayTextAndPIN("Log in?"))
         )
         .authenticate();
   }
@@ -986,8 +986,8 @@ public class SmartIdClientTest {
         .withSignableHash(hashToSign)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                AllowedInteraction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
         )
         .sign();
   }
@@ -1003,8 +1003,8 @@ public class SmartIdClientTest {
         .withAuthenticationHash(authenticationHash)
         .withCertificateLevel("ADVANCED")
         .withAllowedInteractionsOrder(asList(
-                AllowedInteraction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                AllowedInteraction.displayTextAndPIN("Log in?"))
+                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+                Interaction.displayTextAndPIN("Log in?"))
         )
         .authenticate();
   }

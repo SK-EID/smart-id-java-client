@@ -27,7 +27,7 @@ package ee.sk.test.smartid.integration;
  */
 
 import ee.sk.smartid.*;
-import ee.sk.smartid.rest.dao.AllowedInteraction;
+import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
@@ -115,7 +115,7 @@ public class SmartIdIntegrationTest {
              .withSignableData(dataToSign)
              .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
              .withAllowedInteractionsOrder(
-                     Collections.singletonList(AllowedInteraction.displayTextAndPIN("012345678901234567890123456789012345678901234567890123456789"))
+                     Collections.singletonList(Interaction.displayTextAndPIN("012345678901234567890123456789012345678901234567890123456789"))
              )
              .sign();
 
@@ -134,7 +134,7 @@ public class SmartIdIntegrationTest {
              .withDocumentNumber(DOCUMENT_NUMBER)
              .withAuthenticationHash(authenticationHash)
              .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
-             .withAllowedInteractionsOrder(Collections.singletonList(AllowedInteraction.displayTextAndPIN("Log in to internet bank?")))
+             .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
              .authenticate();
 
         assertAuthenticationResponseCreated(authenticationResponse, authenticationHash.getHashInBase64());
