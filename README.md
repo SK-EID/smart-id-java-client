@@ -6,8 +6,10 @@
 # Smart-ID Java client
 
 ```diff
-! NB! This is documentation for upcoming Smart-ID API 2.0 that is available in demo but in production it will be made available during summer 2020.  If you need to go live earlier see documentation for [Smart-ID Java Client 1](https://github.com/SK-EID/smart-id-java-client/tree/1.x).
+! NB! This is documentation for upcoming Smart-ID API 2.0 that is available in demo.
+! In production it will be made available during summer 2020. 
 ```
+For Most recent version available in production see the documentation for [Smart-ID Java Client 1.X](https://github.com/SK-EID/smart-id-java-client/tree/1.x).
 
 
 # Table of contents
