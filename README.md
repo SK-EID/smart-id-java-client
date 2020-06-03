@@ -447,13 +447,13 @@ This way it is possible to reduce error handling code to only handle generic par
 * SmartIdException - all exceptions thrown by Smart-ID client are subclass of this
     * UserActionRelatedException - Exceptions that are caused by user's actions (or lack of any action when needed)
         * SessionTimeoutException - user didn't press anything in app when asked
-        * UserSelectedWrongVerificationCodeException - user was displayed 3 codes in app and selected wrong code
-        * UserRefusedException - User pressed cancel. Has some concrete subclasses. But usually handling this parent error is enough.
+        * UserRefusedException - User pressed cancel. Usually handling this parent exception is enough but also has subclasses to indicate the exact screen where cancel was pressed.
             * UserRefusedCertChoiceException
             * UserRefusedConfirmationMessageException
             * UserRefusedConfirmationMessageWithVerificationChoiceException
             * UserRefusedDisplayTextAndPinException
             * UserRefusedVerificationChoiceException
+        * UserSelectedWrongVerificationCodeException - 3 different codeuser was displayed 3 codes in app and selected wrong code
     * UserAccountRelatedException - Exceptions that are caused by user account configuration
         * CertificateLevelMismatchException
         * NoSuitableAccountOfRequestedTypeFoundException
@@ -461,7 +461,8 @@ This way it is possible to reduce error handling code to only handle generic par
             * DocumentUnusableException
         * RequiredInteractionNotSupportedByAppException 
         * UserAccountNotFoundException
-    * NotRetryableSmartIdException - Exceptions that indicate problems with incorrect integration
+    * NotRetryableSmartIdException - Exceptions that indicate problems with incorrect integration.
+    Usually these types of errors remain when user retries shortly.
         * ServerMaintenanceException - Server is currently under maintenance
         * SmartIdClientException - this exception is a sign of incorrect integration with Smart-ID service (i.e. missing parameters etc)
             * RelyingPartyAccountConfigurationException - indicates that RelyingParty configuration at Smart-ID side can be incorrect
