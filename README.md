@@ -8,6 +8,39 @@
 NB! This is documentation for upcoming Smart-ID API 2.0 that is available in demo but in production it will be made available during summer 2020.
 If you need to go live earlier see documentation for [Smart-ID Java Client 1](https://github.com/SK-EID/smart-id-java-client/tree/1.x).
 
+# Table of contents
+
+* [Smart-ID Java client](#smart-id-java-client)
+    *   [Introduction](#introduction)
+    *   [Features](#features)
+    *   [Requirements](#requirements)
+*  [How to use it](#how-to-use-it)
+    *   [Test accounts for testing]()
+    *   [Log request payloads](#log-request-payloads)
+    *   [Example of configuring the client](#example-of-configuring-the-client)
+        *   [Relying on built-in certificates](#relying-on-built-in-certificates)
+        *   [Reading trusted certificates from key store](#reading-trusted-certificates-from-key-store)
+        *   [Feeding trusted certificates one by one](#feeding-trusted-certificates-one-by-one)
+    *   [Examples of performing authentication](#examples-of-performing-authentication)
+        *   [Authenticating with semantics identifier](#authenticating-with-semantics-identifier)
+        *   [Authenticating with document number](#authenticating-with-document-number)
+        *   [Validating authentication response](#validating-authentication-response)
+    *   [Creating a signature](#creating-a-signature)
+        *   [Obtaining signer's certificate](#obtaining-signers-certificate)
+        *   [Create the signature](#create-the-signature)
+    *   [Setting the order of preferred interactions for displaying text and asking PIN](#setting-the-order-of-preferred-interactions-for-displaying-text-and-asking-pin)
+        *   [Parameter allowedInteractionsOrder most common examples](#parameter-allowedinteractionsorder-most-common-examples)
+            *   [Short confirmation message with PIN](#short-confirmation-message-with-pin)
+            *   [Verification code choice](#verification-code-choice)
+            *   [Long confirmation message with fallback to PIN](#long-confirmation-message-with-fallback-to-pin)
+            *   [Long confirmation message together with verification code choice with fallback to verification code choice](#long-confirmation-message-together-with-verification-code-choice-with-fallback-to-verification-code-choice)
+            *   [Interactions with longer text without fallback](#interactions-with-longer-text-without-fallback)
+    *   [Handling exceptions](#handling-exceptions)
+    *   [Network connection configuration of the client](#network-connection-configuration-of-the-client)
+        *   [Example of creating a client with configured ssl context on JBoss using JAXWS RS](#example-of-creating-a-client-with-configured-ssl-context-on-jboss-using-jaxws-rs)
+        *   [Example of creating a client with configured proxy on JBoss](#example-of-creating-a-client-with-configured-ssl-context-on-jboss-using-jaxws-rs)
+
+
 ## Introduction
 
 The Smart-ID Java client can be used for easy integration of the [Smart-ID](https://www.smart-id.com) solution to information systems or e-services.
@@ -384,7 +417,7 @@ else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteraction
 }
 ```
 
-### Long confirmation message together with verification code choice with fallback to verification code choice.
+### Long confirmation message together with verification code choice with fallback to verification code choice
 
 Relying Party first choice is confirmationMessage followed by verification code choice.
 If this is not available then only verification code choice with shorter text is displayed.
@@ -417,7 +450,7 @@ else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteraction
 ```
 
 
-### Listing interactions with longer text without fallback
+### Interactions with longer text without fallback
 
 Relying Party can require interactions without fallback.
 If End User's phone doesn't support required flow the library throws `RequiredInteractionNotSupportedByAppException`.
