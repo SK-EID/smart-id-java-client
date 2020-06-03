@@ -1,8 +1,9 @@
 package ee.sk.test.smartid.integration;
 
 import ee.sk.smartid.*;
-import ee.sk.smartid.exception.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.InteractionFlow;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -244,7 +245,7 @@ public class ReadmeTest {
 
          */
 
-    @Test(expected = TechnicalErrorException.class)
+    @Test(expected = UnprocessableSmartIdResponseException.class)
     public void documentAuthValidation() {
 
         // init Authentication response validator with trusted certificates loaded from within library
@@ -352,7 +353,7 @@ Available interactions:
 * `confirmationMessageAndVerificationCodeChoice` with `displayText200`. First screen combines text and Verification Code choice. Second screen is for PIN.
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
-The Smart-ID server is aware of which app installations support which interactions. When processing an RP request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
+The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
 The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
 If an app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
@@ -396,7 +397,8 @@ If user's app doesn't support displaying verification code choice then system fa
 
     @Test
     public void documentInteractionOrderVerificationChoice() {
-        SmartIdSignature smartIdSignature = client
+        try {
+            SmartIdSignature smartIdSignature = client
                 .createSignature()
                 .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
                 .withSignableHash(hashToSign)
@@ -406,6 +408,10 @@ If user's app doesn't support displaying verification code choice then system fa
                         Interaction.displayTextAndPIN("My confirmation message that is no more than 60 chars")
                 ))
                 .sign();
+        }
+        catch (UserSelectedWrongVerificationCodeException wrongVerificationCodeException) {
+            System.out.println("User selected wrong verification code from 3-code choice");
+        }
     }
 
     /*
@@ -498,7 +504,7 @@ If End User's phone doesn't support required flow the library throws `RequiredIn
                 ))
                 .sign();
         }
-        catch (RequiredInteractionNotSupportedByAppException interactionNotSupported) {
+        catch (RequiredInteractionNotSupportedByAppException e) {
             System.out.println("User's Smart-ID app is not capable of displaying required interaction");
         }
 

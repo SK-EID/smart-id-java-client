@@ -26,7 +26,13 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.*;
@@ -283,11 +289,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Send the authentication request and get the session Id
    *
-   * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return session Id - later to be used for manual session status polling
@@ -342,11 +344,11 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     validateSessionResult(sessionStatus.getResult());
     if (sessionStatus.getSignature() == null) {
       logger.error("Signature was not present in the response");
-      throw new TechnicalErrorException("Signature was not present in the response");
+      throw new UnprocessableSmartIdResponseException("Signature was not present in the response");
     }
     if (sessionStatus.getCert() == null) {
       logger.error("Certificate was not present in the response");
-      throw new TechnicalErrorException("Certificate was not present in the response");
+      throw new UnprocessableSmartIdResponseException("Certificate was not present in the response");
     }
   }
 

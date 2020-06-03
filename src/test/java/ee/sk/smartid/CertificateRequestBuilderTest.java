@@ -26,9 +26,9 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.exception.UserRefusedException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
@@ -95,7 +95,7 @@ public class CertificateRequestBuilderTest {
 
   @Test
   public void getCertificate_withoutAnyIdentifier_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
 
     SignableHash hashToSign = new SignableHash();
@@ -121,7 +121,7 @@ public class CertificateRequestBuilderTest {
     assertValidCertificateChoiceRequestMade(null);
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test(expected = SmartIdClientException.class)
   public void getCertificate_whenIdentityOrDocumentNumberNotSet_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
@@ -130,7 +130,7 @@ public class CertificateRequestBuilderTest {
         .fetch();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test(expected = SmartIdClientException.class)
   public void getCertificate_withoutRelyingPartyUUID_shouldThrowException() {
     builder
         .withRelyingPartyName("relying-party-name")
@@ -139,7 +139,7 @@ public class CertificateRequestBuilderTest {
         .fetch();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test(expected = SmartIdClientException.class)
   public void getCertificate_withoutRelyingPartyName_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
@@ -150,7 +150,7 @@ public class CertificateRequestBuilderTest {
 
   @Test
   public void getCertificate_withTooLongNonce_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Nonce cannot be longer that 30 chars. You supplied: 'THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890'");
 
     builder
@@ -179,25 +179,25 @@ public class CertificateRequestBuilderTest {
         .fetch();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseWithoutCertificate_shouldThrowException() {
     connector.sessionStatusToRespond.setCert(null);
     makeCertificateRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseContainingEmptyCertificate_shouldThrowException() {
     connector.sessionStatusToRespond.getCert().setValue("");
     makeCertificateRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseWithoutDocumentNumber_shouldThrowException() {
     connector.sessionStatusToRespond.getResult().setDocumentNumber(null);
     makeCertificateRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseWithBlankDocumentNumber_shouldThrowException() {
     connector.sessionStatusToRespond.getResult().setDocumentNumber(" ");
     makeCertificateRequest();

@@ -26,7 +26,9 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.*;
@@ -161,7 +163,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_withoutDocumentNumber_withoutSemanticsIdentifier_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -179,7 +181,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_withDocumentNumberAndWithSemanticsIdentifier_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -199,7 +201,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_withoutHashAndWithoutDataToSign_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
 
     builder
@@ -213,7 +215,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticateWithHash_withoutHashType_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -231,7 +233,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticateWithHash_withoutHash_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -249,7 +251,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticateWithoutRelyingPartyUuid_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Parameter relyingPartyUUID must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -267,7 +269,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticateWithoutRelyingPartyName_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Parameter relyingPartyName must be set");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -285,7 +287,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_withTooLongNonce_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Nonce cannot be longer that 30 chars. You supplied: 'THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890'");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -305,7 +307,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_missingAllowedInteractionOrder_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Missing or empty mandatory parameter allowedInteractionsOrder");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -323,7 +325,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_displayTextAndPinTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText60 must not be longer than 60 characters");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -344,7 +346,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_verificationCodeChoiceTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText60 must not be longer than 60 characters");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -365,7 +367,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_confirmationMessageTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText200 must not be longer than 200 characters");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -390,7 +392,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_confirmationMessageAndVerificationCodeChoiceTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText200 must not be longer than 200 characters");
 
     AuthenticationHash authenticationHash = new AuthenticationHash();
@@ -471,7 +473,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_resultMissingInResponse_shouldThrowException() {
-    expectedException.expect(TechnicalErrorException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
 
     connector.sessionStatusToRespond.setResult(null);
     makeAuthenticationRequest();
@@ -479,7 +481,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_signatureMissingInResponse_shouldThrowException() {
-    expectedException.expect(TechnicalErrorException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
 
     connector.sessionStatusToRespond.setSignature(null);
     makeAuthenticationRequest();
@@ -487,7 +489,7 @@ public class AuthenticationRequestBuilderTest {
 
   @Test
   public void authenticate_certificateMissingInResponse_shouldThrowException() {
-    expectedException.expect(TechnicalErrorException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
 
     connector.sessionStatusToRespond.setCert(null);
     makeAuthenticationRequest();

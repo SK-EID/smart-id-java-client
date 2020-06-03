@@ -26,7 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import org.junit.Test;
 
 public class CertificateParserTest {

@@ -26,7 +26,11 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +56,7 @@ public class SessionStatusPoller {
       return pollForFinalSessionStatus(sessionId);
     } catch (InterruptedException e) {
       logger.error("Failed to poll session status: " + e.getMessage());
-      throw new TechnicalErrorException("Failed to poll session status: " + e.getMessage(), e);
+      throw new UnprocessableSmartIdResponseException("Failed to poll session status: " + e.getMessage(), e);
     }
   }
 

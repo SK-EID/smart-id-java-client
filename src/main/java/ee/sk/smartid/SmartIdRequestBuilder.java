@@ -26,7 +26,11 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraction.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.Interaction;
@@ -67,32 +71,32 @@ public abstract class SmartIdRequestBuilder {
   protected void validateParameters() {
     if (isBlank(relyingPartyUUID)) {
       logger.error("Parameter relyingPartyUUID must be set");
-      throw new InvalidParametersException("Parameter relyingPartyUUID must be set");
+      throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
     }
     if (isBlank(relyingPartyName)) {
       logger.error("Parameter relyingPartyName must be set");
-      throw new InvalidParametersException("Parameter relyingPartyName must be set");
+      throw new SmartIdClientException("Parameter relyingPartyName must be set");
     }
     if (nonce != null && nonce.length() > 30) {
-      throw new InvalidParametersException("Nonce cannot be longer that 30 chars. You supplied: '" + nonce + "'");
+      throw new SmartIdClientException("Nonce cannot be longer that 30 chars. You supplied: '" + nonce + "'");
     }
 
     int identifierCount = getIdentifiersCount();
 
     if (identifierCount == 0) {
       logger.error("Either documentNumber or semanticsIdentifier must be set");
-      throw new InvalidParametersException("Either documentNumber or semanticsIdentifier must be set");
+      throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set");
     }
     else if (identifierCount > 1 ) {
       logger.error("Exactly one of documentNumber or semanticsIdentifier must be set");
-      throw new InvalidParametersException("Exactly one of documentNumber or semanticsIdentifier must be set");
+      throw new SmartIdClientException("Exactly one of documentNumber or semanticsIdentifier must be set");
     }
   }
 
   protected void validateAuthSignParameters() {
     if (!isHashSet() && !isSignableDataSet()) {
       logger.error("Either dataToSign or hash with hashType must be set");
-      throw new InvalidParametersException("Either dataToSign or hash with hashType must be set");
+      throw new SmartIdClientException("Either dataToSign or hash with hashType must be set");
     }
     validateAllowedInteractionOrder();
   }
@@ -100,7 +104,7 @@ public abstract class SmartIdRequestBuilder {
   private void validateAllowedInteractionOrder() {
     if (getAllowedInteractionsOrder() == null || getAllowedInteractionsOrder().isEmpty()) {
       logger.error("Missing or empty mandatory parameter allowedInteractionsOrder");
-      throw new InvalidParametersException("Missing or empty mandatory parameter allowedInteractionsOrder");
+      throw new SmartIdClientException("Missing or empty mandatory parameter allowedInteractionsOrder");
     }
     getAllowedInteractionsOrder().forEach(Interaction::validate);
   }
@@ -119,7 +123,7 @@ public abstract class SmartIdRequestBuilder {
   protected void validateSessionResult(SessionResult result) {
     if (result == null) {
       logger.error("Result is missing in the session status response");
-      throw new TechnicalErrorException("Result is missing in the session status response");
+      throw new UnprocessableSmartIdResponseException("Result is missing in the session status response");
     }
     String endResult = result.getEndResult().toUpperCase();
 
@@ -149,7 +153,7 @@ public abstract class SmartIdRequestBuilder {
       case "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE":
         throw new UserRefusedConfirmationMessageWithVerificationChoiceException();
       default:
-        throw new TechnicalErrorException("Session status end result is '" + endResult + "'");
+        throw new UnprocessableSmartIdResponseException("Session status end result is '" + endResult + "'");
     }
   }
 

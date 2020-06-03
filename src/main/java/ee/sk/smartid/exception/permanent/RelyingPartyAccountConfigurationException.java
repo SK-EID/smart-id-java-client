@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.permanent;
 
 /*-
  * #%L
@@ -26,5 +26,12 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class SessionTimeoutException extends SmartIdException {
+/**
+ * Problems with RelyingParty account and access configuration
+ */
+public class RelyingPartyAccountConfigurationException extends SmartIdClientException {
+
+    public RelyingPartyAccountConfigurationException(String s, Exception e) {
+        super(s, e);
+    }
 }

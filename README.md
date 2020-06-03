@@ -304,7 +304,7 @@ Available interactions:
 * `confirmationMessageAndVerificationCodeChoice` with `displayText200`. First screen combines text and Verification Code choice. Second screen is for PIN.
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
-The Smart-ID server is aware of which app installations support which interactions. When processing an RP request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
+The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
 The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
 If an app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
@@ -341,16 +341,21 @@ If user picks wrong verification code then the session is cancelled and library 
 If user's app doesn't support displaying verification code choice then system falls back to displaying text and PIN input.
 
 ```
-SmartIdSignature smartIdSignature = client
-    .createSignature()
-    .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
-    .withSignableHash(hashToSign)
-    .withCertificateLevel("QUALIFIED")
-    .withAllowedInteractionsOrder(Arrays.asList(
-            Interaction.verificationCodeChoice("My confirmation message that is no more than 60 chars"),
-            Interaction.displayTextAndPIN("My confirmation message that is no more than 60 chars")
-    ))
-    .sign();
+try {
+    SmartIdSignature smartIdSignature = client
+        .createSignature()
+        .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+        .withSignableHash(hashToSign)
+        .withCertificateLevel("QUALIFIED")
+        .withAllowedInteractionsOrder(Arrays.asList(
+                Interaction.verificationCodeChoice("My confirmation message that is no more than 60 chars"),
+                Interaction.displayTextAndPIN(     "My confirmation message that is no more than 60 chars")
+        ))
+        .sign();
+}
+catch (UserSelectedWrongVerificationCodeException wrongVerificationCodeException) {
+    System.out.println("User selected wrong verification code from 3-code choice");
+}
 ```
 
 ### Long confirmation message with fallback to PIN
@@ -387,7 +392,6 @@ If this is not available then only verification code choice with shorter text is
 If user picks wrong verification code then the session is cancelled and library throws `UserSelectedWrongVerificationCodeException`.
 
 
-
 ```
 SmartIdSignature smartIdSignature = client
     .createSignature()
@@ -412,12 +416,57 @@ else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteraction
 }
 ```
 
+
 ### Listing interactions with longer text without fallback
 
 Relying Party can require interactions without fallback.
 If End User's phone doesn't support required flow the library throws `RequiredInteractionNotSupportedByAppException`.
 
+```
+try {
+    client
+        .createSignature()
+        .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+        .withSignableHash(hashToSign)
+        .withCertificateLevel("QUALIFIED")
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.confirmationMessage("Long text (up to 200 characters) goes here.")
+        ))
+        .sign();
+}
+catch (RequiredInteractionNotSupportedByAppException e) {
+    System.out.println("User's Smart-ID app is not capable of displaying required interaction");
+}
 
+```
+## Handling exceptions
+
+Exceptions thrown by this library are hierarchical.
+This way it is possible to reduce error handling code to only handle generic parent exceptions when needed.
+
+* SmartIdException - all exceptions thrown by Smart-ID client are subclass of this
+    * UserActionRelatedException - Exceptions that are caused by user's actions (or lack of any action when needed)
+        * SessionTimeoutException - user didn't press anything in app when asked
+        * UserSelectedWrongVerificationCodeException - user was displayed 3 codes in app and selected wrong code
+        * UserRefusedException - User pressed cancel. Has some concrete subclasses. But usually handling this parent error is enough.
+            * UserRefusedCertChoiceException
+            * UserRefusedConfirmationMessageException
+            * UserRefusedConfirmationMessageWithVerificationChoiceException
+            * UserRefusedDisplayTextAndPinException
+            * UserRefusedVerificationChoiceException
+    * UserAccountRelatedException - Exceptions that are caused by user account configuration
+        * CertificateLevelMismatchException
+        * NoSuitableAccountOfRequestedTypeFoundException
+        * PersonShouldViewSmartIdPortalException
+            * DocumentUnusableException
+        * RequiredInteractionNotSupportedByAppException 
+        * UserAccountNotFoundException
+    * NotRetryableSmartIdException - Exceptions that indicate problems with incorrect integration
+        * ServerMaintenanceException - Server is currently under maintenance
+        * SmartIdClientException - this exception is a sign of incorrect integration with Smart-ID service (i.e. missing parameters etc)
+            * RelyingPartyAccountConfigurationException - indicates that RelyingParty configuration at Smart-ID side can be incorrect
+            * UnprocessableSmartIdResponseException - shouldn't happen under normal condtitions
+    * SessionNotFoundException - When session was not found. Usually this is also caused by problems with implementation.
 
     
 ## Network connection configuration of the client
@@ -501,6 +550,3 @@ client.setConfiguredClient(resteasyClient);
 ```
 
     
-
-
-

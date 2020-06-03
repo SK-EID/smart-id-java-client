@@ -26,10 +26,9 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.CertificateLevelMismatchException;
-import ee.sk.smartid.exception.SmartIdClientException;
-import ee.sk.smartid.exception.SmartIdResponseValidationException;
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -69,7 +68,7 @@ public class AuthenticationResponseValidator {
    * The constructed instance is initialized with default trusted
    * CA certificates.
    *
-   * @throws TechnicalErrorException when there was an error initializing trusted CA certificates
+   * @throws SmartIdClientException when there was an error initializing trusted CA certificates
    */
   public AuthenticationResponseValidator() {
       initializeTrustedCACertificatesFromKeyStore();
@@ -80,7 +79,7 @@ public class AuthenticationResponseValidator {
    * <p>
    * The constructed instance is initialized passed in certificates
    *
-   * @throws TechnicalErrorException when there was an error initializing trusted CA certificates
+   * @throws SmartIdClientException when there was an error initializing trusted CA certificates
    */
   public AuthenticationResponseValidator(X509Certificate[] trustedCertificates) {
     trustedCACertificates.addAll(asList(trustedCertificates));
@@ -102,16 +101,16 @@ public class AuthenticationResponseValidator {
     validateAuthenticationResponse(authenticationResponse);
     AuthenticationIdentity identity = constructAuthenticationIdentity(authenticationResponse.getCertificate());
     if (!verifyResponseEndResult(authenticationResponse)) {
-      throw new SmartIdResponseValidationException("Smart-ID API returned end result code '" + authenticationResponse.getEndResult() + "'");
+      throw new UnprocessableSmartIdResponseException("Smart-ID API returned end result code '" + authenticationResponse.getEndResult() + "'");
     }
     if (!verifySignature(authenticationResponse)) {
-      throw new SmartIdResponseValidationException("Failed to verify validity of signature returned by Smart-ID");
+      throw new UnprocessableSmartIdResponseException("Failed to verify validity of signature returned by Smart-ID");
     }
     if (!verifyCertificateExpiry(authenticationResponse.getCertificate())) {
-      throw new SmartIdResponseValidationException("Signer's certificate has expired");
+      throw new UnprocessableSmartIdResponseException("Signer's certificate has expired");
     }
     if (!isCertificateTrusted(authenticationResponse.getCertificate())) {
-      throw new SmartIdResponseValidationException("Signer's certificate is not trusted");
+      throw new UnprocessableSmartIdResponseException("Signer's certificate is not trusted");
     }
     if (!verifyCertificateLevel(authenticationResponse)) {
       throw new CertificateLevelMismatchException();
@@ -211,15 +210,15 @@ public class AuthenticationResponseValidator {
   private void validateAuthenticationResponse(SmartIdAuthenticationResponse authenticationResponse) {
     if (authenticationResponse.getCertificate() == null) {
       logger.error("Certificate is not present in the authentication response");
-      throw new TechnicalErrorException("Certificate is not present in the authentication response");
+      throw new UnprocessableSmartIdResponseException("Certificate is not present in the authentication response");
     }
     if (StringUtils.isEmpty(authenticationResponse.getSignatureValueInBase64())) {
       logger.error("Signature is not present in the authentication response");
-      throw new TechnicalErrorException("Signature is not present in the authentication response");
+      throw new UnprocessableSmartIdResponseException("Signature is not present in the authentication response");
     }
     if (authenticationResponse.getHashType() == null) {
       logger.error("Hash type is not present in the authentication response");
-      throw new TechnicalErrorException("Hash type is not present in the authentication response");
+      throw new UnprocessableSmartIdResponseException("Hash type is not present in the authentication response");
     }
   }
 
@@ -238,7 +237,7 @@ public class AuthenticationResponseValidator {
       return signature.verify(authenticationResponse.getSignatureValue());
     } catch (GeneralSecurityException e) {
       logger.error("Signature verification failed");
-      throw new TechnicalErrorException("Signature verification failed", e);
+      throw new UnprocessableSmartIdResponseException("Signature verification failed", e);
     }
   }
 

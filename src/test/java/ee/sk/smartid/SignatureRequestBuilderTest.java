@@ -26,7 +26,9 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.*;
@@ -125,7 +127,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void signWithoutDocumentNumber_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
 
     SignableHash hashToSign = new SignableHash();
@@ -142,7 +144,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void sign_withDocumentNumberAndWithSemanticsIdentifier_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier must be set");
 
     SignableHash hashToSign = new SignableHash();
@@ -162,7 +164,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void sign_withoutDataToSign_withoutHash_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
 
     builder
@@ -175,7 +177,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void signWithSignableHash_withoutHashType_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
 
     SignableHash hashToSign = new SignableHash();
@@ -192,7 +194,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void sign_withHash_withoutHashType_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
 
     SignableHash hashToSign = new SignableHash();
@@ -208,7 +210,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void sign_withoutRelyingPartyUuid_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Parameter relyingPartyUUID must be set");
 
     SignableHash hashToSign = new SignableHash();
@@ -225,7 +227,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void sign_withoutRelyingPartyName_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Parameter relyingPartyName must be set");
 
     SignableHash hashToSign = new SignableHash();
@@ -242,7 +244,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void sign_withTooLongNonce_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("Nonce cannot be longer that 30 chars. You supplied: 'THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890'");
 
     SignableHash hashToSign = new SignableHash();
@@ -262,7 +264,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void authenticate_displayTextAndPinTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText60 must not be longer than 60 characters");
 
     SignableHash hashToSign = new SignableHash();
@@ -283,7 +285,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void authenticate_verificationCodeChoiceTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText60 must not be longer than 60 characters");
 
     SignableHash hashToSign = new SignableHash();
@@ -304,7 +306,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void authenticate_confirmationMessageTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText200 must not be longer than 200 characters");
 
     SignableHash hashToSign = new SignableHash();
@@ -329,7 +331,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void authenticate_confirmationMessageAndVerificationCodeChoiceTextTooLong_shouldThrowException() {
-    expectedException.expect(InvalidParametersException.class);
+    expectedException.expect(SmartIdClientException.class);
     expectedException.expectMessage("displayText200 must not be longer than 200 characters");
 
     SignableHash hashToSign = new SignableHash();
@@ -413,7 +415,7 @@ public class SignatureRequestBuilderTest {
 
   @Test
   public void sign_signatureMissingInResponse_shouldThrowException() {
-    expectedException.expect(TechnicalErrorException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
     expectedException.expectMessage("Signature was not present in the response");
 
     connector.sessionStatusToRespond.setSignature(null);

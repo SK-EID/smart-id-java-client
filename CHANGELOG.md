@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Switch to Smart-ID API 2.0
 - `AuthenticationResponseValidator.validate()` returns AuthenticationIdentity if validation passes.
   If validation fails then `SmartIdResponseValidationException` or its subclass `CertificateLevelMismatchException` (if signer's certificate is below requested level) is thrown.
+- Grouped exceptions thrown by library to reduce need to handle each exception individually. See Readme.md for detail info.
 - Minimum Java level raised to Java 8
 
 ### Added

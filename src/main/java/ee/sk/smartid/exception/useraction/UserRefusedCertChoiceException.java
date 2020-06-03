@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraction;
 
 /*-
  * #%L
@@ -26,5 +26,8 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class UserSelectedWrongVerificationCodeException extends SmartIdException {
+public class UserRefusedCertChoiceException extends UserRefusedException {
+    public UserRefusedCertChoiceException() {
+        super("User has multiple accounts and pressed Cancel on device choice screen on any device.");
+    }
 }

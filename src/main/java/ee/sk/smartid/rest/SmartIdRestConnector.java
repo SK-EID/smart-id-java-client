@@ -26,7 +26,13 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
+import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -196,10 +202,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
       return postRequest(uri, request, CertificateChoiceResponse.class);
     } catch (NotFoundException e) {
       logger.warn("Certificate not found for URI " + uri, e);
-      throw new CertificateNotFoundException();
+      throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
       logger.warn("No permission to issue the request", e);
-      throw new RequestForbiddenException();
+      throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
     }
   }
 
@@ -211,7 +217,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
       throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
       logger.warn("No permission to issue the request", e);
-      throw new RequestForbiddenException();
+      throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
     }
   }
 
@@ -223,7 +229,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
       throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
       logger.warn("No permission to issue the request", e);
-      throw new RequestForbiddenException();
+      throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
     }
   }
 
@@ -231,19 +237,31 @@ public class SmartIdRestConnector implements SmartIdConnector {
     try {
       Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
       return prepareClient(uri).post(requestEntity, responseType);
-    } catch (NotAuthorizedException e) {
+    }
+    catch (NotAuthorizedException e) {
       logger.warn("Request is unauthorized for URI " + uri, e);
-      throw new UnauthorizedException();
-    } catch (BadRequestException e) {
+      throw new RelyingPartyAccountConfigurationException("Request is unauthorized for URI " + uri, e);
+    }
+    catch (BadRequestException e) {
       logger.warn("Request is invalid for URI " + uri, e);
-      throw new InvalidParametersException();
-    } catch (ClientErrorException e) {
+      throw new SmartIdClientException("Server refused the request", e);
+    }
+    catch (ClientErrorException e) {
+      if (e.getResponse().getStatus() == 471) {
+        logger.warn("No suitable account of requested type found, but user has some other accounts.", e);
+        throw new NoSuitableAccountOfRequestedTypeFoundException();
+      }
+      if (e.getResponse().getStatus() == 472) {
+        logger.warn("Person should view Smart-ID app or Smart-ID self-service portal now.", e);
+        throw new PersonShouldViewSmartIdPortalException();
+      }
       if (e.getResponse().getStatus() == 480) {
         logger.warn("Client-side API is too old and not supported anymore");
-        throw new ClientNotSupportedException();
+        throw new SmartIdClientException("Client-side API is too old and not supported anymore");
       }
       throw e;
-    } catch (ServerErrorException e) {
+    }
+    catch (ServerErrorException e) {
       if (e.getResponse().getStatus() == 580) {
         logger.warn("Server is under maintenance, retry later", e);
         throw new ServerMaintenanceException();

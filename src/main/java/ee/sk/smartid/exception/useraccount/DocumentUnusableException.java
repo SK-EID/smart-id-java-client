@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraccount;
 
 /*-
  * #%L
@@ -26,8 +26,8 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class UserRefusedVerificationChoiceException extends UserRefusedException {
-    public UserRefusedVerificationChoiceException() {
-        super("User cancelled verificationCodeChoice screen");
+public class DocumentUnusableException extends PersonShouldViewSmartIdPortalException {
+    public DocumentUnusableException() {
+        super("DOCUMENT_UNUSABLE. User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.");
     }
 }

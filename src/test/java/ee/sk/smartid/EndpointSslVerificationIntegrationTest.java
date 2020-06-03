@@ -1,7 +1,7 @@
 package ee.sk.smartid;
 
 
-import ee.sk.smartid.exception.UnauthorizedException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
 import ee.sk.test.smartid.integration.SmartIdIntegrationTest;
 import org.hamcrest.core.StringContains;
 import org.junit.Rule;
@@ -78,7 +78,7 @@ public class EndpointSslVerificationIntegrationTest {
 
     @Test
     public void makeRequestToLiveApi_useDefaultSslContext_sslHandshakeSucceedsButThrowsUnauthorizedException() {
-        expectedException.expect(UnauthorizedException.class);
+        expectedException.expect(RelyingPartyAccountConfigurationException.class);
 
         SmartIdClient client = new SmartIdClient();
         client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);

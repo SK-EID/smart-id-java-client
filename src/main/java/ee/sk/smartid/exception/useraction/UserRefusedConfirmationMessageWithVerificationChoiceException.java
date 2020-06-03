@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraction;
 
 /*-
  * #%L
@@ -26,5 +26,8 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class CertificateNotFoundException extends SmartIdException {
+public class UserRefusedConfirmationMessageWithVerificationChoiceException extends UserRefusedException {
+    public UserRefusedConfirmationMessageWithVerificationChoiceException() {
+        super("User cancelled on confirmationMessageAndVerificationCodeChoice screen");
+    }
 }

@@ -27,7 +27,15 @@ package ee.sk.smartid;
  */
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import ee.sk.smartid.rest.dao.Interaction;
@@ -363,7 +371,7 @@ public class SmartIdClientTest {
 
   }
 
-  @Test(expected = CertificateNotFoundException.class)
+  @Test(expected = UserAccountNotFoundException.class)
   public void getCertificate_whenUserAccountNotFound_shouldThrowException() {
     stubNotFoundResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json");
     makeGetCertificateRequest();
@@ -412,7 +420,7 @@ public class SmartIdClientTest {
     makeGetCertificateRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_whenUnknownErrorCode_shouldThrowException() {
     stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenUnknownErrorCode.json");
     makeGetCertificateRequest();
@@ -424,25 +432,25 @@ public class SmartIdClientTest {
     makeCreateSignatureRequest();
   }
 
-  @Test(expected = RequestForbiddenException.class)
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
   public void getCertificate_whenRequestForbidden_shouldThrowException() {
     stubForbiddenResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json");
     makeGetCertificateRequest();
   }
 
-  @Test(expected = RequestForbiddenException.class)
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
   public void sign_whenRequestForbidden_shouldThrowException() {
     stubForbiddenResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json");
     makeCreateSignatureRequest();
   }
 
-  @Test(expected = ClientNotSupportedException.class)
+  @Test(expected = SmartIdClientException.class)
   public void getCertificate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
     stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", 480);
     makeGetCertificateRequest();
   }
 
-  @Test(expected = ClientNotSupportedException.class)
+  @Test(expected = SmartIdClientException.class)
   public void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
     stubErrorResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", 480);
     makeCreateSignatureRequest();
@@ -647,13 +655,13 @@ public class SmartIdClientTest {
     makeAuthenticationRequest();
   }
 
-  @Test(expected = RequestForbiddenException.class)
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
   public void authenticate_whenRequestForbidden_shouldThrowException() {
     stubForbiddenResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json");
     makeAuthenticationRequest();
   }
 
-  @Test(expected = ClientNotSupportedException.class)
+  @Test(expected = SmartIdClientException.class)
   public void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
     stubErrorResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", 480);
     makeAuthenticationRequest();

@@ -26,9 +26,8 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.CertificateLevelMismatchException;
-import ee.sk.smartid.exception.SmartIdResponseValidationException;
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hamcrest.core.StringContains;
@@ -87,7 +86,7 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void validate_invalidSignatureValue() {
-    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
     expectedException.expectMessage(StringContains.containsString("Failed to verify validity of signature returned by Smart-ID"));
 
     SmartIdAuthenticationResponse response = createValidValidationResponse();
@@ -108,7 +107,7 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void validationReturnsInvalidAuthenticationResult_whenEndResultNotOk() {
-    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
     expectedException.expectMessage(StringContains.containsString("Smart-ID API returned end result code 'NOT OK'"));
 
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidEndResult();
@@ -117,7 +116,7 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void validationReturnsInvalidAuthenticationResult_whenSignatureVerificationFails() {
-    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
     expectedException.expectMessage(StringContains.containsString("Failed to verify validity of signature returned by Smart-ID"));
 
     SmartIdAuthenticationResponse response = createValidationResponseWithInvalidSignature();
@@ -126,7 +125,7 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void validationReturnsInvalidAuthenticationResult_whenSignersCertExpired() {
-    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
     expectedException.expectMessage(StringContains.containsString("Signer's certificate has expired"));
 
     SmartIdAuthenticationResponse response = createValidationResponseWithExpiredCertificate();
@@ -135,7 +134,7 @@ public class AuthenticationResponseValidatorTest {
 
   @Test
   public void validationReturnsInvalidAuthenticationResult_whenSignersCertNotTrusted() throws CertificateException {
-    expectedException.expect(SmartIdResponseValidationException.class);
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
     expectedException.expectMessage(StringContains.containsString("Signer's certificate is not trusted"));
 
     SmartIdAuthenticationResponse response = createValidValidationResponse();
@@ -215,21 +214,21 @@ public class AuthenticationResponseValidatorTest {
     assertAuthenticationIdentityValid(authenticationIdentity, response.getCertificate());
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void whenCertificateIsNull_ThenThrowException() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setCertificate(null);
     validator.validate(response);
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void whenSignatureIsEmpty_ThenThrowException() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setSignatureValueInBase64("");
     validator.validate(response);
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void whenHashTypeIsNull_ThenThrowException() {
     SmartIdAuthenticationResponse response = createValidValidationResponse();
     response.setHashType(null);

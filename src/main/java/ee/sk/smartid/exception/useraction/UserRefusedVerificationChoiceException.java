@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraction;
 
 /*-
  * #%L
@@ -26,10 +26,8 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class RequiredInteractionNotSupportedByAppException extends SmartIdException {
-
-    public RequiredInteractionNotSupportedByAppException() {
-        super("User app version does not support any of the allowedInteractionsOrder interactions.");
+public class UserRefusedVerificationChoiceException extends UserRefusedException {
+    public UserRefusedVerificationChoiceException() {
+        super("User cancelled verificationCodeChoice screen");
     }
-
 }

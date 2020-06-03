@@ -26,7 +26,13 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.*;
@@ -218,7 +224,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Send the certificate choice request and get the response
    *x
-   * @throws CertificateNotFoundException when the certificate was not found
+   * @throws UserAccountNotFoundException when the certificate was not found
    * @throws UserRefusedException when the user has refused the session.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
@@ -227,8 +233,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    *
    * @return the certificate choice response
    */
-  public SmartIdCertificate fetch() throws InvalidParametersException, CertificateNotFoundException, RequestForbiddenException, UserRefusedException,
-      SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
+  public SmartIdCertificate fetch() throws UserAccountNotFoundException, UserRefusedException,
+      SessionTimeoutException, DocumentUnusableException, UnprocessableSmartIdResponseException, SmartIdClientException, ServerMaintenanceException {
     logger.debug("Starting to fetch certificate");
     validateParameters();
     String sessionId = initiateCertificateChoice();
@@ -244,8 +250,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    *
    * @return session Id - later to be used for manual session status polling
    */
-  public String initiateCertificateChoice() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,
-          ClientNotSupportedException, ServerMaintenanceException {
+  public String initiateCertificateChoice() throws UserAccountNotFoundException,
+          SmartIdClientException, ServerMaintenanceException {
     validateParameters();
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse response = fetchCertificateChoiceSessionResponse(request);
@@ -302,11 +308,11 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     SessionCertificate certificate = sessionStatus.getCert();
     if (certificate == null || isBlank(certificate.getValue())) {
       logger.error("Certificate was not present in the session status response");
-      throw new TechnicalErrorException("Certificate was not present in the session status response");
+      throw new UnprocessableSmartIdResponseException("Certificate was not present in the session status response");
     }
     if (isBlank(sessionStatus.getResult().getDocumentNumber())) {
       logger.error("Document number was not present in the session status response");
-      throw new TechnicalErrorException("Document number was not present in the session status response");
+      throw new UnprocessableSmartIdResponseException("Document number was not present in the session status response");
     }
   }
 
@@ -314,7 +320,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     super.validateParameters();
     if (isBlank(getDocumentNumber()) && !hasSemanticsIdentifier()) {
       logger.error("Either documentNumber or semanticsIdentifier must be set");
-      throw new InvalidParametersException("Either documentNumber or semanticsIdentifier must be set");
+      throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set");
     }
   }
 

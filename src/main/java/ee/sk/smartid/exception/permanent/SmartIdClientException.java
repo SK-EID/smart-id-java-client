@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.permanent;
 
 /*-
  * #%L
@@ -26,10 +26,12 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
+import ee.sk.smartid.exception.NotRetryableSmartIdException;
+
 /**
  * This exception is thrown if client (this library) has configuration errors.
  */
-public class SmartIdClientException extends RuntimeException {
+public class SmartIdClientException extends NotRetryableSmartIdException {
 
   public SmartIdClientException(String message) {
     super(message);

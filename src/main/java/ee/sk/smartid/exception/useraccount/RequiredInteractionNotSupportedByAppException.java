@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraccount;
 
 /*-
  * #%L
@@ -25,16 +25,13 @@ package ee.sk.smartid.exception;
  * THE SOFTWARE.
  * #L%
  */
-/**
- * This exception is thrown if client (this library) cannot handle Smart-ID API response.
- */
-public class TechnicalErrorException extends SmartIdException {
 
-  public TechnicalErrorException(String message, Throwable cause) {
-    super(message, cause);
-  }
+import ee.sk.smartid.exception.UserAccountRelatedException;
 
-  public TechnicalErrorException(String message) {
-    super(message);
-  }
+public class RequiredInteractionNotSupportedByAppException extends UserAccountRelatedException {
+
+    public RequiredInteractionNotSupportedByAppException() {
+        super("User app version does not support any of the allowedInteractionsOrder interactions.");
+    }
+
 }

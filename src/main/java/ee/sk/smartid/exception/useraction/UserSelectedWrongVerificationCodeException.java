@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraction;
 
 /*-
  * #%L
@@ -26,9 +26,10 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class ClientNotSupportedException extends SmartIdException {
+import ee.sk.smartid.exception.UserActionRelatedException;
 
-  public ClientNotSupportedException() {
-    super("The client-side implementation of this API is old and not supported any more. Relying Party should contact customer support.");
-  }
+public class UserSelectedWrongVerificationCodeException extends UserActionRelatedException {
+    public UserSelectedWrongVerificationCodeException() {
+        super("User selected wrong verification code");
+    }
 }

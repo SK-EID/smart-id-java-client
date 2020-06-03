@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraccount;
 
 /*-
  * #%L
@@ -26,9 +26,10 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class RequestForbiddenException extends SmartIdException {
+import ee.sk.smartid.exception.UserAccountRelatedException;
 
-  public RequestForbiddenException() {
-    super("Relying Party has no permission to issue the request. This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.");
-  }
+public class UserAccountNotFoundException extends UserAccountRelatedException {
+    public UserAccountNotFoundException() {
+        super("User account not found");
+    }
 }

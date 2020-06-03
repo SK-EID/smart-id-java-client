@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.useraction;
 
 /*-
  * #%L
@@ -26,5 +26,8 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class UserAccountNotFoundException extends SmartIdException {
+public class UserRefusedDisplayTextAndPinException extends UserRefusedException {
+    public UserRefusedDisplayTextAndPinException() {
+        super("User pressed Cancel on PIN screen.");
+    }
 }

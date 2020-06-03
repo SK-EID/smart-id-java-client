@@ -1,7 +1,7 @@
 package ee.sk.smartid.rest.dao;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.exception.InvalidParametersException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,13 +79,13 @@ public class Interaction implements Serializable {
     private void validateDisplayText60() {
         if (getType() == VERIFICATION_CODE_CHOICE || getType() == DISPLAY_TEXT_AND_PIN) {
             if (getDisplayText60() == null) {
-                throw new InvalidParametersException("displayText60 cannot be null for AllowedInteractionOrder of type " + getType());
+                throw new SmartIdClientException("displayText60 cannot be null for AllowedInteractionOrder of type " + getType());
             }
             if (getDisplayText60().length() > 60) {
-                throw new InvalidParametersException("displayText60 must not be longer than 60 characters");
+                throw new SmartIdClientException("displayText60 must not be longer than 60 characters");
             }
             if (getDisplayText200() != null) {
-                throw new InvalidParametersException("displayText200 must be null for AllowedInteractionOrder of type " + getType());
+                throw new SmartIdClientException("displayText200 must be null for AllowedInteractionOrder of type " + getType());
             }
         }
     }
@@ -93,13 +93,13 @@ public class Interaction implements Serializable {
     private void validateDisplayText200() {
         if (getType() == CONFIRMATION_MESSAGE || getType() == CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE) {
             if (getDisplayText200() == null) {
-                throw new InvalidParametersException("displayText200 cannot be null for AllowedInteractionOrder of type " + getType());
+                throw new SmartIdClientException("displayText200 cannot be null for AllowedInteractionOrder of type " + getType());
             }
             if (getDisplayText200().length() > 200) {
-                throw new InvalidParametersException("displayText200 must not be longer than 200 characters");
+                throw new SmartIdClientException("displayText200 must not be longer than 200 characters");
             }
             if (getDisplayText60() != null) {
-                throw new InvalidParametersException("displayText60 must be null for AllowedInteractionOrder of type " + getType());
+                throw new SmartIdClientException("displayText60 must be null for AllowedInteractionOrder of type " + getType());
             }
         }
     }

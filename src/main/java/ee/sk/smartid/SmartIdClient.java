@@ -26,8 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.SmartIdClientException;
-import ee.sk.smartid.exception.SmartIdException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
@@ -299,7 +298,7 @@ public class SmartIdClient {
       }
     }
     catch (KeyStoreException | CertificateEncodingException e) {
-      throw new SmartIdException(e.getMessage());
+      throw new SmartIdClientException(e.getMessage());
     }
 
   }

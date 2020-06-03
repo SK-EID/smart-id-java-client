@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception;
+package ee.sk.smartid.exception.permanent;
 
 /*-
  * #%L
@@ -26,7 +26,9 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class ServerMaintenanceException extends SmartIdException {
+import ee.sk.smartid.exception.NotRetryableSmartIdException;
+
+public class ServerMaintenanceException extends NotRetryableSmartIdException {
 
   public ServerMaintenanceException() {
     super("Server is under maintenance, retry later.");

@@ -26,7 +26,13 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.*;
@@ -325,7 +331,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   * @throws UnprocessableSmartIdResponseException when session status response's result is missing or it has some unknown value
    *
    * @param sessionStatus session status response
    * @return the authentication response
@@ -352,7 +358,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     validateSessionResult(sessionStatus.getResult());
     if (sessionStatus.getSignature() == null) {
       logger.error("Signature was not present in the response");
-      throw new TechnicalErrorException("Signature was not present in the response");
+      throw new UnprocessableSmartIdResponseException("Signature was not present in the response");
     }
   }
 
