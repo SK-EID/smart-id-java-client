@@ -26,9 +26,9 @@ package ee.sk.smartid.exception.useraccount;
  * #L%
  */
 
-import ee.sk.smartid.exception.UserAccountRelatedException;
+import ee.sk.smartid.exception.UserAccountException;
 
-public class UserAccountNotFoundException extends UserAccountRelatedException {
+public class UserAccountNotFoundException extends UserAccountException {
     public UserAccountNotFoundException() {
         super("User account not found");
     }

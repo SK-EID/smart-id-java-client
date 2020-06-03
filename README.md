@@ -14,6 +14,8 @@ If you need to go live earlier see documentation for [Smart-ID Java Client 1](ht
     *   [Introduction](#introduction)
     *   [Features](#features)
     *   [Requirements](#requirements)
+    *   [Getting the library](#getting-the-library)
+    *   [Changelog(#changelog)
 *  [How to use it](#how-to-use-it)
     *   [Test accounts for testing]()
     *   [Log request payloads](#log-request-payloads)
@@ -71,9 +73,9 @@ You can use the library as a Maven dependency from the [Maven Central](https://s
 
 `implementation 'ee.sk.smartid:smart-id-java-client:INSERT_VERSION_HERE'`
 
-### Changes
+## Changelog
 
-* Listed in [changelog](CHANGELOG.md)
+Changes introduced with new library versions are described in [CHANGELOG.md](CHANGELOG.md)
 
 
 # How to use it
@@ -475,10 +477,10 @@ catch (RequiredInteractionNotSupportedByAppException e) {
 ## Handling exceptions
 
 Exceptions thrown by this library are hierarchical.
-This way it is possible to reduce error handling code to only handle generic parent exceptions when needed.
+This way it is possible to reduce error handling code to only handle generic parent exceptions when suitable.
 
 * SmartIdException - all exceptions thrown by Smart-ID client are subclass of this
-    * UserActionRelatedException - Exceptions that are caused by user's actions (or lack of any action when needed)
+    * UserActionException - Exceptions that are caused by user's actions (or lack of any action when needed)
         * SessionTimeoutException - user didn't press anything in app when asked
         * UserRefusedException - User pressed cancel. Usually handling this parent exception is enough but also has subclasses to indicate the exact screen where cancel was pressed.
             * UserRefusedCertChoiceException
@@ -487,14 +489,14 @@ This way it is possible to reduce error handling code to only handle generic par
             * UserRefusedDisplayTextAndPinException
             * UserRefusedVerificationChoiceException
         * UserSelectedWrongVerificationCodeException - 3 different codeuser was displayed 3 codes in app and selected wrong code
-    * UserAccountRelatedException - Exceptions that are caused by user account configuration
+    * UserAccountException - Exceptions that are caused by user account configuration. 
         * CertificateLevelMismatchException
         * NoSuitableAccountOfRequestedTypeFoundException
         * PersonShouldViewSmartIdPortalException
             * DocumentUnusableException
         * RequiredInteractionNotSupportedByAppException 
         * UserAccountNotFoundException
-    * NotRetryableSmartIdException - Exceptions that indicate problems with incorrect integration.
+    * Enduring - Exceptions that indicate problems with incorrect integration.
     Usually these types of errors remain when user retries shortly.
         * ServerMaintenanceException - Server is currently under maintenance
         * SmartIdClientException - this exception is a sign of incorrect integration with Smart-ID service (i.e. missing parameters etc)

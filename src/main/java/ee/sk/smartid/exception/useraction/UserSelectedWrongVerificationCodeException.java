@@ -26,9 +26,9 @@ package ee.sk.smartid.exception.useraction;
  * #L%
  */
 
-import ee.sk.smartid.exception.UserActionRelatedException;
+import ee.sk.smartid.exception.UserActionException;
 
-public class UserSelectedWrongVerificationCodeException extends UserActionRelatedException {
+public class UserSelectedWrongVerificationCodeException extends UserActionException {
     public UserSelectedWrongVerificationCodeException() {
         super("User selected wrong verification code");
     }

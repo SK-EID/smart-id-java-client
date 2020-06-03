@@ -26,9 +26,9 @@ package ee.sk.smartid.exception.useraction;
  * #L%
  */
 
-import ee.sk.smartid.exception.UserActionRelatedException;
+import ee.sk.smartid.exception.UserActionException;
 
-public class UserRefusedException extends UserActionRelatedException {
+public class UserRefusedException extends UserActionException {
 
     public UserRefusedException() {
         super("User pressed cancel in app");

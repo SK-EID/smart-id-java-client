@@ -6,12 +6,12 @@ package ee.sk.smartid.exception;
  * or Smart-ID server is under maintenance.
  * With these types of errors there is not recommended to ask the user for immediate retry.
  */
-public abstract class NotRetryableSmartIdException extends SmartIdException {
-    public NotRetryableSmartIdException(String message) {
+public abstract class EnduringSmartIdException extends SmartIdException {
+    public EnduringSmartIdException(String message) {
         super(message);
     }
 
-    public NotRetryableSmartIdException(String message, Throwable cause) {
+    public EnduringSmartIdException(String message, Throwable cause) {
         super(message, cause);
     }
 }

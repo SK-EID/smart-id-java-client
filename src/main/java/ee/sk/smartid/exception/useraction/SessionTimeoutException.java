@@ -26,9 +26,9 @@ package ee.sk.smartid.exception.useraction;
  * #L%
  */
 
-import ee.sk.smartid.exception.UserActionRelatedException;
+import ee.sk.smartid.exception.UserActionException;
 
-public class SessionTimeoutException extends UserActionRelatedException {
+public class SessionTimeoutException extends UserActionException {
     public SessionTimeoutException() {
         super("Session timed out without getting any response from user");
     }

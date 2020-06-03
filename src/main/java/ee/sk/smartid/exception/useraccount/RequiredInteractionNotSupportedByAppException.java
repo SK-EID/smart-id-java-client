@@ -26,9 +26,9 @@ package ee.sk.smartid.exception.useraccount;
  * #L%
  */
 
-import ee.sk.smartid.exception.UserAccountRelatedException;
+import ee.sk.smartid.exception.UserAccountException;
 
-public class RequiredInteractionNotSupportedByAppException extends UserAccountRelatedException {
+public class RequiredInteractionNotSupportedByAppException extends UserAccountException {
 
     public RequiredInteractionNotSupportedByAppException() {
         super("User app version does not support any of the allowedInteractionsOrder interactions.");
