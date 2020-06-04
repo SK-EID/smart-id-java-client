@@ -173,16 +173,12 @@ client.addTrustedSSLCertificates(
 );
 ```
 
-    
 
 ## Examples of performing authentication
 
 ### Authenticating with semantics identifier
 
 More info about Semantics Identifier can be found [here](https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.01.00_30/en_31941201v010100v.pdf)
-
-     
-
 
 ```
 SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
@@ -220,7 +216,7 @@ Then start the authentication process (which triggers Smart-ID app in the phone 
 
 ### Authenticating with document number
 
-If you already know the documentNumber you can this for (re-)authentication.
+If you already know the documentNumber you can use this for (re-)authentication.
 Each document number is connected with specific mobile device of user.
 If user has Smart-ID installed to multiple devices then this triggers notification to a specific device only.
 This is why it is recommended to use authentication with document number if you want to target specific device only.
@@ -254,7 +250,7 @@ Validation performs following checks:
 
 - signature is the valid signature over the same "hash", which was submitted by the RP.
 - signature is the valid signature, verifiable with the public key inside the certificate of the user, given in the field "cert.value"
-- The person's certificate given returned is valid. This is not expired, signed by trusted CA and with correct (i.e. the same as in response structure, greater than or equal to that in the original request) level.
+- returned certificate is valid (is not expired, signed by trusted CA and with correct level (i.e. not weaker than requested))
 - The identity of the authenticated person is in the 'subject' field of the included X.509 certificate.
 
 Validation returns information about the authenticated person.
@@ -292,21 +288,25 @@ X509Certificate signersCertificate = responseWithSigningCertificate.getCertifica
 ```
 
 If needed you can use semantics identifier instead of document number to obtain signer's certificate.
-This may trigger a notification to user's device if user has more than one device with Smart-ID
+This may trigger a notification to all of the user's devices if user has more than one device with Smart-ID
 (as each device has separate signing certificate).
 
 ### Create the signature
 
 All Smart-ID devices support displaying text that is up to 60 characters long.
 Some devices also support displaying text (on a separate screen) that is up to 200 characters long
-as well as other interaction flows like user needs to choose a correct code from 3 different verification codes.
+as well as other interaction flows like user needs to choose the correct code from 3 different verification codes.
 
 You can send different interactions to user's device and it picks the first one that the app can handle.
+
+You need to use other utilities (like [DigiDoc4j](https://github.com/open-eid/digidoc4j) for example) to
+create the AsicE/BDoc container with files in it and get the hash to be signed.
+
 
 ```
 SignableHash hashToSign = new SignableHash();
 hashToSign.setHashType(HashType.SHA256);
-// calculate hash from the document you want to sign (i.e. use Digidoc4J or other libraries)
+// calculate hash from the document you want to sign (i.e. use DigiDoc4j or other libraries)
 // this class also has a method to set hash as bite array
 hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
 
@@ -333,7 +333,7 @@ smartIdSignature.getInteractionFlowUsed(); // which interaction was used
 
 # Setting the order of preferred interactions for displaying text and asking PIN
 
-An app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
+The app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
 Different interaction flows can support different amount of data to display information to user.
 
 Available interactions:
@@ -345,7 +345,7 @@ Available interactions:
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
 The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
 The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
-If an app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
+If the app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
 `displayText60`, `displayText200` - Text to display for authentication consent dialog on the mobile device. Limited to 60 and 200 characters respectively.
 

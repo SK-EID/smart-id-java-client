@@ -201,7 +201,7 @@ public class ReadmeTest {
 
     ### Authenticating with document number
 
-    If you already know the documentNumber you can this for (re-)authentication.
+    If you already know the documentNumber you can use this for (re-)authentication.
     Each document number is connected with specific mobile device of user.
     If user has Smart-ID installed to multiple devices then this triggers notification to a specific device only.
     This is why it is recommended to use authentication with document number if you want to target specific device only.
@@ -292,7 +292,7 @@ public class ReadmeTest {
     /*
 
     If needed you can use semantics identifier instead of document number to obtain signer's certificate.
-    This may trigger a notification to user's device if user has more than one device with Smart-ID
+    This may trigger a notification to all of the user's devices if user has more than one device with Smart-ID
     (as each device has separate signing certificate).
 
 
@@ -300,10 +300,12 @@ public class ReadmeTest {
 
     All Smart-ID devices support displaying text that is up to 60 characters long.
     Some devices also support displaying text (on a separate screen) that is up to 200 characters long
-    as well as other interaction flows like user needs to choose a correct code from 3 different verification codes.
+    as well as other interaction flows like user needs to choose the correct code from 3 different verification codes.
 
     You can send different interactions to user's device and it picks the first one that the app can handle.
 
+You need to use other utilities (like [DigiDoc4j](https://github.com/open-eid/digidoc4j) for example) to
+create the AsicE/BDoc container with files in it and get the hash to be signed.
      */
 
 
@@ -343,7 +345,7 @@ public class ReadmeTest {
 
 # Setting the order of preferred interactions for displaying text and asking PIN
 
-An app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
+The app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
 Different interaction flows can support different amount of data to display information to user.
 
 Available interactions:
@@ -355,7 +357,7 @@ Available interactions:
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
 The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
 The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
-If an app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
+If the app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
 `displayText60`, `displayText200` - Text to display for authentication consent dialog on the mobile device. Limited to 60 and 200 characters respectively.
 
