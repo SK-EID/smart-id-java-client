@@ -26,6 +26,14 @@ package ee.sk.smartid;
  * #L%
  */
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -35,17 +43,15 @@ import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.Capability;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * Class for building certificate choice request and getting the response
@@ -234,7 +240,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return the certificate choice response
    */
   public SmartIdCertificate fetch() throws UserAccountNotFoundException, UserRefusedException,
-      SessionTimeoutException, DocumentUnusableException, UnprocessableSmartIdResponseException, SmartIdClientException, ServerMaintenanceException {
+      SessionTimeoutException, DocumentUnusableException, SmartIdClientException, ServerMaintenanceException {
     logger.debug("Starting to fetch certificate");
     validateParameters();
     String sessionId = initiateCertificateChoice();
@@ -318,10 +324,6 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasSemanticsIdentifier()) {
-      logger.error("Either documentNumber or semanticsIdentifier must be set");
-      throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set");
-    }
   }
 
   private String getDocumentNumber(SessionStatus sessionStatus) {
