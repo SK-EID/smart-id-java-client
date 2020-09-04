@@ -26,20 +26,34 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.DigestCalculator;
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.rest.dao.*;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Before;
+import org.junit.Test;
 
 public class SmartIdRestIntegrationTest {
 
@@ -133,10 +147,7 @@ public class SmartIdRestIntegrationTest {
 
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
 
-    RequestProperties requestProperties = getRequestPropertiesWithIgnoredProperties();
-
     SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
-    signatureSessionRequest.setRequestProperties(requestProperties);
 
     SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber, signatureSessionRequest);
     sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
@@ -152,12 +163,9 @@ public class SmartIdRestIntegrationTest {
 
   }
 
-  //@Test CURRENTLY IGNORED AS DEMO DOESN'T RESPOND BACK IGNORED PROPERTIES
+  //@Test //CURRENTLY IGNORED AS DEMO DOESN'T RESPOND BACK IGNORED PROPERTIES
   public void getIgnoredProperties_withAuthenticate() throws Exception {
     AuthenticationSessionRequest authenticationSessionRequest = createAuthenticationSessionRequest();
-
-    RequestProperties requestProperties = getRequestPropertiesWithIgnoredProperties();
-    authenticationSessionRequest.setRequestProperties(requestProperties);
 
     SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010101-10006");
 
@@ -267,26 +275,4 @@ public class SmartIdRestIntegrationTest {
     return Base64.encodeBase64String(digestValue);
   }
 
-  private RequestProperties getRequestPropertiesWithIgnoredProperties() {
-    return new RequestProperties() {
-      private String testingIgnored = "random value";
-      private String testingIgnoredTwo = "random value";
-
-      public void setTestingIgnoredTwo(String testingIgnoredTwo) {
-        this.testingIgnoredTwo = testingIgnoredTwo;
-      }
-
-      public String getTestingIgnoredTwo() {
-        return testingIgnoredTwo;
-      }
-
-      public void setTestingIgnored(String testingIgnored) {
-        this.testingIgnored = testingIgnored;
-      }
-
-      public String getTestingIgnored() {
-        return testingIgnored;
-      }
-    };
-  }
 }

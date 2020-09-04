@@ -26,24 +26,30 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.exception.useraction.*;
-import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.Interaction;
-import ee.sk.smartid.rest.dao.RequestProperties;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.List;
 import java.util.Set;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class SmartIdRequestBuilder {
 
@@ -60,7 +66,6 @@ public abstract class SmartIdRequestBuilder {
   protected SignableHash hashToSign;
   protected String nonce;
   protected Set<String> capabilities;
-  protected RequestProperties requestProperties;
   protected List<Interaction> allowedInteractionsOrder;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
@@ -218,10 +223,6 @@ public abstract class SmartIdRequestBuilder {
   public SemanticsIdentifier getSemanticsIdentifier() { return semanticsIdentifier; }
 
   public Set<String> getCapabilities() { return capabilities; }
-
-  public RequestProperties getRequestProperties() {
-    return requestProperties;
-  }
 
   public List<Interaction> getAllowedInteractionsOrder() {
     return allowedInteractionsOrder;

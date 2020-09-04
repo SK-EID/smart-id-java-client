@@ -1,7 +1,25 @@
 package ee.sk.test.smartid.integration;
 
-import ee.sk.smartid.*;
+import static java.util.Arrays.asList;
+
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+
+import ee.sk.smartid.AuthenticationHash;
+import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationResponseValidator;
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.SignableHash;
+import ee.sk.smartid.SmartIdAuthenticationResponse;
+import ee.sk.smartid.SmartIdCertificate;
+import ee.sk.smartid.SmartIdClient;
+import ee.sk.smartid.SmartIdSignature;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.dao.Interaction;
@@ -16,19 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
-import static java.util.Arrays.asList;
 
 /**
  * These tests contain snippets used in Readme.md
@@ -45,6 +50,9 @@ public class ReadmeTest {
 
     SignableHash hashToSign;
 
+    private static final String
+         DEMO_HOST_SSL_CERTIFICATE = "-----BEGIN CERTIFICATE-----\nMIIFIjCCBAqgAwIBAgIQBH3ZvDVJl5qtCPwQJSruujANBgkqhkiG9w0BAQsFADBNMQswCQYDVQQG\nEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMScwJQYDVQQDEx5EaWdpQ2VydCBTSEEyIFNlY3Vy\nZSBTZXJ2ZXIgQ0EwHhcNMTcwODAxMDAwMDAwWhcNMjAxMDAyMTIwMDAwWjB0MQswCQYDVQQGEwJF\nRTEQMA4GA1UEBxMHVGFsbGlubjEbMBkGA1UEChMSU0sgSUQgU29sdXRpb25zIEFTMR0wGwYDVQQL\nExRWYWx1ZS1hZGRlZCBTZXJ2aWNlczEXMBUGA1UEAxMOc2lkLmRlbW8uc2suZWUwggEiMA0GCSqG\nSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDGFOOk4KzH95NP2dWUuPIvv4RGj3Zvk/Y3ZwavDaPzUkKS\nY9jgiI8EHYIiKde10bqfMeZ1N4No2orwzTtzMP2rqLwGd8ZYSFyF8pymxx0TY0w4yP1MWOq+MQ/6\n5fdBOgOXyhEoIHVWbbAJMmJaH0ozyKwXSKElHNzvKemDTHt7i/NKRG6oBexl3y6KEzKU37mg+scV\nr1i9hPlSO+ymvVUN+VCr1GteNuiFcpRdToVl9rXjvD2mqZfokD5VOuwPwuOecIIqjTpd87kzlgka\nlQfijx1jOBwVx2Hx+wgASiMy2cfHqXlkBvpvi4HTvjK/DMv4C2AqKJHlwjShceuESCH7AgMBAAGj\nggHVMIIB0TAfBgNVHSMEGDAWgBQPgGEcgjFh1S8o541GOLQs4cbZ4jAdBgNVHQ4EFgQUvTSpJnBN\ntfuuL2YY3AKaIPxXljMwGQYDVR0RBBIwEIIOc2lkLmRlbW8uc2suZWUwDgYDVR0PAQH/BAQDAgWg\nMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjBrBgNVHR8EZDBiMC+gLaArhilodHRwOi8v\nY3JsMy5kaWdpY2VydC5jb20vc3NjYS1zaGEyLWcxLmNybDAvoC2gK4YpaHR0cDovL2NybDQuZGln\naWNlcnQuY29tL3NzY2Etc2hhMi1nMS5jcmwwTAYDVR0gBEUwQzA3BglghkgBhv1sAQEwKjAoBggr\nBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQuY29tL0NQUzAIBgZngQwBAgIwfAYIKwYBBQUH\nAQEEcDBuMCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wRgYIKwYBBQUHMAKG\nOmh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFNIQTJTZWN1cmVTZXJ2ZXJDQS5j\ncnQwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQsFAAOCAQEAtr3K/2vKMH75bbEKrEorjxEsEOQo\npcIhBU5mOVVU5XO+xlrL6NvjyCV47Z9N+uEq4X59YTki23/NGMS85Mm+gl1wq8oPRdNSpNAVhrNY\nNYSFYkvVdFELKmVkep53D2YiB0ygOWghk9JI6UX/kWxBr5N2Qc4+eRKAjlm3vf/HGmOaG2LRbSLL\nPmp6VDQebv2P53rqYdzUpR/qQWHyMtTnku/i0eCY1UCkZHoxLV5vbztAT9kWS0s1d38yDqfljGSW\n/jbdu3P2jkR6PhH5Lupe24SN7jpKDfQJ8oDx6RTM8op7BvL67e6bVW8PzYZCI5BW7ZxEq85+2zIL\nwcEt/pk+DA==\n-----END CERTIFICATE-----";
+
 
     @Before
     public void setUp() {
@@ -52,6 +60,7 @@ public class ReadmeTest {
         client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
+        client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
 
         authenticationResponse = new SmartIdAuthenticationResponse();
 
@@ -75,63 +84,35 @@ public class ReadmeTest {
 
     The production environment host URL, relying party UUID and name are fixed in the Smart-ID service agreement.
 
-    E-service provider needs to validate SSL certificate of API endpoint.
-    SSL certificates have a validity period which means that the certificate is switched
-    every couple of years and client-side needs to reflect this.
+    ### Verifying the SSL connection to Application Provider (SK)
 
+    Relying Party needs to verify that it is connecting to Smart-ID API it trusts.
+    More info about this requirement can be found from [Smart-ID Documentation](https://github.com/SK-EID/smart-id-documentation#35-api-endpoint-authentication).
 
-    ### Relying on built-in certificates
+    #### Reading trusted certificates from key store
 
-    This library maintains list of certificates.
-    During end of validity period new certificates are inserted to the library and new version is published.
-    This means the e-service provider must update its code.
+It is recommended to read trusted certificates from a file.
+
 
      */
 
 
     @Test
-    public void documentConfigureTheClient_hardcodedCertificates() {
+    public void documentConfigureTheClient_trustStore() throws Exception {
+        // reading trusted certificates from external trustStore file
+        InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
+        KeyStore trustStore = KeyStore.getInstance("JKS");
+        trustStore.load(is, "changeit".toCharArray());
 
         // Client setup. Note that these values are demo environment specific.
         SmartIdClient client = new SmartIdClient();
         client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-        // relying on SSL certificates hard-coded to this library.
-        // On cert validity period end you must update library version.
-        client.useDemoEnvSSLCertificates(); // for production: useLiveEnvSSLCertificates()
+        client.setTrustStore(trustStore);
     }
 
-    /*
-
-    ### Reading trusted certificates from key store
-
-    It is also possible to read trusted certificates from a file.
-    This way new certificates can be imported to the file without need to update library code.
-
-     */
-
-    @Test
-    public void documentConfigureTheClient_externalKeystoreFile() throws Exception {
-        // reading trusted certificates from external keystore file
-        InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_ssl_cert.jks");
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        keyStore.load(is, "changeit".toCharArray());
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
-        trustManagerFactory.init(keyStore);
-        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-        Client configuredClient = ClientBuilder.newBuilder().sslContext(sslContext).build();
-
-        // Client setup. Note that these values are demo environment specific.
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        client.setRelyingPartyName("DEMO");
-        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-        client.setConfiguredClient(configuredClient);
-    }
-
-    /*
+        /*
 
     ### Feeding trusted certificates one by one
 
@@ -140,14 +121,15 @@ public class ReadmeTest {
 
      */
 
-    @Test
+
+    @Test(expected = SmartIdClientException.class)
     public void documentConfigureTheClient_feedSeparately() {
 
         SmartIdClient client = new SmartIdClient();
         client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-        client.addTrustedSSLCertificates(
+        client.setTrustedCertificates(
                 "-----BEGIN CERTIFICATE-----\nMIIFIjCCBAqgAwIBAgIQBH3ZvDVJl5qtCPwQJSruuj...",
                 "-----BEGIN CERTIFICATE-----\nMIIE0zCCA7ugAwIBAgIQbQr/Ky22GFhYWS3oQoJkyT..."
         );

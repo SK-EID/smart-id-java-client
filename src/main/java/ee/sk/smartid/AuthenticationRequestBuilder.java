@@ -26,6 +26,14 @@ package ee.sk.smartid;
  * #L%
  */
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
@@ -35,17 +43,17 @@ import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.Capability;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.SessionSignature;
+import ee.sk.smartid.rest.dao.SessionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * Class for building authentication request and getting the response
@@ -241,19 +249,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Sets the request's request properties
-   * <p>
-   * Optional. Additional request properties
-   *
-   * @param requestProperties request properties of the request
-   * @return this builder
-   */
-  public AuthenticationRequestBuilder withRequestProperties(RequestProperties requestProperties) {
-    this.requestProperties = requestProperties;
-    return this;
-  }
-
-  /**
    * @param allowedInteractionsOrder Preferred order of what dialog to present to user. What actually gets displayed depends on user's device and its software version.
    *                                 First option from this list that the device is capable of handling is displayed to the user.
    * @return this builder
@@ -371,7 +366,6 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     request.setHash(getHashInBase64());
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
-    request.setRequestProperties(getRequestProperties());
     request.setAllowedInteractionsOrder(getAllowedInteractionsOrder());
     return request;
   }

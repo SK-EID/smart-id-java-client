@@ -26,11 +26,11 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class AuthenticationSessionRequest implements Serializable {
 
@@ -49,10 +49,7 @@ public class AuthenticationSessionRequest implements Serializable {
   private String nonce;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Set capabilities;
-
-  @JsonInclude(JsonInclude.Include.NON_EMPTY)
-  private RequestProperties requestProperties;
+  private Set<String> capabilities;
 
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private List<Interaction> allowedInteractionsOrder;
@@ -109,20 +106,12 @@ public class AuthenticationSessionRequest implements Serializable {
     this.nonce = nonce;
   }
 
-  public Set getCapabilities() {
+  public Set<String> getCapabilities() {
     return capabilities;
   }
 
-  public void setCapabilities(Set capabilities) {
+  public void setCapabilities(Set<String> capabilities) {
     this.capabilities = capabilities;
-  }
-
-  public RequestProperties getRequestProperties() {
-    return requestProperties;
-  }
-
-  public void setRequestProperties(RequestProperties requestProperties) {
-    this.requestProperties = requestProperties;
   }
 
   public List<Interaction> getAllowedInteractionsOrder() {

@@ -5,11 +5,8 @@
 
 # Smart-ID Java client
 
-```diff
-! NB! This is documentation for upcoming Smart-ID API 2.0 that is available in demo.
-! In production it will be made available during summer 2020. 
-```
-For Most recent version available in production see the documentation for [Smart-ID Java Client 1.X](https://github.com/SK-EID/smart-id-java-client/tree/1.x).
+This version of the library uses Smart-ID API v 2.0.
+For using Smart-ID API v. 1.0 see [Smart-ID Java Client 1.X](https://github.com/SK-EID/smart-id-java-client/tree/1.x).
 
 
 # Table of contents
@@ -24,7 +21,6 @@ For Most recent version available in production see the documentation for [Smart
     *   [Test accounts for testing]()
     *   [Log request payloads](#log-request-payloads)
     *   [Example of configuring the client](#example-of-configuring-the-client)
-        *   [Relying on built-in certificates](#relying-on-built-in-certificates)
         *   [Reading trusted certificates from key store](#reading-trusted-certificates-from-key-store)
         *   [Feeding trusted certificates one by one](#feeding-trusted-certificates-one-by-one)
     *   [Examples of performing authentication](#examples-of-performing-authentication)
@@ -104,58 +100,32 @@ logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 
 You need a client for any call to API.
 
-The production environment host URL, relying party UUID and name are fixed in the Smart-ID service agreement.
+The production environment host URL, Relying Party UUID and name are fixed in the Smart-ID service agreement.
 
-E-service provider needs to validate SSL certificate of API endpoint.
-SSL certificates have a validity period which means that the certificate is switched
-every couple of years and client-side needs to reflect this.
+### Verifying the SSL connection to Application Provider (SK)
 
-
-### Relying on built-in certificates
-
-This library maintains list of certificates.
-During end of validity period new certificates are inserted to the library and new version is published.
-This means the e-service provider must update its code.
+Relying Party needs to verify that it is connecting to Smart-ID API it trusts.
+More info about this requirement can be found from [Smart-ID Documentation](https://github.com/SK-EID/smart-id-documentation#35-api-endpoint-authentication).
 
 
+#### Reading trusted certificates from key store
+
+It is recommended to keep trusted certificates in a trust store file:
+
+<!-- Do not change code samples here but instead copy from ReadmeTest.documentConfigureTheClient_trustStore() -->
 ```
-// Client setup. Note that these values are demo environment specific.
-SmartIdClient client = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-client.setRelyingPartyName("DEMO");
-client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-// relying on SSL certificates hard-coded to this library.
-// On cert validity period end you must update library version.
-client.useDemoEnvSSLCertificates(); // for production: useLiveEnvSSLCertificates()
+        // reading trusted certificates from external trustStore file
+        InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
+        KeyStore trustStore = KeyStore.getInstance("JKS");
+        trustStore.load(is, "changeit".toCharArray());
+
+        // Client setup. Note that these values are demo environment specific.
+        SmartIdClient client = new SmartIdClient();
+        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        client.setRelyingPartyName("DEMO");
+        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
+        client.setTrustStore(trustStore);
 ```
-    
-
-### Reading trusted certificates from key store
-
-It is also possible to read trusted certificates from a file.
-This way new certificates can be imported to the file without need to update library code.
-
-
-```
-// reading trusted certificates from external keystore file
-InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_ssl_cert.jks");
-KeyStore keyStore = KeyStore.getInstance("JKS");
-keyStore.load(is, "changeit".toCharArray());
-TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
-trustManagerFactory.init(keyStore);
-SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-Client configuredClient = ClientBuilder.newBuilder().sslContext(sslContext).build();
-
-// Client setup. Note that these values are demo environment specific.
-SmartIdClient client = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-client.setRelyingPartyName("DEMO");
-client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-client.setConfiguredClient(configuredClient);
-```
-
-    
 
 ### Feeding trusted certificates one by one
 

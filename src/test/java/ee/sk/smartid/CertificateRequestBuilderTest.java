@@ -26,11 +26,22 @@ package ee.sk.smartid;
  * #L%
  */
 
+import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+
+import java.security.cert.X509Certificate;
+
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
+import ee.sk.smartid.rest.dao.Capability;
 import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionCertificate;
@@ -39,14 +50,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import java.security.cert.X509Certificate;
-
-import static ee.sk.smartid.DummyData.createSessionEndResult;
-import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.*;
 
 public class CertificateRequestBuilderTest {
 
@@ -159,6 +162,18 @@ public class CertificateRequestBuilderTest {
         .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
         .withCertificateLevel("QUALIFIED")
         .withNonce("THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890")
+        .fetch();
+  }
+
+  @Test
+  public void getCertificate_withCapabilities() {
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
+        .withCertificateLevel("QUALIFIED")
+        .withCapabilities(Capability.ADVANCED)
         .fetch();
   }
 
