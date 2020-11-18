@@ -23,6 +23,24 @@
         <url>https://github.com/SK-EID/smart-id-java-client.git</url>
     </scm>
 
+    <developers>
+        <developer>
+            <name>Juhan Aasaru</name>
+            <organization>Nortal</organization>
+            <organizationUrl>http://www.nortal.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Andreas Valdma</name>
+            <organization>Nortal</organization>
+            <organizationUrl>http://www.nortal.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <organization>
+        <name>SK ID Solutions AS</name>
+        <url>https://www.skidsolutions.eu/en</url>
+    </organization>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -194,14 +212,6 @@
                 <configuration>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>
@@ -241,6 +251,7 @@
                 <version>6.0.3</version>
                 <configuration>
                     <skipTestScope>true</skipTestScope>
+                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
