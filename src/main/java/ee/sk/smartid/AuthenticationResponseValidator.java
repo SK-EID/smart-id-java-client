@@ -77,7 +77,8 @@ public class AuthenticationResponseValidator {
   /**
    * Constructs a new {@code AuthenticationResponseValidator}.
    * <p>
-   * The constructed instance is initialized passed in certificates
+   * The constructed instance is initialized passed in certificates.
+   * @param trustedCertificates List of certificates to trust
    *
    * @throws SmartIdClientException when there was an error initializing trusted CA certificates
    */

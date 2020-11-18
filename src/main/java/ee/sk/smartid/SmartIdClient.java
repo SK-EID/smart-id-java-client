@@ -281,7 +281,9 @@ public class SmartIdClient {
     this.connector = smartIdConnector;
   }
 
-  /** Use setTrustStore() instead */
+  /** Use setTrustStore() instead
+   * @param trustStore Trust store to load certificates from.
+   */
   @Deprecated
   public void loadSslCertificatesFromKeystore(KeyStore trustStore) {
     this.setTrustStore(trustStore);
