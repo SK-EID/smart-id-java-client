@@ -155,11 +155,6 @@ public class SessionStatusPollerTest {
     }
 
     @Override
-    public CertificateChoiceResponse getCertificate(NationalIdentity identity, CertificateRequest request) {
-      return null;
-    }
-
-    @Override
     public CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request) {
       return null;
     }
@@ -183,11 +178,6 @@ public class SessionStatusPollerTest {
 
     @Override
     public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
-      return null;
-    }
-
-    @Override
-    public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
       return null;
     }
 

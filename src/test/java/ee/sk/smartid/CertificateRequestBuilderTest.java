@@ -26,27 +26,35 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.exception.UserRefusedException;
-import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.SmartIdConnectorSpy;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.NationalIdentity;
-import ee.sk.smartid.rest.dao.SessionCertificate;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.*;
-import org.junit.Before;
-import org.junit.Test;
+import static ee.sk.smartid.DummyData.createSessionEndResult;
+import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 
 import java.security.cert.X509Certificate;
 
-import static ee.sk.smartid.DummyData.createSessionEndResult;
-import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.*;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.SmartIdConnectorSpy;
+import ee.sk.smartid.rest.dao.Capability;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class CertificateRequestBuilderTest {
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   private SmartIdConnectorSpy connector;
   private SessionStatusPoller sessionStatusPoller;
@@ -62,12 +70,11 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificate() {
+  public void getCertificate_usingSemanticsIdentifier() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCountryCode("EE")
-        .withNationalIdentityNumber("31111111111")
+        .withSemanticsIdentifierAsString("PNOEE-31111111111")
         .withCertificateLevel("QUALIFIED")
         .fetch();
     assertCertificateResponseValid(certificate);
@@ -76,22 +83,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificateUsingNationalIdentity() {
-    SmartIdCertificate certificate = builder
-        .withRelyingPartyUUID("relying-party-uuid")
-        .withRelyingPartyName("relying-party-name")
-        .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
-        .withCertificateLevel("QUALIFIED")
-        .withCapabilities(Capability.ADVANCED,
-                Capability.QUALIFIED)
-        .fetch();
-    assertCertificateResponseValid(certificate);
-    assertCorrectSessionRequestMade();
-    assertValidCertificateChoiceRequestMade("QUALIFIED");
-  }
-
-  @Test
-  public void getCertificateUsingDocumentNumber() {
+  public void getCertificate_usingDocumentNumber() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -105,19 +97,34 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
+  public void getCertificate_withoutAnyIdentifier_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
+    builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withCertificateLevel("QUALIFIED")
+            .fetch();
+  }
+
+  @Test
   public void getCertificateWithoutCertificateLevel_shouldPass() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withCountryCode("EE")
-        .withNationalIdentityNumber("31111111111")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
         .fetch();
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
     assertValidCertificateChoiceRequestMade(null);
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test(expected = SmartIdClientException.class)
   public void getCertificate_whenIdentityOrDocumentNumberNotSet_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
@@ -126,35 +133,59 @@ public class CertificateRequestBuilderTest {
         .fetch();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test(expected = SmartIdClientException.class)
   public void getCertificate_withoutRelyingPartyUUID_shouldThrowException() {
     builder
         .withRelyingPartyName("relying-party-name")
-        .withCountryCode("EE")
-        .withNationalIdentityNumber("31111111111")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
         .withCertificateLevel("QUALIFIED")
         .fetch();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test(expected = SmartIdClientException.class)
   public void getCertificate_withoutRelyingPartyName_shouldThrowException() {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
-        .withCountryCode("EE")
-        .withNationalIdentityNumber("31111111111")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
         .withCertificateLevel("QUALIFIED")
+        .fetch();
+  }
+
+  @Test
+  public void getCertificate_withTooLongNonce_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Nonce cannot be longer that 30 chars. You supplied: 'THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890'");
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
+        .withCertificateLevel("QUALIFIED")
+        .withNonce("THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890")
+        .fetch();
+  }
+
+  @Test
+  public void getCertificate_withCapabilities() {
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
+        .withCertificateLevel("QUALIFIED")
+        .withCapabilities(Capability.ADVANCED)
         .fetch();
   }
 
   @Test(expected = UserRefusedException.class)
   public void getCertificate_whenUserRefuses_shouldThrowException() {
-    connector.sessionStatusToRespond = createUserRefusedSessionStatus();
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED");
     makeCertificateRequest();
   }
 
   @Test(expected = UserRefusedException.class)
   public void getCertificate_withDocumentNumber_whenUserRefuses_shouldThrowException() {
-    connector.sessionStatusToRespond = createUserRefusedSessionStatus();
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED");
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -163,25 +194,25 @@ public class CertificateRequestBuilderTest {
         .fetch();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseWithoutCertificate_shouldThrowException() {
     connector.sessionStatusToRespond.setCert(null);
     makeCertificateRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseContainingEmptyCertificate_shouldThrowException() {
     connector.sessionStatusToRespond.getCert().setValue("");
     makeCertificateRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseWithoutDocumentNumber_shouldThrowException() {
     connector.sessionStatusToRespond.getResult().setDocumentNumber(null);
     makeCertificateRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseWithBlankDocumentNumber_shouldThrowException() {
     connector.sessionStatusToRespond.getResult().setDocumentNumber(" ");
     makeCertificateRequest();
@@ -201,8 +232,8 @@ public class CertificateRequestBuilderTest {
   }
 
   private void assertValidCertificateChoiceRequestMade(String certificateLevel) {
-    assertEquals("EE", connector.identityUsed.getCountryCode());
-    assertEquals("31111111111", connector.identityUsed.getNationalIdentityNumber());
+    assertThat(connector.semanticsIdentifierUsed.getIdentifier(), is("PNOEE-31111111111"));
+
     assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
     assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
     assertEquals(certificateLevel, connector.certificateRequestUsed.getCertificateLevel());
@@ -240,7 +271,7 @@ public class CertificateRequestBuilderTest {
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
-        .withNationalIdentity(new NationalIdentity("EE", "31111111111"))
+        .withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"))
         .withCertificateLevel("QUALIFIED")
         .fetch();
   }

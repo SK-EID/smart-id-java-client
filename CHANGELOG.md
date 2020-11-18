@@ -2,6 +2,30 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0] - 2020-09-XX
+
+### Changed
+- Switch to Smart-ID API 2.0
+- `AuthenticationResponseValidator.validate()` returns AuthenticationIdentity if validation passes.
+  If validation fails then `SmartIdResponseValidationException` or its subclass `CertificateLevelMismatchException` (if signer's certificate is below requested level) is thrown.
+- Grouped exceptions thrown by library to reduce need to handle each exception individually. See Readme.md for detail info.
+- Minimum Java level raised to Java 8
+- Relying Party must keep a list of trusted certificates (in plain text or in a trust store).
+- request.setVcChoice() was removed in Smart-ID API 2.0 and replaced by request.setAllowedInteractionsOrder();
+
+
+### Added
+- New parameter `allowedInteractionsOrder` added to authentication and signing requests. It replaces parameters displayText and requestProperties.vcChoice
+- New parameter `interactionFlowUsed` added into session status response message.
+- If user refuses then a dedicated exception is thrown that indicates exact screen where user pressed cancel. Thrown exception is subclass of `UserRefusedException`.
+
+### Removed
+- all endpoints using `NationalIdentityNumber` are now removed as this functionality has been removed from Smart-ID API 2.0
+- errors that the caller cannot recover from are now removed from method throws list.
+- Hard-coded certificates were removed together with methods:
+  -  SmartIdClient.useDemoEnvSSLCertificates()
+  - SmartIdClient.useLiveEnvSSLCertificates()
+
 ## [1.6] - 2020-05-25
 
 ### Added

@@ -26,12 +26,12 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import org.junit.Test;
 
 public class CertificateParserTest {
 
-    @Test(expected = TechnicalErrorException.class)
+    @Test(expected = SmartIdClientException.class)
     public void testBothCertificateLevelsQualified() {
         CertificateParser.parseX509Certificate("invalid");
     }

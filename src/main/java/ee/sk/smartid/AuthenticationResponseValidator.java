@@ -26,7 +26,9 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -50,6 +52,8 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
+import static java.util.Arrays.asList;
+
 /**
  * Class used to validate the authentication
  */
@@ -58,53 +62,60 @@ public class AuthenticationResponseValidator {
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseValidator.class);
 
   private List<X509Certificate> trustedCACertificates = new ArrayList<>();
-
   /**
    * Constructs a new {@code AuthenticationResponseValidator}.
    * <p>
    * The constructed instance is initialized with default trusted
    * CA certificates.
    *
-   * @throws TechnicalErrorException when there was an error initializing trusted CA certificates
+   * @throws SmartIdClientException when there was an error initializing trusted CA certificates
    */
   public AuthenticationResponseValidator() {
       initializeTrustedCACertificatesFromKeyStore();
   }
 
   /**
+   * Constructs a new {@code AuthenticationResponseValidator}.
+   * <p>
+   * The constructed instance is initialized passed in certificates
+   *
+   * @throws SmartIdClientException when there was an error initializing trusted CA certificates
+   */
+  public AuthenticationResponseValidator(X509Certificate[] trustedCertificates) {
+    trustedCACertificates.addAll(asList(trustedCertificates));
+  }
+
+  /**
    * Validates the authentication response and returns the its result
    *
-   * @throws TechnicalErrorException when there was an error validating the response
+   * Performs following validations:
+   * "result.endResult" has the value "OK"
+   * "signature.value" is the valid signature over the same "hash", which was submitted by the RP.
+   * "signature.value" is the valid signature, verifiable with the public key inside the certificate of the user, given in the field "cert.value"
+   * The person's certificate given in the "cert.value" is valid (not expired, signed by trusted CA and with correct (i.e. the same as in response structure, greater than or equal to that in the original request) level).
    *
    * @param authenticationResponse authentication response to be validated
    * @return authentication result
    */
-  public SmartIdAuthenticationResult validate(SmartIdAuthenticationResponse authenticationResponse) {
+  public AuthenticationIdentity validate(SmartIdAuthenticationResponse authenticationResponse) {
     validateAuthenticationResponse(authenticationResponse);
-    SmartIdAuthenticationResult authenticationResult = new SmartIdAuthenticationResult();
     AuthenticationIdentity identity = constructAuthenticationIdentity(authenticationResponse.getCertificate());
-    authenticationResult.setAuthenticationIdentity(identity);
     if (!verifyResponseEndResult(authenticationResponse)) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.INVALID_END_RESULT);
+      throw new UnprocessableSmartIdResponseException("Smart-ID API returned end result code '" + authenticationResponse.getEndResult() + "'");
     }
     if (!verifySignature(authenticationResponse)) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.SIGNATURE_VERIFICATION_FAILURE);
+      throw new UnprocessableSmartIdResponseException("Failed to verify validity of signature returned by Smart-ID");
     }
     if (!verifyCertificateExpiry(authenticationResponse.getCertificate())) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.CERTIFICATE_EXPIRED);
+      throw new UnprocessableSmartIdResponseException("Signer's certificate has expired");
     }
     if (!isCertificateTrusted(authenticationResponse.getCertificate())) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.CERTIFICATE_NOT_TRUSTED);
+      throw new UnprocessableSmartIdResponseException("Signer's certificate is not trusted");
     }
     if (!verifyCertificateLevel(authenticationResponse)) {
-      authenticationResult.setValid(false);
-      authenticationResult.addError(SmartIdAuthenticationResult.Error.CERTIFICATE_LEVEL_MISMATCH);
+      throw new CertificateLevelMismatchException();
     }
-    return authenticationResult;
+    return identity;
   }
 
   /**
@@ -192,22 +203,22 @@ public class AuthenticationResponseValidator {
       }
     } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
       logger.error("Error initializing trusted CA certificates", e);
-      throw new TechnicalErrorException("Error initializing trusted CA certificates", e);
+      throw new SmartIdClientException("Error initializing trusted CA certificates", e);
     }
   }
 
   private void validateAuthenticationResponse(SmartIdAuthenticationResponse authenticationResponse) {
     if (authenticationResponse.getCertificate() == null) {
       logger.error("Certificate is not present in the authentication response");
-      throw new TechnicalErrorException("Certificate is not present in the authentication response");
+      throw new UnprocessableSmartIdResponseException("Certificate is not present in the authentication response");
     }
     if (StringUtils.isEmpty(authenticationResponse.getSignatureValueInBase64())) {
       logger.error("Signature is not present in the authentication response");
-      throw new TechnicalErrorException("Signature is not present in the authentication response");
+      throw new UnprocessableSmartIdResponseException("Signature is not present in the authentication response");
     }
     if (authenticationResponse.getHashType() == null) {
       logger.error("Hash type is not present in the authentication response");
-      throw new TechnicalErrorException("Hash type is not present in the authentication response");
+      throw new UnprocessableSmartIdResponseException("Hash type is not present in the authentication response");
     }
   }
 
@@ -226,7 +237,7 @@ public class AuthenticationResponseValidator {
       return signature.verify(authenticationResponse.getSignatureValue());
     } catch (GeneralSecurityException e) {
       logger.error("Signature verification failed");
-      throw new TechnicalErrorException("Signature verification failed", e);
+      throw new UnprocessableSmartIdResponseException("Signature verification failed", e);
     }
   }
 
@@ -238,12 +249,11 @@ public class AuthenticationResponseValidator {
     for (X509Certificate trustedCACertificate : trustedCACertificates) {
       try {
         certificate.verify(trustedCACertificate.getPublicKey());
+        logger.info("Certificate verification passed for '{}' against CA certificate '{}' ", certificate.getSubjectDN() ,trustedCACertificate.getSubjectDN() );
+
         return true;
-      } catch (SignatureException e) {
-        continue;
       } catch (GeneralSecurityException e) {
-        logger.warn("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCACertificate.getSubjectDN(), e);
-        continue;
+        logger.debug("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCACertificate.getSubjectDN(), e);
       }
     }
     return false;
@@ -267,9 +277,9 @@ public class AuthenticationResponseValidator {
         if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {
           identity.setGivenName(rdn.getValue().toString());
         } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
-          identity.setSurName(rdn.getValue().toString());
+          identity.setSurname(rdn.getValue().toString());
         } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
-          identity.setIdentityCode(rdn.getValue().toString().split("-", 2)[1]);
+          identity.setIdentityNumber(rdn.getValue().toString().split("-", 2)[1]);
         } else if(rdn.getType().equalsIgnoreCase("C")) {
           identity.setCountry(rdn.getValue().toString());
         }
@@ -278,7 +288,7 @@ public class AuthenticationResponseValidator {
       return identity;
     } catch (InvalidNameException e) {
       logger.error("Error getting authentication identity from the certificate", e);
-      throw new TechnicalErrorException("Error getting authentication identity from the certificate", e);
+      throw new SmartIdClientException("Error getting authentication identity from the certificate", e);
     }
   }
 }

@@ -3,5 +3,9 @@
   "relyingPartyName": "BANK123",
   "certificateLevel": "ADVANCED",
   "hash": "K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==",
-  "hashType": "SHA512"
+  "hashType": "SHA512",
+  "allowedInteractionsOrder": [
+    {"type": "confirmationMessageAndVerificationCodeChoice", "displayText200":"Log in to self-service?"},
+    {"type": "displayTextAndPIN", "displayText60": "Log in?"}
+  ]
 }

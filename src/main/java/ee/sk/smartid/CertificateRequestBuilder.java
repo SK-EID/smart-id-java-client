@@ -26,15 +26,32 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
-import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.Capability;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Class for building certificate choice request and getting the response
@@ -80,7 +97,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
-    super.withRelyingPartyUUID(relyingPartyUUID);
+    super.relyingPartyUUID = relyingPartyUUID;
     return this;
   }
 
@@ -97,7 +114,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
-    super.withRelyingPartyName(relyingPartyName);
+    super.relyingPartyName = relyingPartyName;
     return this;
   }
 
@@ -106,65 +123,12 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * <p>
    * Document number is unique for the user's certificate/device
    * that is used for choosing the certificate.
-   * To choose certificate with person's national identity use:
-   * {@link #withNationalIdentity(NationalIdentity)}
    *
    * @param documentNumber document number of the certificate/device used to choose the certificate
    * @return this builder
    */
   public CertificateRequestBuilder withDocumentNumber(String documentNumber) {
-    super.withDocumentNumber(documentNumber);
-    return this;
-  }
-
-  /**
-   * Sets the request's national identity
-   * <p>
-   * The national identity of the person choosing the
-   * certificate consists of country code and national
-   * identity number.
-   * To choose the certificate with document number use:
-   * {@link #withDocumentNumber(String) withDocumentNumber}
-   *
-   * @param nationalIdentity national identity of person choosing the certificate
-   * @return this builder
-   */
-  public CertificateRequestBuilder withNationalIdentity(NationalIdentity nationalIdentity) {
-    super.withNationalIdentity(nationalIdentity);
-    return this;
-  }
-
-  /**
-   * Sets the request's country code
-   * <p>
-   * National identity consists of country code and national
-   * identity number. Either use
-   * {@link #withNationalIdentity(NationalIdentity)}
-   * or use {@link #withNationalIdentityNumber(String)}
-   * and {@link #withCountryCode(String)} separately.
-   *
-   * @param countryCode country code of the national identity
-   * @return this builder
-   */
-  public CertificateRequestBuilder withCountryCode(String countryCode) {
-    super.withCountryCode(countryCode);
-    return this;
-  }
-
-  /**
-   * Sets the request's national identity number
-   * <p>
-   * National identity consists of country code and national
-   * identity number. Either use
-   * {@link #withNationalIdentity(NationalIdentity)}
-   * or use {@link #withNationalIdentityNumber(String)}
-   * and {@link #withCountryCode(String)} separately.
-   *
-   * @param nationalIdentityNumber national identity number of the national identity
-   * @return this builder
-   */
-  public CertificateRequestBuilder withNationalIdentityNumber(String nationalIdentityNumber) {
-    super.withNationalIdentityNumber(nationalIdentityNumber);
+    super.documentNumber = documentNumber;
     return this;
   }
 
@@ -179,7 +143,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withCertificateLevel(String certificateLevel) {
-    super.withCertificateLevel(certificateLevel);
+    super.certificateLevel = certificateLevel;
     return this;
   }
 
@@ -200,7 +164,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withNonce(String nonce) {
-    super.withNonce(nonce);
+    super.nonce = nonce;
     return this;
   }
 
@@ -216,7 +180,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withCapabilities(Capability... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = Arrays.stream(capabilities).map(Objects::toString).collect(Collectors.toSet());
     return this;
   }
 
@@ -233,7 +197,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public CertificateRequestBuilder withCapabilities(String... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = new HashSet<>(Arrays.asList(capabilities));
     return this;
   }
 
@@ -241,15 +205,12 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
-   * Either use
-   * {@link #withSemanticsIdentifierAsString(String)} (String)}
-   * or use {@link #withSemanticsIdentifier(SemanticsIdentifier)}
    *
-   * @param semanticsIdentifier semantics identifier for a person
+   * @param semanticsIdentifierAsString semantics identifier for a person
    * @return this builder
    */
-  public CertificateRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifier) {
-    super.withSemanticsIdentifierAsString(semanticsIdentifier);
+  public CertificateRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifierAsString) {
+    super.semanticsIdentifier = new SemanticsIdentifier(semanticsIdentifierAsString);
     return this;
   }
 
@@ -257,59 +218,46 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, and the identifier.
-   * Either use
-   * {@link #withSemanticsIdentifier(SemanticsIdentifier)}
-   * or use {@link #withSemanticsIdentifierAsString(String)}}
    *
    * @param semanticsIdentifier semantics identifier for a person
    * @return this builder
    */
   public CertificateRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
-    super.withSemanticsIdentifier(semanticsIdentifier);
+    super.semanticsIdentifier = semanticsIdentifier;
     return this;
   }
 
   /**
    * Send the certificate choice request and get the response
    *x
-   * @throws InvalidParametersException when mandatory request parameters are missing
-   * @throws CertificateNotFoundException when the certificate was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws UserRefusedException when the user has refused the session
+   * @throws UserAccountNotFoundException when the certificate was not found
+   * @throws UserRefusedException when the user has refused the session.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return the certificate choice response
    */
-  public SmartIdCertificate fetch() throws InvalidParametersException, CertificateNotFoundException, RequestForbiddenException, UserRefusedException,
-      SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
+  public SmartIdCertificate fetch() throws UserAccountNotFoundException, UserRefusedException,
+      SessionTimeoutException, DocumentUnusableException, SmartIdClientException, ServerMaintenanceException {
     logger.debug("Starting to fetch certificate");
     validateParameters();
     String sessionId = initiateCertificateChoice();
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
-    SmartIdCertificate smartIdCertificate = createSmartIdCertificate(sessionStatus);
-    return smartIdCertificate;
+    return createSmartIdCertificate(sessionStatus);
   }
 
   /**
    * Send the certificate choice request and get the session Id
    *
-   * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return session Id - later to be used for manual session status polling
    */
-  public String initiateCertificateChoice() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,
-          ClientNotSupportedException, ServerMaintenanceException {
+  public String initiateCertificateChoice() throws UserAccountNotFoundException,
+          SmartIdClientException, ServerMaintenanceException {
     validateParameters();
     CertificateRequest request = createCertificateRequest();
     CertificateChoiceResponse response = fetchCertificateChoiceSessionResponse(request);
@@ -322,10 +270,9 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * This method uses automatic session status polling internally
    * and therefore blocks the current thread until certificate choice is concluded/interupted etc.
    *
-   * @throws UserRefusedException when the user has refused the session
+   * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
    *
    * @param sessionStatus session status response
    * @return the authentication response
@@ -343,11 +290,12 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   private CertificateChoiceResponse fetchCertificateChoiceSessionResponse(CertificateRequest request) {
     if (isNotEmpty(getDocumentNumber())) {
       return getConnector().getCertificate(getDocumentNumber(), request);
-    } else if(getSemanticsIdentifier() != null) {
+    }
+    else if(getSemanticsIdentifier() != null) {
       return getConnector().getCertificate(getSemanticsIdentifier(), request);
-    } else {
-      NationalIdentity identity = getNationalIdentity();
-      return getConnector().getCertificate(identity, request);
+    }
+    else {
+      throw new IllegalStateException("Either set semanticsIdentifier or documentNumber");
     }
   }
 
@@ -366,20 +314,16 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     SessionCertificate certificate = sessionStatus.getCert();
     if (certificate == null || isBlank(certificate.getValue())) {
       logger.error("Certificate was not present in the session status response");
-      throw new TechnicalErrorException("Certificate was not present in the session status response");
+      throw new UnprocessableSmartIdResponseException("Certificate was not present in the session status response");
     }
     if (isBlank(sessionStatus.getResult().getDocumentNumber())) {
       logger.error("Document number was not present in the session status response");
-      throw new TechnicalErrorException("Document number was not present in the session status response");
+      throw new UnprocessableSmartIdResponseException("Document number was not present in the session status response");
     }
   }
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasNationalIdentity() && !hasSemanticsIdentifier()) {
-      logger.error("Either document number, national identity or semantics identifier must be set");
-      throw new InvalidParametersException("Either document number, national identity or semantics identifier must be set");
-    }
   }
 
   private String getDocumentNumber(SessionStatus sessionStatus) {

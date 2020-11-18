@@ -26,7 +26,10 @@ package ee.sk.smartid.exception;
  * #L%
  */
 
-public class SmartIdException extends RuntimeException {
+/**
+ * All Smart-ID exceptions subclass from this.
+ */
+public abstract class SmartIdException extends RuntimeException {
 
   public SmartIdException() {
   }

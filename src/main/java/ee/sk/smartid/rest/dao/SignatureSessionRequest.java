@@ -26,27 +26,33 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class SignatureSessionRequest implements Serializable {
 
   private String relyingPartyUUID;
+
   private String relyingPartyName;
+
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String certificateLevel;
+
   private String hash;
+
   private String hashType;
-  @JsonInclude(JsonInclude.Include.NON_EMPTY)
-  private String displayText;
+
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String nonce;
+
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Set capabilities;
+  private Set<String> capabilities;
+
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
-  private RequestProperties requestProperties;
+  private List<Interaction> allowedInteractionsOrder;
 
   public String getCertificateLevel() {
     return certificateLevel;
@@ -88,12 +94,8 @@ public class SignatureSessionRequest implements Serializable {
     this.relyingPartyUUID = relyingPartyUUID;
   }
 
-  public String getDisplayText() {
-    return displayText;
-  }
-
-  public void setDisplayText(String displayText) {
-    this.displayText = displayText;
+  private void setDisplayText(String displayText) {
+    throw new UnsupportedOperationException("Method is removed in Smart-ID API 2.0 and replaced with setAllowedInteractionsOrder()");
   }
 
   public String getNonce() {
@@ -104,19 +106,19 @@ public class SignatureSessionRequest implements Serializable {
     this.nonce = nonce;
   }
 
-  public Set getCapabilities() {
+  public Set<String> getCapabilities() {
     return capabilities;
   }
 
-  public void setCapabilities(Set capabilities) {
+  public void setCapabilities(Set<String> capabilities) {
     this.capabilities = capabilities;
   }
 
-  public RequestProperties getRequestProperties() {
-    return requestProperties;
+  public List<Interaction> getAllowedInteractionsOrder() {
+    return allowedInteractionsOrder;
   }
 
-  public void setRequestProperties(RequestProperties requestProperties) {
-    this.requestProperties = requestProperties;
+  public void setAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    this.allowedInteractionsOrder = allowedInteractionsOrder;
   }
 }

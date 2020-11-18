@@ -26,7 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -48,7 +48,7 @@ public class SmartIdSignatureTest {
     assertArrayEquals("Dedgehog".getBytes(), signature.getValue());
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void incorrectBase64StringShouldThrowException() {
     SmartIdSignature signature = new SmartIdSignature();
     signature.setValueInBase64("äIsNotValidBase64Character");

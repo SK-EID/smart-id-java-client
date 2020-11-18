@@ -28,7 +28,11 @@ package ee.sk.smartid.rest;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.ClientRequestHeaderFilter;
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.*;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
@@ -36,13 +40,14 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static ee.sk.smartid.SmartIdRestServiceStubs.*;
+import static java.util.Arrays.asList;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.*;
 
@@ -65,14 +70,14 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getRunningSessionStatus() throws Exception {
+  public void getRunningSessionStatus() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunning.json");
     assertNotNull(sessionStatus);
     assertEquals("RUNNING", sessionStatus.getState());
   }
 
   @Test
-  public void getRunningSessionStatus_withIgnoredProperties() throws Exception {
+  public void getRunningSessionStatus_withIgnoredProperties() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunningWithIgnoredProperties.json");
     assertNotNull(sessionStatus);
     assertEquals("RUNNING", sessionStatus.getState());
@@ -83,7 +88,7 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getSessionStatus_forSuccessfulCertificateRequest() throws Exception {
+  public void getSessionStatus_forSuccessfulCertificateRequest() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
     assertSuccessfulResponse(sessionStatus);
     assertNotNull(sessionStatus.getCert());
@@ -92,7 +97,7 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getSessionStatus_forSuccessfulSigningRequest() throws Exception {
+  public void getSessionStatus_forSuccessfulSigningRequest() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
     assertSuccessfulResponse(sessionStatus);
     assertNotNull(sessionStatus.getSignature());
@@ -101,31 +106,61 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getSessionStatus_userHasRefused() throws Exception {
-    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasRefused.json");
+  public void getSessionStatus_userHasRefused() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
   }
 
   @Test
-  public void getSessionStatus_userHasSelectedWrongVcCode() throws Exception {
-    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
-    assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
+  public void getSessionStatus_userHasRefusedConfirmationMessage() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessage.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE");
   }
 
   @Test
-  public void getSessionStatus_timeout() throws Exception {
+  public void getSessionStatus_userHasRefusedRefusedConfirmationMessageWithVerificationCodeChoice() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessageWithVerificationCodeChoice.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedWhenUserRefusedDisplayTextAndPin() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedDisplayTextAndPin.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_DISPLAYTEXTANDPIN");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedWhenUserRefusedGeneral() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
+  }
+
+  @Test
+  public void getSessionStatus_userHasRefusedWhenUserRefusedVerificationCodeChoice() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedVerificationCodeChoice.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_VC_CHOICE");
+  }
+
+  @Test
+  public void getSessionStatus_timeout() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenTimeout.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "TIMEOUT");
   }
 
   @Test
-  public void getSessionStatus_documentUnusable() throws Exception {
+  public void getSessionStatus_userHasSelectedWrongVcCode() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
+    assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
+  }
+
+  @Test
+  public void getSessionStatus_whenDocumentUnusable() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenDocumentUnusable.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
   }
 
   @Test
-  public void getSessionStatus_withTimeoutParameter() throws Exception {
+  public void getSessionStatus_withTimeoutParameter() {
     stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
     connector.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
     SessionStatus sessionStatus = connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
@@ -134,17 +169,7 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getCertificate_usingNationalIdentityNumber() throws Exception {
-    stubRequestWithResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    CertificateRequest request = createDummyCertificateRequest();
-    CertificateChoiceResponse response = connector.getCertificate(identity, request);
-    assertNotNull(response);
-    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
-  }
-
-  @Test
-  public void getCertificate_usingDocumentNumber() throws Exception {
+  public void getCertificate_usingDocumentNumber() {
     stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
     CertificateRequest request = createDummyCertificateRequest();
     CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
@@ -153,18 +178,19 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void getCertificate_withNonce_usingNationalIdentityNumber() throws Exception {
-    stubRequestWithResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+  public void getCertificate_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/certificatechoice/etsi/PASKZ-987654321012", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PASKZ-987654321012");
+
     CertificateRequest request = createDummyCertificateRequest();
-    request.setNonce("zstOt2umlc");
-    CertificateChoiceResponse response = connector.getCertificate(identity, request);
+    CertificateChoiceResponse response = connector.getCertificate(semanticsIdentifier, request);
     assertNotNull(response);
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
   @Test
-  public void getCertificate_withNonce_usingDocumentNumber() throws Exception {
+  public void getCertificate_withNonce_usingDocumentNumber() {
     stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
     CertificateRequest request = createDummyCertificateRequest();
     request.setNonce("zstOt2umlc");
@@ -173,58 +199,71 @@ public class SmartIdRestConnectorTest {
     assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
-  @Test(expected = CertificateNotFoundException.class)
-  public void getCertificate_whenNationalIdentityNumberNotFound_shoudThrowException() throws Exception {
-    stubNotFoundResponse("/certificatechoice/pno/EE/123456789", "requests/certificateChoiceRequest.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+  @Test
+  public void getCertificate_withNonce_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/certificatechoice/etsi/IDCCZ-1234567890", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, "CZ", "1234567890");
     CertificateRequest request = createDummyCertificateRequest();
-    connector.getCertificate(identity, request);
+    request.setNonce("zstOt2umlc");
+    CertificateChoiceResponse response = connector.getCertificate(semanticsIdentifier, request);
+    assertNotNull(response);
+    assertEquals("97f5058e-e308-4c83-ac14-7712b0eb9d86", response.getSessionID());
   }
 
-  @Test(expected = CertificateNotFoundException.class)
-  public void getCertificate_whenDocumentNumberNotFound_shoudThrowException() throws Exception {
+  @Test(expected = UserAccountNotFoundException.class)
+  public void getCertificate_whenDocumentNumberNotFound_shoudThrowException() {
     stubNotFoundResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
   }
 
-  @Test(expected = UnauthorizedException.class)
-  public void getCertificate_withWrongAuthenticationParams_shuldThrowException() throws Exception {
+  @Test(expected = UserAccountNotFoundException.class)
+  public void getCertificate_semanticsIdentifierNotFound_shouldThrowException() {
+    stubNotFoundResponse("/certificatechoice/etsi/IDCCZ-1234567890", "requests/certificateChoiceRequest.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("IDCCZ-1234567890");
+
+    CertificateRequest request = createDummyCertificateRequest();
+    connector.getCertificate(semanticsIdentifier, request);
+  }
+
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
+  public void getCertificate_withWrongAuthenticationParams_shuldThrowException() {
     stubUnauthorizedResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void getCertificate_withWrongRequestParams_shouldThrowException() throws Exception {
+  @Test(expected = SmartIdClientException.class)
+  public void getCertificate_withWrongRequestParams_shouldThrowException() {
     stubBadRequestResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
   }
 
-  @Test(expected = RequestForbiddenException.class)
-  public void getCertificate_whenRequestForbidden_shouldThrowException() throws Exception {
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
+  public void getCertificate_whenRequestForbidden_shouldThrowException() {
     stubForbiddenResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
   }
 
-  @Test(expected = ClientNotSupportedException.class)
-  public void getCertificate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+  @Test(expected = SmartIdClientException.class)
+  public void getCertificate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
     stubErrorResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", 480);
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
   }
 
   @Test(expected = ServerMaintenanceException.class)
-  public void getCertificate_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+  public void getCertificate_whenSystemUnderMaintenance_shouldThrowException() {
     stubErrorResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", 580);
     CertificateRequest request = createDummyCertificateRequest();
     connector.getCertificate("PNOEE-123456", request);
   }
 
   @Test
-  public void sign_usingDocumentNumber() throws Exception {
+  public void sign_usingDocumentNumber() {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
@@ -232,18 +271,10 @@ public class SmartIdRestConnectorTest {
     assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
-  @Test
-  public void sign_withDisplayText_usingDocumentNumber() throws Exception {
-    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithDisplayText.json", "responses/signatureSessionResponse.json");
-    SignatureSessionRequest request = createDummySignatureSessionRequest();
-    request.setDisplayText("Authorize transfer of €10");
-    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
-    assertNotNull(response);
-    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
-  }
+
 
   @Test
-  public void sign_withNonce_usingDocumentNumber() throws Exception {
+  public void sign_withNonce_usingDocumentNumber() {
     stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     request.setNonce("zstOt2umlc");
@@ -253,73 +284,121 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void sign_withRequestProperties_usingDocumentNumber() throws Exception {
-    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithRequestProperties.json", "responses/signatureSessionResponse.json");
+  public void sign_withAllowedInteractionsOrder_confirmationMessageAndFallbackToDisplayTextAndPIN() {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_fallbackTo_displayTextAndPIN.json", "responses/signatureSessionResponse.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
 
-    RequestProperties requestProperties = new RequestProperties();
-    requestProperties.setVcChoice(true);
-    request.setRequestProperties(requestProperties);
+    Interaction confirmationMessageInteraction = Interaction.confirmationMessage("Do you want to transfer 200 Bison dollars from savings account to Oceanic Airlines?");
+    Interaction fallbackInteraction = Interaction.displayTextAndPIN("Transfer 200 BSD to Oceanic Airlines?");
+    request.setAllowedInteractionsOrder(asList(confirmationMessageInteraction, fallbackInteraction));
 
     SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
     assertNotNull(response);
     assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
+  @Test
+  public void sign_withAllowedInteractionsOrder_confirmationMessageAndNoFallback() {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_noFallback.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+
+    Interaction confi = Interaction.confirmationMessage("Do you want to transfer 999 Bison dollars from savings account to Oceanic Airlines?");
+    request.setAllowedInteractionsOrder(Collections.singletonList(confi));
+
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
+  }
+
+  @Test
+  public void sign_withAllowedInteractionsOrder_verificationCodeChoiceAndFallbackToDisplayTextAndPIN() {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_verificationCodeChoice_fallbackTo_displayTextAndPIN.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+
+    Interaction verificationCodeChoice = Interaction.verificationCodeChoice("Transfer 444 BSD to Oceanic Airlines?");
+    Interaction fallbackToDisplayTextAndPIN = Interaction.displayTextAndPIN("Transfer 444 BSD to Oceanic Airlines?");
+    request.setAllowedInteractionsOrder(asList(verificationCodeChoice, fallbackToDisplayTextAndPIN));
+
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
+  }
+
+  @Test
+  public void sign_withAllowedInteractionsOrder_confirmationMessageAndFallbackToVerificationCodeChoice() {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_fallbackTo_verificationCodeChoice.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+
+    Interaction confirmationMessage = Interaction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
+    Interaction fallbackToVerificationCodeChoice = Interaction.verificationCodeChoice("Transfer 707 BSD to Oceanic Airlines?");
+    request.setAllowedInteractionsOrder(asList(confirmationMessage, fallbackToVerificationCodeChoice));
+
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
+  }
+
+  @Test
+  public void sign_withAllowedInteractionsOrder_confirmationMessageAndVerificationCodeChoice_fallbackToVerificationCodeChoice() {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessageAndVerificationCodeChoice_fallbackTo_verificationCodeChoice.json", "responses/signatureSessionResponse.json");
+    SignatureSessionRequest request = createDummySignatureSessionRequest();
+
+    Interaction confirmationMessage = Interaction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
+    Interaction fallbackToVerificationCodeChoice = Interaction.verificationCodeChoice("Transfer 707 BSD to Oceanic Airlines?");
+    request.setAllowedInteractionsOrder(asList(confirmationMessage, fallbackToVerificationCodeChoice));
+
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
+    assertNotNull(response);
+    assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
+  }
+
+
+
+
   @Test(expected = UserAccountNotFoundException.class)
-  public void sign_whenDocumentNumberNotFound_shouldThrowException() throws Exception {
+  public void sign_whenDocumentNumberNotFound_shouldThrowException() {
     stubNotFoundResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
 
-  @Test(expected = UnauthorizedException.class)
-  public void sign_withWrongAuthenticationParams_shouldThrowException() throws Exception {
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
+  public void sign_withWrongAuthenticationParams_shouldThrowException() {
     stubUnauthorizedResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void sign_withWrongRequestParams_shouldThrowException() throws Exception {
+  @Test(expected = SmartIdClientException.class)
+  public void sign_withWrongRequestParams_shouldThrowException() {
     stubBadRequestResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
 
-  @Test(expected = RequestForbiddenException.class)
-  public void sign_whenRequestForbidden_shouldThrowException() throws Exception {
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
+  public void sign_whenRequestForbidden_shouldThrowException() {
     stubForbiddenResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
 
-  @Test(expected = ClientNotSupportedException.class)
-  public void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+  @Test(expected = SmartIdClientException.class)
+  public void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
     stubErrorResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", 480);
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
 
   @Test(expected = ServerMaintenanceException.class)
-  public void sign_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+  public void sign_whenSystemUnderMaintenance_shouldThrowException() {
     stubErrorResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", 580);
     SignatureSessionRequest request = createDummySignatureSessionRequest();
     connector.sign("PNOEE-123456", request);
   }
 
   @Test
-  public void authenticate_usingNationalIdentityNumber() throws Exception {
-    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    AuthenticationSessionResponse response = connector.authenticate(identity, request);
-    assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
-  }
-
-  @Test
-  public void authenticate_usingDocumentNumber() throws Exception {
+  public void authenticate_usingDocumentNumber() {
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
@@ -328,18 +407,19 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void authenticate_withNonce_usingNationalIdentityNumber() throws Exception {
-    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+  public void authenticate_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/authentication/etsi/PASKZ-987654321012", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, "KZ", "987654321012");
+
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    request.setNonce("g9rp4kjca3");
-    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    AuthenticationSessionResponse response = connector.authenticate(semanticsIdentifier, request);
     assertNotNull(response);
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
   @Test
-  public void authenticate_withNonce_usingDocumentNumber() throws Exception {
+  public void authenticate_withNonce_usingDocumentNumber() {
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     request.setNonce("g9rp4kjca3");
@@ -349,49 +429,39 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void authenticate_withDisplayText_usingNationalIdentityNumber() throws Exception {
-    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
+  public void authenticate_withNonce_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/authentication/etsi/PASEE-48308230504", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, SemanticsIdentifier.CountryCode.EE, "48308230504");
+
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    request.setDisplayText("Log into internet banking system");
-    AuthenticationSessionResponse response = connector.authenticate(identity, request);
+    request.setNonce("g9rp4kjca3");
+    AuthenticationSessionResponse response = connector.authenticate(semanticsIdentifier, request);
     assertNotNull(response);
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
+
   @Test
-  public void authenticate_withDisplayText_usingDocumentNumber() throws Exception {
-    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithDisplayText.json", "responses/authenticationSessionResponse.json");
+  public void authenticate_withSingleAllowedInteraction_usingSemanticsIdentifier() {
+    stubRequestWithResponse("/authentication/etsi/PNOLT-48010010101", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOLT-48010010101");
+
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    request.setDisplayText("Log into internet banking system");
-    AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
+    request.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
+
+    AuthenticationSessionResponse response = connector.authenticate(semanticsIdentifier, request);
     assertNotNull(response);
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
-  @Test
-  public void authenticate_withRequestProperties_usingNationalIdentityNumber() throws Exception {
-    stubRequestWithResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequestWithRequestProperties.json", "responses/authenticationSessionResponse.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-
-    RequestProperties requestProperties = new RequestProperties();
-    requestProperties.setVcChoice(true);
-    request.setRequestProperties(requestProperties);
-
-    AuthenticationSessionResponse response = connector.authenticate(identity, request);
-    assertNotNull(response);
-    assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
-  }
 
   @Test
-  public void authenticate_withRequestProperties_usingDocumentNumber() throws Exception {
-    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithRequestProperties.json", "responses/authenticationSessionResponse.json");
+  public void authenticate_withSingleAllowedInteraction_usingDocumentNumber() {
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-
-    RequestProperties requestProperties = new RequestProperties();
-    requestProperties.setVcChoice(true);
-    request.setRequestProperties(requestProperties);
+    request.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
 
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
     assertNotNull(response);
@@ -399,57 +469,59 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test(expected = UserAccountNotFoundException.class)
-  public void authenticate_whenNationalIdentityNumberNotFound_shoudThrowException() throws Exception {
-    stubNotFoundResponse("/authentication/pno/EE/123456789", "requests/authenticationSessionRequest.json");
-    NationalIdentity identity = new NationalIdentity("EE", "123456789");
-    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
-    connector.authenticate(identity, request);
-  }
-
-  @Test(expected = UserAccountNotFoundException.class)
-  public void authenticate_whenDocumentNumberNotFound_shoudThrowException() throws Exception {
+  public void authenticate_whenDocumentNumberNotFound_shouldThrowException() {
     stubNotFoundResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
   }
 
-  @Test(expected = UnauthorizedException.class)
-  public void authenticate_withWrongAuthenticationParams_shuldThrowException() throws Exception {
+  @Test(expected = UserAccountNotFoundException.class)
+  public void authenticate_whenSemanticsIdentifierNotFound_shouldThrowException() {
+    stubNotFoundResponse("/authentication/etsi/IDCLV-230883-19894", "requests/authenticationSessionRequest.json");
+
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, SemanticsIdentifier.CountryCode.LV, "230883-19894");
+
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    connector.authenticate(semanticsIdentifier, request);
+  }
+
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
+  public void authenticate_withWrongAuthenticationParams_shuldThrowException() {
     stubUnauthorizedResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void authenticate_withWrongRequestParams_shouldThrowException() throws Exception {
+  @Test(expected = SmartIdClientException.class)
+  public void authenticate_withWrongRequestParams_shouldThrowException() {
     stubBadRequestResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
   }
 
-  @Test(expected = RequestForbiddenException.class)
-  public void authenticate_whenRequestForbidden_shouldThrowException() throws Exception {
+  @Test(expected = RelyingPartyAccountConfigurationException.class)
+  public void authenticate_whenRequestForbidden_shouldThrowException() {
     stubForbiddenResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
   }
 
-  @Test(expected = ClientNotSupportedException.class)
-  public void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() throws Exception {
+  @Test(expected = SmartIdClientException.class)
+  public void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
     stubErrorResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", 480);
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
   }
 
   @Test(expected = ServerMaintenanceException.class)
-  public void authenticate_whenSystemUnderMaintenance_shouldThrowException() throws Exception {
+  public void authenticate_whenSystemUnderMaintenance_shouldThrowException() {
     stubErrorResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", 580);
     AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
     connector.authenticate("PNOEE-123456", request);
   }
 
   @Test
-  public void verifyCustomRequestHeaderPresent_whenAuthenticating() throws Exception {
+  public void verifyCustomRequestHeaderPresent_whenAuthenticating() {
     String headerName = "custom-header";
     String headerValue = "Auth";
 
@@ -465,7 +537,7 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void verifyCustomRequestHeaderPresent_whenSigning() throws Exception {
+  public void verifyCustomRequestHeaderPresent_whenSigning() {
     String headerName = "custom-header";
     String headerValue = "Sign";
 
@@ -481,7 +553,7 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void verifyCustomRequestHeaderPresent_whenChoosingCertificate() throws Exception {
+  public void verifyCustomRequestHeaderPresent_whenChoosingCertificate() {
     String headerName = "custom-header";
     String headerValue = "Cert choice";
 
@@ -497,7 +569,7 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
-  public void verifyCustomRequestHeaderPresent_whenRequestingSessionStatus() throws Exception {
+  public void verifyCustomRequestHeaderPresent_whenRequestingSessionStatus() {
     String headerName = "custom-header";
     String headerValue = "Session status";
 
@@ -529,7 +601,7 @@ public class SmartIdRestConnectorTest {
     assertEquals(endResult, sessionStatus.getResult().getEndResult());
   }
 
-  private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) throws IOException {
+  private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {
     stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
     return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
   }
@@ -549,6 +621,10 @@ public class SmartIdRestConnectorTest {
     request.setCertificateLevel("ADVANCED");
     request.setHash("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     request.setHashType("SHA256");
+    request.setAllowedInteractionsOrder(asList(
+            Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
+            Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
+    );
     return request;
   }
 
@@ -559,6 +635,10 @@ public class SmartIdRestConnectorTest {
     request.setCertificateLevel("ADVANCED");
     request.setHash("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
     request.setHashType("SHA512");
+    request.setAllowedInteractionsOrder(asList(
+            Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
+            Interaction.displayTextAndPIN("Log in?"))
+    );
     return request;
   }
 }

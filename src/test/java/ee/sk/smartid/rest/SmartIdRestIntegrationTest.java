@@ -26,19 +26,34 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.rest.dao.CertificateRequest;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.concurrent.TimeUnit;
-
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 public class SmartIdRestIntegrationTest {
 
@@ -47,12 +62,12 @@ public class SmartIdRestIntegrationTest {
   private static final String DOCUMENT_NUMBER = "PNOEE-10101010005-Z1B2-Q";
   private static final String DOCUMENT_NUMBER_LT = "PNOLT-10101010005-Z52N-Q";
   private static final String DATA_TO_SIGN = "Hello World!";
-  private static final String CERTIFICATE_LEVEL = "QUALIFIED";
+  private static final String CERTIFICATE_LEVEL_QUALIFIED = "QUALIFIED";
   private SmartIdConnector connector;
 
   @Before
   public void setUp() {
-    connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v1/");
+    connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v2/");
   }
 
   @Test
@@ -69,13 +84,11 @@ public class SmartIdRestIntegrationTest {
   }
 
   @Test
-  public void authenticate_withNationalIdentityNumber() throws Exception {
-    NationalIdentity nationalIdentity = new NationalIdentity();
-    nationalIdentity.setCountryCode("LV");
-    nationalIdentity.setNationalIdentityNumber("010101-10006");
+  public void authenticate_withSemanticsIdentifier() throws Exception {
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010101-10006");
 
     AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
-    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(nationalIdentity, request);
+    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, request);
 
     assertNotNull(authenticationSessionResponse);
     assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
@@ -94,10 +107,38 @@ public class SmartIdRestIntegrationTest {
 
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
 
+    assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
+
     assertAuthenticationResponseCreated(sessionStatus);
   }
 
+
   @Test
+  public void authenticate_withDocumentNumber_advancedInteraction() throws Exception {
+    AuthenticationSessionRequest authenticationSessionRequest = new AuthenticationSessionRequest();
+    authenticationSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
+    authenticationSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
+    authenticationSessionRequest.setCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED);
+    authenticationSessionRequest.setHashType("SHA512");
+    authenticationSessionRequest.setHash(calculateHashInBase64(DATA_TO_SIGN.getBytes()));
+
+    authenticationSessionRequest.setAllowedInteractionsOrder(
+            asList(Interaction.confirmationMessage("Do you want to log in to internet banking system of Oceanic Bank?"),
+                    Interaction.displayTextAndPIN("Log into internet banking system?")));
+
+    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, authenticationSessionRequest);
+
+    assertNotNull(authenticationSessionResponse);
+    assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+
+    assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
+
+    assertAuthenticationResponseCreated(sessionStatus);
+  }
+
+  //@Test CURRENTLY IGNORED AS DEMO DOESN'T RESPOND BACK IGNORED PROPERTIES
   public void getIgnoredProperties_withSign_getIgnoredProperties_withAuthenticate_testAccountsIgnoreVcChoice() throws Exception {
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession(DOCUMENT_NUMBER);
 
@@ -106,42 +147,42 @@ public class SmartIdRestIntegrationTest {
 
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
 
-    RequestProperties requestProperties = getRequestPropertiesWithIgnoredProperties();
-
     SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
-    signatureSessionRequest.setRequestProperties(requestProperties);
 
     SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber, signatureSessionRequest);
     sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
+
+    assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
+
+
     assertSignatureCreated(sessionStatus);
     assertNotNull(sessionStatus.getIgnoredProperties());
-    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(3));
 
-    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("vcChoice", "testingIgnored", "testingIgnoredTwo"));
+    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("testingIgnored", "testingIgnoredTwo"));
+    assertThat(sessionStatus.getIgnoredProperties().length, equalTo(2));
+
   }
 
-  @Test
-  public void getIgnoredProperties_withAuthenticate_testAccountsIgnoreVcChoice() throws Exception {
+  //@Test //CURRENTLY IGNORED AS DEMO DOESN'T RESPOND BACK IGNORED PROPERTIES
+  public void getIgnoredProperties_withAuthenticate() throws Exception {
     AuthenticationSessionRequest authenticationSessionRequest = createAuthenticationSessionRequest();
 
-    RequestProperties requestProperties = getRequestPropertiesWithIgnoredProperties();
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010101-10006");
 
-    authenticationSessionRequest.setRequestProperties(requestProperties);
 
-    NationalIdentity nationalIdentity = new NationalIdentity();
-    nationalIdentity.setCountryCode("LV");
-    nationalIdentity.setNationalIdentityNumber("010101-10006");
-
-    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(nationalIdentity, authenticationSessionRequest);
+    AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, authenticationSessionRequest);
 
     assertNotNull(authenticationSessionResponse);
     assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
 
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+
+    assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
+
     assertAuthenticationResponseCreated(sessionStatus);
     assertNotNull(sessionStatus.getIgnoredProperties());
 
-    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("vcChoice", "testingIgnored", "testingIgnoredTwo"));
+    assertThat(asList(sessionStatus.getIgnoredProperties()), containsInAnyOrder("testingIgnored", "testingIgnoredTwo"));
   }
 
   private CertificateChoiceResponse fetchCertificateChoiceSession(String documentNumber) {
@@ -156,7 +197,7 @@ public class SmartIdRestIntegrationTest {
     CertificateRequest request = new CertificateRequest();
     request.setRelyingPartyUUID(RELYING_PARTY_UUID);
     request.setRelyingPartyName(RELYING_PARTY_NAME);
-    request.setCertificateLevel(CERTIFICATE_LEVEL);
+    request.setCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED);
     return request;
   }
 
@@ -175,10 +216,11 @@ public class SmartIdRestIntegrationTest {
     SignatureSessionRequest signatureSessionRequest = new SignatureSessionRequest();
     signatureSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     signatureSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
-    signatureSessionRequest.setCertificateLevel(CERTIFICATE_LEVEL);
+    signatureSessionRequest.setCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED);
     signatureSessionRequest.setHashType("SHA512");
     String hashInBase64 = calculateHashInBase64(DATA_TO_SIGN.getBytes());
     signatureSessionRequest.setHash(hashInBase64);
+    signatureSessionRequest.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to bank?")));
     return signatureSessionRequest;
   }
 
@@ -186,10 +228,13 @@ public class SmartIdRestIntegrationTest {
     AuthenticationSessionRequest authenticationSessionRequest = new AuthenticationSessionRequest();
     authenticationSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     authenticationSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
-    authenticationSessionRequest.setCertificateLevel(CERTIFICATE_LEVEL);
+    authenticationSessionRequest.setCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED);
     authenticationSessionRequest.setHashType("SHA512");
     String hashInBase64 = calculateHashInBase64(DATA_TO_SIGN.getBytes());
     authenticationSessionRequest.setHash(hashInBase64);
+
+    authenticationSessionRequest.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
+
     return authenticationSessionRequest;
   }
 
@@ -230,26 +275,4 @@ public class SmartIdRestIntegrationTest {
     return Base64.encodeBase64String(digestValue);
   }
 
-  private RequestProperties getRequestPropertiesWithIgnoredProperties() {
-    return new RequestProperties() {
-      private String testingIgnored = "random value";
-      private String testingIgnoredTwo = "random value";
-
-      public void setTestingIgnoredTwo(String testingIgnoredTwo) {
-        this.testingIgnoredTwo = testingIgnoredTwo;
-      }
-
-      public String getTestingIgnoredTwo() {
-        return testingIgnoredTwo;
-      }
-
-      public void setTestingIgnored(String testingIgnored) {
-        this.testingIgnored = testingIgnored;
-      }
-
-      public String getTestingIgnored() {
-        return testingIgnored;
-      }
-    };
-  }
 }

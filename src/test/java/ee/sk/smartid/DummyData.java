@@ -39,9 +39,9 @@ public class DummyData {
     return result;
   }
 
-  public static SessionStatus createUserRefusedSessionStatus() {
+  public static SessionStatus createUserRefusedSessionStatus(String sessionResult) {
     SessionStatus status = createCompleteSessionStatus();
-    status.setResult(createSessionResult("USER_REFUSED"));
+    status.setResult(createSessionResult(sessionResult));
     return status;
   }
 

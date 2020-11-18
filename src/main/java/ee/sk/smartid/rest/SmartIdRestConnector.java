@@ -26,7 +26,13 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
+import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,14 +55,16 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
   private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
   private static final String SESSION_STATUS_URI = "/session/{sessionId}";
-  private static final String CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH = "/certificatechoice/pno/{country}/{nationalIdentityNumber}";
+
   private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
   private static final String CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/certificatechoice/etsi/{semanticsIdentifier}";
+
   private static final String SIGNATURE_BY_DOCUMENT_NUMBER_PATH = "/signature/document/{documentNumber}";
   private static final String SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/signature/etsi/{semanticsIdentifier}";
+
   private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
-  private static final String AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH = "/authentication/pno/{country}/{nationalIdentityNumber}";
   private static final String AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/authentication/etsi/{semanticsIdentifier}";
+
   private String endpointUrl;
   private transient Configuration clientConfig;
   private transient Client configuredClient;
@@ -98,16 +106,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
   }
 
   @Override
-  public CertificateChoiceResponse getCertificate(NationalIdentity identity, CertificateRequest request) {
-    logger.debug("Getting certificate for " + identity);
-    URI uri = UriBuilder
-        .fromUri(endpointUrl)
-        .path(CERTIFICATE_CHOICE_BY_NATIONAL_IDENTITY_PATH)
-        .build(identity.getCountryCode(), identity.getNationalIdentityNumber());
-    return postCertificateRequest(uri, request);
-  }
-
-  @Override
   public CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request) {
     logger.debug("Getting certificate for document " + documentNumber);
     URI uri = UriBuilder
@@ -135,34 +133,19 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .fromUri(endpointUrl)
         .path(SIGNATURE_BY_DOCUMENT_NUMBER_PATH)
         .build(documentNumber);
-    try {
-      return postRequest(uri, request, SignatureSessionResponse.class);
-    } catch (NotFoundException e) {
-      logger.warn("User account not found for signing with document " + documentNumber);
-      throw new UserAccountNotFoundException();
-    } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
-      throw new RequestForbiddenException();
-    }
+
+    return postSigningRequest(uri, request);
   }
 
   @Override
-  public SignatureSessionResponse sign(SemanticsIdentifier semanticsIdentifier,
-      SignatureSessionRequest request) {
-    logger.debug("Signing for semantics identifier " + semanticsIdentifier);
+  public SignatureSessionResponse sign(SemanticsIdentifier semanticsIdentifier, SignatureSessionRequest request) {
+    logger.debug("Signing for " + semanticsIdentifier);
     URI uri = UriBuilder
         .fromUri(endpointUrl)
         .path(SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
         .build(semanticsIdentifier.getIdentifier());
-    try {
-      return postRequest(uri, request, SignatureSessionResponse.class);
-    } catch (NotFoundException e) {
-      logger.warn("User account not found for semantics identifier " + semanticsIdentifier.getIdentifier());
-      throw new UserAccountNotFoundException();
-    } catch (ForbiddenException e) {
-      logger.warn("No permission to issue the request");
-      throw new RequestForbiddenException();
-    }
+
+    return postSigningRequest(uri, request);
   }
 
   @Override
@@ -172,16 +155,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .fromUri(endpointUrl)
         .path(AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH)
         .build(documentNumber);
-    return postAuthenticationRequest(uri, request);
-  }
-
-  @Override
-  public AuthenticationSessionResponse authenticate(NationalIdentity identity, AuthenticationSessionRequest request) {
-    logger.debug("Authenticating for " + identity);
-    URI uri = UriBuilder
-        .fromUri(endpointUrl)
-        .path(AUTHENTICATE_BY_NATIONAL_IDENTITY_PATH)
-        .build(identity.getCountryCode(), identity.getNationalIdentityNumber());
     return postAuthenticationRequest(uri, request);
   }
 
@@ -229,10 +202,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
       return postRequest(uri, request, CertificateChoiceResponse.class);
     } catch (NotFoundException e) {
       logger.warn("Certificate not found for URI " + uri, e);
-      throw new CertificateNotFoundException();
+      throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
       logger.warn("No permission to issue the request", e);
-      throw new RequestForbiddenException();
+      throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
     }
   }
 
@@ -244,7 +217,19 @@ public class SmartIdRestConnector implements SmartIdConnector {
       throw new UserAccountNotFoundException();
     } catch (ForbiddenException e) {
       logger.warn("No permission to issue the request", e);
-      throw new RequestForbiddenException();
+      throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
+    }
+  }
+
+  private SignatureSessionResponse postSigningRequest(URI uri, SignatureSessionRequest request) {
+    try {
+      return postRequest(uri, request, SignatureSessionResponse.class);
+    } catch (NotFoundException e) {
+      logger.warn("User account not found for URI " + uri, e);
+      throw new UserAccountNotFoundException();
+    } catch (ForbiddenException e) {
+      logger.warn("No permission to issue the request", e);
+      throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
     }
   }
 
@@ -252,19 +237,31 @@ public class SmartIdRestConnector implements SmartIdConnector {
     try {
       Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
       return prepareClient(uri).post(requestEntity, responseType);
-    } catch (NotAuthorizedException e) {
+    }
+    catch (NotAuthorizedException e) {
       logger.warn("Request is unauthorized for URI " + uri, e);
-      throw new UnauthorizedException();
-    } catch (BadRequestException e) {
+      throw new RelyingPartyAccountConfigurationException("Request is unauthorized for URI " + uri, e);
+    }
+    catch (BadRequestException e) {
       logger.warn("Request is invalid for URI " + uri, e);
-      throw new InvalidParametersException();
-    } catch (ClientErrorException e) {
+      throw new SmartIdClientException("Server refused the request", e);
+    }
+    catch (ClientErrorException e) {
+      if (e.getResponse().getStatus() == 471) {
+        logger.warn("No suitable account of requested type found, but user has some other accounts.", e);
+        throw new NoSuitableAccountOfRequestedTypeFoundException();
+      }
+      if (e.getResponse().getStatus() == 472) {
+        logger.warn("Person should view Smart-ID app or Smart-ID self-service portal now.", e);
+        throw new PersonShouldViewSmartIdPortalException();
+      }
       if (e.getResponse().getStatus() == 480) {
         logger.warn("Client-side API is too old and not supported anymore");
-        throw new ClientNotSupportedException();
+        throw new SmartIdClientException("Client-side API is too old and not supported anymore");
       }
       throw e;
-    } catch (ServerErrorException e) {
+    }
+    catch (ServerErrorException e) {
       if (e.getResponse().getStatus() == 580) {
         logger.warn("Server is under maintenance, retry later", e);
         throw new ServerMaintenanceException();

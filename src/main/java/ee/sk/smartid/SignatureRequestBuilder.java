@@ -26,15 +26,32 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.*;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.*;
+import ee.sk.smartid.rest.dao.Capability;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionSignature;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.SignatureSessionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * Class for building signature request and getting the response
@@ -82,7 +99,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
-    super.withRelyingPartyUUID(relyingPartyUUID);
+    this.relyingPartyUUID = relyingPartyUUID;
     return this;
   }
 
@@ -99,7 +116,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withRelyingPartyName(String relyingPartyName) {
-    super.withRelyingPartyName(relyingPartyName);
+    this.relyingPartyName = relyingPartyName;
     return this;
   }
 
@@ -113,7 +130,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withDocumentNumber(String documentNumber) {
-    super.withDocumentNumber(documentNumber);
+    this.documentNumber = documentNumber;
     return this;
   }
 
@@ -121,15 +138,12 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, a hyphen and the identifier.
-   * Either use
-   * {@link #withSemanticsIdentifierAsString(String)}
-   * or use {@link #withSemanticsIdentifier(SemanticsIdentifier)}
    *
-   * @param semanticsIdentifier semantics identifier for a person
+   * @param semanticsIdentifierAsString semantics identifier for a person
    * @return this builder
    */
-  public SignatureRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifier) {
-    super.withSemanticsIdentifierAsString(semanticsIdentifier);
+  public SignatureRequestBuilder withSemanticsIdentifierAsString(String semanticsIdentifierAsString) {
+    this.semanticsIdentifier = new SemanticsIdentifier(semanticsIdentifierAsString);
     return this;
   }
 
@@ -137,15 +151,12 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * Sets the request's personal semantics identifier
    * <p>
    * Semantics identifier consists of identity type, country code, and the identifier.
-   * Either use
-   * {@link #withSemanticsIdentifier(SemanticsIdentifier)}
-   * or use {@link #withSemanticsIdentifierAsString(String)}}
    *
    * @param semanticsIdentifier semantics identifier for a person
    * @return this builder
    */
   public SignatureRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
-    super.withSemanticsIdentifier(semanticsIdentifier);
+    this.semanticsIdentifier = semanticsIdentifier;
     return this;
   }
 
@@ -162,7 +173,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withSignableData(SignableData dataToSign) {
-    super.withSignableData(dataToSign);
+    super.dataToSign = dataToSign;
     return this;
   }
 
@@ -176,7 +187,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withSignableHash(SignableHash hashToSign) {
-    super.withSignableHash(hashToSign);
+    super.hashToSign = hashToSign;
     return this;
   }
 
@@ -191,21 +202,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withCertificateLevel(String certificateLevel) {
-    super.withCertificateLevel(certificateLevel);
-    return this;
-  }
-
-  /**
-   * Sets the request's display text
-   * <p>
-   * Optional. It's the text to display for authentication consent dialog
-   * on the mobile device.
-   *
-   * @param displayText text to display
-   * @return this builder
-   */
-  public SignatureRequestBuilder withDisplayText(String displayText) {
-    super.withDisplayText(displayText);
+    this.certificateLevel = certificateLevel;
     return this;
   }
 
@@ -226,7 +223,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withNonce(String nonce) {
-    super.withNonce(nonce);
+    this.nonce = nonce;
     return this;
   }
 
@@ -242,7 +239,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withCapabilities(Capability... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = Arrays.stream(capabilities).map(Objects::toString).collect(Collectors.toSet());
     return this;
   }
 
@@ -259,20 +256,17 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @return this builder
    */
   public SignatureRequestBuilder withCapabilities(String... capabilities) {
-    super.withCapabilities(capabilities);
+    this.capabilities = new HashSet<>(Arrays.asList(capabilities));
     return this;
   }
  
   /**
-   * Sets the request's request properties
-   * <p>
-   * Optional. Additional request properties
-   *
-   * @param requestProperties request properties of the request
+   * @param allowedInteractionsOrder Preferred order of what dialog to present to user. What actually gets displayed depends on user's device and its software version.
+   *                                 First option from this list that the device is capable of handling is displayed to the user.
    * @return this builder
    */
-  public SignatureRequestBuilder withRequestProperties(RequestProperties requestProperties) {
-    super.withRequestProperties(requestProperties);
+  public SignatureRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    this.allowedInteractionsOrder = allowedInteractionsOrder;
     return this;
   }
 
@@ -282,44 +276,33 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * This method uses automatic session status polling internally
    * and therefore blocks the current thread until signing is concluded/interupted etc.
    *
-   * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws UserRefusedException when the user has refused the session
+   * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
    *                                   User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return the signature response
    */
-  public SmartIdSignature sign() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,UserRefusedException,
-      UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException, TechnicalErrorException, ClientNotSupportedException, ServerMaintenanceException {
+  public SmartIdSignature sign() throws UserAccountNotFoundException, UserRefusedException,
+      UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException, ServerMaintenanceException {
     validateParameters();
     String sessionId = initiateSigning();
     SessionStatus sessionStatus = getSessionStatusPoller().fetchFinalSessionStatus(sessionId);
-    SmartIdSignature signature = createSmartIdSignature(sessionStatus);
-    return signature;
+    return createSmartIdSignature(sessionStatus);
   }
 
   /**
    * Send the signature request and get the session Id
    *
-   * @throws InvalidParametersException when mandatory request parameters are missing
    * @throws UserAccountNotFoundException when the user account was not found
-   * @throws RequestForbiddenException when Relying Party has no permission to issue the request.
-   *                                   This may happen when Relying Party has no permission to invoke operations on accounts with ADVANCED certificates.
-   * @throws ClientNotSupportedException when the client-side implementation of this API is old and not supported any more
    * @throws ServerMaintenanceException when the server is under maintenance
    *
    * @return session Id - later to be used for manual session status polling
    */
-  public String initiateSigning() throws InvalidParametersException, UserAccountNotFoundException, RequestForbiddenException,
-          ClientNotSupportedException, ServerMaintenanceException {
+  public String initiateSigning() throws UserAccountNotFoundException, ServerMaintenanceException {
     validateParameters();
     SignatureSessionRequest request = createSignatureSessionRequest();
     SignatureSessionResponse response = getSignatureResponse(request);
@@ -338,10 +321,10 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Get {@link SmartIdSignature} from {@link SessionStatus}
    *
-   * @throws UserRefusedException when the user has refused the session
+   * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
-   * @throws TechnicalErrorException when session status response's result is missing or it has some unknown value
+   * @throws UnprocessableSmartIdResponseException when session status response's result is missing or it has some unknown value
    *
    * @param sessionStatus session status response
    * @return the authentication response
@@ -354,26 +337,21 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     signature.setValueInBase64(sessionSignature.getValue());
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
     signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
+    signature.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+
     return signature;
   }
 
   protected void validateParameters() {
     super.validateParameters();
-    if (isBlank(getDocumentNumber()) && !hasSemanticsIdentifier()) {
-      logger.error("Document number or semantics identifier must be set");
-      throw new InvalidParametersException("Document number or semantics identifier must be set");
-    }
-    if (!isHashSet() && !isSignableDataSet()) {
-      logger.error("Signable data or hash with hash type must be set");
-      throw new InvalidParametersException("Signable data or hash with hash type must be set");
-    }
+    super.validateAuthSignParameters();
   }
 
   private void validateSignatureResponse(SessionStatus sessionStatus) {
     validateSessionResult(sessionStatus.getResult());
     if (sessionStatus.getSignature() == null) {
       logger.error("Signature was not present in the response");
-      throw new TechnicalErrorException("Signature was not present in the response");
+      throw new UnprocessableSmartIdResponseException("Signature was not present in the response");
     }
   }
 
@@ -384,10 +362,9 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setCertificateLevel(getCertificateLevel());
     request.setHashType(getHashTypeString());
     request.setHash(getHashInBase64());
-    request.setDisplayText(getDisplayText());
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
-    request.setRequestProperties(getRequestProperties());
+    request.setAllowedInteractionsOrder(getAllowedInteractionsOrder());
     return request;
   }
 }

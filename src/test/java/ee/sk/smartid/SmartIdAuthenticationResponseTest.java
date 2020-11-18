@@ -26,7 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public class SmartIdAuthenticationResponseTest {
     assertArrayEquals("Tere allkiri!".getBytes(), AuthenticationResponse.getSignatureValue());
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test(expected = UnprocessableSmartIdResponseException.class)
   public void incorrectBase64StringShouldThrowException() {
     SmartIdAuthenticationResponse AuthenticationResponse = new SmartIdAuthenticationResponse();
     AuthenticationResponse.setSignatureValueInBase64("!IsNotValidBase64Character");

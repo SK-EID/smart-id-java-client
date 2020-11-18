@@ -26,37 +26,44 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.InvalidParametersException;
-import ee.sk.smartid.exception.TechnicalErrorException;
-import ee.sk.smartid.exception.UserRefusedException;
-import ee.sk.smartid.exception.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.rest.dao.*;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import java.util.Collections;
 
 import static ee.sk.smartid.DummyData.*;
+import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class SignatureRequestBuilderTest {
 
   private SmartIdConnectorSpy connector;
-  private SessionStatusPoller sessionStatusPoller;
   private SignatureRequestBuilder builder;
+
+  @Rule
+  public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
     connector = new SmartIdConnectorSpy();
-    sessionStatusPoller = new SessionStatusPoller(connector);
     connector.signatureSessionResponseToRespond = createDummySignatureSessionResponse();
     connector.sessionStatusToRespond = createDummySessionStatusResponse();
-    builder = new SignatureRequestBuilder(connector, sessionStatusPoller);
+    builder = new SignatureRequestBuilder(connector, new SessionStatusPoller(connector));
   }
 
   @Test
-  public void signWithSignableHash() {
+  public void sign_withHashToSign() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
@@ -68,6 +75,9 @@ public class SignatureRequestBuilderTest {
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .withCapabilities(Capability.ADVANCED)
+        .withAllowedInteractionsOrder(asList(
+                Interaction.confirmationMessageAndVerificationCodeChoice("Sign hash?"),
+                Interaction.verificationCodeChoice("Sign hash?")))
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");
@@ -76,7 +86,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test
-  public void signWithSignableData() {
+  public void sign_withDataToSign() {
     SignableData dataToSign = new SignableData("Say 'hello' to my little friend!".getBytes());
     dataToSign.setHashType(HashType.SHA256);
 
@@ -87,35 +97,12 @@ public class SignatureRequestBuilderTest {
         .withSignableData(dataToSign)
         .withDocumentNumber("PNOEE-31111111111")
         .withCapabilities("QUALIFIED")
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Do you want to say hello?")))
         .sign();
 
     assertCorrectSignatureRequestMade("QUALIFIED");
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
-  }
-
-  @Test
-  public void signWithSignableData_andRequestProperties() {
-    SignableData dataToSign = new SignableData("Say 'hello' to my little friend!".getBytes());
-    dataToSign.setHashType(HashType.SHA256);
-
-    RequestProperties requestProperties = new RequestProperties();
-    requestProperties.setVcChoice(true);
-
-    SmartIdSignature signature = builder
-            .withRelyingPartyUUID("relying-party-uuid")
-            .withRelyingPartyName("relying-party-name")
-            .withCertificateLevel("QUALIFIED")
-            .withSignableData(dataToSign)
-            .withDocumentNumber("PNOEE-31111111111")
-            .withRequestProperties(requestProperties)
-            .sign();
-
-    assertCorrectSignatureRequestMade("QUALIFIED");
-    assertCorrectSessionRequestMade();
-    assertSignatureCorrect(signature);
-    assertNotNull(connector.signatureSessionRequestUsed.getRequestProperties());
-    assertEquals(true, connector.signatureSessionRequestUsed.getRequestProperties().isVcChoice());
   }
 
   @Test
@@ -129,6 +116,8 @@ public class SignatureRequestBuilderTest {
         .withRelyingPartyName("relying-party-name")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(asList(Interaction.confirmationMessageAndVerificationCodeChoice("Sign the contract?"),
+                Interaction.verificationCodeChoice("Sign hash?")))
         .sign();
 
     assertCorrectSignatureRequestMade(null);
@@ -136,8 +125,11 @@ public class SignatureRequestBuilderTest {
     assertSignatureCorrect(signature);
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test
   public void signWithoutDocumentNumber_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Either documentNumber or semanticsIdentifier must be set");
+
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     hashToSign.setHashType(HashType.SHA256);
@@ -150,8 +142,31 @@ public class SignatureRequestBuilderTest {
         .sign();
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void signWithoutSignableHash_andWithoutSignableData_shouldThrowException() {
+  @Test
+  public void sign_withDocumentNumberAndWithSemanticsIdentifier_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Exactly one of documentNumber or semanticsIdentifier must be set");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
+    builder
+          .withRelyingPartyUUID("relying-party-uuid")
+          .withRelyingPartyName("relying-party-name")
+          .withSignableHash(hashToSign)
+          .withDocumentNumber("PNOEE-31111111111")
+          .withSemanticsIdentifierAsString("IDCCZ-1234567890")
+          .withCertificateLevel("QUALIFIED")
+          .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
+          .sign();
+  }
+
+  @Test
+  public void sign_withoutDataToSign_withoutHash_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
+
     builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -160,8 +175,11 @@ public class SignatureRequestBuilderTest {
         .sign();
   }
 
-  @Test(expected = InvalidParametersException.class)
+  @Test
   public void signWithSignableHash_withoutHashType_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
+
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
 
@@ -174,8 +192,11 @@ public class SignatureRequestBuilderTest {
         .sign();
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void signWithSignableHash_withoutHash_shouldThrowException() {
+  @Test
+  public void sign_withHash_withoutHashType_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Either dataToSign or hash with hashType must be set");
+
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashType(HashType.SHA256);
     builder
@@ -187,8 +208,11 @@ public class SignatureRequestBuilderTest {
         .sign();
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void signWithoutRelyingPartyUuid_shouldThrowException() {
+  @Test
+  public void sign_withoutRelyingPartyUuid_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Parameter relyingPartyUUID must be set");
+
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     hashToSign.setHashType(HashType.SHA256);
@@ -201,8 +225,11 @@ public class SignatureRequestBuilderTest {
         .sign();
   }
 
-  @Test(expected = InvalidParametersException.class)
-  public void signWithoutRelyingPartyName_shouldThrowException() {
+  @Test
+  public void sign_withoutRelyingPartyName_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Parameter relyingPartyName must be set");
+
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
     hashToSign.setHashType(HashType.SHA256);
@@ -215,21 +242,182 @@ public class SignatureRequestBuilderTest {
         .sign();
   }
 
-  @Test(expected = UserRefusedException.class)
+  @Test
+  public void sign_withTooLongNonce_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("Nonce cannot be longer that 30 chars. You supplied: 'THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890'");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
+    hashToSign.setHashType(HashType.SHA256);
+
+    builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withCertificateLevel("QUALIFIED")
+        .withSignableHash(hashToSign)
+        .withDocumentNumber("PNOEE-31111111111")
+        .withNonce("THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890")
+        .sign();
+  }
+
+
+  @Test
+  public void authenticate_displayTextAndPinTextTooLong_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("displayText60 must not be longer than 60 characters");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    hashToSign.setHashType(HashType.SHA512);
+
+    builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withSignableHash(hashToSign)
+            .withCertificateLevel("QUALIFIED")
+            .withDocumentNumber("PNOEE-31111111111")
+            .withAllowedInteractionsOrder(Collections.singletonList(
+                    Interaction.displayTextAndPIN("This text here is longer than 60 characters allowed for displayTextAndPIN"))
+            )
+            .sign();
+  }
+
+  @Test
+  public void authenticate_verificationCodeChoiceTextTooLong_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("displayText60 must not be longer than 60 characters");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    hashToSign.setHashType(HashType.SHA512);
+
+    builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withSignableHash(hashToSign)
+            .withCertificateLevel("QUALIFIED")
+            .withDocumentNumber("PNOEE-31111111111")
+            .withAllowedInteractionsOrder(Collections.singletonList(
+                    Interaction.verificationCodeChoice("This text here is longer than 60 characters allowed for verificationCodeChoice"))
+            )
+            .sign();
+  }
+
+  @Test
+  public void authenticate_confirmationMessageTextTooLong_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("displayText200 must not be longer than 200 characters");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    hashToSign.setHashType(HashType.SHA512);
+
+    builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withSignableHash(hashToSign)
+            .withCertificateLevel("QUALIFIED")
+            .withDocumentNumber("PNOEE-31111111111")
+            .withAllowedInteractionsOrder(Collections.singletonList(
+                    Interaction.confirmationMessage("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                            "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
+                            "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
+                            "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
+                            "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."))
+            )
+            .sign();
+  }
+
+  @Test
+  public void authenticate_confirmationMessageAndVerificationCodeChoiceTextTooLong_shouldThrowException() {
+    expectedException.expect(SmartIdClientException.class);
+    expectedException.expectMessage("displayText200 must not be longer than 200 characters");
+
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("7iaw3Ur350mqGo7jwQrpkj9hiYB3Lkc/iBml1JQODbJ6wYX4oOHV+E+IvIh/1nsUNzLDBMxfqa2Ob1f1ACio/w==");
+    hashToSign.setHashType(HashType.SHA512);
+
+    builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withSignableHash(hashToSign)
+            .withCertificateLevel("QUALIFIED")
+            .withDocumentNumber("PNOEE-31111111111")
+            .withAllowedInteractionsOrder(Collections.singletonList(
+                    Interaction.confirmationMessageAndVerificationCodeChoice("This text here is longer than 200 characters allowed for confirmationMessage. Lorem ipsum dolor sit amet, " +
+                            "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, " +
+                            "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. " +
+                            "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. " +
+                            "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."))
+            )
+            .sign();
+  }
+
+
+
+  @Test
   public void sign_userRefused_shouldThrowException() {
-    connector.sessionStatusToRespond = createUserRefusedSessionStatus();
+    expectedException.expect(UserRefusedException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED");
     makeSigningRequest();
   }
 
 
-  @Test(expected = UserSelectedWrongVerificationCodeException.class)
+  @Test
+  public void sign_userRefusedCertChoice_shouldThrowException() {
+    expectedException.expect(UserRefusedCertChoiceException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_CERT_CHOICE");
+    makeSigningRequest();
+  }
+
+  @Test
+  public void sign_userRefusedDisplayTextAndPin_shouldThrowException() {
+    expectedException.expect(UserRefusedDisplayTextAndPinException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_DISPLAYTEXTANDPIN");
+    makeSigningRequest();
+  }
+
+  @Test
+  public void sign_userRefusedVerificationChoice_shouldThrowException() {
+    expectedException.expect(UserRefusedVerificationChoiceException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_VC_CHOICE");
+    makeSigningRequest();
+  }
+
+  @Test
+  public void sign_userRefusedConfirmationMessage_shouldThrowException() {
+    expectedException.expect(UserRefusedConfirmationMessageException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_CONFIRMATIONMESSAGE");
+    makeSigningRequest();
+  }
+
+  @Test
+  public void sign_userRefusedConfirmationMessageWithVerificationChoice_shouldThrowException() {
+    expectedException.expect(UserRefusedConfirmationMessageWithVerificationChoiceException.class);
+
+    connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
+    makeSigningRequest();
+  }
+
+  @Test
   public void sign_userSelectedWrongVerificationCode_shouldThrowException() {
+    expectedException.expect(UserSelectedWrongVerificationCodeException.class);
+
     connector.sessionStatusToRespond = createUserSelectedWrongVerificationCode();
     makeSigningRequest();
   }
 
-  @Test(expected = TechnicalErrorException.class)
+  @Test
   public void sign_signatureMissingInResponse_shouldThrowException() {
+    expectedException.expect(UnprocessableSmartIdResponseException.class);
+    expectedException.expectMessage("Signature was not present in the response");
+
     connector.sessionStatusToRespond.setSignature(null);
     makeSigningRequest();
   }
@@ -252,6 +440,7 @@ public class SignatureRequestBuilderTest {
     assertEquals("luvjsi1+1iLN9yfDFEh/BE8h", signature.getValueInBase64());
     assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
     assertEquals("PNOEE-31111111111", signature.getDocumentNumber());
+    assertThat(signature.getInteractionFlowUsed(), is("verificationCodeChoice"));
   }
 
   private SignatureSessionResponse createDummySignatureSessionResponse() {
@@ -268,6 +457,7 @@ public class SignatureRequestBuilderTest {
     signature.setValue("luvjsi1+1iLN9yfDFEh/BE8h");
     signature.setAlgorithm("sha256WithRSAEncryption");
     status.setSignature(signature);
+    status.setInteractionFlowUsed("verificationCodeChoice");
     return status;
   }
 
@@ -282,6 +472,7 @@ public class SignatureRequestBuilderTest {
         .withCertificateLevel("QUALIFIED")
         .withSignableHash(hashToSign)
         .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Transfer amount X to Y?")))
         .sign();
   }
 }

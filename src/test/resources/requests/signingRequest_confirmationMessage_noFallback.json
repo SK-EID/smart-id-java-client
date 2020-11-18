@@ -1,0 +1,13 @@
+{
+  "relyingPartyUUID": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "relyingPartyName": "BANK123",
+  "certificateLevel": "ADVANCED",
+  "hash": "0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=",
+  "hashType": "SHA256",
+  "allowedInteractionsOrder": [
+    {
+      "type": "confirmationMessage",
+      "displayText200": "Do you want to transfer 999 Bison dollars from savings account to Oceanic Airlines?"
+    }
+  ]
+}

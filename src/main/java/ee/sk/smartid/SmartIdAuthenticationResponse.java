@@ -26,7 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.TechnicalErrorException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.Serializable;
@@ -43,10 +43,11 @@ public class SmartIdAuthenticationResponse implements Serializable {
   private String requestedCertificateLevel;
   private String certificateLevel;
   private String documentNumber;
+  private String interactionFlowUsed;
 
   public byte[] getSignatureValue() {
     if (!Base64.isBase64(signatureValueInBase64)) {
-      throw new TechnicalErrorException("Failed to parse signature value in base64. Probably incorrectly encoded base64 string: '" + signatureValueInBase64);
+      throw new UnprocessableSmartIdResponseException("Failed to parse signature value in base64. Probably incorrectly encoded base64 string: '" + signatureValueInBase64);
     }
     return Base64.decodeBase64(signatureValueInBase64);
   }
@@ -121,5 +122,13 @@ public class SmartIdAuthenticationResponse implements Serializable {
 
   public void setDocumentNumber(String documentNumber) {
     this.documentNumber = documentNumber;
+  }
+
+  public String getInteractionFlowUsed() {
+    return interactionFlowUsed;
+  }
+
+  public void setInteractionFlowUsed(String interactionFlowUsed) {
+    this.interactionFlowUsed = interactionFlowUsed;
   }
 }

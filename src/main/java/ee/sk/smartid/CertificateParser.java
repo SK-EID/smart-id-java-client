@@ -26,12 +26,12 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.TechnicalErrorException;
-import java.nio.charset.StandardCharsets;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -53,7 +53,7 @@ public class CertificateParser {
           StandardCharsets.UTF_8)));
     } catch (CertificateException e) {
       logger.error("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage());
-      throw new TechnicalErrorException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);
+      throw new SmartIdClientException("Failed to parse X509 certificate from " + certificateString + ". Error " + e.getMessage(), e);
     }
   }
 
