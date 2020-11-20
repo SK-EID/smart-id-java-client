@@ -47,23 +47,6 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>central</id>
-            <name>Maven Repository Switchboard</name>
-            <url>https://repo1.maven.org/maven2</url>
-        </repository>
-        <!-- comment in if you want to configure client with RestEasy in tests
-            <repository>
-                <id>jboss</id>
-                <url>http://repository.jboss.org/nexus/content/groups/public/</url>
-            </repository>
-        -->
-    </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
@@ -194,7 +177,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.0.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -208,10 +191,15 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-                </configuration>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
