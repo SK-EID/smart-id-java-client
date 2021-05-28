@@ -26,29 +26,22 @@ package ee.sk.test.smartid.integration;
  * #L%
  */
 
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-
-import java.security.cert.CertificateEncodingException;
-import java.util.Collections;
-
-import ee.sk.smartid.AuthenticationHash;
-import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.AuthenticationResponseValidator;
-import ee.sk.smartid.SignableData;
-import ee.sk.smartid.SmartIdAuthenticationResponse;
-import ee.sk.smartid.SmartIdCertificate;
-import ee.sk.smartid.SmartIdClient;
-import ee.sk.smartid.SmartIdSignature;
+import ee.sk.smartid.*;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.security.cert.CertificateEncodingException;
+import java.util.Collections;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class SmartIdIntegrationTest {
 

@@ -26,34 +26,22 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.Interaction;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+
+import static java.util.Arrays.asList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class SmartIdRestIntegrationTest {
 
@@ -133,7 +121,7 @@ public class SmartIdRestIntegrationTest {
 
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
 
-    assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
+    org.hamcrest.MatcherAssert.assertThat(sessionStatus.getInteractionFlowUsed(), is("confirmationMessage"));
 
     assertAuthenticationResponseCreated(sessionStatus);
   }
