@@ -1,23 +1,6 @@
 package ee.sk.test.smartid.integration;
 
-import static java.util.Arrays.asList;
-
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
-import ee.sk.smartid.AuthenticationHash;
-import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.AuthenticationResponseValidator;
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.SignableHash;
-import ee.sk.smartid.SmartIdAuthenticationResponse;
-import ee.sk.smartid.SmartIdCertificate;
-import ee.sk.smartid.SmartIdClient;
-import ee.sk.smartid.SmartIdSignature;
+import ee.sk.smartid.*;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
@@ -34,6 +17,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+
+import static java.util.Arrays.asList;
 
 /**
  * These tests contain snippets used in Readme.md
@@ -215,7 +207,7 @@ It is recommended to read trusted certificates from a file.
      */
 
 
-    @Test(expected = RequiredInteractionNotSupportedByAppException.class)
+    @Test
     public void documentAuthenticatingWithDocumentNumber() {
 
         AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();

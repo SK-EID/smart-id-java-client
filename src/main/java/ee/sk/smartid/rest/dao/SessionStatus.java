@@ -39,7 +39,7 @@ public class SessionStatus implements Serializable {
   private SessionSignature signature;
 
   private SessionCertificate cert;
-  private String[] ignoredProperties;
+  private String[] ignoredProperties = {};
 
   private String interactionFlowUsed;
 
