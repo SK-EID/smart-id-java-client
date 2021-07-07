@@ -236,7 +236,11 @@ AuthenticationIdentity authIdentity = authenticationResponseValidator.validate(a
 String givenName = authIdentity.getGivenName(); // e.g. Mari-Liis"
 String surname = authIdentity.getSurname(); // e.g. "Männik"
 String identityCode = authIdentity.getIdentityCode(); // e.g. "47101010033"
-String country = authIdentity.getCountry(); // e.g. "EE"
+String country = authIdentity.getCountry(); // e.g. "EE", "LV", "LT"
+
+// Date-of-birth is extracted from certificate attribute or parsed from national identity number
+// Value is present for all Estonian and Lithuanian persons but not for all Latvian certificates 
+Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth();
 ```
 
 

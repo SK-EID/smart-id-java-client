@@ -1,0 +1,104 @@
+package ee.sk.smartid.util;
+
+import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
+
+public class NationalIdentityNumberUtil {
+    private static final Logger logger = LoggerFactory.getLogger(NationalIdentityNumberUtil.class);
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuuMMdd")
+            .withResolverStyle(ResolverStyle.STRICT);
+
+    /**
+     * Detect date-of-birth from national identification number if possible or return null.
+     *
+     * This method always returns the value for all Estonian and Lithuanian national identification numbers.
+     *
+     * It also works for older Latvian personal codes but Latvian personal codes issued after July 1st 2017
+     * (starting with "32") do not carry date-of-birth.
+     *
+     * Some (but not all) Smart-ID certificates have date-of-birth on a separate attribute.
+     * It is recommended to use that value if present.
+     * @see CertificateAttributeUtil#getDateOfBirth(java.security.cert.X509Certificate)
+     *
+     * @param authenticationIdentity Authentication identity
+     * @return DateOfBirth or null if it cannot be detected from personal code
+     */
+    public static LocalDate getDateOfBirth(AuthenticationIdentity authenticationIdentity) {
+        String identityNumber = authenticationIdentity.getIdentityNumber();
+
+        switch ( authenticationIdentity.getCountry().toUpperCase()) {
+            case "EE":
+            case "LT":
+                return parseEeLtDateOfBirth(identityNumber);
+            case "LV":
+                return parseLvDateOfBirth(identityNumber);
+            default:
+                throw new UnprocessableSmartIdResponseException("Unknown country: " + authenticationIdentity.getCountry());
+        }
+    }
+
+    public static LocalDate parseEeLtDateOfBirth(String eeOrLtNationalIdentityNumber) {
+        String birthDate = eeOrLtNationalIdentityNumber.substring(1, 7);
+
+        switch (eeOrLtNationalIdentityNumber.substring(0, 1)) {
+            case "1":
+            case "2":
+                birthDate = "18" + birthDate;
+                break;
+            case "3":
+            case "4":
+                birthDate = "19" + birthDate;
+                break;
+            case "5":
+            case "6":
+                birthDate = "20" + birthDate;
+                break;
+            default:
+                throw new RuntimeException("Invalid personal code " + eeOrLtNationalIdentityNumber);
+        }
+
+        try {
+            return LocalDate.parse(birthDate, DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            throw new UnprocessableSmartIdResponseException("Could not parse birthdate from nationalIdentityNumber=" + eeOrLtNationalIdentityNumber, e);
+        }
+    }
+
+    public static LocalDate parseLvDateOfBirth(String lvNationalIdentityNumber) {
+        if ("32".equals(lvNationalIdentityNumber.substring(0, 2))) {
+            logger.debug("Person has newer type of Latvian ID-code that does not carry birthdate info");
+            return null;
+        }
+
+        String birthDate = lvNationalIdentityNumber.substring(4, 6) + lvNationalIdentityNumber.substring(0, 4);
+
+        switch (lvNationalIdentityNumber.substring(7, 8)) {
+            case "0":
+                birthDate = "18" + birthDate;
+                break;
+            case "1":
+                birthDate = "19" + birthDate;
+                break;
+            case "2":
+                birthDate = "20" + birthDate;
+                break;
+            default:
+                throw new UnprocessableSmartIdResponseException("Invalid personal code: " + lvNationalIdentityNumber);
+        }
+
+        try {
+            return LocalDate.parse(birthDate, DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            throw new UnprocessableSmartIdResponseException("Unable get birthdate from Latvian personal code " + lvNationalIdentityNumber, e);
+        }
+    }
+
+}

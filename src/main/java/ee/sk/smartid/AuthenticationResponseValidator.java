@@ -29,6 +29,8 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
+import ee.sk.smartid.util.CertificateAttributeUtil;
+import ee.sk.smartid.util.NationalIdentityNumberUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -47,10 +49,8 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 
@@ -270,26 +270,39 @@ public class AuthenticationResponseValidator {
     return ArrayUtils.addAll(digestInfoPrefix, digest);
   }
 
-  AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
-    AuthenticationIdentity identity = new AuthenticationIdentity();
+  public AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
+    AuthenticationIdentity identity = new AuthenticationIdentity(certificate);
     try {
       LdapName ln = new LdapName(certificate.getSubjectDN().getName());
       for(Rdn rdn : ln.getRdns()) {
-        if(rdn.getType().equalsIgnoreCase("GIVENNAME")) {
+        if (rdn.getType().equalsIgnoreCase("GIVENNAME")) {
           identity.setGivenName(rdn.getValue().toString());
-        } else if(rdn.getType().equalsIgnoreCase("SURNAME")) {
+        }
+        else if (rdn.getType().equalsIgnoreCase("SURNAME")) {
           identity.setSurname(rdn.getValue().toString());
-        } else if(rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
+        }
+        else if (rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
           identity.setIdentityNumber(rdn.getValue().toString().split("-", 2)[1]);
-        } else if(rdn.getType().equalsIgnoreCase("C")) {
+        }
+        else if (rdn.getType().equalsIgnoreCase("C")) {
           identity.setCountry(rdn.getValue().toString());
         }
-
       }
+
+      identity.setDateOfBirth(getDateOfBirth(identity));
+
       return identity;
-    } catch (InvalidNameException e) {
+    }
+    catch (InvalidNameException e) {
       logger.error("Error getting authentication identity from the certificate", e);
       throw new SmartIdClientException("Error getting authentication identity from the certificate", e);
     }
   }
+
+  private LocalDate getDateOfBirth(AuthenticationIdentity identity) {
+    return Optional.ofNullable(
+            CertificateAttributeUtil.getDateOfBirth(identity.getAuthCertificate()))
+            .orElse(NationalIdentityNumberUtil.getDateOfBirth(identity));
+  }
+
 }
