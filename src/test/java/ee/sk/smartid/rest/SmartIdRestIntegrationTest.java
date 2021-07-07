@@ -45,8 +45,8 @@ public class SmartIdRestIntegrationTest {
 
   private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
   private static final String RELYING_PARTY_NAME = "DEMO";
-  private static final String DOCUMENT_NUMBER = "PNOEE-10101010005-Z1B2-Q";
-  private static final String DOCUMENT_NUMBER_LT = "PNOLT-10101010005-Z52N-Q";
+  private static final String DOCUMENT_NUMBER = "PNOEE-30303039914-5QSV-Q";
+  private static final String DOCUMENT_NUMBER_LT = "PNOLT-30303039914-PBZK-Q";
   private static final String DATA_TO_SIGN = "Hello World!";
   private static final String CERTIFICATE_LEVEL_QUALIFIED = "QUALIFIED";
   private SmartIdConnector connector;
@@ -71,7 +71,7 @@ public class SmartIdRestIntegrationTest {
 
   @Test
   public void authenticate_withSemanticsIdentifier() throws Exception {
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010101-10006");
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
 
     AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, request);
@@ -119,7 +119,7 @@ public class SmartIdRestIntegrationTest {
 
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
 
-    assertThat(sessionStatus.getInteractionFlowUsed(), is("confirmationMessage"));
+    org.hamcrest.MatcherAssert.assertThat(sessionStatus.getInteractionFlowUsed(), is("confirmationMessage"));
 
     assertAuthenticationResponseCreated(sessionStatus);
   }
@@ -153,7 +153,7 @@ public class SmartIdRestIntegrationTest {
   public void getIgnoredProperties_withAuthenticate() throws Exception {
     AuthenticationSessionRequest authenticationSessionRequest = createAuthenticationSessionRequest();
 
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010101-10006");
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
 
 
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, authenticationSessionRequest);

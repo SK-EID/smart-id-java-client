@@ -167,7 +167,7 @@ It is recommended to read trusted certificates from a file.
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
                 SemanticsIdentifier.IdentityType.PNO, // 3 character identity type (PAS-passport, IDC-national identity card or PNO - (national) personal number)
                 SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                "10101010005"); // identifier (according to country and identity type reference)
+                "30303039914"); // identifier (according to country and identity type reference)
 
         // For security reasons a new hash value must be created for each new authentication request
         AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
@@ -218,7 +218,7 @@ It is recommended to read trusted certificates from a file.
 
         SmartIdAuthenticationResponse authenticationResponse = client
                 .createAuthentication()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
                 .withAuthenticationHash(authenticationHash)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Collections.singletonList(
@@ -256,8 +256,11 @@ It is recommended to read trusted certificates from a file.
         String givenName = authIdentity.getGivenName(); // e.g. Mari-Liis"
         String surname = authIdentity.getSurname(); // e.g. "Männik"
         String identityCode = authIdentity.getIdentityNumber(); // e.g. "47101010033"
-        String country = authIdentity.getCountry(); // e.g. "EE"
+        String country = authIdentity.getCountry(); // e.g. "EE", "LV", "LT"
 
+        // Date-of-birth is extracted from certificate attribute or parsed from national identity number
+        // Value is present for all Estonian and Lithuanian persons but not for all Latvian certificates
+        Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth();
     }
 
 
@@ -278,7 +281,7 @@ It is recommended to read trusted certificates from a file.
 
         SmartIdCertificate responseWithSigningCertificate = client
                 .getCertificate()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q") // returned as authentication result
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q") // returned as authentication result
                 .withCertificateLevel("QUALIFIED")
                 .fetch();
 
@@ -324,7 +327,7 @@ create the AsicE/BDoc container with files in it and get the hash to be signed.
 
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q") // returned as authentication result
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q") // returned as authentication result
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
@@ -373,7 +376,7 @@ Every Smart-ID app supports this interaction flow and there is no need to provid
     public void documentInteractionOrderMostCommon() {
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Collections.singletonList(
@@ -400,7 +403,7 @@ If user's app doesn't support displaying verification code choice then system fa
         try {
             SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Arrays.asList(
@@ -428,7 +431,7 @@ If the Smart-ID app in user's smart device doesn't support this feature then the
     public void documentInteractionOrderConfirmationWithFallbackToPin() {
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
@@ -460,7 +463,7 @@ If user picks wrong verification code then the session is cancelled and library 
     public void documentInteractionOrder2() {
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
@@ -496,7 +499,7 @@ If End User's phone doesn't support required flow the library throws `RequiredIn
         try {
             client
                 .createSignature()
-                .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+                .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Collections.singletonList(

@@ -26,12 +26,24 @@ package ee.sk.smartid;
  * #L%
  */
 
-public class AuthenticationIdentity {
+import java.security.cert.X509Certificate;
+import java.time.LocalDate;
+import java.util.Optional;
 
+public class AuthenticationIdentity {
   private String givenName;
   private String surname;
   private String identityNumber;
   private String country;
+  private X509Certificate authCertificate;
+  private LocalDate dateOfBirth;
+
+  public AuthenticationIdentity() {
+  }
+
+  public AuthenticationIdentity(X509Certificate authCertificate) {
+    this.authCertificate = authCertificate;
+  }
 
   public String getGivenName() {
     return givenName;
@@ -49,11 +61,19 @@ public class AuthenticationIdentity {
     this.surname = surname;
   }
 
+  /**
+   * Instead use:
+   * @see this#getSurname()
+   */
   @Deprecated
   public String getSurName() {
     return surname;
   }
 
+  /**
+   * Instead use:
+   * @see this#setSurname(String)
+   */
   @Deprecated
   public void setSurName(String surname) {
     this.surname = surname;
@@ -82,4 +102,27 @@ public class AuthenticationIdentity {
   public void setCountry(String country) {
     this.country = country;
   }
+
+  public X509Certificate getAuthCertificate() {
+    return authCertificate;
+  }
+
+  public void setAuthCertificate(X509Certificate authCertificate) {
+    this.authCertificate = authCertificate;
+  }
+
+  /**
+   * Person date of birth.
+   * NB! This information is not available for some Latvian certificates.
+   *
+   * @return Date of birth if this information is available in authentication response or empty optional.
+   */
+  public Optional<LocalDate> getDateOfBirth() {
+    return Optional.ofNullable(dateOfBirth);
+  }
+
+  public void setDateOfBirth(LocalDate dateOfBirth) {
+    this.dateOfBirth = dateOfBirth;
+  }
+
 }
