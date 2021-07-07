@@ -26,41 +26,27 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import static java.util.Arrays.asList;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.Interaction;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+
+import static java.util.Arrays.asList;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+
 public class SmartIdRestIntegrationTest {
 
   private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
   private static final String RELYING_PARTY_NAME = "DEMO";
-  private static final String DOCUMENT_NUMBER = "PNOEE-10101010005-Z1B2-Q";
-  private static final String DOCUMENT_NUMBER_LT = "PNOLT-10101010005-Z52N-Q";
+  private static final String DOCUMENT_NUMBER = "PNOEE-30303039914-5QSV-Q";
+  private static final String DOCUMENT_NUMBER_LT = "PNOLT-30303039914-PBZK-Q";
   private static final String DATA_TO_SIGN = "Hello World!";
   private static final String CERTIFICATE_LEVEL_QUALIFIED = "QUALIFIED";
   private SmartIdConnector connector;
@@ -85,7 +71,7 @@ public class SmartIdRestIntegrationTest {
 
   @Test
   public void authenticate_withSemanticsIdentifier() throws Exception {
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010101-10006");
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
 
     AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, request);
@@ -133,7 +119,7 @@ public class SmartIdRestIntegrationTest {
 
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
 
-    assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
+    org.hamcrest.MatcherAssert.assertThat(sessionStatus.getInteractionFlowUsed(), is("confirmationMessage"));
 
     assertAuthenticationResponseCreated(sessionStatus);
   }
@@ -167,7 +153,7 @@ public class SmartIdRestIntegrationTest {
   public void getIgnoredProperties_withAuthenticate() throws Exception {
     AuthenticationSessionRequest authenticationSessionRequest = createAuthenticationSessionRequest();
 
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010101-10006");
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
 
 
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, authenticationSessionRequest);

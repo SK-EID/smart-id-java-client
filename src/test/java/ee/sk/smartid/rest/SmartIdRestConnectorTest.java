@@ -106,6 +106,16 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
+  public void getSessionStatus_hasUserAgentHeader() {
+    SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
+    assertSuccessfulResponse(sessionStatus);
+
+    verify(getRequestedFor(urlMatching("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
+            .withHeader("User-Agent", containing("smart-id-java-client/"))
+            .withHeader("User-Agent", containing("Java/")));
+  }
+
+  @Test
   public void getSessionStatus_userHasRefused() {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
     assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
@@ -271,7 +281,16 @@ public class SmartIdRestConnectorTest {
     assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
+  @Test
+  public void sign_hasUserAgentHeader() {
+    stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+    SignatureSessionResponse response = connector.sign("PNOEE-123456", createDummySignatureSessionRequest());
+    assertNotNull(response);
 
+    verify(postRequestedFor(urlMatching("/signature/document/PNOEE-123456"))
+            .withHeader("User-Agent", containing("smart-id-java-client/"))
+            .withHeader("User-Agent", containing("Java/")));
+  }
 
   @Test
   public void sign_withNonce_usingDocumentNumber() {
@@ -456,7 +475,6 @@ public class SmartIdRestConnectorTest {
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
   }
 
-
   @Test
   public void authenticate_withSingleAllowedInteraction_usingDocumentNumber() {
     stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
@@ -466,6 +484,19 @@ public class SmartIdRestConnectorTest {
     AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
     assertNotNull(response);
     assertEquals("1dcc1600-29a6-4e95-a95c-d69b31febcfb", response.getSessionID());
+  }
+
+  @Test
+  public void authenticate_hasUserAgentHeader() {
+    stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
+    AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
+    request.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
+
+    connector.authenticate("PNOEE-123456", request);
+
+    verify(postRequestedFor(urlMatching("/authentication/document/PNOEE-123456"))
+            .withHeader("User-Agent", containing("smart-id-java-client/"))
+            .withHeader("User-Agent", containing("Java/")));
   }
 
   @Test(expected = UserAccountNotFoundException.class)
@@ -569,6 +600,17 @@ public class SmartIdRestConnectorTest {
   }
 
   @Test
+  public void getCertificate_hasUserAgentHeader() {
+    connector = new SmartIdRestConnector("http://localhost:18089");
+    stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+    connector.getCertificate("PNOEE-123456", createDummyCertificateRequest());
+
+    verify(postRequestedFor(urlMatching("/certificatechoice/document/PNOEE-123456"))
+            .withHeader("User-Agent", containing("smart-id-java-client/"))
+            .withHeader("User-Agent", containing("Java/")));
+  }
+
+  @Test
   public void verifyCustomRequestHeaderPresent_whenRequestingSessionStatus() {
     String headerName = "custom-header";
     String headerValue = "Session status";
@@ -641,4 +683,5 @@ public class SmartIdRestConnectorTest {
     );
     return request;
   }
+
 }
