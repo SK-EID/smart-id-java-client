@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.1] (unreleased)
 
 ### Added
-- AuthenticationIdentity.getDateOfBirth() to get person birthdate (if available). 
+- AuthenticationIdentity.getDateOfBirth() to get person birthdate (if available).
+- Add library version number and Java major release number to User-Agent header of outgoing requests
 
 ## [2.0] - 2020-11-20
 
