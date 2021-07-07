@@ -156,7 +156,7 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
     // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
     SemanticsIdentifier.IdentityType.PNO, 
     SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-    "10101010005"); // identifier (according to country and identity type reference)
+    "30303039914"); // identifier (according to country and identity type reference)
 
 // For security reasons a new hash value must be created for each new authentication request
 AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
@@ -200,7 +200,7 @@ String verificationCode = authenticationHash.calculateVerificationCode();
 
 SmartIdAuthenticationResponse authenticationResponse = client
     .createAuthentication()
-    .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+    .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
     .withAuthenticationHash(authenticationHash)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(Collections.singletonList(
@@ -250,7 +250,7 @@ To fetch the certificate you can use documentNumber.
 ```
 SmartIdCertificate responseWithSigningCertificate = client
     .getCertificate()
-    .withDocumentNumber("PNOEE-10101010005-Z1B2-Q") // returned as authentication result
+    .withDocumentNumber("PNOEE-30303039914-5QSV-Q") // returned as authentication result
     .withCertificateLevel("QUALIFIED")
     .fetch();
 
@@ -287,7 +287,7 @@ String verificationCode = hashToSign.calculateVerificationCode();
 
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOEE-10101010005-Z1B2-Q") // returned as authentication result
+    .withDocumentNumber("PNOEE-30303039914-5QSV-Q") // returned as authentication result
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(asList(
@@ -331,7 +331,7 @@ Every Smart-ID app supports this interaction flow and there is no need to provid
 ```
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+    .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(Collections.singletonList(
@@ -353,7 +353,7 @@ If user's app doesn't support displaying verification code choice then system fa
 try {
     SmartIdSignature smartIdSignature = client
         .createSignature()
-        .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+        .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
         .withSignableHash(hashToSign)
         .withCertificateLevel("QUALIFIED")
         .withAllowedInteractionsOrder(Arrays.asList(
@@ -376,7 +376,7 @@ If the Smart-ID app in user's smart device doesn't support this feature then the
 ```
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+    .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(asList(
@@ -404,7 +404,7 @@ If user picks wrong verification code then the session is cancelled and library 
 ```
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+    .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(asList(
@@ -435,7 +435,7 @@ If End User's phone doesn't support required flow the library throws `RequiredIn
 try {
     client
         .createSignature()
-        .withDocumentNumber("PNOEE-10101010005-Z1B2-Q")
+        .withDocumentNumber("PNOEE-30303039914-5QSV-Q")
         .withSignableHash(hashToSign)
         .withCertificateLevel("QUALIFIED")
         .withAllowedInteractionsOrder(Collections.singletonList(
