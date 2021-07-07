@@ -174,7 +174,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
   }
 
-  private Invocation.Builder prepareClient(URI uri) {
+  protected Invocation.Builder prepareClient(URI uri) {
     Client client;
     if (this.configuredClient == null) {
       ClientBuilder clientBuilder = ClientBuilder.newBuilder();
@@ -194,7 +194,26 @@ public class SmartIdRestConnector implements SmartIdConnector {
         .register(new LoggingFilter())
         .target(uri)
         .request()
-        .accept(APPLICATION_JSON_TYPE);
+        .accept(APPLICATION_JSON_TYPE)
+        .header("User-Agent", buildUserAgentString());
+  }
+
+  protected String buildUserAgentString() {
+    return "smart-id-java-client/" + getClientVersion() + " (Java/" + getJdkMajorVersion() + ")";
+  }
+
+  protected String getClientVersion() {
+    String clientVersion = getClass().getPackage().getImplementationVersion();
+    return clientVersion == null ? "-" : clientVersion;
+  }
+
+  protected String getJdkMajorVersion() {
+    try {
+      return System.getProperty("java.version").split("_")[0];
+    }
+    catch (Exception e) {
+      return "-";
+    }
   }
 
   private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {

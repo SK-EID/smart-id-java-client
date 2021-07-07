@@ -38,10 +38,8 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Arrays.asList;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class SmartIdRestIntegrationTest {
 
