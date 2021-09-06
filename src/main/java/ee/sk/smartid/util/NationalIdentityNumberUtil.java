@@ -13,7 +13,7 @@ import java.time.format.ResolverStyle;
 public class NationalIdentityNumberUtil {
     private static final Logger logger = LoggerFactory.getLogger(NationalIdentityNumberUtil.class);
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuuMMdd")
+    private static final DateTimeFormatter DATE_FORMATTER_YYYY_MM_DD = DateTimeFormatter.ofPattern("uuuuMMdd")
             .withResolverStyle(ResolverStyle.STRICT);
 
     /**
@@ -66,36 +66,40 @@ public class NationalIdentityNumberUtil {
         }
 
         try {
-            return LocalDate.parse(birthDate, DATE_FORMATTER);
+            return LocalDate.parse(birthDate, DATE_FORMATTER_YYYY_MM_DD);
         } catch (DateTimeParseException e) {
             throw new UnprocessableSmartIdResponseException("Could not parse birthdate from nationalIdentityNumber=" + eeOrLtNationalIdentityNumber, e);
         }
     }
 
     public static LocalDate parseLvDateOfBirth(String lvNationalIdentityNumber) {
-        if ("32".equals(lvNationalIdentityNumber.substring(0, 2))) {
+        String birthDay = lvNationalIdentityNumber.substring(0, 2);
+        if ("32".equals(birthDay)) {
             logger.debug("Person has newer type of Latvian ID-code that does not carry birthdate info");
             return null;
         }
 
-        String birthDate = lvNationalIdentityNumber.substring(4, 6) + lvNationalIdentityNumber.substring(0, 4);
+        String birthMonth = lvNationalIdentityNumber.substring(2, 4);
+        String birthYearTwoDigit = lvNationalIdentityNumber.substring(4, 6);
+        String century = lvNationalIdentityNumber.substring(7, 8);
+        String birthDateYyyyMmDd;
 
-        switch (lvNationalIdentityNumber.substring(7, 8)) {
+        switch (century) {
             case "0":
-                birthDate = "18" + birthDate;
+                birthDateYyyyMmDd = "18" + (birthYearTwoDigit + birthMonth + birthDay);
                 break;
             case "1":
-                birthDate = "19" + birthDate;
+                birthDateYyyyMmDd = "19" + (birthYearTwoDigit + birthMonth + birthDay);
                 break;
             case "2":
-                birthDate = "20" + birthDate;
+                birthDateYyyyMmDd = "20" + (birthYearTwoDigit + birthMonth + birthDay);
                 break;
             default:
                 throw new UnprocessableSmartIdResponseException("Invalid personal code: " + lvNationalIdentityNumber);
         }
 
         try {
-            return LocalDate.parse(birthDate, DATE_FORMATTER);
+            return LocalDate.parse(birthDateYyyyMmDd, DATE_FORMATTER_YYYY_MM_DD);
         } catch (DateTimeParseException e) {
             throw new UnprocessableSmartIdResponseException("Unable get birthdate from Latvian personal code " + lvNationalIdentityNumber, e);
         }
