@@ -21,8 +21,7 @@ public class NationalIdentityNumberUtilTest {
 
         X509Certificate eeCertificate = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_EE));
 
-        AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
-        AuthenticationIdentity identity = validator.constructAuthenticationIdentity(eeCertificate);
+        AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(eeCertificate);
 
 
         LocalDate dateOfBirth = NationalIdentityNumberUtil.getDateOfBirth(identity);
@@ -35,8 +34,7 @@ public class NationalIdentityNumberUtilTest {
     public void getDateOfBirthFromIdCode_latvianIdCode_returns() throws CertificateException {
         X509Certificate lvCertificate = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LV_DOB_03_APRIL_1903));
 
-        AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
-        AuthenticationIdentity identity = validator.constructAuthenticationIdentity(lvCertificate);
+        AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(lvCertificate);
 
         LocalDate dateOfBirth = NationalIdentityNumberUtil.getDateOfBirth(identity);
 
@@ -48,8 +46,7 @@ public class NationalIdentityNumberUtilTest {
     public void getDateOfBirthFromIdCode_lithuanianIdCode_returns() throws CertificateException {
         X509Certificate ltCertificate = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LT));
 
-        AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
-        AuthenticationIdentity identity = validator.constructAuthenticationIdentity(ltCertificate);
+        AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(ltCertificate);
 
         LocalDate dateOfBirth = NationalIdentityNumberUtil.getDateOfBirth(identity);
 

@@ -1,6 +1,5 @@
 package ee.sk.smartid.util;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.security.cert.CertificateException;
@@ -13,15 +12,14 @@ import static org.hamcrest.Matchers.*;
 
 public class CertificateAttributeUtilTest {
 
-    @Ignore("There is no test cert with DoB available")
     @Test
     public void getDateOfBirthFromCertificateAttribute_datePresent_returns() throws CertificateException {
-        X509Certificate certificateWithDob = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_WITH_DOB));
+        X509Certificate certificateWithDob = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LV_WITH_DOB));
 
         LocalDate dateOfBirthCertificateAttribute = CertificateAttributeUtil.getDateOfBirth(certificateWithDob);
 
         assertThat(dateOfBirthCertificateAttribute, is(notNullValue()));
-        assertThat(dateOfBirthCertificateAttribute, is(LocalDate.of(1980, 3, 8)));
+        assertThat(dateOfBirthCertificateAttribute, is(LocalDate.of(1903, 3, 3)));
     }
 
     @Test

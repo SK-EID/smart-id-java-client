@@ -270,7 +270,7 @@ public class AuthenticationResponseValidator {
     return ArrayUtils.addAll(digestInfoPrefix, digest);
   }
 
-  public AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
+  public static AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
     AuthenticationIdentity identity = new AuthenticationIdentity(certificate);
     try {
       LdapName ln = new LdapName(certificate.getSubjectDN().getName());
@@ -299,7 +299,7 @@ public class AuthenticationResponseValidator {
     }
   }
 
-  private LocalDate getDateOfBirth(AuthenticationIdentity identity) {
+  private static LocalDate getDateOfBirth(AuthenticationIdentity identity) {
     return Optional.ofNullable(
             CertificateAttributeUtil.getDateOfBirth(identity.getAuthCertificate()))
             .orElse(NationalIdentityNumberUtil.getDateOfBirth(identity));
