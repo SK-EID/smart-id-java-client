@@ -64,7 +64,7 @@ public class SessionStatusPoller {
     SessionStatus sessionStatus = null;
     while (sessionStatus == null || equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
       sessionStatus = pollSessionStatus(sessionId);
-      if (equalsIgnoreCase("COMPLETE", sessionStatus.getState())) {
+      if (sessionStatus != null && equalsIgnoreCase("COMPLETE", sessionStatus.getState())) {
         break;
       }
       logger.debug("Sleeping for " + pollingSleepTimeout + " " + pollingSleepTimeUnit);

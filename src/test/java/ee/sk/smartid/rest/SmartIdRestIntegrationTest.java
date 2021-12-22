@@ -37,15 +37,19 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import static ee.sk.test.smartid.integration.SmartIdIntegrationTest.TEST_AGAINST_SMART_ID_DEMO;
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 public class SmartIdRestIntegrationTest {
 
   private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
   private static final String RELYING_PARTY_NAME = "DEMO";
-  private static final String DOCUMENT_NUMBER = "PNOEE-30303039914-5QSV-Q";
+  private static final String DOCUMENT_NUMBER = "PNOLT-30303039903-FMB7-Q";
   private static final String DOCUMENT_NUMBER_LT = "PNOLT-30303039914-PBZK-Q";
   private static final String DATA_TO_SIGN = "Hello World!";
   private static final String CERTIFICATE_LEVEL_QUALIFIED = "QUALIFIED";
@@ -54,6 +58,9 @@ public class SmartIdRestIntegrationTest {
   @Before
   public void setUp() {
     connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v2/");
+
+    // this allows to switch off tests going against smart-id demo env
+    assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
   }
 
   @Test
@@ -93,11 +100,12 @@ public class SmartIdRestIntegrationTest {
 
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
 
+    assertNotNull(sessionStatus.getResult());
+    assertThat(sessionStatus.getResult().getEndResult(), is("OK"));
     assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
 
     assertAuthenticationResponseCreated(sessionStatus);
   }
-
 
   @Test
   public void authenticate_withDocumentNumber_advancedInteraction() throws Exception {
@@ -119,6 +127,8 @@ public class SmartIdRestIntegrationTest {
 
     SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
 
+    assertNotNull(sessionStatus.getResult());
+    assertThat(sessionStatus.getResult().getEndResult(), is("OK"));
     org.hamcrest.MatcherAssert.assertThat(sessionStatus.getInteractionFlowUsed(), is("confirmationMessage"));
 
     assertAuthenticationResponseCreated(sessionStatus);
@@ -138,6 +148,8 @@ public class SmartIdRestIntegrationTest {
     SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber, signatureSessionRequest);
     sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
 
+    assertNotNull(sessionStatus.getResult());
+    assertThat(sessionStatus.getResult().getEndResult(), is("OK"));
     assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
 
 
