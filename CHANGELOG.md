@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.1.3] - UPCOMING
+## [2.1.3] - 2021-12-22
 
 ### Fixed
 - Possible NPE fix (in rare cases under load testing the SessionStatus is null)
