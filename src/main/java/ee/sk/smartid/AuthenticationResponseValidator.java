@@ -299,7 +299,7 @@ public class AuthenticationResponseValidator {
     }
   }
 
-  private static LocalDate getDateOfBirth(AuthenticationIdentity identity) {
+  public static LocalDate getDateOfBirth(AuthenticationIdentity identity) {
     return Optional.ofNullable(
             CertificateAttributeUtil.getDateOfBirth(identity.getAuthCertificate()))
             .orElse(NationalIdentityNumberUtil.getDateOfBirth(identity));
