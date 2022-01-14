@@ -96,4 +96,22 @@ public class NationalIdentityNumberUtilTest {
         assertThat(exception.getMessage(), is("Unable get birthdate from Latvian personal code 331265-0234"));
     }
 
+    @Test
+    public void getDateOfBirthFromIdCode_sweden_returnsNull() {
+        AuthenticationIdentity identity = new AuthenticationIdentity();
+        identity.setCountry("SE");
+        identity.setIdentityNumber("1995012-79039");
+
+        assertThat(NationalIdentityNumberUtil.getDateOfBirth(identity), is(nullValue()));
+    }
+
+    @Test
+    public void getDateOfBirthFromIdCode_poland_returnsNull() {
+        AuthenticationIdentity identity = new AuthenticationIdentity();
+        identity.setCountry("PL");
+        identity.setIdentityNumber("64120301283");
+
+        assertThat(NationalIdentityNumberUtil.getDateOfBirth(identity), is(nullValue()));
+    }
+
 }
