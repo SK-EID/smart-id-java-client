@@ -281,7 +281,7 @@ create the AsicE/BDoc container with files in it and get the hash to be signed.
 SignableHash hashToSign = new SignableHash();
 hashToSign.setHashType(HashType.SHA256);
 // calculate hash from the document you want to sign (i.e. use DigiDoc4j or other libraries)
-// this class also has a method to set hash as bite array
+// this class also has a method to set hash as byte array
 hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
 
 // to display the verification code
