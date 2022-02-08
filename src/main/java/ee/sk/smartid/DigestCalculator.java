@@ -29,7 +29,6 @@ package ee.sk.smartid;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 public class DigestCalculator {
 
@@ -38,7 +37,7 @@ public class DigestCalculator {
       MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
       return digest.digest(dataToDigest);
     }
-    catch (NoSuchAlgorithmException e) {
+    catch (Exception e) {
       throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
     }
   }

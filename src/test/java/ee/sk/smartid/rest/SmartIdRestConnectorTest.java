@@ -371,9 +371,6 @@ public class SmartIdRestConnectorTest {
     assertEquals("2c52caf4-13b0-41c4-bdc6-aa268403cc00", response.getSessionID());
   }
 
-
-
-
   @Test(expected = UserAccountNotFoundException.class)
   public void sign_whenDocumentNumberNotFound_shouldThrowException() {
     stubNotFoundResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
