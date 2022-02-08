@@ -26,11 +26,10 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.Assert.assertNotNull;
@@ -111,9 +110,11 @@ public class SmartIdRestServiceStubs {
     assertNotNull("File not found: " + fileName, resource);
     File file = new File(resource.getFile());
     try {
-      return FileUtils.readFileToString(file, "UTF-8");
-    } catch (IOException e) {
+     return new String ( Files.readAllBytes( file.toPath() ), "UTF-8" );
+    }
+    catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
+
 }
