@@ -210,7 +210,7 @@ public class CertificateRequestBuilderTest {
 
   @Test(expected = UnprocessableSmartIdResponseException.class)
   public void getCertificate_withCertificateResponseWithBlankDocumentNumber_shouldThrowException() {
-    connector.sessionStatusToRespond.getResult().setDocumentNumber(" ");
+    connector.sessionStatusToRespond.getResult().setDocumentNumber("");
     makeCertificateRequest();
   }
 

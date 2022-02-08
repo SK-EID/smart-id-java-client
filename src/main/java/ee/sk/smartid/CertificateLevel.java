@@ -26,7 +26,6 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,13 +42,17 @@ public class CertificateLevel {
   }
 
   public CertificateLevel(String certificateLevel) {
+    if (certificateLevel == null) {
+      throw new IllegalArgumentException("certificateLevel cannot be null");
+    }
     this.certificateLevel = certificateLevel;
   }
 
   public boolean isEqualOrAbove(String certificateLevel) {
-    if (StringUtils.equalsIgnoreCase(this.certificateLevel, certificateLevel)) {
+    if (this.certificateLevel.equalsIgnoreCase(certificateLevel)) {
       return true;
-    } else if (certificateLevels.get(certificateLevel) != null && certificateLevels.get(this.certificateLevel) != null) {
+    }
+    else if (certificateLevels.get(certificateLevel) != null && certificateLevels.get(this.certificateLevel) != null) {
       return certificateLevels.get(certificateLevel) <= certificateLevels.get(this.certificateLevel);
     }
     return false;

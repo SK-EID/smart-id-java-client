@@ -31,8 +31,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.util.CertificateAttributeUtil;
 import ee.sk.smartid.util.NationalIdentityNumberUtil;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
+import ee.sk.smartid.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,7 +211,7 @@ public class AuthenticationResponseValidator {
       logger.error("Certificate is not present in the authentication response");
       throw new UnprocessableSmartIdResponseException("Certificate is not present in the authentication response");
     }
-    if (StringUtils.isEmpty(authenticationResponse.getSignatureValueInBase64())) {
+    if (StringUtil.isEmpty(authenticationResponse.getSignatureValueInBase64())) {
       logger.error("Signature is not present in the authentication response");
       throw new UnprocessableSmartIdResponseException("Signature is not present in the authentication response");
     }
@@ -262,11 +261,14 @@ public class AuthenticationResponseValidator {
   private boolean verifyCertificateLevel(SmartIdAuthenticationResponse authenticationResponse) {
     CertificateLevel certLevel = new CertificateLevel(authenticationResponse.getCertificateLevel());
     String requestedCertificateLevel = authenticationResponse.getRequestedCertificateLevel();
-    return StringUtils.isEmpty(requestedCertificateLevel) || certLevel.isEqualOrAbove(requestedCertificateLevel);
+    return StringUtil.isEmpty(requestedCertificateLevel) || certLevel.isEqualOrAbove(requestedCertificateLevel);
   }
 
   private static byte[] addPadding(byte[] digestInfoPrefix, byte[] digest) {
-    return ArrayUtils.addAll(digestInfoPrefix, digest);
+    final byte[] digestWithPrefix = new byte[digestInfoPrefix.length + digest.length];
+    System.arraycopy(digestInfoPrefix, 0, digestWithPrefix, 0, digestInfoPrefix.length);
+    System.arraycopy(digest, 0, digestWithPrefix, digestInfoPrefix.length, digest.length);
+    return digestWithPrefix;
   }
 
   public static AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {

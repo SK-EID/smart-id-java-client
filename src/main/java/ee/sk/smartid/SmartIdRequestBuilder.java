@@ -26,23 +26,11 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
-import java.util.List;
-import java.util.Set;
-
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
-import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
-import ee.sk.smartid.exception.useraction.UserRefusedException;
-import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
-import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.exception.useraction.*;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.Interaction;
@@ -50,6 +38,11 @@ import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Set;
+
+import static ee.sk.smartid.util.StringUtil.isEmpty;
 
 public abstract class SmartIdRequestBuilder {
 
@@ -74,11 +67,11 @@ public abstract class SmartIdRequestBuilder {
   }
 
   protected void validateParameters() {
-    if (isBlank(relyingPartyUUID)) {
+    if (isEmpty(relyingPartyUUID)) {
       logger.error("Parameter relyingPartyUUID must be set");
       throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
     }
-    if (isBlank(relyingPartyName)) {
+    if (isEmpty(relyingPartyName)) {
       logger.error("Parameter relyingPartyName must be set");
       throw new SmartIdClientException("Parameter relyingPartyName must be set");
     }
@@ -116,7 +109,7 @@ public abstract class SmartIdRequestBuilder {
 
   private int getIdentifiersCount() {
     int identifierCount = 0;
-    if (!isBlank(getDocumentNumber())) {
+    if (!isEmpty(getDocumentNumber())) {
       identifierCount++;
     }
     if (hasSemanticsIdentifier()) {

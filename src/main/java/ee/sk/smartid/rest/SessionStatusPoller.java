@@ -37,8 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-
 public class SessionStatusPoller {
 
   private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
@@ -62,9 +60,9 @@ public class SessionStatusPoller {
 
   private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
     SessionStatus sessionStatus = null;
-    while (sessionStatus == null || equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
+    while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState()) ) {
       sessionStatus = pollSessionStatus(sessionId);
-      if (sessionStatus != null && equalsIgnoreCase("COMPLETE", sessionStatus.getState())) {
+      if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState()) ) {
         break;
       }
       logger.debug("Sleeping for " + pollingSleepTimeout + " " + pollingSleepTimeUnit);
