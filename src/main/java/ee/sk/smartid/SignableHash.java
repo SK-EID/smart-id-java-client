@@ -26,9 +26,8 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.apache.commons.codec.binary.Base64;
-
 import java.io.Serializable;
+import java.util.Base64;
 
 /**
  * This class can be used to contain the hash
@@ -53,11 +52,11 @@ public class SignableHash implements Serializable {
   }
 
   public void setHashInBase64(String hashInBase64) {
-    hash = Base64.decodeBase64(hashInBase64);
+    hash = Base64.getDecoder().decode(hashInBase64);
   }
 
   public String getHashInBase64() {
-    return Base64.encodeBase64String(hash);
+    return Base64.getEncoder().encodeToString(hash);
   }
 
   public HashType getHashType() {

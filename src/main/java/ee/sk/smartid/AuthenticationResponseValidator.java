@@ -31,7 +31,6 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.util.CertificateAttributeUtil;
 import ee.sk.smartid.util.NationalIdentityNumberUtil;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -232,7 +231,7 @@ public class AuthenticationResponseValidator {
       PublicKey signersPublicKey = authenticationResponse.getCertificate().getPublicKey();
       Signature signature = Signature.getInstance("NONEwith" + signersPublicKey.getAlgorithm());
       signature.initVerify(signersPublicKey);
-      byte[] signedHash = Base64.decodeBase64(authenticationResponse.getSignedHashInBase64());
+      byte[] signedHash = Base64.getDecoder().decode(authenticationResponse.getSignedHashInBase64());
       byte[] signedDigestWithPadding = addPadding(authenticationResponse.getHashType().getDigestInfoPrefix(), signedHash);
       signature.update(signedDigestWithPadding);
       return signature.verify(authenticationResponse.getSignatureValue());

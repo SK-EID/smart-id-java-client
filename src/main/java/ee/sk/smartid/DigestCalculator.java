@@ -26,12 +26,21 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.apache.commons.codec.digest.DigestUtils;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class DigestCalculator {
 
   public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
-    String algorithmName = hashType.getAlgorithmName();
-    return DigestUtils.getDigest(algorithmName).digest(dataToDigest);
+    try {
+      MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
+      return digest.digest(dataToDigest);
+    }
+    catch (NoSuchAlgorithmException e) {
+      throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
+    }
   }
+
 }
