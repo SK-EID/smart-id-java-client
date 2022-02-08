@@ -1,6 +1,6 @@
 # Guidelines for developers of this library
 
-## Main principles
+## Main design principles
 
 ### Use as few external dependencies as possible
 
@@ -8,6 +8,10 @@ Always prefer the functionality built into Java in favor of Apache Commons/Lang/
 
 You can check the effective dependency tree:
 mvn dependency:tree -Dscope=compile
+
+### Add a license header for each file
+
+mvn license:update-file-header
 
 ### Keep 3rd party licenses file updated
 
