@@ -26,11 +26,11 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class SignatureSessionRequest implements Serializable {
 
@@ -94,7 +94,7 @@ public class SignatureSessionRequest implements Serializable {
     this.relyingPartyUUID = relyingPartyUUID;
   }
 
-  private void setDisplayText(String displayText) {
+  protected void setDisplayText(String displayText) {
     throw new UnsupportedOperationException("Method is removed in Smart-ID API 2.0 and replaced with setAllowedInteractionsOrder()");
   }
 

@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception.useraccount;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L
@@ -26,12 +26,13 @@ package ee.sk.smartid.exception.useraccount;
  * #L%
  */
 
+import org.junit.Test;
 
-import ee.sk.smartid.exception.UserAccountException;
+public class SignatureSessionRequestTest {
 
-public class CertificateLevelMismatchException extends UserAccountException {
-
-    public CertificateLevelMismatchException() {
-        super("Signer's certificate is below requested certificate level");
+    @Test(expected = UnsupportedOperationException.class)
+    public void setDisplayText() {
+        SignatureSessionRequest signatureSessionRequest = new SignatureSessionRequest();
+        signatureSessionRequest.setDisplayText("test");
     }
 }

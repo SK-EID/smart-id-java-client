@@ -63,7 +63,7 @@ public class AuthenticationIdentity {
 
   /**
    * Instead use:
-   * @see this#getSurname()
+   *  {@link #getSurname()}
    */
   @Deprecated
   public String getSurName() {
@@ -72,11 +72,11 @@ public class AuthenticationIdentity {
 
   /**
    * Instead use:
-   * @see this#setSurname(String)
+   *   {@link #setSurname(String)}
    */
   @Deprecated
-  public void setSurName(String surname) {
-    this.surname = surname;
+  public void setSurName(String surName) {
+    this.surname = surName;
   }
 
   public String getIdentityNumber() {
@@ -105,10 +105,6 @@ public class AuthenticationIdentity {
 
   public X509Certificate getAuthCertificate() {
     return authCertificate;
-  }
-
-  public void setAuthCertificate(X509Certificate authCertificate) {
-    this.authCertificate = authCertificate;
   }
 
   /**

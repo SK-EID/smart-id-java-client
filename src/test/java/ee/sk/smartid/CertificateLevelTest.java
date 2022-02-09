@@ -71,9 +71,9 @@ public class CertificateLevelTest {
     assertFalse(certificateLevel.isEqualOrAbove("SOME UNKNOWN LEVEL"));
   }
 
-  @Test
-  public void testBothCertLevelUnknown() {
-    CertificateLevel certificateLevel = new CertificateLevel("SOME UNKNOWN LEVEL");
-    assertTrue(certificateLevel.isEqualOrAbove("SOME UNKNOWN LEVEL"));
+
+  @Test(expected = IllegalArgumentException.class)
+  public void certificateLevel_nullArgumentToConstructor() {
+    new CertificateLevel(null);
   }
 }

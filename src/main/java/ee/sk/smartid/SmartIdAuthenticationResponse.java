@@ -27,10 +27,10 @@ package ee.sk.smartid;
  */
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import org.apache.commons.codec.binary.Base64;
 
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 
 public class SmartIdAuthenticationResponse implements Serializable {
 
@@ -46,10 +46,12 @@ public class SmartIdAuthenticationResponse implements Serializable {
   private String interactionFlowUsed;
 
   public byte[] getSignatureValue() {
-    if (!Base64.isBase64(signatureValueInBase64)) {
+    try {
+      return Base64.getDecoder().decode(signatureValueInBase64);
+    }
+    catch (IllegalArgumentException ie) {
       throw new UnprocessableSmartIdResponseException("Failed to parse signature value in base64. Probably incorrectly encoded base64 string: '" + signatureValueInBase64);
     }
-    return Base64.decodeBase64(signatureValueInBase64);
   }
 
   public String getEndResult() {

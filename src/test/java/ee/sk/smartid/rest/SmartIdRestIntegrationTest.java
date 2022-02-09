@@ -30,7 +30,6 @@ import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -238,7 +237,7 @@ public class SmartIdRestIntegrationTest {
 
   private SessionStatus pollSessionStatus(String sessionId) throws InterruptedException {
     SessionStatus sessionStatus = null;
-    while (sessionStatus == null || StringUtils.equalsIgnoreCase("RUNNING", sessionStatus.getState())) {
+    while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState() )) {
       sessionStatus = connector.getSessionStatus(sessionId);
       TimeUnit.SECONDS.sleep(1);
     }

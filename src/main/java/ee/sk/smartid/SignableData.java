@@ -26,9 +26,8 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.apache.commons.codec.binary.Base64;
-
 import java.io.Serializable;
+import java.util.Base64;
 
 /**
  * This class can be used to contain the data
@@ -56,7 +55,7 @@ public class SignableData implements Serializable {
 
   public String calculateHashInBase64() {
     byte[] digest = calculateHash();
-    return Base64.encodeBase64String(digest);
+    return Base64.getEncoder().encodeToString(digest);
   }
 
   public byte[] calculateHash() {

@@ -1,4 +1,4 @@
-package ee.sk.smartid.exception.useraccount;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
@@ -26,12 +26,14 @@ package ee.sk.smartid.exception.useraccount;
  * #L%
  */
 
+public class StringUtil {
 
-import ee.sk.smartid.exception.UserAccountException;
-
-public class CertificateLevelMismatchException extends UserAccountException {
-
-    public CertificateLevelMismatchException() {
-        super("Signer's certificate is below requested certificate level");
+    public static boolean isNotEmpty(final CharSequence cs) {
+        return cs != null && cs.length() > 0;
     }
+
+    public static boolean isEmpty(final CharSequence cs) {
+        return cs == null || cs.length() == 0;
+    }
+
 }

@@ -26,14 +26,6 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -43,15 +35,17 @@ import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.Capability;
-import ee.sk.smartid.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.CertificateRequest;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionCertificate;
-import ee.sk.smartid.rest.dao.SessionResult;
-import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static ee.sk.smartid.util.StringUtil.isEmpty;
+import static ee.sk.smartid.util.StringUtil.isNotEmpty;
 
 /**
  * Class for building certificate choice request and getting the response
@@ -312,11 +306,11 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   public void validateCertificateResponse(SessionStatus sessionStatus) {
     validateSessionResult(sessionStatus.getResult());
     SessionCertificate certificate = sessionStatus.getCert();
-    if (certificate == null || isBlank(certificate.getValue())) {
+    if (certificate == null || isEmpty(certificate.getValue())) {
       logger.error("Certificate was not present in the session status response");
       throw new UnprocessableSmartIdResponseException("Certificate was not present in the session status response");
     }
-    if (isBlank(sessionStatus.getResult().getDocumentNumber())) {
+    if (isEmpty(sessionStatus.getResult().getDocumentNumber())) {
       logger.error("Document number was not present in the session status response");
       throw new UnprocessableSmartIdResponseException("Document number was not present in the session status response");
     }
