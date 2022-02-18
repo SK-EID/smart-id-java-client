@@ -125,18 +125,18 @@ More info about this requirement can be found from [Smart-ID Documentation](http
 It is recommended to keep trusted certificates in a trust store file:
 
 <!-- Do not change code samples here but instead copy from ReadmeTest.documentConfigureTheClient_trustStore() -->
-```
-        // reading trusted certificates from external trustStore file
-        InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
-        KeyStore trustStore = KeyStore.getInstance("JKS");
-        trustStore.load(is, "changeit".toCharArray());
+```java
+// reading trusted certificates from external trustStore file
+InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
+KeyStore trustStore = KeyStore.getInstance("JKS");
+trustStore.load(is, "changeit".toCharArray());
 
-        // Client setup. Note that these values are demo environment specific.
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        client.setRelyingPartyName("DEMO");
-        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-        client.setTrustStore(trustStore);
+// Client setup. Note that these values are demo environment specific.
+SmartIdClient client = new SmartIdClient();
+client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+client.setRelyingPartyName("DEMO");
+client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
+client.setTrustStore(trustStore);
 ```
 
 ### Feeding trusted certificates one by one
@@ -144,7 +144,7 @@ It is recommended to keep trusted certificates in a trust store file:
 It also possible to feed trusted certificates one by one.
 This can prove useful when trusted certificates are kept as application configuration property.
 
-```
+```java
 SmartIdClient client = new SmartIdClient();
 client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
 client.setRelyingPartyName("DEMO");
@@ -162,7 +162,7 @@ client.addTrustedSSLCertificates(
 
 More info about Semantics Identifier can be found [here](https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.01.00_30/en_31941201v010100v.pdf)
 
-```
+```java
 SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
     // 3 character identity type
     // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
@@ -203,7 +203,7 @@ Each document number is connected with specific mobile device of user.
 If user has Smart-ID installed to multiple devices then this triggers notification to a specific device only.
 This is why it is recommended to use authentication with document number if you want to target specific device only.
 
-```
+```java
 AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
 
 String verificationCode = authenticationHash.calculateVerificationCode();
@@ -237,7 +237,7 @@ Validation performs following checks:
 
 Validation returns information about the authenticated person.
 
-```
+```java
 // init Authentication response validator with trusted certificates loaded from within library
 // as an alternative you can pass trusted certificates array as parameter to constructor
 AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
@@ -263,7 +263,7 @@ Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth();
 To create a digital signature, most format require the signer's certificate beforehand.
 To fetch the certificate you can use documentNumber.
 
-```
+```java
 SmartIdCertificate responseWithSigningCertificate = client
     .getCertificate()
     .withDocumentNumber("PNOLT-30303039914-PBZK-Q") // returned as authentication result
@@ -289,7 +289,7 @@ You need to use other utilities (like [DigiDoc4j](https://github.com/open-eid/di
 create the AsicE/BDoc container with files in it and get the hash to be signed.
 
 
-```
+```java
 SignableHash hashToSign = new SignableHash();
 hashToSign.setHashType(HashType.SHA256);
 // calculate hash from the document you want to sign (i.e. use DigiDoc4j or other libraries)
@@ -344,7 +344,7 @@ Following allowedInteractionsOrder combinations are most likely to be used.
 If confirmation message fits to 60 characters then this is the most common choice.
 Every Smart-ID app supports this interaction flow and there is no need to provide any fallbacks to this interaction.
 
-```
+```java
 SmartIdSignature smartIdSignature = client
     .createSignature()
     .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
@@ -365,7 +365,7 @@ If user picks wrong verification code then the session is cancelled and library 
 
 If user's app doesn't support displaying verification code choice then system falls back to displaying text and PIN input.
 
-```
+```java
 try {
     SmartIdSignature smartIdSignature = client
         .createSignature()
@@ -389,7 +389,7 @@ Relying Party first choice is confirmationMessage that can be up to 200 characte
 If the Smart-ID app in user's smart device doesn't support this feature then the app falls back to displayTextAndPIN interaction.
 
 
-```
+```java
 SmartIdSignature smartIdSignature = client
     .createSignature()
     .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
@@ -417,7 +417,7 @@ If this is not available then only verification code choice with shorter text is
 If user picks wrong verification code then the session is cancelled and library throws `UserSelectedWrongVerificationCodeException`.
 
 
-```
+```java
 SmartIdSignature smartIdSignature = client
     .createSignature()
     .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
@@ -447,7 +447,7 @@ else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteraction
 Relying Party can require interactions without fallback.
 If End User's phone doesn't support required flow the library throws `RequiredInteractionNotSupportedByAppException`.
 
-```
+```java
 try {
     client
         .createSignature()
@@ -504,7 +504,7 @@ Under the hood each operation (authentication, choosing certificate and signing)
 
 Session status request by default is a long poll method, meaning the request method might not return until a timeout expires. Caller can tune each poll's timeout value in milliseconds inside the bounds set by service operator to turn it into a short poll.
 
-```
+```java
 SmartIdClient client = new SmartIdClient();
 // ...
 // sets the timeout for each session status poll
@@ -517,7 +517,7 @@ As Smart-ID Java client uses Jersey client for network communication underneath,
 
 Here's an example how to configure HTTP connector's custom socket timeouts for the Smart-ID client:
 
-```
+```java
 SmartIdClient client = new SmartIdClient();
 // ...
 ClientConfig clientConfig = new ClientConfig();
@@ -528,7 +528,7 @@ client.setNetworkConnectionConfig(clientConfig);
 ```
 And here's an example how to use Apache Http Client with custom socket timeouts as the HTTP connector instead of the default HttpUrlConnection:
 
-```
+```java
 SmartIdClient client = new SmartIdClient();
 // ...
 ClientConfig clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
@@ -547,7 +547,7 @@ Keep in mind that the HTTP connector timeout of waiting for data shouldn't norma
 ### Example of creating a client with configured ssl context on JBoss using JAXWS RS
 
 
-```
+```java
 ResteasyClient resteasyClient = new ResteasyClientBuilder()
         .sslContext(SmartIdClient.createSslContext(Arrays.asList(
             "pem cert 1", "pem cert 2")))
@@ -563,7 +563,7 @@ client.setConfiguredClient(resteasyClient);
 
 ### Example of creating a client with configured proxy on JBoss
 
-```   
+```java   
 ResteasyClient resteasyClient = new ResteasyClientBuilder()
         .defaultProxy("localhost", 8080, "http")
         .build();
