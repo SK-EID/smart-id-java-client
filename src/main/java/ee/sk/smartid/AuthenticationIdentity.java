@@ -64,6 +64,7 @@ public class AuthenticationIdentity {
   /**
    * Instead use:
    *  {@link #getSurname()}
+   * @return surname of the person
    */
   @Deprecated
   public String getSurName() {
@@ -71,6 +72,8 @@ public class AuthenticationIdentity {
   }
 
   /**
+   * @param surName surname
+   *
    * Instead use:
    *   {@link #setSurname(String)}
    */
