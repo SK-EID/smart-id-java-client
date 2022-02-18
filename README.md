@@ -20,7 +20,9 @@ For using Smart-ID API v. 1.0 see [Smart-ID Java Client 1.X](https://github.com/
     *   [Changelog](#changelog)
 *  [How to use it](#how-to-use-it)
     *   [Test accounts for testing]()
-    *   [Log request payloads](#log-request-payloads)
+    *   [Logging](#logging)
+        *   [Log request payloads](#log-request-payloads)
+        *   [Get the IP address of user's device](#get-the-ip-address-of-users-device)
     *   [Example of configuring the client](#example-of-configuring-the-client)
         *   [Reading trusted certificates from key store](#reading-trusted-certificates-from-key-store)
         *   [Feeding trusted certificates one by one](#feeding-trusted-certificates-one-by-one)
@@ -55,7 +57,7 @@ The Smart-ID Java client can be used for easy integration of the [Smart-ID](http
 * creating digital signature
 
 ## Requirements
-* Java 8
+* Java 8 or later
 
 ## Getting the library
 
@@ -86,7 +88,9 @@ Changes introduced with new library versions are described in [CHANGELOG.md](CHA
 [Test accounts for testing](https://github.com/SK-EID/smart-id-documentation/wiki/Environment-technical-parameters#test-accounts-for-automated-testing)
 
 
-## Log request payloads
+## Logging
+
+### Log request payloads
 
 To log requests going to Smart-ID API set ee.sk.smartid.rest.LoggingFilter to log at trace level.
 For applications on Spring Boot this can be done by adding following line to application.yml:
@@ -94,7 +98,14 @@ For applications on Spring Boot this can be done by adding following line to app
 logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 ```
 
+### Get the IP address of user's device
 
+Smart-ID API returns the IP address of the user's device for subscribed Relying Parties.
+This info can be retrieved using one of:
+
+* [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/rest/dao/SessionStatus.java)
+* [SmartIdAuthenticationResponse.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdAuthenticationResponse.java)
+* [SmartIdSignature.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdSignature.java#:~:text=getDeviceIpAddress)
 
 
 ## Example of configuring the client
