@@ -103,9 +103,9 @@ logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 Smart-ID API returns the IP address of the user's device for subscribed Relying Parties.
 This info can be retrieved using one of:
 
-* [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/rest/dao/SessionStatus.java#:~:text=getDeviceIpAddress())
 * [SmartIdAuthenticationResponse.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdAuthenticationResponse.java#:~:text=getDeviceIpAddress())
 * [SmartIdSignature.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdSignature.java#:~:text=getDeviceIpAddress())
+* [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/rest/dao/SessionStatus.java#:~:text=getDeviceIpAddress())
 
 
 ## Example of configuring the client
