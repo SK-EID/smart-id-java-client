@@ -318,6 +318,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
     authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
     authenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+    authenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
 
     return authenticationResponse;
   }

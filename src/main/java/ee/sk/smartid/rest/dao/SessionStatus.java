@@ -42,6 +42,7 @@ public class SessionStatus implements Serializable {
   private String[] ignoredProperties = {};
 
   private String interactionFlowUsed;
+  private String deviceIpAddress;
 
   public String getState() {
     return state;
@@ -89,6 +90,20 @@ public class SessionStatus implements Serializable {
 
   public void setInteractionFlowUsed(String interactionFlowUsed) {
     this.interactionFlowUsed = interactionFlowUsed;
+  }
+
+  /**
+   * IP address of the device running the App.
+   * Present only for subscribed RPs and when available (e.g. not present in case state is TIMEOUT).
+   *
+   * @return IP address of the device running Smart-id app (or null if not returned)
+   */
+  public String getDeviceIpAddress() {
+    return deviceIpAddress;
+  }
+
+  public void setDeviceIpAddress(String deviceIpAddress) {
+    this.deviceIpAddress = deviceIpAddress;
   }
 
 }
