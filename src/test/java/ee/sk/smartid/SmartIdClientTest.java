@@ -26,44 +26,12 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubErrorResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubForbiddenResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
-import static ee.sk.smartid.SmartIdRestServiceStubs.stubSessionStatusWithState;
-import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.isOneOf;
-import static org.hamcrest.Matchers.startsWith;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
-import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
-import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraccount.*;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.rest.SmartIdConnector;
@@ -78,6 +46,24 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static ee.sk.smartid.SmartIdRestServiceStubs.*;
+import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SmartIdClientTest {
 
@@ -519,6 +505,25 @@ public class SmartIdClientTest {
   }
 
   @Test
+  public void createSignatureAndGetDeviceIpAddress_noIpAddressReturned() {
+    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
+    SmartIdSignature signature = createSignature();
+
+    assertThat(signature.getDeviceIpAddress(), is(nullValue()));
+  }
+
+  @Test
+  public void createSignatureAndGetDeviceIpAddress() {
+    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
+    SmartIdSignature signature = createSignature();
+
+    assertThat(signature.getInteractionFlowUsed(), is("displayTextAndPIN"));
+    assertThat(signature.getDeviceIpAddress(), is("62.65.42.46"));
+  }
+
+  @Test
   public void setPollingSleepTimeoutForCertificateChoice() {
     stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
 
@@ -721,6 +726,25 @@ public class SmartIdClientTest {
     long duration = measureAuthenticationDuration();
     assertTrue("Duration is " + duration, duration > 2000L);
     assertTrue("Duration is " + duration, duration < 3000L);
+  }
+
+
+  @Test
+  public void getDeviceIpAddress_ipAddressNotPresent() {
+    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
+
+    SmartIdAuthenticationResponse authentication = createAuthentication();
+    assertThat(authentication.getDeviceIpAddress(), is(nullValue()));
+  }
+
+  @Test
+  public void getDeviceIpAddress_ipAddressReturned() {
+    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
+
+    SmartIdAuthenticationResponse authentication = createAuthentication();
+    assertThat(authentication.getDeviceIpAddress(), is("62.65.42.45"));
   }
 
   @Test

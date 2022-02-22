@@ -44,6 +44,7 @@ public class SmartIdAuthenticationResponse implements Serializable {
   private String certificateLevel;
   private String documentNumber;
   private String interactionFlowUsed;
+  private String deviceIpAddress;
 
   public byte[] getSignatureValue() {
     try {
@@ -133,4 +134,19 @@ public class SmartIdAuthenticationResponse implements Serializable {
   public void setInteractionFlowUsed(String interactionFlowUsed) {
     this.interactionFlowUsed = interactionFlowUsed;
   }
+
+  /**
+   * IP address of the device running the App.
+   * Present only for subscribed RPs and when available (e.g. not present in case state is TIMEOUT).
+   *
+   * @return IP address of the device running Smart-id app (or null if not returned)
+   */
+  public String getDeviceIpAddress() {
+    return deviceIpAddress;
+  }
+
+  public void setDeviceIpAddress(String deviceIpAddress) {
+    this.deviceIpAddress = deviceIpAddress;
+  }
+
 }

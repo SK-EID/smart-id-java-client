@@ -332,6 +332,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     signature.setAlgorithmName(sessionSignature.getAlgorithm());
     signature.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
     signature.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+    signature.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
 
     return signature;
   }
