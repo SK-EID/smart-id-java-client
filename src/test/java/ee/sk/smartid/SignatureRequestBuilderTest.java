@@ -475,4 +475,5 @@ public class SignatureRequestBuilderTest {
         .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Transfer amount X to Y?")))
         .sign();
   }
+
 }

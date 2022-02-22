@@ -26,6 +26,15 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.SmartIdRestConnector;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.core.Configuration;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,16 +48,6 @@ import java.security.cert.CertificateFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.Configuration;
-
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.SmartIdRestConnector;
 
 public class SmartIdClient {
 
