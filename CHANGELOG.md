@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] 
+
+### Changed
+- Updated dependencies
+
+### Changes in tests and documentation
+- How to use a proxy server - added documentation to README.md and tests to ReadmeTest.java
+
 ## [2.2] - 2022-02-22
 
 ### Changed

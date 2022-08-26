@@ -66,12 +66,12 @@ public class SmartIdRestIntegrationTest {
   public void getCertificateAndSignHash() throws Exception {
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession(DOCUMENT_NUMBER_LT);
 
-    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID());
+    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID(), connector);
     assertCertificateChosen(sessionStatus);
 
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
     SignatureSessionResponse signatureSessionResponse = createRequestAndFetchSignatureSession(documentNumber);
-    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
+    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID(), connector);
     assertSignatureCreated(sessionStatus);
   }
 
@@ -85,7 +85,7 @@ public class SmartIdRestIntegrationTest {
     assertNotNull(authenticationSessionResponse);
     assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
 
-    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
     assertAuthenticationResponseCreated(sessionStatus);
   }
 
@@ -97,7 +97,7 @@ public class SmartIdRestIntegrationTest {
     assertNotNull(authenticationSessionResponse);
     assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
 
-    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
 
     assertNotNull(sessionStatus.getResult());
     assertThat(sessionStatus.getResult().getEndResult(), is("OK"));
@@ -124,7 +124,7 @@ public class SmartIdRestIntegrationTest {
     assertNotNull(authenticationSessionResponse);
     assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
 
-    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
 
     assertNotNull(sessionStatus.getResult());
     assertThat(sessionStatus.getResult().getEndResult(), is("OK"));
@@ -137,7 +137,7 @@ public class SmartIdRestIntegrationTest {
   public void getIgnoredProperties_withSign_getIgnoredProperties_withAuthenticate_testAccountsIgnoreVcChoice() throws Exception {
     CertificateChoiceResponse certificateChoiceResponse = fetchCertificateChoiceSession(DOCUMENT_NUMBER);
 
-    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID());
+    SessionStatus sessionStatus = pollSessionStatus(certificateChoiceResponse.getSessionID(), connector);
     assertCertificateChosen(sessionStatus);
 
     String documentNumber = sessionStatus.getResult().getDocumentNumber();
@@ -145,7 +145,7 @@ public class SmartIdRestIntegrationTest {
     SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
 
     SignatureSessionResponse signatureSessionResponse = fetchSignatureSession(documentNumber, signatureSessionRequest);
-    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID());
+    sessionStatus = pollSessionStatus(signatureSessionResponse.getSessionID(), connector);
 
     assertNotNull(sessionStatus.getResult());
     assertThat(sessionStatus.getResult().getEndResult(), is("OK"));
@@ -172,7 +172,7 @@ public class SmartIdRestIntegrationTest {
     assertNotNull(authenticationSessionResponse);
     assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
 
-    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID());
+    SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
 
     assertThat(sessionStatus.getInteractionFlowUsed(), is("displayTextAndPIN"));
 
@@ -221,7 +221,7 @@ public class SmartIdRestIntegrationTest {
     return signatureSessionRequest;
   }
 
-  private AuthenticationSessionRequest createAuthenticationSessionRequest() {
+  public static AuthenticationSessionRequest createAuthenticationSessionRequest() {
     AuthenticationSessionRequest authenticationSessionRequest = new AuthenticationSessionRequest();
     authenticationSessionRequest.setRelyingPartyUUID(RELYING_PARTY_UUID);
     authenticationSessionRequest.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -235,10 +235,10 @@ public class SmartIdRestIntegrationTest {
     return authenticationSessionRequest;
   }
 
-  private SessionStatus pollSessionStatus(String sessionId) throws InterruptedException {
+  public static SessionStatus pollSessionStatus(String sessionId, SmartIdConnector connector1) throws InterruptedException {
     SessionStatus sessionStatus = null;
     while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState() )) {
-      sessionStatus = connector.getSessionStatus(sessionId);
+      sessionStatus = connector1.getSessionStatus(sessionId);
       TimeUnit.SECONDS.sleep(1);
     }
     assertEquals("COMPLETE", sessionStatus.getState());
@@ -258,7 +258,7 @@ public class SmartIdRestIntegrationTest {
     assertThat(sessionStatus.getCert().getValue(), not(isEmptyOrNullString()));
   }
 
-  private void assertAuthenticationResponseCreated(SessionStatus sessionStatus) {
+  public static void assertAuthenticationResponseCreated(SessionStatus sessionStatus) {
     assertNotNull(sessionStatus);
 
     assertThat(sessionStatus.getResult().getEndResult(), not(isEmptyOrNullString()));
@@ -267,7 +267,7 @@ public class SmartIdRestIntegrationTest {
     assertThat(sessionStatus.getCert().getCertificateLevel(), not(isEmptyOrNullString()));
   }
 
-  private String calculateHashInBase64(byte[] dataToSign) {
+  private static String calculateHashInBase64(byte[] dataToSign) {
     byte[] digestValue = DigestCalculator.calculateDigest(dataToSign, HashType.SHA512);
     return Base64.encodeBase64String(digestValue);
   }

@@ -31,15 +31,15 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.rest.dao.Interaction;
-import ee.sk.smartid.rest.dao.InteractionFlow;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.*;
 import org.apache.http.client.config.RequestConfig;
 import org.glassfish.jersey.apache.connector.ApacheClientProperties;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +53,13 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.*;
 import static ee.sk.test.smartid.integration.SmartIdIntegrationTest.TEST_AGAINST_SMART_ID_DEMO;
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeTrue;
 
 /**
@@ -622,61 +627,83 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
         client.setNetworkConnectionConfig(clientConfig);
     }
 
-    /*
-
-    Keep in mind that the HTTP connector timeout of waiting for data shouldn't normally be less than the timeout for session status poll.
-
-    ### Example of creating a client with configured ssl context on JBoss using JAXWS RS
-
-
-
-     */
-
-
 
     @Test
-    public void documentJbossJaxWS() {
+    @Ignore("you need to run a proxy to run this test")
+    public void document_setProxy_withJbossRestEasy() throws Exception {
+        // in order to run this test you can set up a proxy server locally
+        //docker run -d --name squid-container -e TZ=UTC -p 3128:3128 ubuntu/squid:5.2-22.04_beta
 
-        /*
-        ResteasyClient resteasyClient = new ResteasyClientBuilder()
-                .sslContext(SmartIdClient.createSslContext(Arrays.asList("pem cert 1", "pem cert 2")))
-                .build();
 
+        // CODE EXAMPLE STARTS HERE
+
+        org.jboss.resteasy.client.jaxrs.ResteasyClient resteasyClient =
+                new org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl()
+                        .defaultProxy("127.0.0.1", 3128, "http")
+                        .build();
         SmartIdClient client = new SmartIdClient();
         client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
         client.setConfiguredClient(resteasyClient);
-*/
+        client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
 
+        // CODE EXAMPLE ENDS HERE
+
+
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
+
+        AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
+        SmartIdConnector smartIdConnector = client.getSmartIdConnector();
+        AuthenticationSessionResponse authenticationSessionResponse = smartIdConnector.authenticate(semanticsIdentifier, request);
+
+        assertNotNull(authenticationSessionResponse);
+        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+
+        SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), smartIdConnector);
+        assertAuthenticationResponseCreated(sessionStatus);
+
+
+        // this allows to switch off tests going against smart-id demo env
+        assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
     }
 
-    /*
-
-    ### Example of creating a client with configured proxy on JBoss
-
-
-     */
-
     @Test
-    public void configureClientWithNetwork() {
+    @Ignore("you need a running proxy server to run this test")
+    public void document_setNetworkConnectionConfig_withJersey() throws Exception {
+        // in order to run this test you first have to set up a proxy server locally
+        //docker run -d --name squid-container -e TZ=UTC -p 3128:3128 ubuntu/squid:5.2-22.04_beta
 
-        /* To comment in this you need to enable JBoss repository and dependency in pom.xml
+        // CODE EXAMPLE STARTS HERE
 
-        ResteasyClient resteasyClient = new ResteasyClientBuilder()
-                .defaultProxy("localhost", 8080, "http")
-                .build();
+        org.glassfish.jersey.client.ClientConfig clientConfig =
+                new org.glassfish.jersey.client.ClientConfig();
+        clientConfig.property(ClientProperties.PROXY_URI, "http://127.0.0.1:3128");
 
         SmartIdClient client = new SmartIdClient();
         client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-        client.setConfiguredClient(resteasyClient);
+        client.setNetworkConnectionConfig(clientConfig);
+        client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
 
-         */
+        // CODE EXAMPLE ENDS HERE
+
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
+
+        AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
+        SmartIdConnector smartIdConnector = client.getSmartIdConnector();
+        AuthenticationSessionResponse authenticationSessionResponse = smartIdConnector.authenticate(semanticsIdentifier, request);
+
+        assertNotNull(authenticationSessionResponse);
+        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+
+        SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), smartIdConnector);
+        assertAuthenticationResponseCreated(sessionStatus);
+
+        // this allows to switch off tests going against smart-id demo env
+        assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
+
     }
-
-
-
 
 }
