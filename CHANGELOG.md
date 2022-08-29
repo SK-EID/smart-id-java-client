@@ -4,6 +4,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased] 
 
+### Fixed
+- added jakarta.ws.rs:jakarta.ws.rs-api as a dependency to avoid ClassNotFoundException with spring framework
+
 ### Changed
 - Updated dependencies
 

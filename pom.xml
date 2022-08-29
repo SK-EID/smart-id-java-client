@@ -47,6 +47,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <jackson.version>2.13.3</jackson.version>
         <jersey.version>3.0.6</jersey.version>
+        <rs-api.version>3.0.0</rs-api.version>
         <resteasy.version>6.0.3.Final</resteasy.version>
     </properties>
 
@@ -66,6 +67,13 @@
             <artifactId>jersey-hk2</artifactId>
             <version>${jersey.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>${rs-api.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.glassfish.jersey.connectors</groupId>
             <artifactId>jersey-apache-connector</artifactId>
