@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.com/SK-EID/smart-id-java-client.svg?branch=master)](https://travis-ci.com/SK-EID/smart-id-java-client)
-[![Coverage Status](https://img.shields.io/librariesio/github/SK-EID/mid-rest-java-client.svg)](https://libraries.io/maven/ee.sk.mid:mid-rest-java-client)
+[![Dependencies](https://img.shields.io/librariesio/github/SK-EID/smart-id-java-client.svg)](https://libraries.io/maven/ee.sk.smartid:smart-id-java-client)
 [![Coverage Status](https://img.shields.io/codecov/c/github/SK-EID/smart-id-java-client.svg)](https://codecov.io/github/SK-EID/smart-id-java-client/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/ee.sk.smartid/smart-id-java-client/badge.svg)](https://maven-badges.herokuapp.com/maven-central/ee.sk.smartid/smart-id-java-client)
 [![License: MIT](https://img.shields.io/github/license/mashape/apistatus.svg)](https://opensource.org/licenses/MIT)
