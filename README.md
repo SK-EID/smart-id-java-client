@@ -18,33 +18,34 @@ For using Smart-ID API v. 1.0 see [Smart-ID Java Client 1.X](https://github.com/
     *   [Requirements](#requirements)
     *   [Getting the library](#getting-the-library)
     *   [Changelog](#changelog)
-*  [How to use it](#how-to-use-it)
-    *   [Test accounts for testing]()
-    *   [Logging](#logging)
+* [How to use it](#how-to-use-it)
+    * [Test accounts for testing]()
+    * [Logging](#logging)
         *   [Log request payloads](#log-request-payloads)
         *   [Get the IP address of user's device](#get-the-ip-address-of-users-device)
-    *   [Example of configuring the client](#example-of-configuring-the-client)
+    * [Example of configuring the client](#example-of-configuring-the-client)
         *   [Reading trusted certificates from key store](#reading-trusted-certificates-from-key-store)
         *   [Feeding trusted certificates one by one](#feeding-trusted-certificates-one-by-one)
-    *   [Examples of performing authentication](#examples-of-performing-authentication)
+    * [Examples of performing authentication](#examples-of-performing-authentication)
         *   [Authenticating with semantics identifier](#authenticating-with-semantics-identifier)
         *   [Authenticating with document number](#authenticating-with-document-number)
         *   [Validating authentication response](#validating-authentication-response)
-    *   [Creating a signature](#creating-a-signature)
+    * [Creating a signature](#creating-a-signature)
         *   [Obtaining signer's certificate](#obtaining-signers-certificate)
         *   [Create the signature](#create-the-signature)
-    *   [Setting the order of preferred interactions for displaying text and asking PIN](#setting-the-order-of-preferred-interactions-for-displaying-text-and-asking-pin)
+    * [Setting the order of preferred interactions for displaying text and asking PIN](#setting-the-order-of-preferred-interactions-for-displaying-text-and-asking-pin)
         *   [Parameter allowedInteractionsOrder most common examples](#parameter-allowedinteractionsorder-most-common-examples)
             *   [Short confirmation message with PIN](#short-confirmation-message-with-pin)
             *   [Verification code choice](#verification-code-choice)
             *   [Long confirmation message with fallback to PIN](#long-confirmation-message-with-fallback-to-pin)
             *   [Long confirmation message together with verification code choice with fallback to verification code choice](#long-confirmation-message-together-with-verification-code-choice-with-fallback-to-verification-code-choice)
             *   [Interactions with longer text without fallback](#interactions-with-longer-text-without-fallback)
-    *   [Handling exceptions](#handling-exceptions)
-    *   [Network connection configuration of the client](#network-connection-configuration-of-the-client)
+    * [Handling exceptions](#handling-exceptions)
+    * [Network connection configuration of the client](#network-connection-configuration-of-the-client)
         *   [Example of creating a client with configured ssl context on JBoss using JAXWS RS](#example-of-creating-a-client-with-configured-ssl-context-on-jboss-using-jaxws-rs)
-        *   [Example of creating a client with configured proxy on JBoss](#example-of-creating-a-client-with-configured-ssl-context-on-jboss-using-jaxws-rs)
-
+    * [Configuring a proxy](#configuring-a-proxy)
+        * [Configuring a proxy using JBoss Resteasy library](#configuring-a-proxy-using-jboss-resteasy-library)
+        * [Configuring a proxy using Jersey](#configuring-a-proxy-using-jersey)
 
 ## Introduction
 
@@ -560,19 +561,40 @@ client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
 client.setConfiguredClient(resteasyClient);
 ```
 
+## Configuring a proxy
+
+If you need to access the internet through a proxy (that runs on 127.0.0.1:3128 in the examples)
+you have two alternatives:
+
+### Configuring a proxy using JBoss Resteasy library
+
+<!-- Do not change code samples here but instead copy from ReadmeTest.document_setProxy_withJbossRestEasy() -->
+```java   
+    org.jboss.resteasy.client.jaxrs.ResteasyClient resteasyClient =
+            new org.jboss.resteasy.client.jaxrs.internal.ResteasyClientBuilderImpl()
+                    .defaultProxy("127.0.0.1", 3128, "http")
+                    .build();
+    SmartIdClient client = new SmartIdClient();
+    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+    client.setRelyingPartyName("DEMO");
+    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
+    client.setConfiguredClient(resteasyClient);
+    client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
+```
 
 ### Example of creating a client with configured proxy on JBoss
 
-```java   
-ResteasyClient resteasyClient = new ResteasyClientBuilder()
-        .defaultProxy("localhost", 8080, "http")
-        .build();
+<!-- Do not change code samples here but instead copy from ReadmeTest.document_setNetworkConnectionConfig_withJersey()-->
+```java 
+    org.glassfish.jersey.client.ClientConfig clientConfig =
+            new org.glassfish.jersey.client.ClientConfig();
+    clientConfig.property(ClientProperties.PROXY_URI, "http://127.0.0.1:3128");
 
-SmartIdClient client = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-client.setRelyingPartyName("DEMO");
-client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-client.setConfiguredClient(resteasyClient);
+    SmartIdClient client = new SmartIdClient();
+    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+    client.setRelyingPartyName("DEMO");
+    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
+    client.setNetworkConnectionConfig(clientConfig);
+    client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
 ```
 
-    
