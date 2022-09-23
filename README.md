@@ -30,6 +30,7 @@ For using Smart-ID API v. 1.0 see [Smart-ID Java Client 1.X](https://github.com/
         *   [Authenticating with semantics identifier](#authenticating-with-semantics-identifier)
         *   [Authenticating with document number](#authenticating-with-document-number)
         *   [Validating authentication response](#validating-authentication-response)
+            *   [Extracting date-of-birth](#extracting-date-of-birth)
     * [Creating a signature](#creating-a-signature)
         *   [Obtaining signer's certificate](#obtaining-signers-certificate)
         *   [Create the signature](#create-the-signature)
@@ -250,10 +251,33 @@ String givenName = authIdentity.getGivenName(); // e.g. Mari-Liis"
 String surname = authIdentity.getSurname(); // e.g. "Männik"
 String identityCode = authIdentity.getIdentityCode(); // e.g. "47101010033"
 String country = authIdentity.getCountry(); // e.g. "EE", "LV", "LT"
+Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth(); // see next paragraph
+```
 
-// Date-of-birth is extracted from certificate attribute or parsed from national identity number
-// Value is present for all Estonian and Lithuanian persons but not for all Latvian certificates 
+### Extracting date-of-birth
+
+Since all Estonian and Lithuanian national identity numbers contain date-of-birth
+this getDateOfBirth function always returns a correct value for them.
+
+For persons with Latvian national identity number the date-of-birth is parsed
+from a separate field of the certificate but for some older Smart-id accounts
+(issued between 2017-07-01 and 2021-05-20) the value might be missing.
+
+More info about the availability of the separate field in certificates:
+https://github.com/SK-EID/smart-id-documentation/wiki/FAQ#where-can-i-find-users-date-of-birth
+
+```
 Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth();
+```
+
+One can also only fetch the signing certificate of a person
+and then construct authentication identity from that
+and extract the date-of-birth from there.
+Read below about how to obtain the signer's certificate.
+
+```
+AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(signersCertificate);
+Optional<LocalDate> dateOfBirthExtracted = identity.getDateOfBirth();
 ```
 
 

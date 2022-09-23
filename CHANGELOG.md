@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+
+### Documented
+- How to extract date-of-birth from a certificate added as a separate paragraph to readme.
+- Added two tests into SmartIdIntegrationTest that demonstrate fetching and parsing a certificate with date-of-birth
+
 ## [2.2.1] - 2022-09-12
 
 ### Fixed

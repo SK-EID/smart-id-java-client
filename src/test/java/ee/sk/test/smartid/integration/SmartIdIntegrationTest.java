@@ -29,6 +29,8 @@ package ee.sk.test.smartid.integration;
 import ee.sk.smartid.*;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.util.CertificateAttributeUtil;
+import ee.sk.smartid.util.NationalIdentityNumberUtil;
 import org.apache.commons.codec.binary.Base64;
 import org.hamcrest.CoreMatchers;
 import org.junit.Before;
@@ -164,6 +166,64 @@ public class SmartIdIntegrationTest {
         AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateResponse.getCertificate());
         assertThat(identity.getDateOfBirth().isPresent(), CoreMatchers.is(true));
         assertThat(identity.getDateOfBirth().get(), CoreMatchers.is(LocalDate.of(1903,3,3)));
+    }
+
+    @Test
+    public void getCertificate_EstonianByDocumentNumber_dateOfBirthParsedFromFieldInCertificate() throws CertificateEncodingException {
+        SmartIdCertificate certificateResponse = client
+                .getCertificate()
+                .withRelyingPartyUUID(RELYING_PARTY_UUID)
+                .withRelyingPartyName(RELYING_PARTY_NAME)
+                .withDocumentNumber("PNOEE-39912319997-AAAA-Q")
+                .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+                .withNonce("012345678901234567890123456789")
+                .fetch();
+
+        assertThat(certificateResponse.getDocumentNumber(), is("PNOEE-39912319997-AAAA-Q"));
+        assertThat(certificateResponse.getCertificateLevel(), is("QUALIFIED"));
+        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
+
+        AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateResponse.getCertificate());
+        assertThat(identity.getDateOfBirth().get(), CoreMatchers.is(LocalDate.of(1903,3,3)));
+
+        // NB! This certificate has a different date-of-birth value
+        // in the attribute of the certificate comparing to
+        // what would expect from the national identity number.
+        // the following code blocks demonstrate that
+        LocalDate dateOfBirthParsedFromCertificate = CertificateAttributeUtil.getDateOfBirth(identity.getAuthCertificate());
+        assertThat(dateOfBirthParsedFromCertificate, CoreMatchers.is(LocalDate.of(1903,3,3)));
+
+        LocalDate dateOfBirthParsedFromNationalIdentityNumber = NationalIdentityNumberUtil.getDateOfBirth(identity);
+        assertThat(dateOfBirthParsedFromNationalIdentityNumber, CoreMatchers.is(LocalDate.of(1999,12,31)));
+    }
+
+    @Test
+    public void getCertificate_LithuanianByDocumentNumber_dateOfBirthParsedFromFieldInCertificate() throws CertificateEncodingException {
+        SmartIdCertificate certificateResponse = client
+                .getCertificate()
+                .withRelyingPartyUUID(RELYING_PARTY_UUID)
+                .withRelyingPartyName(RELYING_PARTY_NAME)
+                .withDocumentNumber("PNOLT-39912319997-AAAA-Q")
+                .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+                .withNonce("012345678901234567890123456789")
+                .fetch();
+
+        assertThat(certificateResponse.getDocumentNumber(), is("PNOLT-39912319997-AAAA-Q"));
+        assertThat(certificateResponse.getCertificateLevel(), is("QUALIFIED"));
+        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
+
+        AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateResponse.getCertificate());
+        assertThat(identity.getDateOfBirth().get(), CoreMatchers.is(LocalDate.of(1903,3,3)));
+
+        // NB! This certificate has a different date-of-birth value
+        // in the attribute of the certificate comparing to
+        // what would expect from the national identity number.
+        // the following code blocks demonstrate that
+        LocalDate dateOfBirthParsedFromCertificate = CertificateAttributeUtil.getDateOfBirth(identity.getAuthCertificate());
+        assertThat(dateOfBirthParsedFromCertificate, CoreMatchers.is(LocalDate.of(1903,3,3)));
+
+        LocalDate dateOfBirthParsedFromNationalIdentityNumber = NationalIdentityNumberUtil.getDateOfBirth(identity);
+        assertThat(dateOfBirthParsedFromNationalIdentityNumber, CoreMatchers.is(LocalDate.of(1999,12,31)));
     }
 
     @Test
