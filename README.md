@@ -151,7 +151,7 @@ SmartIdClient client = new SmartIdClient();
 client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
 client.setRelyingPartyName("DEMO");
 client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-client.addTrustedSSLCertificates(
+client.setTrustedCertificates(
         "-----BEGIN CERTIFICATE-----\nMIIFIjCCBAqgAwIBAgIQBH3ZvDVJl5qtCPwQJSruuj...",
         "-----BEGIN CERTIFICATE-----\nMIIE0zCCA7ugAwIBAgIQbQr/Ky22GFhYWS3oQoJkyT..."
 );

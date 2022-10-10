@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Documented
 - How to extract date-of-birth from a certificate added as a separate paragraph to readme.
 - Added two tests into SmartIdIntegrationTest that demonstrate fetching and parsing a certificate with date-of-birth
+- Changed demo SSL certificate
+- add correct way of adding trusted certificates in Readme [#73](https://github.com/SK-EID/smart-id-java-client/issues/73)
 
 ## [2.2.1] - 2022-09-12
 
