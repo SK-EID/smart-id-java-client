@@ -45,8 +45,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <jackson.version>2.13.3</jackson.version>
-        <jersey.version>3.0.6</jersey.version>
+        <jackson.version>2.13.4</jackson.version>
+        <jackson.annotations.version>2.13.4</jackson.annotations.version>
+        <jersey.version>3.0.8</jersey.version>
         <rs-api.version>3.0.0</rs-api.version>
         <resteasy.version>6.0.3.Final</resteasy.version>
     </properties>
@@ -84,7 +85,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
+            <version>${jackson.annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -244,7 +245,7 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>6.0.3</version>
+                <version>7.3.0</version>
                 <configuration>
                     <skipTestScope>true</skipTestScope>
                     <skip>true</skip>
