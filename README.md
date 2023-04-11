@@ -214,7 +214,7 @@ String verificationCode = authenticationHash.calculateVerificationCode();
 
 SmartIdAuthenticationResponse authenticationResponse = client
     .createAuthentication()
-    .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
+    .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
     .withAuthenticationHash(authenticationHash)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(Collections.singletonList(
@@ -291,7 +291,7 @@ To fetch the certificate you can use documentNumber.
 ```java
 SmartIdCertificate responseWithSigningCertificate = client
     .getCertificate()
-    .withDocumentNumber("PNOLT-30303039914-PBZK-Q") // returned as authentication result
+    .withDocumentNumber("PNOLT-30303039914-MOCK-Q") // returned as authentication result
     .withCertificateLevel("QUALIFIED")
     .fetch();
 
@@ -328,7 +328,7 @@ String verificationCode = hashToSign.calculateVerificationCode();
 
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOLT-30303039914-PBZK-Q") // returned as authentication result
+    .withDocumentNumber("PNOLT-30303039914-MOCK-Q") // returned as authentication result
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(asList(
@@ -372,7 +372,7 @@ Every Smart-ID app supports this interaction flow and there is no need to provid
 ```java
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
+    .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(Collections.singletonList(
@@ -394,7 +394,7 @@ If user's app doesn't support displaying verification code choice then system fa
 try {
     SmartIdSignature smartIdSignature = client
         .createSignature()
-        .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
+        .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
         .withSignableHash(hashToSign)
         .withCertificateLevel("QUALIFIED")
         .withAllowedInteractionsOrder(Arrays.asList(
@@ -417,7 +417,7 @@ If the Smart-ID app in user's smart device doesn't support this feature then the
 ```java
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
+    .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(asList(
@@ -445,7 +445,7 @@ If user picks wrong verification code then the session is cancelled and library 
 ```java
 SmartIdSignature smartIdSignature = client
     .createSignature()
-    .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
+    .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
     .withSignableHash(hashToSign)
     .withCertificateLevel("QUALIFIED")
     .withAllowedInteractionsOrder(asList(
@@ -476,7 +476,7 @@ If End User's phone doesn't support required flow the library throws `RequiredIn
 try {
     client
         .createSignature()
-        .withDocumentNumber("PNOLT-30303039914-PBZK-Q")
+        .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
         .withSignableHash(hashToSign)
         .withCertificateLevel("QUALIFIED")
         .withAllowedInteractionsOrder(Collections.singletonList(

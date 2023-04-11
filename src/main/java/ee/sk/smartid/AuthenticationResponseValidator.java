@@ -85,9 +85,8 @@ public class AuthenticationResponseValidator {
   }
 
   /**
-   * Validates the authentication response and returns the its result
-   *
-   * Performs following validations:
+   * Validates the authentication response and returns the result.
+   * Performs the following validations:
    * "result.endResult" has the value "OK"
    * "signature.value" is the valid signature over the same "hash", which was submitted by the RP.
    * "signature.value" is the valid signature, verifiable with the public key inside the certificate of the user, given in the field "cert.value"
@@ -121,7 +120,7 @@ public class AuthenticationResponseValidator {
    * Gets the list of trusted CA certificates
    * <p>
    * Authenticating person's certificate has to be issued by
-   * one of the trusted CA certificates. Otherwise the person's
+   * one of the trusted CA certificates. Otherwise, the person's
    * authentication is deemed untrusted and therefore not valid.
    *
    * @return list of trusted CA certificates
@@ -134,7 +133,7 @@ public class AuthenticationResponseValidator {
    * Adds a certificate to the list of trusted CA certificates
    * <p>
    * Authenticating person's certificate has to be issued by
-   * one of the trusted CA certificates. Otherwise the person's
+   * one of the trusted CA certificates. Otherwise, the person's
    * authentication is deemed untrusted and therefore not valid.
    *
    * @param certificate trusted CA certificate
@@ -148,7 +147,7 @@ public class AuthenticationResponseValidator {
    * adds it into the list of trusted CA certificates
    * <p>
    * Authenticating person's certificate has to be issued by
-   * one of the trusted CA certificates. Otherwise the person's
+   * one of the trusted CA certificates. Otherwise, the person's
    * authentication is deemed untrusted and therefore not valid.
    *
    * @throws CertificateException when there was an error constructing the certificate from bytes
@@ -166,7 +165,7 @@ public class AuthenticationResponseValidator {
    * and adds it into the list of trusted CA certificates
    * <p>
    * Authenticating person's certificate has to be issued by
-   * one of the trusted CA certificates. Otherwise the person's
+   * one of the trusted CA certificates. Otherwise, the person's
    * authentication is deemed untrusted and therefore not valid.
    *
    * @throws IOException when there is an error reading the file
