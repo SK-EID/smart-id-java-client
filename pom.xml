@@ -47,7 +47,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <jackson.version>2.14.2</jackson.version>
         <jackson.annotations.version>2.14.2</jackson.annotations.version>
-        <jersey.version>3.1.1</jersey.version>
+        <jersey.version>3.0.10</jersey.version><!-- NB! 3.1.x does not work with Java 8 -->
         <resteasy.version>6.2.3.Final</resteasy.version>
     </properties>
 
