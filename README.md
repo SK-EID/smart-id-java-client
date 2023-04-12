@@ -503,7 +503,7 @@ This way it is possible to reduce error handling code to only handle generic par
             * UserRefusedConfirmationMessageWithVerificationChoiceException
             * UserRefusedDisplayTextAndPinException
             * UserRefusedVerificationChoiceException
-        * UserSelectedWrongVerificationCodeException - 3 different codeuser was displayed 3 codes in app and selected wrong code
+        * UserSelectedWrongVerificationCodeException - the end user was displayed 3 codes in app and user selected wrong code
     * UserAccountException - Exceptions that are caused by user account configuration. 
         * CertificateLevelMismatchException
         * NoSuitableAccountOfRequestedTypeFoundException
@@ -516,7 +516,7 @@ This way it is possible to reduce error handling code to only handle generic par
         * ServerMaintenanceException - Server is currently under maintenance
         * SmartIdClientException - this exception is a sign of incorrect integration with Smart-ID service (i.e. missing parameters etc)
             * RelyingPartyAccountConfigurationException - indicates that RelyingParty configuration at Smart-ID side can be incorrect
-            * UnprocessableSmartIdResponseException - shouldn't happen under normal condtitions
+            * UnprocessableSmartIdResponseException - shouldn't happen under normal conditions
     * SessionNotFoundException - When session was not found. Usually this is also caused by problems with implementation.
 
     
