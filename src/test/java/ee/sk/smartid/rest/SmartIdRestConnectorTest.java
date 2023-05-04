@@ -36,6 +36,7 @@ import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.*;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
+import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,7 +66,6 @@ public class SmartIdRestConnectorTest {
   @Test(expected = SessionNotFoundException.class)
   public void getNotExistingSessionStatus() {
     stubNotFoundResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016");
-    SessionStatusRequest request = new SessionStatusRequest("de305d54-75b4-431b-adb2-eb6b9e546016");
     connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
   }
 
@@ -92,7 +92,7 @@ public class SmartIdRestConnectorTest {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
     assertSuccessfulResponse(sessionStatus);
     assertNotNull(sessionStatus.getCert());
-    assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
+    MatcherAssert.assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
     assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
   }
 
@@ -101,7 +101,7 @@ public class SmartIdRestConnectorTest {
     SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
     assertSuccessfulResponse(sessionStatus);
     assertNotNull(sessionStatus.getSignature());
-    assertThat(sessionStatus.getSignature().getValue(), startsWith("luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv"));
+    MatcherAssert.assertThat(sessionStatus.getSignature().getValue(), startsWith("luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv"));
     assertEquals("sha256WithRSAEncryption", sessionStatus.getSignature().getAlgorithm());
   }
 

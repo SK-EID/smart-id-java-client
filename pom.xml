@@ -27,12 +27,12 @@
         <developer>
             <name>Juhan Aasaru</name>
             <organization>Nortal</organization>
-            <organizationUrl>http://www.nortal.com</organizationUrl>
+            <organizationUrl>https://www.nortal.com</organizationUrl>
         </developer>
         <developer>
             <name>Andreas Valdma</name>
             <organization>Nortal</organization>
-            <organizationUrl>http://www.nortal.com</organizationUrl>
+            <organizationUrl>https://www.nortal.com</organizationUrl>
         </developer>
     </developers>
 
@@ -45,19 +45,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <jackson.version>2.13.4</jackson.version>
-        <jackson.annotations.version>2.13.4</jackson.annotations.version>
-        <jersey.version>3.0.8</jersey.version>
-        <rs-api.version>3.0.0</rs-api.version>
-        <resteasy.version>6.0.3.Final</resteasy.version>
+        <jackson.version>2.14.2</jackson.version>
+        <jackson.annotations.version>2.14.2</jackson.annotations.version>
+        <jersey.version>3.0.10</jersey.version><!-- NB! 3.1.x does not work with Java 8 -->
+        <resteasy.version>6.0.3.Final</resteasy.version><!-- 6.1+ doesn't work with Java 8 -->
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <version>${jersey.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
@@ -67,12 +61,6 @@
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
             <version>${jersey.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
-            <version>${rs-api.version}</version>
         </dependency>
 
         <dependency>
@@ -245,10 +233,10 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>7.3.0</version>
+                <version>8.2.1</version>
                 <configuration>
                     <skipTestScope>true</skipTestScope>
-                    <skip>true</skip>
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>
