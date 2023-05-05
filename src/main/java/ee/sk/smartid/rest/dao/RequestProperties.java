@@ -3,7 +3,9 @@ package ee.sk.smartid.rest.dao;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-public class RequestProperties {
+import java.io.Serializable;
+
+public class RequestProperties implements Serializable {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     Boolean shareMdClientIpAddress;
