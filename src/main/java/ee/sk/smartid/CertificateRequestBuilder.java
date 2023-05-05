@@ -222,6 +222,17 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
+   * Ask to return the IP address of the mobile device where Smart-ID app was running.
+   * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
+   *
+   * @return this builder
+   */
+  public CertificateRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+    this.shareMdClientIpAddress = shareMdClientIpAddress;
+    return this;
+  }
+
+  /**
    * Send the certificate choice request and get the response
    *x
    * @throws UserAccountNotFoundException when the certificate was not found
@@ -278,6 +289,8 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     smartIdCertificate.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
     smartIdCertificate.setCertificateLevel(certificate.getCertificateLevel());
     smartIdCertificate.setDocumentNumber(getDocumentNumber(sessionStatus));
+    smartIdCertificate.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
+
     return smartIdCertificate;
   }
 
@@ -300,6 +313,13 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
     request.setCertificateLevel(getCertificateLevel());
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
+    if (requestProperties.hasProperties()) {
+      request.setRequestProperties(requestProperties);
+    }
+
     return request;
   }
 

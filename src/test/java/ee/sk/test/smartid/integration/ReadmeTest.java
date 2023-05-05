@@ -233,10 +233,16 @@ It is recommended to read trusted certificates from a file.
                 .withAllowedInteractionsOrder(
                         Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")
                 ))
+                // we want to get the IP address of the device running Smart-ID app
+                // for the IP to be returned the service provider (SK) must switch on this option
+                .withShareMdClientIpAddress(true)
                 .authenticate();
 
         // You need this if you want to implement signing
         String documentNumberForFurtherReference = authenticationResponse.getDocumentNumber();
+
+        // We get IP of Smart-ID app since we made the request .withShareMdClientIpAddress(true)
+        String deviceIpAddress = authenticationResponse.getDeviceIpAddress();
     }
 
     /*

@@ -44,8 +44,7 @@ import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class CertificateRequestBuilderTest {
 
@@ -109,7 +108,7 @@ public class CertificateRequestBuilderTest {
   }
 
   @Test
-  public void getCertificateWithoutCertificateLevel_shouldPass() {
+  public void getCertificate_withoutCertificateLevel() {
     SmartIdCertificate certificate = builder
         .withRelyingPartyUUID("relying-party-uuid")
         .withRelyingPartyName("relying-party-name")
@@ -118,6 +117,47 @@ public class CertificateRequestBuilderTest {
     assertCertificateResponseValid(certificate);
     assertCorrectSessionRequestMade();
     assertValidCertificateChoiceRequestMade(null);
+  }
+
+  @Test
+  public void getCertificate_withShareMdClientIpAddressTrue() {
+    SmartIdCertificate certificate = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
+        .withCertificateLevel("ADVANCED")
+        .withShareMdClientIpAddress(true)
+            .fetch();
+    assertCertificateResponseValid(certificate);
+
+    assertNotNull("getRequestProperties must be set withShareMdClientIpAddress",
+            connector.certificateRequestUsed.getRequestProperties());
+    assertTrue("requestProperties.shareMdClientIpAddress must be true",
+            connector.certificateRequestUsed.getRequestProperties().getShareMdClientIpAddress());
+    assertThat(certificate.getDeviceIpAddress(), is("5.5.5.5"));
+
+    assertCorrectSessionRequestMade();
+    assertValidCertificateChoiceRequestMade("ADVANCED");
+  }
+
+  @Test
+  public void getCertificate_withShareMdClientIpAddressFalse() {
+    SmartIdCertificate certificate = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
+        .withCertificateLevel("ADVANCED")
+        .withShareMdClientIpAddress(false)
+        .fetch();
+    assertCertificateResponseValid(certificate);
+
+    assertNotNull("getRequestProperties must be set withShareMdClientIpAddress",
+            connector.certificateRequestUsed.getRequestProperties());
+    assertFalse("requestProperties.shareMdClientIpAddress must be false",
+            connector.certificateRequestUsed.getRequestProperties().getShareMdClientIpAddress());
+
+    assertCorrectSessionRequestMade();
+    assertValidCertificateChoiceRequestMade("ADVANCED");
   }
 
   @Test(expected = SmartIdClientException.class)
@@ -247,6 +287,7 @@ public class CertificateRequestBuilderTest {
     status.setState("COMPLETE");
     status.setCert(createSessionCertificate());
     status.setResult(createSessionEndResult());
+    status.setDeviceIpAddress("5.5.5.5");
     return status;
   }
 

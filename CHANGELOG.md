@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3] - UPCOMING
+- To request IP-address of the device running Smart-ID app, the following methods were added: 
+  - AuthenticationRequestBuilder.withShareMdClientIpAddress(boolean)
+  - CertificateRequestBuilder.withShareMdClientIpAddress(boolean)
+  - SignatureRequestBuilder.withShareMdClientIpAddress(boolean)
+- The IP-address returned can be read out using:
+  - SmartIdAuthenticationResponse.getDeviceIpAddress(), 
+  - SmartIdCertificate.getDeviceIpAddress(),
+  - SmartIdSignature.getDeviceIpAddress(), 
+
+
 ## [2.2.2] - 2022-11-14
 
 ### Changed

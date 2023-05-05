@@ -269,6 +269,7 @@ public class SmartIdIntegrationTest {
              .withAuthenticationHash(authenticationHash)
              .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
              .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
+             .withShareMdClientIpAddress(true)
              .authenticate();
 
         assertAuthenticationResponseCreated(authenticationResponse, authenticationHash.getHashInBase64());
@@ -280,6 +281,8 @@ public class SmartIdIntegrationTest {
         assertThat(authenticationIdentity.getSurname(), is("TESTNUMBER"));
         assertThat(authenticationIdentity.getIdentityNumber(), is("30303039914"));
         assertThat(authenticationIdentity.getCountry(), is("LT"));
+
+        System.out.println("Device IP: " + authenticationResponse.getDeviceIpAddress());
     }
 
     private void assertSignatureCreated(SmartIdSignature signature) {

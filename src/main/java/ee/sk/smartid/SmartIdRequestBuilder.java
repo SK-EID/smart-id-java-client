@@ -60,6 +60,7 @@ public abstract class SmartIdRequestBuilder {
   protected String nonce;
   protected Set<String> capabilities;
   protected List<Interaction> allowedInteractionsOrder;
+  protected Boolean shareMdClientIpAddress;
 
   protected SmartIdRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
     this.connector = connector;
