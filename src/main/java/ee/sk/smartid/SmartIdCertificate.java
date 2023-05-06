@@ -34,6 +34,7 @@ public class SmartIdCertificate implements Serializable {
   private X509Certificate certificate;
   private String documentNumber;
   private String certificateLevel;
+  private String deviceIpAddress;
 
   public void setCertificate(X509Certificate certificate) {
     this.certificate = certificate;
@@ -58,4 +59,13 @@ public class SmartIdCertificate implements Serializable {
   public void setCertificateLevel(String certificateLevel) {
     this.certificateLevel = certificateLevel;
   }
+
+  public void setDeviceIpAddress(String deviceIpAddress) {
+    this.deviceIpAddress = deviceIpAddress;
+  }
+
+  public String getDeviceIpAddress() {
+    return deviceIpAddress;
+  }
+
 }

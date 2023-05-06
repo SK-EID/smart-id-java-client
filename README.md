@@ -102,12 +102,21 @@ logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 
 ### Get the IP address of user's device
 
-Smart-ID API returns the IP address of the user's device for subscribed Relying Parties.
-This info can be retrieved using one of:
+Smart-ID API returns the IP address of the user's device for subscribed Relying Parties who
+ask it to be returned.
 
-* [SmartIdAuthenticationResponse.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdAuthenticationResponse.java#:~:text=getDeviceIpAddress())
-* [SmartIdSignature.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdSignature.java#:~:text=getDeviceIpAddress())
-* [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/rest/dao/SessionStatus.java#:~:text=getDeviceIpAddress())
+Requesting for the IP address to be returned: 
+
+* [AuthenticationRequestBuilder.withShareMdClientIpAddress()](src/main/java/ee/sk/smartid/AuthenticationRequestBuilder.java) -> withShareMdClientIpAddress()
+* [SignatureRequestBuilder.withShareMdClientIpAddress()](src/main/java/ee/sk/smartid/SignatureRequestBuilder.java) -> withShareMdClientIpAddress()
+* [CertificateRequestBuilder.withShareMdClientIpAddress()](src/main/java/ee/sk/smartid/CertificateRequestBuilder.java) -> withShareMdClientIpAddress()
+
+
+The returned info can be retrieved using one of:
+
+* [SmartIdAuthenticationResponse.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdAuthenticationResponse.java) -> getDeviceIpAddress()
+* [SmartIdSignature.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdSignature.java) -> getDeviceIpAddress()
+* [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/rest/dao/SessionStatus.java) -> getDeviceIpAddress()
 
 
 ## Example of configuring the client
@@ -188,10 +197,16 @@ SmartIdAuthenticationResponse authenticationResponse = client
     .withAllowedInteractionsOrder(
             Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")
     ))
+    // we want to get the IP address of the device running Smart-ID app
+    // for the IP to be returned the service provider (SK) must switch on this option
+    .withShareMdClientIpAddress(true)
     .authenticate();
 
 // You need this later to pull user's signing certificate   
 String documentNumberForFurtherReference = authenticationResponse.getDocumentNumber();
+
+// We get IP of Smart-ID app since we made the request .withShareMdClientIpAddress(true)
+String deviceIpAddress = authenticationResponse.getDeviceIpAddress();
 ```
 
 Note that verificationCode should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify if the verification code displayed on the phone matches with the one shown on the web page.

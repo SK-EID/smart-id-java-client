@@ -253,7 +253,18 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     this.capabilities = new HashSet<>(Arrays.asList(capabilities));
     return this;
   }
- 
+
+  /**
+   * Ask to return the IP address of the mobile device where Smart-ID app was running.
+   * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
+   *
+   * @return this builder
+   */
+  public SignatureRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+    this.shareMdClientIpAddress = shareMdClientIpAddress;
+    return this;
+  }
+
   /**
    * @param allowedInteractionsOrder Preferred order of what dialog to present to user. What actually gets displayed depends on user's device and its software version.
    *                                 First option from this list that the device is capable of handling is displayed to the user.
@@ -360,6 +371,13 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
     request.setAllowedInteractionsOrder(getAllowedInteractionsOrder());
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
+    if (requestProperties.hasProperties()) {
+      request.setRequestProperties(requestProperties);
+    }
+
     return request;
   }
 }

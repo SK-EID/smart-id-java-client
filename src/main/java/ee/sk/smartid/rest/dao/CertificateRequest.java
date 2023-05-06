@@ -34,13 +34,20 @@ import java.util.Set;
 public class CertificateRequest implements Serializable {
 
   private String relyingPartyUUID;
+
   private String relyingPartyName;
+
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String certificateLevel;
+
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private String nonce;
+
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private Set capabilities;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private RequestProperties requestProperties;
 
   public String getCertificateLevel() {
     return certificateLevel;
@@ -81,4 +88,13 @@ public class CertificateRequest implements Serializable {
   public void setCapabilities(Set capabilities) {
     this.capabilities = capabilities;
   }
+
+  public RequestProperties getRequestProperties() {
+    return requestProperties;
+  }
+
+  public void setRequestProperties(RequestProperties requestProperties) {
+    this.requestProperties = requestProperties;
+  }
+
 }

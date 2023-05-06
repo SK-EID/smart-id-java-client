@@ -227,7 +227,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    * Specifies capabilities of the user
    * <p>
    *
-   * By default there are no specified capabilities.
+   * By default, there are no specified capabilities.
    * The capabilities need to be specified in case of
    * a restricted Smart ID user
    * {@link #withCapabilities(Capability...)}
@@ -247,6 +247,17 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
    */
   public AuthenticationRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
     this.allowedInteractionsOrder = allowedInteractionsOrder;
+    return this;
+  }
+
+  /**
+   * Ask to return the IP address of the mobile device where Smart-ID app was running.
+   * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
+   *
+   * @return this builder
+   */
+  public AuthenticationRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+    this.shareMdClientIpAddress = shareMdClientIpAddress;
     return this;
   }
 
@@ -360,6 +371,13 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
     request.setNonce(getNonce());
     request.setCapabilities(getCapabilities());
     request.setAllowedInteractionsOrder(getAllowedInteractionsOrder());
+
+    RequestProperties requestProperties = new RequestProperties();
+    requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
+    if (requestProperties.hasProperties()) {
+      request.setRequestProperties(requestProperties);
+    }
+
     return request;
   }
 

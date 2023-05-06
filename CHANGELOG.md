@@ -2,10 +2,20 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.3] - UPCOMING
+- To request the IP address of the device running Smart-ID app, the following methods were added:
+  - AuthenticationRequestBuilder.withShareMdClientIpAddress(boolean)
+  - CertificateRequestBuilder.withShareMdClientIpAddress(boolean)
+  - SignatureRequestBuilder.withShareMdClientIpAddress(boolean)
+- The IP address returned can be read out using:
+  - SmartIdAuthenticationResponse.getDeviceIpAddress()
+  - SmartIdCertificate.getDeviceIpAddress()
+  - SmartIdSignature.getDeviceIpAddress()
+
 ## [2.2.2] - 2022-11-14
 
 ### Changed
--  upgrade jackson, jersey and dependency-check-maven plugin
+- upgrade jackson, jersey and dependency-check-maven plugin
 ### Documented
 - How to extract date-of-birth from a certificate added as a separate paragraph to readme.
 - Added two tests into SmartIdIntegrationTest that demonstrate fetching and parsing a certificate with date-of-birth
@@ -84,7 +94,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - all endpoints using `NationalIdentityNumber` are now removed as this functionality has been removed from Smart-ID API 2.0
 - errors that the caller cannot recover from are now removed from method throws list.
 - Hard-coded certificates were removed together with methods:
-  -  SmartIdClient.useDemoEnvSSLCertificates()
+  - SmartIdClient.useDemoEnvSSLCertificates()
   - SmartIdClient.useLiveEnvSSLCertificates()
 
 ## [1.6] - 2020-05-25
@@ -101,6 +111,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - AuthenticationRequestBuilder method withRequestProperties access modifier changed to public
 
 ### Added
+
 - Maven wrapper to project
 
 ## [1.5] - 2019-11-12
@@ -127,7 +138,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.3] - 2019-09-13
 ### Added
 - Capabilities parameter ([#25](https://github.com/SK-EID/smart-id-java-client/pull/25))
-- [Request properties](https://github.com/SK-EID/smart-id-documentation#416-request-properties) (vcChoice) for authentication and signing ([#21](https://github.com/SK-EID/smart-id-java-client/pull/21)) 
+- [Request properties](https://github.com/SK-EID/smart-id-documentation#416-request-properties) (vcChoice) for authentication and signing ([#21](https://github.com/SK-EID/smart-id-java-client/pull/21))
 
 ## [1.2] - 2019-08-21
 ### Added

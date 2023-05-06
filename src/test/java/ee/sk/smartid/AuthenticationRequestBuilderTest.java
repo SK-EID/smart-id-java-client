@@ -44,8 +44,7 @@ import java.util.Collections;
 import static ee.sk.smartid.DummyData.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class AuthenticationRequestBuilderTest {
 
@@ -157,6 +156,56 @@ public class AuthenticationRequestBuilderTest {
         .authenticate();
 
     assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), null);
+    assertCorrectSessionRequestMade();
+    assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
+  }
+
+  @Test
+  public void authenticate_withShareMdClientIpAddressTrue() throws Exception {
+    AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
+
+    SmartIdAuthenticationResponse authenticationResponse = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withCertificateLevel("QUALIFIED")
+        .withAuthenticationHash(authenticationHash)
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
+        .withShareMdClientIpAddress(true)
+        .authenticate();
+
+    assertNotNull("getRequestProperties must be set withShareMdClientIpAddress",
+            connector.authenticationSessionRequestUsed.getRequestProperties());
+    assertTrue("requestProperties.shareMdClientIpAddress must be true",
+    connector.authenticationSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress());
+
+    assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), "QUALIFIED");
+    assertCorrectSessionRequestMade();
+    assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
+  }
+
+  @Test
+  public void authenticate_withShareMdClientIpAddressFalse() throws Exception {
+    AuthenticationHash authenticationHash = AuthenticationHash.generateRandomHash();
+
+    SmartIdAuthenticationResponse authenticationResponse = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withCertificateLevel("QUALIFIED")
+        .withAuthenticationHash(authenticationHash)
+        .withDocumentNumber("PNOEE-31111111111")
+        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
+        .withShareMdClientIpAddress(false)
+        .authenticate();
+
+    assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), "QUALIFIED");
+
+    assertNotNull("getRequestProperties must be set withShareMdClientIpAddress",
+            connector.authenticationSessionRequestUsed.getRequestProperties());
+
+    assertFalse("requestProperties.shareMdClientIpAddress must be false",
+    connector.authenticationSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress());
+
     assertCorrectSessionRequestMade();
     assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
   }
@@ -550,6 +599,7 @@ public class AuthenticationRequestBuilderTest {
     status.setSignature(signature);
     status.setCert(certificate);
     status.setInteractionFlowUsed("displayTextAndPIN");
+    status.setDeviceIpAddress("4.4.4.4");
     return status;
   }
 

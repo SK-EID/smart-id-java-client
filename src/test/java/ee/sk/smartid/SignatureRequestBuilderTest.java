@@ -43,8 +43,7 @@ import static ee.sk.smartid.DummyData.*;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class SignatureRequestBuilderTest {
 
@@ -106,7 +105,7 @@ public class SignatureRequestBuilderTest {
   }
 
   @Test
-  public void signWithoutCertificateLevel_shouldPass() {
+  public void sign_withoutCertificateLevel() {
     SignableHash hashToSign = new SignableHash();
     hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
     hashToSign.setHashType(HashType.SHA256);
@@ -121,6 +120,64 @@ public class SignatureRequestBuilderTest {
         .sign();
 
     assertCorrectSignatureRequestMade(null);
+    assertCorrectSessionRequestMade();
+    assertSignatureCorrect(signature);
+  }
+
+  @Test
+  public void sign_withShareMdClientIpAddressTrue() {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+    hashToSign.setHashType(HashType.SHA256);
+
+    SmartIdSignature signature = builder
+        .withRelyingPartyUUID("relying-party-uuid")
+        .withRelyingPartyName("relying-party-name")
+        .withSignableHash(hashToSign)
+        .withDocumentNumber("PNOEE-31111111111")
+        .withCertificateLevel("QUALIFIED")
+        .withAllowedInteractionsOrder(asList(Interaction.confirmationMessageAndVerificationCodeChoice("Sign the contract?"),
+                Interaction.verificationCodeChoice("Sign hash?")))
+        .withShareMdClientIpAddress(true)
+        .sign();
+
+    assertCorrectSignatureRequestMade("QUALIFIED");
+
+    assertNotNull("getRequestProperties must be set withShareMdClientIpAddress",
+            connector.signatureSessionRequestUsed.getRequestProperties());
+
+    assertTrue("requestProperties.shareMdClientIpAddress must be true",
+            connector.signatureSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress());
+
+    assertCorrectSessionRequestMade();
+    assertSignatureCorrect(signature);
+  }
+
+  @Test
+  public void sign_withShareMdClientIpAddressFalse() {
+    SignableHash hashToSign = new SignableHash();
+    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+    hashToSign.setHashType(HashType.SHA256);
+
+    SmartIdSignature signature = builder
+            .withRelyingPartyUUID("relying-party-uuid")
+            .withRelyingPartyName("relying-party-name")
+            .withSignableHash(hashToSign)
+            .withDocumentNumber("PNOEE-31111111111")
+            .withCertificateLevel("QUALIFIED")
+            .withAllowedInteractionsOrder(asList(Interaction.confirmationMessageAndVerificationCodeChoice("Sign the contract?"),
+                    Interaction.verificationCodeChoice("Sign hash?")))
+            .withShareMdClientIpAddress(false)
+            .sign();
+
+    assertCorrectSignatureRequestMade("QUALIFIED");
+
+    assertNotNull("getRequestProperties must be set withShareMdClientIpAddress",
+            connector.signatureSessionRequestUsed.getRequestProperties());
+
+    assertFalse("requestProperties.shareMdClientIpAddress must be false",
+            connector.signatureSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress());
+
     assertCorrectSessionRequestMade();
     assertSignatureCorrect(signature);
   }
