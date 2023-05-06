@@ -7,7 +7,6 @@
 # Smart-ID Java client
 
 This version of the library uses Smart-ID API v 2.0.
-For using Smart-ID API v. 1.0 see [Smart-ID Java Client 1.X](https://github.com/SK-EID/smart-id-java-client/tree/1.x).
 
 
 # Table of contents
