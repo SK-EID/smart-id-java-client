@@ -26,40 +26,41 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
+import ee.sk.SmartIdDemoIntegrationTest;
+import ee.sk.SmartIdDemoTestRunner;
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.rest.dao.*;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import static ee.sk.test.smartid.integration.SmartIdIntegrationTest.TEST_AGAINST_SMART_ID_DEMO;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assume.assumeTrue;
 
+@RunWith(SmartIdDemoTestRunner.class)
+@SmartIdDemoIntegrationTest
 public class SmartIdRestIntegrationTest {
 
   private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
   private static final String RELYING_PARTY_NAME = "DEMO";
-  private static final String DOCUMENT_NUMBER = "PNOLT-30303039903-MOCK-Q";
-  private static final String DOCUMENT_NUMBER_LT = "PNOLT-30303039914-MOCK-Q";
+  private static final String DOCUMENT_NUMBER = "PNOEE-50609019996-MOCK-Q";
+  private static final String DOCUMENT_NUMBER_LT = "PNOLT-50609019996-MOCK-Q";
   private static final String DATA_TO_SIGN = "Hello World!";
   private static final String CERTIFICATE_LEVEL_QUALIFIED = "QUALIFIED";
+
   private SmartIdConnector connector;
 
   @Before
   public void setUp() {
     connector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v2/");
-
-    // this allows to switch off tests going against smart-id demo env
-    assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
   }
 
   @Test
@@ -77,7 +78,7 @@ public class SmartIdRestIntegrationTest {
 
   @Test
   public void authenticate_withSemanticsIdentifier() throws Exception {
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
+    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010906-29990");
 
     AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
     AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, request);

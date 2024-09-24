@@ -26,6 +26,9 @@ package ee.sk.test.smartid.integration;
  * #L%
  */
 
+import ee.sk.FileUtil;
+import ee.sk.SmartIdDemoIntegrationTest;
+import ee.sk.SmartIdDemoTestRunner;
 import ee.sk.smartid.*;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -42,6 +45,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,13 +59,11 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.*;
-import static ee.sk.test.smartid.integration.SmartIdIntegrationTest.TEST_AGAINST_SMART_ID_DEMO;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assume.assumeTrue;
 
 /**
  * These tests contain snippets used in Readme.md
@@ -69,53 +71,18 @@ import static org.junit.Assume.assumeTrue;
  * If anything changes in this class (except setUp method) the changes must be reflected in Readme.md
  * These are not real tests!
  */
+@RunWith(SmartIdDemoTestRunner.class)
+@SmartIdDemoIntegrationTest
 public class ReadmeTest {
     private static final Logger logger = LoggerFactory.getLogger(ReadmeTest.class);
 
-    SmartIdClient client;
+    private static final String DEMO_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_demo_sk_ee.pem");
 
-    SmartIdAuthenticationResponse authenticationResponse;
+    private SmartIdClient client;
 
-    SignableHash hashToSign;
+    private SmartIdAuthenticationResponse authenticationResponse;
 
-    public static final String DEMO_HOST_SSL_CERTIFICATE = "-----BEGIN CERTIFICATE-----\n"
-    + "MIIGoDCCBYigAwIBAgIQBOJYR4uzB/mihrGnWl+QIjANBgkqhkiG9w0BAQsFADBP\n"
-    + "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMSkwJwYDVQQDEyBE\n"
-    + "aWdpQ2VydCBUTFMgUlNBIFNIQTI1NiAyMDIwIENBMTAeFw0yMjA5MTYwMDAwMDBa\n"
-    + "Fw0yMzEwMTcyMzU5NTlaMFUxCzAJBgNVBAYTAkVFMRAwDgYDVQQHEwdUYWxsaW5u\n"
-    + "MRswGQYDVQQKExJTSyBJRCBTb2x1dGlvbnMgQVMxFzAVBgNVBAMTDnNpZC5kZW1v\n"
-    + "LnNrLmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoDLLTK+NEKsB\n"
-    + "POdOEjAK7/A8JTmZXlRkjM1aX0pfH6BCIGn3ZJd9M6iSR+KKQEfT0cj7JWvfMjZT\n"
-    + "oVHxOPbUaIUTdu22akLDy0kuZN78/RdqHUPq9WTKZsG3r03bi6tGqFb2KfzhZ2Q9\n"
-    + "zfS8Yn5N0iPeMh48BsreEdumb4F97JSEzjzFdGBb5wED//pHUL2VRoX1hzKV/6D8\n"
-    + "/sWmbMdGTYcXds/JbOIFU6EgAO2ozJUQmTbR2XRJYawKYAm4CEyY49zzvOldjOUC\n"
-    + "VjbheCxPJB0OeqYmfxm6QNqEi33Jsof9Y8uRl/DrEGexApd0bQkcGoGyBB08MWyu\n"
-    + "xjjmjh6TSQIDAQABo4IDcDCCA2wwHwYDVR0jBBgwFoAUt2ui6qiqhIx56rTaD5iy\n"
-    + "xZV2ufQwHQYDVR0OBBYEFIrtybLjSa2jrMVWly+c7KCBvpifMBkGA1UdEQQSMBCC\n"
-    + "DnNpZC5kZW1vLnNrLmVlMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEF\n"
-    + "BQcDAQYIKwYBBQUHAwIwgY8GA1UdHwSBhzCBhDBAoD6gPIY6aHR0cDovL2NybDMu\n"
-    + "ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VExTUlNBU0hBMjU2MjAyMENBMS00LmNybDBA\n"
-    + "oD6gPIY6aHR0cDovL2NybDQuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VExTUlNBU0hB\n"
-    + "MjU2MjAyMENBMS00LmNybDA+BgNVHSAENzA1MDMGBmeBDAECAjApMCcGCCsGAQUF\n"
-    + "BwIBFhtodHRwOi8vd3d3LmRpZ2ljZXJ0LmNvbS9DUFMwfwYIKwYBBQUHAQEEczBx\n"
-    + "MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wSQYIKwYBBQUH\n"
-    + "MAKGPWh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFRMU1JTQVNI\n"
-    + "QTI1NjIwMjBDQTEtMS5jcnQwCQYDVR0TBAIwADCCAYAGCisGAQQB1nkCBAIEggFw\n"
-    + "BIIBbAFqAHcA6D7Q2j71BjUy51covIlryQPTy9ERa+zraeF3fW0GvW4AAAGDRaWg\n"
-    + "0AAABAMASDBGAiEA0YjYuhVcbwncKefVPz4d8IrAQQ6ahcw5mOFufHTwbV8CIQCk\n"
-    + "oYVmHeYe9C9WeHYT4sKozs3ubeNqxPDRjKKaCPhtzQB2ADXPGRu/sWxXvw+tTG1C\n"
-    + "y7u2JyAmUeo/4SrvqAPDO9ZMAAABg0WloQQAAAQDAEcwRQIhALhRwut2GdVSxBnG\n"
-    + "KJOvCyaCySEhF7CXkhJRYsaZhBADAiB2X85UxwB5030w+1pX0QxJ4Z3A2sLwrwYR\n"
-    + "9/+yt4NGLwB3ALc++yTfnE26dfI5xbpY9Gxd/ELPep81xJ4dCYEl7bSZAAABg0Wl\n"
-    + "oRUAAAQDAEgwRgIhAPFc0KtyRqpNV3muD5aCzgE0RuQxsz6KPYKX4I49hfZeAiEA\n"
-    + "yuqiqCAtBkt/G7Wq4SA+/4xDyRKwXo5Zu8QuGGx9taYwDQYJKoZIhvcNAQELBQAD\n"
-    + "ggEBADTzrIM6pAvIClyXTGtyceDKckkGENmFmDvwL6I0Tab/s8uLlREpDhRPQpFQ\n"
-    + "hsAjaxWrfUv25EdYelBvaiOrCUwI3W3zlLy4gcgagEyTJ71lz7cH0VwFWjTsfXXc\n"
-    + "osD5sXMfipvkgmX+XgYJjsDY/HDFQyZp7aoTVqAlOfqkfsHi1EGdd6AGKP0yHokU\n"
-    + "3sUH1X6kDQdSfu1iwRPCn1CGS6xU1VJ6mJDU8SioBQKBAQkCs5UVdjdH+o99xsND\n"
-    + "8kfVHlchc+SxsI5cYhc4gUjjtX/U3FDZcW1IfZDil9tQf9l6rU/ZXMIPHeQWTPAa\n"
-    + "nUMrQKgVkBFH6CVchyHXPejDNGA=\n"
-    + "-----END CERTIFICATE-----";
+    private SignableHash hashToSign;
 
     @Before
     public void setUp() {
@@ -132,9 +99,6 @@ public class ReadmeTest {
         // calculate hash from the document you want to sign (i.e. use DigiDoc4J or other libraries)
         // this class also has a method to set hash as bite array
         hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-        // this allows to switch off tests going against smart-id demo env
-        assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
     }
 
     /*
@@ -414,7 +378,7 @@ create the AsicE/BDoc container with files in it and get the hash to be signed.
 
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOLT-30303039914-MOCK-Q") // returned as authentication result
+                .withDocumentNumber("PNOLT-50609019996-MOCK-Q") // returned as authentication result
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
@@ -463,7 +427,7 @@ Every Smart-ID app supports this interaction flow and there is no need to provid
     public void documentInteractionOrderMostCommon() {
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
+                .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Collections.singletonList(
@@ -490,7 +454,7 @@ If user's app doesn't support displaying verification code choice then system fa
         try {
             SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
+                .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Arrays.asList(
@@ -518,7 +482,7 @@ If the Smart-ID app in user's smart device doesn't support this feature then the
     public void documentInteractionOrderConfirmationWithFallbackToPin() {
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOLT-30303039914-MOCK-Q") //
+                .withDocumentNumber("PNOLT-50609019996-MOCK-Q") //
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
@@ -586,7 +550,7 @@ If End User's phone doesn't support required flow the library throws `RequiredIn
         try {
             client
                 .createSignature()
-                .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
+                .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Collections.singletonList(
@@ -667,7 +631,6 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
         client.setNetworkConnectionConfig(clientConfig);
     }
 
-
     @Test
     @Ignore("you need to run a proxy to run this test")
     public void document_setProxy_withJbossRestEasy() throws Exception {
@@ -702,10 +665,6 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), smartIdConnector);
         assertAuthenticationResponseCreated(sessionStatus);
-
-
-        // this allows to switch off tests going against smart-id demo env
-        assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
     }
 
     @Test
@@ -740,10 +699,6 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), smartIdConnector);
         assertAuthenticationResponseCreated(sessionStatus);
-
-        // this allows to switch off tests going against smart-id demo env
-        assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
-
     }
 
 }

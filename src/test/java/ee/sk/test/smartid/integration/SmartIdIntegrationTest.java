@@ -26,20 +26,6 @@ package ee.sk.test.smartid.integration;
  * #L%
  */
 
-import ee.sk.smartid.*;
-import ee.sk.smartid.rest.dao.Interaction;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.util.CertificateAttributeUtil;
-import ee.sk.smartid.util.NationalIdentityNumberUtil;
-import org.apache.commons.codec.binary.Base64;
-import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.security.cert.CertificateEncodingException;
-import java.time.LocalDate;
-import java.util.Collections;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
@@ -48,62 +34,44 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assume.assumeTrue;
 
+import java.security.cert.CertificateEncodingException;
+import java.time.LocalDate;
+import java.util.Collections;
+
+import org.apache.commons.codec.binary.Base64;
+import org.hamcrest.CoreMatchers;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import ee.sk.FileUtil;
+import ee.sk.SmartIdDemoIntegrationTest;
+import ee.sk.SmartIdDemoTestRunner;
+import ee.sk.smartid.AuthenticationHash;
+import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationResponseValidator;
+import ee.sk.smartid.SignableData;
+import ee.sk.smartid.SmartIdAuthenticationResponse;
+import ee.sk.smartid.SmartIdCertificate;
+import ee.sk.smartid.SmartIdClient;
+import ee.sk.smartid.SmartIdSignature;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+
+@RunWith(SmartIdDemoTestRunner.class)
+@SmartIdDemoIntegrationTest
 public class SmartIdIntegrationTest {
 
     private static final String HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v2/";
     private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
     private static final String RELYING_PARTY_NAME = "DEMO";
-    private static final String DOCUMENT_NUMBER = "PNOLT-30303039914-MOCK-Q";
     private static final String DATA_TO_SIGN = "Well hello there!";
     private static final String CERTIFICATE_LEVEL_QUALIFIED = "QUALIFIED";
     private static final String CERTIFICATE_LEVEL_ADVANCED = "ADVANCED";
+
+    private static final String DEMO_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_demo_sk_ee.pem");
+
     private SmartIdClient client;
-
-    /**
-     *  Allows switching off tests going against smart-id demo env.
-     *  This is sometimes needed if the test data in smart-id is temporarily broken.
-     */
-    public static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
-
-    public static final String DEMO_HOST_SSL_CERTIFICATE = "-----BEGIN CERTIFICATE-----\n"
-    + "MIIGoDCCBYigAwIBAgIQBOJYR4uzB/mihrGnWl+QIjANBgkqhkiG9w0BAQsFADBP\n"
-    + "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMSkwJwYDVQQDEyBE\n"
-    + "aWdpQ2VydCBUTFMgUlNBIFNIQTI1NiAyMDIwIENBMTAeFw0yMjA5MTYwMDAwMDBa\n"
-    + "Fw0yMzEwMTcyMzU5NTlaMFUxCzAJBgNVBAYTAkVFMRAwDgYDVQQHEwdUYWxsaW5u\n"
-    + "MRswGQYDVQQKExJTSyBJRCBTb2x1dGlvbnMgQVMxFzAVBgNVBAMTDnNpZC5kZW1v\n"
-    + "LnNrLmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoDLLTK+NEKsB\n"
-    + "POdOEjAK7/A8JTmZXlRkjM1aX0pfH6BCIGn3ZJd9M6iSR+KKQEfT0cj7JWvfMjZT\n"
-    + "oVHxOPbUaIUTdu22akLDy0kuZN78/RdqHUPq9WTKZsG3r03bi6tGqFb2KfzhZ2Q9\n"
-    + "zfS8Yn5N0iPeMh48BsreEdumb4F97JSEzjzFdGBb5wED//pHUL2VRoX1hzKV/6D8\n"
-    + "/sWmbMdGTYcXds/JbOIFU6EgAO2ozJUQmTbR2XRJYawKYAm4CEyY49zzvOldjOUC\n"
-    + "VjbheCxPJB0OeqYmfxm6QNqEi33Jsof9Y8uRl/DrEGexApd0bQkcGoGyBB08MWyu\n"
-    + "xjjmjh6TSQIDAQABo4IDcDCCA2wwHwYDVR0jBBgwFoAUt2ui6qiqhIx56rTaD5iy\n"
-    + "xZV2ufQwHQYDVR0OBBYEFIrtybLjSa2jrMVWly+c7KCBvpifMBkGA1UdEQQSMBCC\n"
-    + "DnNpZC5kZW1vLnNrLmVlMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEF\n"
-    + "BQcDAQYIKwYBBQUHAwIwgY8GA1UdHwSBhzCBhDBAoD6gPIY6aHR0cDovL2NybDMu\n"
-    + "ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VExTUlNBU0hBMjU2MjAyMENBMS00LmNybDBA\n"
-    + "oD6gPIY6aHR0cDovL2NybDQuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VExTUlNBU0hB\n"
-    + "MjU2MjAyMENBMS00LmNybDA+BgNVHSAENzA1MDMGBmeBDAECAjApMCcGCCsGAQUF\n"
-    + "BwIBFhtodHRwOi8vd3d3LmRpZ2ljZXJ0LmNvbS9DUFMwfwYIKwYBBQUHAQEEczBx\n"
-    + "MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wSQYIKwYBBQUH\n"
-    + "MAKGPWh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFRMU1JTQVNI\n"
-    + "QTI1NjIwMjBDQTEtMS5jcnQwCQYDVR0TBAIwADCCAYAGCisGAQQB1nkCBAIEggFw\n"
-    + "BIIBbAFqAHcA6D7Q2j71BjUy51covIlryQPTy9ERa+zraeF3fW0GvW4AAAGDRaWg\n"
-    + "0AAABAMASDBGAiEA0YjYuhVcbwncKefVPz4d8IrAQQ6ahcw5mOFufHTwbV8CIQCk\n"
-    + "oYVmHeYe9C9WeHYT4sKozs3ubeNqxPDRjKKaCPhtzQB2ADXPGRu/sWxXvw+tTG1C\n"
-    + "y7u2JyAmUeo/4SrvqAPDO9ZMAAABg0WloQQAAAQDAEcwRQIhALhRwut2GdVSxBnG\n"
-    + "KJOvCyaCySEhF7CXkhJRYsaZhBADAiB2X85UxwB5030w+1pX0QxJ4Z3A2sLwrwYR\n"
-    + "9/+yt4NGLwB3ALc++yTfnE26dfI5xbpY9Gxd/ELPep81xJ4dCYEl7bSZAAABg0Wl\n"
-    + "oRUAAAQDAEgwRgIhAPFc0KtyRqpNV3muD5aCzgE0RuQxsz6KPYKX4I49hfZeAiEA\n"
-    + "yuqiqCAtBkt/G7Wq4SA+/4xDyRKwXo5Zu8QuGGx9taYwDQYJKoZIhvcNAQELBQAD\n"
-    + "ggEBADTzrIM6pAvIClyXTGtyceDKckkGENmFmDvwL6I0Tab/s8uLlREpDhRPQpFQ\n"
-    + "hsAjaxWrfUv25EdYelBvaiOrCUwI3W3zlLy4gcgagEyTJ71lz7cH0VwFWjTsfXXc\n"
-    + "osD5sXMfipvkgmX+XgYJjsDY/HDFQyZp7aoTVqAlOfqkfsHi1EGdd6AGKP0yHokU\n"
-    + "3sUH1X6kDQdSfu1iwRPCn1CGS6xU1VJ6mJDU8SioBQKBAQkCs5UVdjdH+o99xsND\n"
-    + "8kfVHlchc+SxsI5cYhc4gUjjtX/U3FDZcW1IfZDil9tQf9l6rU/ZXMIPHeQWTPAa\n"
-    + "nUMrQKgVkBFH6CVchyHXPejDNGA=\n"
-    + "-----END CERTIFICATE-----";
-
 
     @Before
     public void setUp() {
@@ -114,7 +82,6 @@ public class SmartIdIntegrationTest {
         client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
 
         // temporary solution to skip tests going against smart-id demo env
-        assumeTrue(TEST_AGAINST_SMART_ID_DEMO);
     }
 
     @Test
@@ -123,14 +90,14 @@ public class SmartIdIntegrationTest {
                 .getCertificate()
                 .withRelyingPartyUUID(RELYING_PARTY_UUID)
                 .withRelyingPartyName(RELYING_PARTY_NAME)
-                .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LT, "30303039914"))
+                .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LT, "50609019996"))
                 .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
                 .withNonce("012345678901234567890123456789")
                 .fetch();
 
-        assertThat(certificateResponse.getDocumentNumber(), is("PNOLT-30303039914-MOCK-Q"));
+        assertThat(certificateResponse.getDocumentNumber(), is("PNOLT-50609019996-MOCK-Q"));
         assertThat(certificateResponse.getCertificateLevel(), is("QUALIFIED"));
-        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
+        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
     }
 
     @Test
@@ -139,14 +106,14 @@ public class SmartIdIntegrationTest {
                 .getCertificate()
                 .withRelyingPartyUUID(RELYING_PARTY_UUID)
                 .withRelyingPartyName(RELYING_PARTY_NAME)
-                .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030403-10075"))
+                .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010906-29990"))
                 .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
                 .withNonce("012345678901234567890123456789")
                 .fetch();
 
-        assertThat(certificateResponse.getDocumentNumber(), is("PNOLV-030403-10075-ZH4M-Q"));
+        assertThat(certificateResponse.getDocumentNumber(), is("PNOLV-010906-29990-MOCK-Q"));
         assertThat(certificateResponse.getCertificateLevel(), is("QUALIFIED"));
-        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
+        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
     }
 
     @Test
@@ -166,7 +133,7 @@ public class SmartIdIntegrationTest {
 
         AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateResponse.getCertificate());
         assertThat(identity.getDateOfBirth().isPresent(), CoreMatchers.is(true));
-        assertThat(identity.getDateOfBirth().get(), CoreMatchers.is(LocalDate.of(1999,12,31)));
+        assertThat(identity.getDateOfBirth().get(), CoreMatchers.is(LocalDate.of(1999, 12, 31)));
     }
 
     @Test
@@ -181,13 +148,12 @@ public class SmartIdIntegrationTest {
                 .fetch();
 
 
-
         assertThat(certificateResponse.getDocumentNumber(), is("PNOEE-40404049996-MOCK-Q"));
         assertThat(certificateResponse.getCertificateLevel(), is("QUALIFIED"));
         assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
 
         AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateResponse.getCertificate());
-        assertThat(identity.getDateOfBirth().orElse(null), CoreMatchers.is(LocalDate.of(1904,4,4)));
+        assertThat(identity.getDateOfBirth().orElse(null), CoreMatchers.is(LocalDate.of(1904, 4, 4)));
 
     }
 
@@ -207,7 +173,7 @@ public class SmartIdIntegrationTest {
         assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
 
         AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateResponse.getCertificate());
-        assertThat(identity.getDateOfBirth().orElse(null), CoreMatchers.is(LocalDate.of(1903,3,3)));
+        assertThat(identity.getDateOfBirth().orElse(null), CoreMatchers.is(LocalDate.of(1903, 3, 3)));
     }
 
     @Test
@@ -216,25 +182,25 @@ public class SmartIdIntegrationTest {
                 .getCertificate()
                 .withRelyingPartyUUID(RELYING_PARTY_UUID)
                 .withRelyingPartyName(RELYING_PARTY_NAME)
-                .withDocumentNumber(DOCUMENT_NUMBER)
+                .withDocumentNumber("PNOEE-50609019996-MOCK-Q")
                 .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
                 .fetch();
 
-        assertThat(certificateResponse.getDocumentNumber(), is("PNOLT-30303039914-MOCK-Q"));
+        assertThat(certificateResponse.getDocumentNumber(), is("PNOEE-50609019996-MOCK-Q"));
         assertThat(certificateResponse.getCertificateLevel(), is("QUALIFIED"));
-        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
+        assertThat(Base64.encodeBase64String(certificateResponse.getCertificate().getEncoded()), is("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"));
     }
 
 
     @Test
     public void getCertificateAndSignHash_withValidRelayingPartyAndUser_successfulCertificateRequestAndDataSigning() {
         SmartIdCertificate certificateResponse = client
-             .getCertificate()
-             .withRelyingPartyUUID(RELYING_PARTY_UUID)
-             .withRelyingPartyName(RELYING_PARTY_NAME)
-             .withDocumentNumber("PNOLT-30303039914-MOCK-Q")
-             .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
-             .fetch();
+                .getCertificate()
+                .withRelyingPartyUUID(RELYING_PARTY_UUID)
+                .withRelyingPartyName(RELYING_PARTY_NAME)
+                .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
+                .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+                .fetch();
 
         assertCertificateChosen(certificateResponse);
 
@@ -242,16 +208,16 @@ public class SmartIdIntegrationTest {
         SignableData dataToSign = new SignableData(DATA_TO_SIGN.getBytes());
 
         SmartIdSignature signature = client
-             .createSignature()
-             .withRelyingPartyUUID(RELYING_PARTY_UUID)
-             .withRelyingPartyName(RELYING_PARTY_NAME)
-             .withDocumentNumber(documentNumber)
-             .withSignableData(dataToSign)
-             .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
-             .withAllowedInteractionsOrder(
-                     Collections.singletonList(Interaction.displayTextAndPIN("012345678901234567890123456789012345678901234567890123456789"))
-             )
-             .sign();
+                .createSignature()
+                .withRelyingPartyUUID(RELYING_PARTY_UUID)
+                .withRelyingPartyName(RELYING_PARTY_NAME)
+                .withDocumentNumber(documentNumber)
+                .withSignableData(dataToSign)
+                .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+                .withAllowedInteractionsOrder(
+                        Collections.singletonList(Interaction.displayTextAndPIN("012345678901234567890123456789012345678901234567890123456789"))
+                )
+                .sign();
 
         assertSignatureCreated(signature);
     }
@@ -262,15 +228,15 @@ public class SmartIdIntegrationTest {
         assertNotNull(authenticationHash.calculateVerificationCode());
 
         SmartIdAuthenticationResponse authenticationResponse = client
-             .createAuthentication()
-             .withRelyingPartyUUID(RELYING_PARTY_UUID)
-             .withRelyingPartyName(RELYING_PARTY_NAME)
-             .withDocumentNumber(DOCUMENT_NUMBER)
-             .withAuthenticationHash(authenticationHash)
-             .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
-             .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
-             .withShareMdClientIpAddress(true)
-             .authenticate();
+                .createAuthentication()
+                .withRelyingPartyUUID(RELYING_PARTY_UUID)
+                .withRelyingPartyName(RELYING_PARTY_NAME)
+                .withDocumentNumber("PNOLT-40404049996-MOCK-Q")
+                .withAuthenticationHash(authenticationHash)
+                .withCertificateLevel(CERTIFICATE_LEVEL_QUALIFIED)
+                .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
+                .withShareMdClientIpAddress(true)
+                .authenticate();
 
         assertAuthenticationResponseCreated(authenticationResponse, authenticationHash.getHashInBase64());
 
@@ -279,7 +245,7 @@ public class SmartIdIntegrationTest {
 
         assertThat(authenticationIdentity.getGivenName(), is("OK"));
         assertThat(authenticationIdentity.getSurname(), is("TESTNUMBER"));
-        assertThat(authenticationIdentity.getIdentityNumber(), is("30303039914"));
+        assertThat(authenticationIdentity.getIdentityNumber(), is("40404049996"));
         assertThat(authenticationIdentity.getCountry(), is("LT"));
 
         System.out.println("Device IP: " + authenticationResponse.getDeviceIpAddress());
