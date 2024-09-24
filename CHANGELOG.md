@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated java to version 17
 - Updated slf4j-api to version 2.0.16
 - Updated jackson dependencies to version 2.17.2
+- Added jakarta.ws.rs:jakarta.ws.rs-api
 
 ## [2.3] - 2023-05-06
 - To request the IP address of the device running Smart-ID app, the following methods were added:

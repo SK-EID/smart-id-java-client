@@ -87,6 +87,12 @@
             <version>2.0.16</version>
         </dependency>
 
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <!-- to build with Java >= 9 -->
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
