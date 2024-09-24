@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [3.0] - upcoming
+- Updated java to version 17
+
 ## [2.3] - 2023-05-06
 - To request the IP address of the device running Smart-ID app, the following methods were added:
   - AuthenticationRequestBuilder.withShareMdClientIpAddress(boolean)

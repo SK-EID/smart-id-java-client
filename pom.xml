@@ -43,8 +43,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <jackson.version>2.14.2</jackson.version>
         <jackson.annotations.version>2.14.2</jackson.annotations.version>
         <jersey.version>3.0.10</jersey.version><!-- NB! 3.1.x does not work with Java 8 -->
@@ -154,7 +154,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.6</version>
+                <version>0.8.12</version>
                 <executions>
                     <execution>
                         <goals>
