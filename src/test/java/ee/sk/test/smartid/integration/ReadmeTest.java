@@ -654,7 +654,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
         // CODE EXAMPLE ENDS HERE
 
 
-        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010906-29990");
 
         AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
         SmartIdConnector smartIdConnector = client.getSmartIdConnector();
@@ -688,7 +688,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
 
         // CODE EXAMPLE ENDS HERE
 
-        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010906-29990");
 
         AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
         SmartIdConnector smartIdConnector = client.getSmartIdConnector();
