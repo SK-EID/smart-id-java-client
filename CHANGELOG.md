@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Updated jackson dependencies to version 2.17.2
 - Added jakarta.ws.rs:jakarta.ws.rs-api
 - Updated jersey dependencies to version 3.1.8
+- Updated bouncy-castle artifact to bcprov-jdk18on on version 1.78.1
 
 ## [2.3] - 2023-05-06
 - To request the IP address of the device running Smart-ID app, the following methods were added:
