@@ -48,7 +48,7 @@
         <jackson.version>2.17.2</jackson.version>
         <jackson.annotations.version>2.17.2</jackson.annotations.version>
         <jersey.version>3.1.8</jersey.version>
-        <resteasy.version>6.0.3.Final</resteasy.version><!-- 6.1+ doesn't work with Java 8 -->
+        <resteasy.version>6.2.10.Final</resteasy.version>
     </properties>
 
     <dependencies>
@@ -127,9 +127,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
+            <groupId>org.wiremock</groupId>
             <artifactId>wiremock</artifactId>
-            <version>2.27.2</version>
+            <version>3.9.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
