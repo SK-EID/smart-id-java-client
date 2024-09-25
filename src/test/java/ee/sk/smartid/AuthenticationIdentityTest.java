@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,14 +26,15 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import org.junit.jupiter.api.Test;
+
 public class AuthenticationIdentityTest {
 
-    @SuppressWarnings( "deprecation" )
+    @SuppressWarnings("deprecation")
     @Test
     public void setSurName() {
         AuthenticationIdentity authenticationIdentity = new AuthenticationIdentity();
@@ -42,7 +43,7 @@ public class AuthenticationIdentityTest {
         assertThat(authenticationIdentity.getSurname(), is("surname1"));
     }
 
-    @SuppressWarnings( "deprecation" )
+    @SuppressWarnings("deprecation")
     @Test
     public void getSurName() {
         AuthenticationIdentity authenticationIdentity = new AuthenticationIdentity();
@@ -66,6 +67,4 @@ public class AuthenticationIdentityTest {
 
         assertThat(authenticationIdentity.getIdentityNumber(), is("identityCode"));
     }
-
-
 }

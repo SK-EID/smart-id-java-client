@@ -30,9 +30,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.security.cert.CertificateEncodingException;
 import java.time.LocalDate;
@@ -40,13 +39,11 @@ import java.util.Collections;
 
 import org.apache.commons.codec.binary.Base64;
 import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import ee.sk.FileUtil;
 import ee.sk.SmartIdDemoIntegrationTest;
-import ee.sk.SmartIdDemoTestRunner;
 import ee.sk.smartid.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.AuthenticationResponseValidator;
@@ -58,7 +55,6 @@ import ee.sk.smartid.SmartIdSignature;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 
-@RunWith(SmartIdDemoTestRunner.class)
 @SmartIdDemoIntegrationTest
 public class SmartIdIntegrationTest {
 
@@ -73,7 +69,7 @@ public class SmartIdIntegrationTest {
 
     private SmartIdClient client;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         client = new SmartIdClient();
         client.setRelyingPartyUUID(RELYING_PARTY_UUID);

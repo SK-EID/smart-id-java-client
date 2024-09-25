@@ -26,14 +26,16 @@ package ee.sk.smartid;
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
+
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import org.junit.Test;
 
 public class CertificateParserTest {
 
-    @Test(expected = SmartIdClientException.class)
+    @Test
     public void testBothCertificateLevelsQualified() {
-        CertificateParser.parseX509Certificate("invalid");
+        assertThrows(SmartIdClientException.class, () -> CertificateParser.parseX509Certificate("invalid"));
     }
-
 }

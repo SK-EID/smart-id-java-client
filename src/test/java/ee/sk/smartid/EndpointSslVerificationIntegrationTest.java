@@ -31,6 +31,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -38,10 +40,7 @@ import java.security.KeyStore;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.hamcrest.core.StringContains;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import ee.sk.FileUtil;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
@@ -61,27 +60,24 @@ public class EndpointSslVerificationIntegrationTest {
     private static final String LIVE_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_live_sk_ee.pem");
     private static final String DEMO_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_demo_sk_ee.pem");
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void makeRequestToDemoApi_useLiveEnvCertificates_sslHandshakeFails() {
-        expectedException.expect(ProcessingException.class);
-        expectedException.expectMessage(StringContains.containsString("unable to find valid certification path to requested target"));
+        var processingException = assertThrows(ProcessingException.class, () -> {
+            SmartIdClient client = new SmartIdClient();
+            client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
+            client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
 
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
-        client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
+            client.setHostUrl(DEMO_HOST_URL);
+            client.setTrustedCertificates(LIVE_HOST_SSL_CERTIFICATE);
 
-        client.setHostUrl(DEMO_HOST_URL);
-        client.setTrustedCertificates(LIVE_HOST_SSL_CERTIFICATE);
-
-        client
-                .getCertificate()
-                .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
-                .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
-                .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
-                .fetch();
+            client
+                    .getCertificate()
+                    .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
+                    .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
+                    .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
+                    .fetch();
+        });
+        assertThat(processingException.getMessage(), containsString("unable to find valid certification path to requested target"));
     }
 
     @Test
@@ -104,54 +100,54 @@ public class EndpointSslVerificationIntegrationTest {
     }
 
     @Test
-    public void makeRequestToLiveApi_trustStoreFile() throws Exception {
-        expectedException.expect(RelyingPartyAccountConfigurationException.class);
+    public void makeRequestToLiveApi_trustStoreFile() {
+        assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+            InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            trustStore.load(is, "changeit".toCharArray());
 
-        InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
-        KeyStore trustStore = KeyStore.getInstance("JKS");
-        trustStore.load(is, "changeit".toCharArray());
+            SmartIdClient client = new SmartIdClient();
+            client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
+            client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
+            client.setHostUrl(LIVE_HOST_URL);
+            client.setTrustStore(trustStore);
 
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
-        client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
-        client.setHostUrl(LIVE_HOST_URL);
-        client.setTrustStore(trustStore);
-
-        client
-                .getCertificate()
-                .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
-                .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
-                .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
-                .fetch();
+            client
+                    .getCertificate()
+                    .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
+                    .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
+                    .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
+                    .fetch();
+        });
     }
 
     @Test
-    public void makeRequestToLiveApi_trustStoreContext() throws Exception {
-        expectedException.expect(RelyingPartyAccountConfigurationException.class);
-
-        InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
-        KeyStore trustStore = KeyStore.getInstance("JKS");
-        trustStore.load(is, "changeit".toCharArray());
-
-
-        SSLContext trustSslContext = SSLContext.getInstance("TLSv1.2");
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
-        trustManagerFactory.init(trustStore);
-        trustSslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+    public void makeRequestToLiveApi_trustStoreContext() {
+        assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+            InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            trustStore.load(is, "changeit".toCharArray());
 
 
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
-        client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
-        client.setHostUrl(LIVE_HOST_URL);
-        client.setTrustSslContext(trustSslContext);
+            SSLContext trustSslContext = SSLContext.getInstance("TLSv1.2");
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
+            trustManagerFactory.init(trustStore);
+            trustSslContext.init(null, trustManagerFactory.getTrustManagers(), null);
 
-        client
-                .getCertificate()
-                .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
-                .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
-                .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
-                .fetch();
+
+            SmartIdClient client = new SmartIdClient();
+            client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
+            client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
+            client.setHostUrl(LIVE_HOST_URL);
+            client.setTrustSslContext(trustSslContext);
+
+            client
+                    .getCertificate()
+                    .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
+                    .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
+                    .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
+                    .fetch();
+        });
     }
 
     @Test
@@ -246,46 +242,46 @@ public class EndpointSslVerificationIntegrationTest {
     }
 
     @Test
-    public void makeRequestToDemoApi_emptyKeyStore_requestFails() throws Exception {
-        expectedException.expect(ProcessingException.class);
+    public void makeRequestToDemoApi_emptyKeyStore_requestFails() {
+        assertThrows(ProcessingException.class, () -> {
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            trustStore.load(null, null);
 
-        KeyStore trustStore = KeyStore.getInstance("JKS");
-        trustStore.load(null, null);
+            SmartIdClient client = new SmartIdClient();
+            client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
+            client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
+            client.setHostUrl(DEMO_HOST_URL);
+            client.setTrustStore(trustStore);
 
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
-        client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
-        client.setHostUrl(DEMO_HOST_URL);
-        client.setTrustStore(trustStore);
-
-        client
-                .getCertificate()
-                .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
-                .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
-                .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
-                .fetch();
+            client
+                    .getCertificate()
+                    .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
+                    .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
+                    .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
+                    .fetch();
+        });
     }
 
     @Test
-    public void makeRequestToDemoApi_loadWrongSslCertificate_requestFails() throws Exception {
-        expectedException.expect(ProcessingException.class);
-        expectedException.expectMessage(StringContains.containsString("unable to find valid certification path to requested target"));
+    public void makeRequestToDemoApi_loadWrongSslCertificate_requestFails() {
+        var processingException = assertThrows(ProcessingException.class, () -> {
+            InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/wrong_ssl_cert.jks");
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+            keyStore.load(is, "changeit".toCharArray());
 
-        InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/wrong_ssl_cert.jks");
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        keyStore.load(is, "changeit".toCharArray());
+            SmartIdClient client = new SmartIdClient();
+            client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
+            client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
+            client.setHostUrl(DEMO_HOST_URL);
+            client.setTrustStore(keyStore);
 
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID(DEMO_RELYING_PARTY_UUID);
-        client.setRelyingPartyName(DEMO_RELYING_PARTY_NAME);
-        client.setHostUrl(DEMO_HOST_URL);
-        client.setTrustStore(keyStore);
-
-        client
-                .getCertificate()
-                .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
-                .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
-                .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
-                .fetch();
+            client
+                    .getCertificate()
+                    .withRelyingPartyUUID(DEMO_RELYING_PARTY_UUID)
+                    .withRelyingPartyName(DEMO_RELYING_PARTY_NAME)
+                    .withDocumentNumber(DEMO_DOCUMENT_NUMBER)
+                    .fetch();
+        });
+        assertThat(processingException.getMessage(), containsString("unable to find valid certification path to requested target"));
     }
 }

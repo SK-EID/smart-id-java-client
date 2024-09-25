@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,95 +26,102 @@ package ee.sk.smartid;
  * #L%
  */
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.Assert.assertNotNull;
 
 public class SmartIdRestServiceStubs {
 
-  public static void stubNotFoundResponse(String urlEquals) {
-    stubFor(get(urlEqualTo(urlEquals))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(404)
-            .withHeader("Content-Type", "application/json")
-            .withBody("Not found")));
-  }
-
-  public static void stubNotFoundResponse(String url, String requestFile) {
-    stubErrorResponse(url, requestFile, 404);
-  }
-
-  public static void stubUnauthorizedResponse(String url, String requestFile) {
-    stubErrorResponse(url, requestFile, 401);
-  }
-
-  public static void stubBadRequestResponse(String url, String requestFile) {
-    stubErrorResponse(url, requestFile, 400);
-  }
-
-  public static void stubForbiddenResponse(String url, String requestFile) {
-    stubErrorResponse(url, requestFile, 403);
-  }
-
-  public static void stubErrorResponse(String url, String requestFile, int errorStatus) {
-    stubFor(post(urlEqualTo(url))
-        .withHeader("Accept", equalTo("application/json"))
-        .withRequestBody(equalToJson(readFileBody(requestFile)))
-        .willReturn(aResponse()
-            .withStatus(errorStatus)
-            .withHeader("Content-Type", "application/json")
-            .withBody("Not found")));
-  }
-
-  public static void stubRequestWithResponse(String urlEquals, String responseFile) {
-    stubFor(get(urlPathEqualTo(urlEquals))
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(readFileBody(responseFile))));
-  }
-
-  public static void stubRequestWithResponse(String url, String requestFile, String responseFile) {
-    stubFor(post(urlEqualTo(url))
-        .withHeader("Accept", equalTo("application/json"))
-        .withRequestBody(equalToJson(readFileBody(requestFile)))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(readFileBody(responseFile))));
-  }
-
-  public static void stubSessionStatusWithState(String sessionId, String responseFile, String startState, String endState) {
-    String urlEquals = "/session/" + sessionId;
-    stubFor(get(urlEqualTo(urlEquals))
-        .inScenario("session status")
-        .whenScenarioStateIs(startState)
-        .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(readFileBody(responseFile)))
-        .willSetStateTo(endState)
-    );
-  }
-
-  private static String readFileBody(String fileName) {
-    ClassLoader classLoader = SmartIdRestServiceStubs.class.getClassLoader();
-    URL resource = classLoader.getResource(fileName);
-    assertNotNull("File not found: " + fileName, resource);
-    File file = new File(resource.getFile());
-    try {
-     return new String ( Files.readAllBytes( file.toPath() ), "UTF-8" );
+    public static void stubNotFoundResponse(String urlEquals) {
+        stubFor(get(urlEqualTo(urlEquals))
+                .withHeader("Accept", equalTo("application/json"))
+                .willReturn(aResponse()
+                        .withStatus(404)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("Not found")));
     }
-    catch (IOException e) {
-      throw new RuntimeException(e);
+
+    public static void stubNotFoundResponse(String url, String requestFile) {
+        stubErrorResponse(url, requestFile, 404);
     }
-  }
+
+    public static void stubUnauthorizedResponse(String url, String requestFile) {
+        stubErrorResponse(url, requestFile, 401);
+    }
+
+    public static void stubBadRequestResponse(String url, String requestFile) {
+        stubErrorResponse(url, requestFile, 400);
+    }
+
+    public static void stubForbiddenResponse(String url, String requestFile) {
+        stubErrorResponse(url, requestFile, 403);
+    }
+
+    public static void stubErrorResponse(String url, String requestFile, int errorStatus) {
+        stubFor(post(urlEqualTo(url))
+                .withHeader("Accept", equalTo("application/json"))
+                .withRequestBody(equalToJson(readFileBody(requestFile)))
+                .willReturn(aResponse()
+                        .withStatus(errorStatus)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("Not found")));
+    }
+
+    public static void stubRequestWithResponse(String urlEquals, String responseFile) {
+        stubFor(get(urlPathEqualTo(urlEquals))
+                .withHeader("Accept", equalTo("application/json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(readFileBody(responseFile))));
+    }
+
+    public static void stubRequestWithResponse(String url, String requestFile, String responseFile) {
+        stubFor(post(urlEqualTo(url))
+                .withHeader("Accept", equalTo("application/json"))
+                .withRequestBody(equalToJson(readFileBody(requestFile)))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(readFileBody(responseFile))));
+    }
+
+    public static void stubSessionStatusWithState(String sessionId, String responseFile, String startState, String endState) {
+        String urlEquals = "/session/" + sessionId;
+        stubFor(get(urlEqualTo(urlEquals))
+                .inScenario("session status")
+                .whenScenarioStateIs(startState)
+                .withHeader("Accept", equalTo("application/json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(readFileBody(responseFile)))
+                .willSetStateTo(endState)
+        );
+    }
+
+    private static String readFileBody(String fileName) {
+        ClassLoader classLoader = SmartIdRestServiceStubs.class.getClassLoader();
+        URL resource = classLoader.getResource(fileName);
+        assertNotNull(resource, "File not found: " + fileName);
+        File file = new File(resource.getFile());
+        try {
+            return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

@@ -12,10 +12,10 @@ package ee.sk.test.smartid.integration;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,28 +26,15 @@ package ee.sk.test.smartid.integration;
  * #L%
  */
 
-import ee.sk.FileUtil;
-import ee.sk.SmartIdDemoIntegrationTest;
-import ee.sk.SmartIdDemoTestRunner;
-import ee.sk.smartid.*;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.*;
-import org.apache.http.client.config.RequestConfig;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.hamcrest.CoreMatchers;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.assertAuthenticationResponseCreated;
+import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.createAuthenticationSessionRequest;
+import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.pollSessionStatus;
+import static java.util.Arrays.asList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.InputStream;
 import java.security.KeyStore;
@@ -58,12 +45,41 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.*;
-import static java.util.Arrays.asList;
-import static junit.framework.TestCase.assertNotNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.not;
+import org.apache.http.client.config.RequestConfig;
+import org.glassfish.jersey.apache.connector.ApacheClientProperties;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.hamcrest.CoreMatchers;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ee.sk.FileUtil;
+import ee.sk.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.AuthenticationHash;
+import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationResponseValidator;
+import ee.sk.smartid.CertificateParser;
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.SignableHash;
+import ee.sk.smartid.SmartIdAuthenticationResponse;
+import ee.sk.smartid.SmartIdCertificate;
+import ee.sk.smartid.SmartIdClient;
+import ee.sk.smartid.SmartIdSignature;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.AuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.InteractionFlow;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionStatus;
 
 /**
  * These tests contain snippets used in Readme.md
@@ -71,7 +87,6 @@ import static org.hamcrest.Matchers.not;
  * If anything changes in this class (except setUp method) the changes must be reflected in Readme.md
  * These are not real tests!
  */
-@RunWith(SmartIdDemoTestRunner.class)
 @SmartIdDemoIntegrationTest
 public class ReadmeTest {
     private static final Logger logger = LoggerFactory.getLogger(ReadmeTest.class);
@@ -84,7 +99,7 @@ public class ReadmeTest {
 
     private SignableHash hashToSign;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         client = new SmartIdClient();
         client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
@@ -151,17 +166,18 @@ It is recommended to read trusted certificates from a file.
      */
 
 
-    @Test(expected = SmartIdClientException.class)
+    @Test
     public void documentConfigureTheClient_feedSeparately() {
-
-        SmartIdClient client = new SmartIdClient();
-        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        client.setRelyingPartyName("DEMO");
-        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
-        client.setTrustedCertificates(
-                "-----BEGIN CERTIFICATE-----\nMIIFIjCCBAqgAwIBAgIQBH3ZvDVJl5qtCPwQJSruuj...",
-                "-----BEGIN CERTIFICATE-----\nMIIE0zCCA7ugAwIBAgIQbQr/Ky22GFhYWS3oQoJkyT..."
-        );
+        assertThrows(SmartIdClientException.class, () -> {
+            SmartIdClient client = new SmartIdClient();
+            client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+            client.setRelyingPartyName("DEMO");
+            client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v2/");
+            client.setTrustedCertificates(
+                    "-----BEGIN CERTIFICATE-----\nMIIFIjCCBAqgAwIBAgIQBH3ZvDVJl5qtCPwQJSruuj...",
+                    "-----BEGIN CERTIFICATE-----\nMIIE0zCCA7ugAwIBAgIQbQr/Ky22GFhYWS3oQoJkyT..."
+            );
+        });
     }
 
     /*
@@ -196,7 +212,7 @@ It is recommended to read trusted certificates from a file.
                 // Smart-ID app will display verification code to the user and user must insert PIN1
                 .withAllowedInteractionsOrder(
                         Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")
-                ))
+                        ))
                 // we want to get the IP address of the device running Smart-ID app
                 // for the IP to be returned the service provider (SK) must switch on this option
                 .withShareMdClientIpAddress(true)
@@ -261,57 +277,55 @@ It is recommended to read trusted certificates from a file.
 
          */
 
-    @Test(expected = UnprocessableSmartIdResponseException.class)
+    @Test
     public void documentAuthValidation() {
+        assertThrows(UnprocessableSmartIdResponseException.class, () -> {
+            // init Authentication response validator with trusted certificates loaded from within library
+            // as an alternative you can pass trusted certificates array as parameter to constructor
+            AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
 
-        // init Authentication response validator with trusted certificates loaded from within library
-        // as an alternative you can pass trusted certificates array as parameter to constructor
-        AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
+            // throws SmartIdResponseValidationException if validation doesn't pass
+            AuthenticationIdentity authIdentity = authenticationResponseValidator.validate(authenticationResponse);
 
-        // throws SmartIdResponseValidationException if validation doesn't pass
-        AuthenticationIdentity authIdentity = authenticationResponseValidator.validate(authenticationResponse);
-
-        String givenName = authIdentity.getGivenName(); // e.g. Mari-Liis"
-        String surname = authIdentity.getSurname(); // e.g. "Männik"
-        String identityCode = authIdentity.getIdentityNumber(); // e.g. "47101010033"
-        String country = authIdentity.getCountry(); // e.g. "EE", "LV", "LT"
-        Optional<LocalDate> birthDate = authIdentity.getDateOfBirth(); // see next paragraph
-
-
-
-        /**
-         * ### Extracting date-of-birth
-         * Since all Estonian and Lithuanian national identity numbers contain date-of-birth
-         * this function always returns a correct value for them.
-         *
-         * For persons with Latvian national identity number the date-of-birth is parsed
-         * from a separate field but for some old Smart-id accounts the value might be missing.
-         *
-         * More info about the availability of the separate field in certificates:
-         * https://github.com/SK-EID/smart-id-documentation/wiki/FAQ#where-can-i-find-users-date-of-birth
-         */
-
-        Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth();
-
-        /**
-        One can also only fetch the signing certificate of a person
-        and then construct authentication identity from that
-        and extract the date-of-birth from there.
-         */
-
-        // skip these lines in readme.md
-        String certificate = "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";
-        X509Certificate x509Certificate = CertificateParser.parseX509Certificate(certificate);
-        // skip previous 2 lines from readme.md
-
-        AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(x509Certificate);
-        Optional<LocalDate> signersCertificate = identity.getDateOfBirth();
-
-        assertThat(signersCertificate, CoreMatchers.is(LocalDate.of(1903,3,3)));
-
-        // skip that:
+            String givenName = authIdentity.getGivenName(); // e.g. Mari-Liis"
+            String surname = authIdentity.getSurname(); // e.g. "Männik"
+            String identityCode = authIdentity.getIdentityNumber(); // e.g. "47101010033"
+            String country = authIdentity.getCountry(); // e.g. "EE", "LV", "LT"
+            Optional<LocalDate> birthDate = authIdentity.getDateOfBirth(); // see next paragraph
 
 
+            /**
+             * ### Extracting date-of-birth
+             * Since all Estonian and Lithuanian national identity numbers contain date-of-birth
+             * this function always returns a correct value for them.
+             *
+             * For persons with Latvian national identity number the date-of-birth is parsed
+             * from a separate field but for some old Smart-id accounts the value might be missing.
+             *
+             * More info about the availability of the separate field in certificates:
+             * https://github.com/SK-EID/smart-id-documentation/wiki/FAQ#where-can-i-find-users-date-of-birth
+             */
+
+            Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth();
+
+            /**
+             One can also only fetch the signing certificate of a person
+             and then construct authentication identity from that
+             and extract the date-of-birth from there.
+             */
+
+            // skip these lines in readme.md
+            String certificate = "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";
+            X509Certificate x509Certificate = CertificateParser.parseX509Certificate(certificate);
+            // skip previous 2 lines from readme.md
+
+            AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(x509Certificate);
+            Optional<LocalDate> signersCertificate = identity.getDateOfBirth();
+
+            assertThat(signersCertificate, CoreMatchers.is(LocalDate.of(1903, 3, 3)));
+
+            // skip that:
+        });
     }
 
 
@@ -363,8 +377,6 @@ create the AsicE/BDoc container with files in it and get the hash to be signed.
 
     @Test
     public void documentCreatingSignature() {
-
-
         SignableHash hashToSign = new SignableHash();
         hashToSign.setHashType(HashType.SHA256);
         // calculate hash from the document you want to sign (i.e. use Digidoc4J or other libraries)
@@ -453,17 +465,16 @@ If user's app doesn't support displaying verification code choice then system fa
     public void documentInteractionOrderVerificationChoice() {
         try {
             SmartIdSignature smartIdSignature = client
-                .createSignature()
-                .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
-                .withSignableHash(hashToSign)
-                .withCertificateLevel("QUALIFIED")
-                .withAllowedInteractionsOrder(Arrays.asList(
-                        Interaction.verificationCodeChoice("My confirmation message that is no more than 60 chars"),
-                        Interaction.displayTextAndPIN("My confirmation message that is no more than 60 chars")
-                ))
-                .sign();
-        }
-        catch (UserSelectedWrongVerificationCodeException wrongVerificationCodeException) {
+                    .createSignature()
+                    .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
+                    .withSignableHash(hashToSign)
+                    .withCertificateLevel("QUALIFIED")
+                    .withAllowedInteractionsOrder(Arrays.asList(
+                            Interaction.verificationCodeChoice("My confirmation message that is no more than 60 chars"),
+                            Interaction.displayTextAndPIN("My confirmation message that is no more than 60 chars")
+                    ))
+                    .sign();
+        } catch (UserSelectedWrongVerificationCodeException wrongVerificationCodeException) {
             System.out.println("User selected wrong verification code from 3-code choice");
         }
     }
@@ -493,8 +504,7 @@ If the Smart-ID app in user's smart device doesn't support this feature then the
 
         if (InteractionFlow.CONFIRMATION_MESSAGE.is(smartIdSignature.getInteractionFlowUsed())) {
             System.out.println("Smart-ID app was able to display full text to user");
-        }
-        else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteractionFlowUsed())) {
+        } else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteractionFlowUsed())) {
             System.out.println("Smart-ID app displayed shorter text to user");
         }
 
@@ -526,15 +536,13 @@ If user picks wrong verification code then the session is cancelled and library 
 
         if (InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE.is(smartIdSignature.getInteractionFlowUsed())) {
             System.out.println("Smart-ID app was able to display full text on separate screen and verification code choice.");
-        }
-        else if (InteractionFlow.VERIFICATION_CODE_CHOICE.is(smartIdSignature.getInteractionFlowUsed())) {
+        } else if (InteractionFlow.VERIFICATION_CODE_CHOICE.is(smartIdSignature.getInteractionFlowUsed())) {
             System.out.println("Smart-ID app displayed shorter text together with verification choice.");
-        }
-        else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteractionFlowUsed())) {
+        } else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteractionFlowUsed())) {
             System.out.println("Smart-ID app displayed shorter text to user with PIN input.");
         }
-
     }
+
     /*
 
 ### Listing interactions with longer text without fallback
@@ -546,24 +554,19 @@ If End User's phone doesn't support required flow the library throws `RequiredIn
      */
     @Test
     public void documentInteractionOrderWithoutFallback() {
-
         try {
             client
-                .createSignature()
-                .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
-                .withSignableHash(hashToSign)
-                .withCertificateLevel("QUALIFIED")
-                .withAllowedInteractionsOrder(Collections.singletonList(
-                        Interaction.confirmationMessage("Long text (up to 200 characters) goes here.")
-                ))
-                .sign();
-        }
-        catch (RequiredInteractionNotSupportedByAppException e) {
+                    .createSignature()
+                    .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
+                    .withSignableHash(hashToSign)
+                    .withCertificateLevel("QUALIFIED")
+                    .withAllowedInteractionsOrder(Collections.singletonList(
+                            Interaction.confirmationMessage("Long text (up to 200 characters) goes here.")
+                    ))
+                    .sign();
+        } catch (RequiredInteractionNotSupportedByAppException e) {
             System.out.println("User's Smart-ID app is not capable of displaying required interaction");
         }
-
-
-
     }
 
 
@@ -581,7 +584,6 @@ Session status request by default is a long poll method, meaning the request met
 
     @Test
     public void documentClientTimeoutConfig() {
-
         SmartIdClient client = new SmartIdClient();
         // ...
         // sets the timeout for each session status poll
@@ -600,7 +602,6 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
 
     @Test
     public void documentClientConnectionTimeoutConfig() {
-
         SmartIdClient client = new SmartIdClient();
         // ...
         ClientConfig clientConfig = new ClientConfig();
@@ -632,7 +633,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
     }
 
     @Test
-    @Ignore("you need to run a proxy to run this test")
+    @Disabled("you need to run a proxy to run this test")
     public void document_setProxy_withJbossRestEasy() throws Exception {
         // in order to run this test you can set up a proxy server locally
         //docker run -d --name squid-container -e TZ=UTC -p 3128:3128 ubuntu/squid:5.2-22.04_beta
@@ -656,7 +657,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
 
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010906-29990");
 
-        AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
+        AuthenticationSessionRequest request = createAuthenticationSessionRequest();
         SmartIdConnector smartIdConnector = client.getSmartIdConnector();
         AuthenticationSessionResponse authenticationSessionResponse = smartIdConnector.authenticate(semanticsIdentifier, request);
 
@@ -668,7 +669,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
     }
 
     @Test
-    @Ignore("you need a running proxy server to run this test")
+    @Disabled("you need a running proxy server to run this test")
     public void document_setNetworkConnectionConfig_withJersey() throws Exception {
         // in order to run this test you first have to set up a proxy server locally
         //docker run -d --name squid-container -e TZ=UTC -p 3128:3128 ubuntu/squid:5.2-22.04_beta
@@ -690,7 +691,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
 
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010906-29990");
 
-        AuthenticationSessionRequest request =  createAuthenticationSessionRequest();
+        AuthenticationSessionRequest request = createAuthenticationSessionRequest();
         SmartIdConnector smartIdConnector = client.getSmartIdConnector();
         AuthenticationSessionResponse authenticationSessionResponse = smartIdConnector.authenticate(semanticsIdentifier, request);
 

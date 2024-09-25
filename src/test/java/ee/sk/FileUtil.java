@@ -1,11 +1,11 @@
 package ee.sk;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
-import org.junit.Assert;
 
 public final class FileUtil {
 
@@ -20,7 +20,7 @@ public final class FileUtil {
         try {
             ClassLoader classLoader = FileUtil.class.getClassLoader();
             URL resource = classLoader.getResource(fileName);
-            Assert.assertNotNull("File not found: " + fileName, resource);
+            assertNotNull(resource, "File not found: " + fileName);
             return Files.readAllBytes(Paths.get(resource.toURI()));
         } catch (Exception e) {
             throw new RuntimeException("Exception: " + e.getMessage(), e);

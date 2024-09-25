@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,32 +26,36 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 public class SmartIdSignatureTest {
 
-  @Test
-  public void getSignatureValueInBase64() {
-    SmartIdSignature signature = new SmartIdSignature();
-    signature.setValueInBase64("VGVyZSBNYWFpbG0=");
-    assertEquals("VGVyZSBNYWFpbG0=", signature.getValueInBase64());
-  }
+    @Test
+    public void getSignatureValueInBase64() {
+        SmartIdSignature signature = new SmartIdSignature();
+        signature.setValueInBase64("VGVyZSBNYWFpbG0=");
+        assertEquals("VGVyZSBNYWFpbG0=", signature.getValueInBase64());
+    }
 
-  @Test
-  public void getSignatureValueInBytes() {
-    SmartIdSignature signature = new SmartIdSignature();
-    signature.setValueInBase64("RGVkZ2Vob2c=");
-    assertArrayEquals("Dedgehog".getBytes(), signature.getValue());
-  }
+    @Test
+    public void getSignatureValueInBytes() {
+        SmartIdSignature signature = new SmartIdSignature();
+        signature.setValueInBase64("RGVkZ2Vob2c=");
+        assertArrayEquals("Dedgehog".getBytes(), signature.getValue());
+    }
 
-  @Test(expected = UnprocessableSmartIdResponseException.class)
-  public void incorrectBase64StringShouldThrowException() {
-    SmartIdSignature signature = new SmartIdSignature();
-    signature.setValueInBase64("äIsNotValidBase64Character");
-    signature.getValue();
-  }
+    @Test
+    public void incorrectBase64StringShouldThrowException() {
+        assertThrows(UnprocessableSmartIdResponseException.class, () -> {
+            SmartIdSignature signature = new SmartIdSignature();
+            signature.setValueInBase64("äIsNotValidBase64Character");
+            signature.getValue();
+        });
+    }
 }
