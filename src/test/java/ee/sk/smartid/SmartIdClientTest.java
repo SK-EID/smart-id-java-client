@@ -42,7 +42,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.isOneOf;
+import static org.hamcrest.Matchers.oneOf;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -151,7 +151,7 @@ public class SmartIdClientTest {
 
         String interactionFlowUsed = signature.getInteractionFlowUsed();
 
-        assertThat(interactionFlowUsed, isOneOf("displayTextAndPIN", "confirmationMessage"));
+        assertThat(interactionFlowUsed, is(oneOf("displayTextAndPIN", "confirmationMessage")));
         assertValidSignatureCreated(signature);
     }
 

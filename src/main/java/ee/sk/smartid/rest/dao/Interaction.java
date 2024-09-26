@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,19 +26,18 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static ee.sk.smartid.rest.dao.InteractionFlow.CONFIRMATION_MESSAGE;
+import static ee.sk.smartid.rest.dao.InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE;
+import static ee.sk.smartid.rest.dao.InteractionFlow.DISPLAY_TEXT_AND_PIN;
+import static ee.sk.smartid.rest.dao.InteractionFlow.VERIFICATION_CODE_CHOICE;
 
 import java.io.Serializable;
 
-import static ee.sk.smartid.rest.dao.InteractionFlow.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Interaction implements Serializable {
-
-    private static final Logger logger = LoggerFactory.getLogger(Interaction.class);
 
     private InteractionFlow type;
 

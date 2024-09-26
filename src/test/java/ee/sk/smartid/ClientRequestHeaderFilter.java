@@ -34,7 +34,7 @@ import java.util.Map;
 
 public class ClientRequestHeaderFilter implements ClientRequestFilter {
 
-  private Map<String, String> headersToAdd;
+  private final Map<String, String> headersToAdd;
 
   public ClientRequestHeaderFilter(Map<String, String> headersToAdd) {
     this.headersToAdd = headersToAdd;

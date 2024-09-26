@@ -29,11 +29,11 @@ package ee.sk.smartid.util;
 public class StringUtil {
 
     public static boolean isNotEmpty(final CharSequence cs) {
-        return cs != null && cs.length() > 0;
+        return cs != null && !cs.isEmpty();
     }
 
     public static boolean isEmpty(final CharSequence cs) {
-        return cs == null || cs.length() == 0;
+        return cs == null || cs.isEmpty();
     }
 
 }

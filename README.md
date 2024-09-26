@@ -151,7 +151,7 @@ client.setTrustStore(trustStore);
 
 ### Feeding trusted certificates one by one
 
-It also possible to feed trusted certificates one by one.
+It is also possible to feed trusted certificates one by one.
 This can prove useful when trusted certificates are kept as application configuration property.
 
 ```java
@@ -210,7 +210,7 @@ String deviceIpAddress = authenticationResponse.getDeviceIpAddress();
 
 Note that verificationCode should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify if the verification code displayed on the phone matches with the one shown on the web page.
 Leave a few seconds for the verification code to be displayed for users using the web service with their mobile device.
-Then start the authentication process (which triggers Smart-ID app in the phone which covers the verification code displayed.
+Then start the authentication process (which triggers Smart-ID app in the phone which covers the verification code displayed).
 
 ### Authenticating with document number
 
@@ -313,7 +313,7 @@ X509Certificate signersCertificate = responseWithSigningCertificate.getCertifica
 ```
 
 If needed you can use semantics identifier instead of document number to obtain signer's certificate.
-This may trigger a notification to all of the user's devices if user has more than one device with Smart-ID
+This may trigger a notification to all the user's devices if user has more than one device with Smart-ID
 (as each device has separate signing certificate).
 
 ### Create the signature
@@ -364,7 +364,7 @@ Different interaction flows can support different amount of data to display info
 Available interactions:
 * `displayTextAndPIN` with `displayText60`. The simplest interaction with max 60 chars of text and PIN entry on a single screen. Every app has this interaction available.
 * `verificationCodeChoice` with `displayText60`. On first screen user must choose the correct verification code that was displayed to him from 3 verification codes. Then second screen is displayed with max 60 chars text and PIN input.
-* `confirmationMessage` with `displayText200`. First screen is for text only (max 200 chars) and has Confirm and Cancel buttons. Second screen is for PIN.
+* `confirmationMessage` with `displayText200`. The first screen is for text only (max 200 chars) and has the Confirm and Cancel buttons. The second screen is for a PIN.
 * `confirmationMessageAndVerificationCodeChoice` with `displayText200`. First screen combines text and Verification Code choice. Second screen is for PIN.
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
@@ -528,7 +528,7 @@ This way it is possible to reduce error handling code to only handle generic par
     * Enduring - Exceptions that indicate problems with incorrect integration.
     Usually these types of errors remain when user retries shortly.
         * ServerMaintenanceException - Server is currently under maintenance
-        * SmartIdClientException - this exception is a sign of incorrect integration with Smart-ID service (i.e. missing parameters etc)
+        * SmartIdClientException - this exception is a sign of incorrect integration with Smart-ID service (i.e. missing parameters etc.)
             * RelyingPartyAccountConfigurationException - indicates that RelyingParty configuration at Smart-ID side can be incorrect
             * UnprocessableSmartIdResponseException - shouldn't happen under normal conditions
     * SessionNotFoundException - When session was not found. Usually this is also caused by problems with implementation.

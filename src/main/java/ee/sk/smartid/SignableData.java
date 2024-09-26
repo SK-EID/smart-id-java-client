@@ -34,7 +34,7 @@ import java.util.Base64;
  * to be signed when it is not yet in hashed format
  * <p>
  * {@link #setHashType(HashType)} can be used
- * to set the wanted hash tpye. SHA-512 is default.
+ * to set the wanted hash type. SHA-512 is default.
  * <p>
  * {@link #calculateHash()} and
  * {@link #calculateHashInBase64()} methods
@@ -46,7 +46,7 @@ import java.util.Base64;
  */
 public class SignableData implements Serializable {
 
-  private byte[] dataToSign;
+  private final byte[] dataToSign;
   private HashType hashType = HashType.SHA512;
 
   public SignableData(byte[] dataToSign) {

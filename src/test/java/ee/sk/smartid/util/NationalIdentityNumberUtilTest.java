@@ -112,20 +112,18 @@ public class NationalIdentityNumberUtilTest {
 
     @Test
     public void parseLvDateOfBirth_invalidMonth_throwsException() {
-        UnprocessableSmartIdResponseException exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            NationalIdentityNumberUtil.parseLvDateOfBirth("131365-1234");
-        });
+        var unprocessableSmartIdResponseException = assertThrows(UnprocessableSmartIdResponseException.class,
+                () -> NationalIdentityNumberUtil.parseLvDateOfBirth("131365-1234"));
 
-        assertThat(exception.getMessage(), is("Unable get birthdate from Latvian personal code 131365-1234"));
+        assertThat(unprocessableSmartIdResponseException.getMessage(), is("Unable get birthdate from Latvian personal code 131365-1234"));
     }
 
     @Test
     public void parseLvDateOfBirth_invalidIdCode_throwsException() {
-        UnprocessableSmartIdResponseException exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            NationalIdentityNumberUtil.parseLvDateOfBirth("331265-0234");
-        });
+        var unprocessableSmartIdResponseException = assertThrows(UnprocessableSmartIdResponseException.class,
+                () -> NationalIdentityNumberUtil.parseLvDateOfBirth("331265-0234"));
 
-        assertThat(exception.getMessage(), is("Unable get birthdate from Latvian personal code 331265-0234"));
+        assertThat(unprocessableSmartIdResponseException.getMessage(), is("Unable get birthdate from Latvian personal code 331265-0234"));
     }
 
     @Test

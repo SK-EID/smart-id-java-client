@@ -29,9 +29,9 @@ package ee.sk.smartid.rest;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -94,7 +94,7 @@ public class SmartIdRestIntegrationTest {
         AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, request);
 
         assertNotNull(authenticationSessionResponse);
-        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(authenticationSessionResponse.getSessionID(), not(emptyOrNullString()));
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
         assertAuthenticationResponseCreated(sessionStatus);
@@ -106,7 +106,7 @@ public class SmartIdRestIntegrationTest {
         AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, request);
 
         assertNotNull(authenticationSessionResponse);
-        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(authenticationSessionResponse.getSessionID(), not(emptyOrNullString()));
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
 
@@ -133,7 +133,7 @@ public class SmartIdRestIntegrationTest {
         AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(DOCUMENT_NUMBER, authenticationSessionRequest);
 
         assertNotNull(authenticationSessionResponse);
-        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(authenticationSessionResponse.getSessionID(), not(emptyOrNullString()));
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
 
@@ -181,7 +181,7 @@ public class SmartIdRestIntegrationTest {
         AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, authenticationSessionRequest);
 
         assertNotNull(authenticationSessionResponse);
-        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(authenticationSessionResponse.getSessionID(), not(emptyOrNullString()));
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), connector);
 
@@ -197,7 +197,7 @@ public class SmartIdRestIntegrationTest {
         CertificateRequest request = createCertificateRequest();
         CertificateChoiceResponse certificateChoiceResponse = connector.getCertificate(documentNumber, request);
         assertNotNull(certificateChoiceResponse);
-        assertThat(certificateChoiceResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(certificateChoiceResponse.getSessionID(), not(emptyOrNullString()));
         return certificateChoiceResponse;
     }
 
@@ -216,7 +216,7 @@ public class SmartIdRestIntegrationTest {
 
     private SignatureSessionResponse fetchSignatureSession(String documentNumber, SignatureSessionRequest signatureSessionRequest) {
         SignatureSessionResponse signatureSessionResponse = connector.sign(documentNumber, signatureSessionRequest);
-        assertThat(signatureSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(signatureSessionResponse.getSessionID(), not(emptyOrNullString()));
         return signatureSessionResponse;
     }
 
@@ -259,23 +259,23 @@ public class SmartIdRestIntegrationTest {
     private void assertSignatureCreated(SessionStatus sessionStatus) {
         assertNotNull(sessionStatus);
         assertNotNull(sessionStatus.getSignature());
-        assertThat(sessionStatus.getSignature().getValue(), not(isEmptyOrNullString()));
+        assertThat(sessionStatus.getSignature().getValue(), not(emptyOrNullString()));
     }
 
     private void assertCertificateChosen(SessionStatus sessionStatus) {
         assertNotNull(sessionStatus);
         String documentNumber = sessionStatus.getResult().getDocumentNumber();
-        assertThat(documentNumber, not(isEmptyOrNullString()));
-        assertThat(sessionStatus.getCert().getValue(), not(isEmptyOrNullString()));
+        assertThat(documentNumber, not(emptyOrNullString()));
+        assertThat(sessionStatus.getCert().getValue(), not(emptyOrNullString()));
     }
 
     public static void assertAuthenticationResponseCreated(SessionStatus sessionStatus) {
         assertNotNull(sessionStatus);
 
-        assertThat(sessionStatus.getResult().getEndResult(), not(isEmptyOrNullString()));
-        assertThat(sessionStatus.getSignature().getValue(), not(isEmptyOrNullString()));
-        assertThat(sessionStatus.getCert().getValue(), not(isEmptyOrNullString()));
-        assertThat(sessionStatus.getCert().getCertificateLevel(), not(isEmptyOrNullString()));
+        assertThat(sessionStatus.getResult().getEndResult(), not(emptyOrNullString()));
+        assertThat(sessionStatus.getSignature().getValue(), not(emptyOrNullString()));
+        assertThat(sessionStatus.getCert().getValue(), not(emptyOrNullString()));
+        assertThat(sessionStatus.getCert().getCertificateLevel(), not(emptyOrNullString()));
     }
 
     private static String calculateHashInBase64(byte[] dataToSign) {

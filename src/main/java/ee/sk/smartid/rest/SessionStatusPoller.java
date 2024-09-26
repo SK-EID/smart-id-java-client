@@ -40,7 +40,8 @@ import java.util.concurrent.TimeUnit;
 public class SessionStatusPoller {
 
   private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
-  private SmartIdConnector connector;
+
+  private final SmartIdConnector connector;
   private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
   private long pollingSleepTimeout = 1L;
 

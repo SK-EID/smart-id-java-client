@@ -32,7 +32,7 @@ import java.util.Map;
 
 public class CertificateLevel {
 
-  private String certificateLevel;
+  private final String certificateLevel;
 
   private static final Map<String, Integer> certificateLevels = new HashMap<>();
 

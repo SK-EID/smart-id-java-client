@@ -189,7 +189,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Sets the request's nonce
    * <p>
-   * By default the authentication's initiation request
+   * By default, the authentication's initiation request
    * has idempotent behaviour meaning when the request
    * is repeated inside a given time frame with exactly
    * the same parameters, session ID of an existing session
@@ -210,7 +210,7 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Specifies capabilities of the user
    * <p>
-   * By default there are no specified capabilities.
+   * By default, there are no specified capabilities.
    * The capabilities need to be specified in case of
    * a restricted Smart ID user
    * {@link #withCapabilities(String...)}
@@ -285,12 +285,12 @@ public class AuthenticationRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Send the authentication request and get the session Id
+   * Send the authentication request and get the session ID
    *
    * @throws UserAccountNotFoundException when the user account was not found
    * @throws ServerMaintenanceException when the server is under maintenance
    *
-   * @return session Id - later to be used for manual session status polling
+   * @return session ID - later to be used for manual session status polling
    */
   public String initiateAuthentication() throws UserAccountNotFoundException, ServerMaintenanceException {
     validateParameters();

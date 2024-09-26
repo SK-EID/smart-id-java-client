@@ -260,15 +260,13 @@ public class AuthenticationRequestBuilderTest {
 
     @Test
     public void authenticate_withoutHashAndWithoutDataToSign_shouldThrowException() {
-        var smartIdClientException = assertThrows(SmartIdClientException.class, () -> {
-            builder
-                    .withRelyingPartyUUID("relying-party-uuid")
-                    .withRelyingPartyName("relying-party-name")
-                    .withCertificateLevel("QUALIFIED")
-                    .withDocumentNumber("PNOEE-31111111111")
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
-                    .authenticate();
-        });
+        var smartIdClientException = assertThrows(SmartIdClientException.class,
+                () -> builder.withRelyingPartyUUID("relying-party-uuid")
+                        .withRelyingPartyName("relying-party-name")
+                        .withCertificateLevel("QUALIFIED")
+                        .withDocumentNumber("PNOEE-31111111111")
+                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log in to internet bank?")))
+                        .authenticate());
         assertEquals("Either dataToSign or hash with hashType must be set", smartIdClientException.getMessage());
     }
 

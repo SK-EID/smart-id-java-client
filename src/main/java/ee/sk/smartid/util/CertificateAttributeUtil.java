@@ -48,7 +48,7 @@ public class CertificateAttributeUtil {
 
     /**
      * Get Date-of-birth (DoB) from a specific certificate header (if present).
-     *
+     * <p>
      * NB! This attribute may be present on some newer certificates (since ~ May 2021) but not all.
      *
      * @see NationalIdentityNumberUtil#getDateOfBirth(AuthenticationIdentity) for fallback.
@@ -91,8 +91,7 @@ public class CertificateAttributeUtil {
         while (objects.hasMoreElements()) {
             Object param = objects.nextElement();
 
-            if (param instanceof ASN1ObjectIdentifier) {
-                ASN1ObjectIdentifier id = (ASN1ObjectIdentifier) param;
+            if (param instanceof ASN1ObjectIdentifier id) {
                 if (id.equals(BCStyle.DATE_OF_BIRTH) && objects.hasMoreElements()) {
                     Object nextElement = objects.nextElement();
 

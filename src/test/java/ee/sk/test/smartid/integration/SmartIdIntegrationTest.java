@@ -27,7 +27,7 @@ package ee.sk.test.smartid.integration;
  */
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -249,20 +249,20 @@ public class SmartIdIntegrationTest {
 
     private void assertSignatureCreated(SmartIdSignature signature) {
         assertNotNull(signature);
-        assertThat(signature.getValueInBase64(), not(isEmptyOrNullString()));
+        assertThat(signature.getValueInBase64(), not(emptyOrNullString()));
     }
 
     private void assertCertificateChosen(SmartIdCertificate certificateResponse) {
         assertNotNull(certificateResponse);
-        assertThat(certificateResponse.getDocumentNumber(), not(isEmptyOrNullString()));
+        assertThat(certificateResponse.getDocumentNumber(), not(emptyOrNullString()));
         assertNotNull(certificateResponse.getCertificate());
     }
 
     private void assertAuthenticationResponseCreated(SmartIdAuthenticationResponse authenticationResponse, String expectedHashToSignInBase64) {
         assertNotNull(authenticationResponse);
-        assertThat(authenticationResponse.getEndResult(), not(isEmptyOrNullString()));
+        assertThat(authenticationResponse.getEndResult(), not(emptyOrNullString()));
         assertEquals(expectedHashToSignInBase64, authenticationResponse.getSignedHashInBase64());
-        assertThat(authenticationResponse.getSignatureValueInBase64(), not(isEmptyOrNullString()));
+        assertThat(authenticationResponse.getSignatureValueInBase64(), not(emptyOrNullString()));
         assertNotNull(authenticationResponse.getCertificate());
         assertNotNull(authenticationResponse.getCertificateLevel());
     }

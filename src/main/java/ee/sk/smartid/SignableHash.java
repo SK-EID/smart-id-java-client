@@ -36,7 +36,7 @@ import java.util.Base64;
  * {@link #setHash(byte[])} can be used
  * to set the hash.
  * {@link #setHashType(HashType)} can be used
- * to set the hash tpye.
+ * to set the hash type.
  * <p>
  * {@link ee.sk.smartid.SignableData} can be used
  * instead when the data to be signed is not already
@@ -75,7 +75,7 @@ public class SignableHash implements Serializable {
    * Calculates the verification code from the hash
    * <p>
    * Verification code should be displayed on the web page or some sort of web service
-   * so the person signing through the Smart-ID mobile app can verify if if the verification code
+   * so the person signing through the Smart-ID mobile app can verify if the verification code
    * displayed on the phone matches with the one shown on the web page.
    *
    * @return the verification code

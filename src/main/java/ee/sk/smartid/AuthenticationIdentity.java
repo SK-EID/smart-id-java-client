@@ -73,7 +73,7 @@ public class AuthenticationIdentity {
 
   /**
    * @param surName surname
-   *
+   * <p>
    * Instead use:
    *   {@link #setSurname(String)}
    */

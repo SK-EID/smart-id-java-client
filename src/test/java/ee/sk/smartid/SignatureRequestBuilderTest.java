@@ -231,14 +231,12 @@ public class SignatureRequestBuilderTest {
 
     @Test
     public void sign_withoutDataToSign_withoutHash_shouldThrowException() {
-        var smartIdClientException = assertThrows(SmartIdClientException.class, () -> {
-            builder
-                    .withRelyingPartyUUID("relying-party-uuid")
-                    .withRelyingPartyName("relying-party-name")
-                    .withCertificateLevel("QUALIFIED")
-                    .withDocumentNumber("PNOEE-31111111111")
-                    .sign();
-        });
+        var smartIdClientException = assertThrows(SmartIdClientException.class,
+                () -> builder.withRelyingPartyUUID("relying-party-uuid")
+                        .withRelyingPartyName("relying-party-name")
+                        .withCertificateLevel("QUALIFIED")
+                        .withDocumentNumber("PNOEE-31111111111")
+                        .sign());
         assertEquals("Either dataToSign or hash with hashType must be set", smartIdClientException.getMessage());
     }
 

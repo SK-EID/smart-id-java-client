@@ -31,7 +31,7 @@ import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.createAuthentication
 import static ee.sk.smartid.rest.SmartIdRestIntegrationTest.pollSessionStatus;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -160,7 +160,7 @@ It is recommended to read trusted certificates from a file.
 
     ### Feeding trusted certificates one by one
 
-        It also possible to feed trusted certificates one by one.
+        It is also possible to feed trusted certificates one by one.
         This can prove useful when trusted certificates are kept as application configuration property.
 
      */
@@ -227,9 +227,10 @@ It is recommended to read trusted certificates from a file.
 
     /*
 
-    Note that verificationCode should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify if the verification code displayed on the phone matches with the one shown on the web page.
+    Note that verificationCode should be displayed by the web service, so the person signing through the Smart-ID mobile app can verify
+     if the verification code displayed on the phone matches with the one shown on the web page.
     Leave a few seconds for the verification code to be displayed for users using the web service with their mobile device.
-    Then start the authentication process (which triggers Smart-ID app in the phone which covers the verification code displayed.
+    Then start the authentication process (which triggers Smart-ID app in the phone which covers the verification code displayed).
 
     ### Authenticating with document number
 
@@ -298,10 +299,10 @@ It is recommended to read trusted certificates from a file.
              * ### Extracting date-of-birth
              * Since all Estonian and Lithuanian national identity numbers contain date-of-birth
              * this function always returns a correct value for them.
-             *
+             * <p>
              * For persons with Latvian national identity number the date-of-birth is parsed
              * from a separate field but for some old Smart-id accounts the value might be missing.
-             *
+             * <p>
              * More info about the availability of the separate field in certificates:
              * https://github.com/SK-EID/smart-id-documentation/wiki/FAQ#where-can-i-find-users-date-of-birth
              */
@@ -358,7 +359,7 @@ It is recommended to read trusted certificates from a file.
     /*
 
     If needed you can use semantics identifier instead of document number to obtain signer's certificate.
-    This may trigger a notification to all of the user's devices if user has more than one device with Smart-ID
+    This may trigger a notification to all the user's devices if user has more than one device with Smart-ID
     (as each device has separate signing certificate).
 
 
@@ -415,7 +416,7 @@ Different interaction flows can support different amount of data to display info
 Available interactions:
 * `displayTextAndPIN` with `displayText60`. The simplest interaction with max 60 chars of text and PIN entry on a single screen. Every app has this interaction available.
 * `verificationCodeChoice` with `displayText60`. On first screen user must choose the correct verification code that was displayed to him from 3 verification codes. Then second screen is displayed with max 60 chars text and PIN input.
-* `confirmationMessage` with `displayText200`. First screen is for text only (max 200 chars) and has Confirm and Cancel buttons. Second screen is for PIN.
+* `confirmationMessage` with `displayText200`. The first screen is for text only (max 200 chars) and has the Confirm and Cancel buttons. The second screen is for a PIN.
 * `confirmationMessageAndVerificationCodeChoice` with `displayText200`. First screen combines text and Verification Code choice. Second screen is for PIN.
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
@@ -618,7 +619,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
 
      */
     @Test
-    public void documentApacheHttpCleint() {
+    public void documentApacheHttpClient() {
         SmartIdClient client = new SmartIdClient();
         // ...
         ClientConfig clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
@@ -662,7 +663,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
         AuthenticationSessionResponse authenticationSessionResponse = smartIdConnector.authenticate(semanticsIdentifier, request);
 
         assertNotNull(authenticationSessionResponse);
-        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(authenticationSessionResponse.getSessionID(), not(emptyOrNullString()));
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), smartIdConnector);
         assertAuthenticationResponseCreated(sessionStatus);
@@ -696,7 +697,7 @@ Here's an example how to configure HTTP connector's custom socket timeouts for t
         AuthenticationSessionResponse authenticationSessionResponse = smartIdConnector.authenticate(semanticsIdentifier, request);
 
         assertNotNull(authenticationSessionResponse);
-        assertThat(authenticationSessionResponse.getSessionID(), not(isEmptyOrNullString()));
+        assertThat(authenticationSessionResponse.getSessionID(), not(emptyOrNullString()));
 
         SessionStatus sessionStatus = pollSessionStatus(authenticationSessionResponse.getSessionID(), smartIdConnector);
         assertAuthenticationResponseCreated(sessionStatus);

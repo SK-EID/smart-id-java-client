@@ -67,8 +67,6 @@ public class DigestCalculatorTest {
 
     @Test
     public void calculateDigest_nullHashType() {
-        assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            DigestCalculator.calculateDigest(HELLO_WORLD_BYTES, null);
-        });
+        assertThrows(UnprocessableSmartIdResponseException.class, () -> DigestCalculator.calculateDigest(HELLO_WORLD_BYTES, null));
     }
 }

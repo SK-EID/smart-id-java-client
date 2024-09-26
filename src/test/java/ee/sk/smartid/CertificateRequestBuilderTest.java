@@ -56,13 +56,12 @@ import ee.sk.smartid.rest.dao.SessionStatus;
 public class CertificateRequestBuilderTest {
 
     private SmartIdConnectorSpy connector;
-    private SessionStatusPoller sessionStatusPoller;
     private CertificateRequestBuilder builder;
 
     @BeforeEach
     public void setUp() {
         connector = new SmartIdConnectorSpy();
-        sessionStatusPoller = new SessionStatusPoller(connector);
+        SessionStatusPoller sessionStatusPoller = new SessionStatusPoller(connector);
         connector.sessionStatusToRespond = createCertificateSessionStatusCompleteResponse();
         connector.certificateChoiceToRespond = createCertificateChoiceResponse();
         builder = new CertificateRequestBuilder(connector, sessionStatusPoller);
@@ -195,15 +194,13 @@ public class CertificateRequestBuilderTest {
 
     @Test
     public void getCertificate_withTooLongNonce_shouldThrowException() {
-        var smartIdClientException = assertThrows(SmartIdClientException.class, () -> {
-            builder
-                    .withRelyingPartyUUID("relying-party-uuid")
-                    .withRelyingPartyName("relying-party-name")
-                    .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
-                    .withCertificateLevel("QUALIFIED")
-                    .withNonce("THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890")
-                    .fetch();
-        });
+        var smartIdClientException = assertThrows(SmartIdClientException.class,
+                () -> builder.withRelyingPartyUUID("relying-party-uuid")
+                        .withRelyingPartyName("relying-party-name")
+                        .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
+                        .withCertificateLevel("QUALIFIED")
+                        .withNonce("THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890")
+                        .fetch());
         assertEquals("Nonce cannot be longer that 30 chars. You supplied: 'THIS_IS_LONGER_THAN_ALLOWED_30_CHARS_0123456789012345678901234567890'", smartIdClientException.getMessage());
     }
 

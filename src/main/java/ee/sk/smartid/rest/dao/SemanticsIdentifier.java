@@ -30,7 +30,7 @@ import java.io.Serializable;
 
 public class SemanticsIdentifier implements Serializable {
 
-  protected String identifier;
+  private final String identifier;
 
   public SemanticsIdentifier(IdentityType identityType, CountryCode countryCode, String identityNumber) {
     this.identifier = "" + identityType + countryCode + "-" + identityNumber;

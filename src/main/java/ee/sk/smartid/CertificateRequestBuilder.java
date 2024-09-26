@@ -144,7 +144,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Sets the request's nonce
    * <p>
-   * By default the certificate choice's initiation request
+   * By default, the certificate choice's initiation request
    * has idempotent behaviour meaning when the request
    * is repeated inside a given time frame with exactly
    * the same parameters, session ID of an existing session
@@ -165,7 +165,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Specifies capabilities of the user
    * <p>
-   * By default there are no specified capabilities.
+   * By default, there are no specified capabilities.
    * The capabilities need to be specified in case of
    * a restricted Smart ID user
    * {@link #withCapabilities(String...)}
@@ -182,7 +182,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * Specifies capabilities of the user
    * <p>
    *
-   * By default there are no specified capabilities.
+   * By default, there are no specified capabilities.
    * The capabilities need to be specified in case of
    * a restricted Smart ID user
    * {@link #withCapabilities(Capability...)}
@@ -254,12 +254,12 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Send the certificate choice request and get the session Id
+   * Send the certificate choice request and get the session ID
    *
    * @throws UserAccountNotFoundException when the user account was not found
    * @throws ServerMaintenanceException when the server is under maintenance
    *
-   * @return session Id - later to be used for manual session status polling
+   * @return session ID - later to be used for manual session status polling
    */
   public String initiateCertificateChoice() throws UserAccountNotFoundException,
           SmartIdClientException, ServerMaintenanceException {
@@ -273,7 +273,7 @@ public class CertificateRequestBuilder extends SmartIdRequestBuilder {
    * Create {@link SmartIdCertificate} from {@link SessionStatus}
    * <p>
    * This method uses automatic session status polling internally
-   * and therefore blocks the current thread until certificate choice is concluded/interupted etc.
+   * and therefore blocks the current thread until certificate choice is concluded/interrupted etc.
    *
    * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe

@@ -149,9 +149,10 @@ public class SessionStatusPollerTest {
     }
 
     public static class SmartIdConnectorStub implements SmartIdConnector {
-        String sessionIdUsed;
-        SessionStatusRequest requestUsed;
-        List<SessionStatus> responses = new ArrayList<>();
+
+        private String sessionIdUsed;
+        private SessionStatusRequest requestUsed;
+        private final List<SessionStatus> responses = new ArrayList<>();
         int responseNumber = 0;
         private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
         private long sessionStatusResponseSocketOpenTimeValue;

@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 public class SmartIdRestServiceStubs {
@@ -118,10 +117,9 @@ public class SmartIdRestServiceStubs {
         assertNotNull(resource, "File not found: " + fileName);
         File file = new File(resource.getFile());
         try {
-            return new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+            return Files.readString(file.toPath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
-
 }
