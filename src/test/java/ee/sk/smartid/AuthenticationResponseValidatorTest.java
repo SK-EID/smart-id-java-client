@@ -31,23 +31,25 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 
-import javax.naming.InvalidNameException;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
+import javax.security.auth.x500.X500Principal;
 
 import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ee.sk.CertificateUtil;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 
@@ -169,13 +171,14 @@ public class AuthenticationResponseValidatorTest {
 
     @Test
     public void testTrustedCACertificateLoadingInPEMFormat() throws CertificateException {
-        byte[] caCertificateInPem = getX509CertificateBytes(AUTH_CERTIFICATE_EE);
+        byte[] caCertificateInPem = CertificateUtil.getX509CertificateBytes(AUTH_CERTIFICATE_EE);
 
         AuthenticationResponseValidator validator = new AuthenticationResponseValidator();
         validator.clearTrustedCACertificates();
         validator.addTrustedCACertificate(caCertificateInPem);
 
-        assertEquals(getX509Certificate(caCertificateInPem).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
+        X500Principal expectedPrincipal = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_EE).getSubjectX500Principal();
+        assertEquals(expectedPrincipal, validator.getTrustedCACertificates().get(0).getSubjectX500Principal());
     }
 
     @Test
@@ -186,7 +189,8 @@ public class AuthenticationResponseValidatorTest {
         validator.clearTrustedCACertificates();
         validator.addTrustedCACertificate(caCertificateInDER);
 
-        assertEquals(getX509Certificate(caCertificateInDER).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
+        X500Principal expectedPrincipal = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_EE).getSubjectX500Principal();
+        assertEquals(expectedPrincipal, validator.getTrustedCACertificates().get(0).getSubjectX500Principal());
     }
 
     @Test
@@ -197,7 +201,8 @@ public class AuthenticationResponseValidatorTest {
         validator.clearTrustedCACertificates();
         validator.addTrustedCACertificate(caCertificateFile);
 
-        assertEquals(getX509Certificate(Files.readAllBytes(caCertificateFile.toPath())).getSubjectDN(), validator.getTrustedCACertificates().get(0).getSubjectDN());
+        X500Principal expectedPrincipal = CertificateUtil.getX509Certificate(Files.readAllBytes(caCertificateFile.toPath())).getSubjectX500Principal();
+        assertEquals(expectedPrincipal, validator.getTrustedCACertificates().get(0).getSubjectX500Principal());
     }
 
     @Test
@@ -252,7 +257,7 @@ public class AuthenticationResponseValidatorTest {
 
     @Test
     public void shouldConstructAuthenticationIdentityEE() throws CertificateException {
-        X509Certificate certificateEe = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_EE));
+        X509Certificate certificateEe = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_EE);
 
         AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateEe);
 
@@ -267,7 +272,7 @@ public class AuthenticationResponseValidatorTest {
 
     @Test
     public void shouldConstructAuthenticationIdentityLV() throws CertificateException {
-        X509Certificate certificateLv = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LV));
+        X509Certificate certificateLv = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV);
 
         AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateLv);
 
@@ -282,7 +287,7 @@ public class AuthenticationResponseValidatorTest {
 
     @Test
     public void shouldConstructAuthenticationIdentityLT() throws CertificateException {
-        X509Certificate certificateLt = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LT));
+        X509Certificate certificateLt = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LT);
 
         AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.constructAuthenticationIdentity(certificateLt);
 
@@ -336,34 +341,17 @@ public class AuthenticationResponseValidatorTest {
         return authenticationResponse;
     }
 
-    public static byte[] getX509CertificateBytes(String base64Certificate) {
-        String caCertificateInPem = CertificateParser.BEGIN_CERT + "\n" + base64Certificate + "\n" + CertificateParser.END_CERT;
-        return caCertificateInPem.getBytes();
-    }
-
-    public static X509Certificate getX509Certificate(byte[] certificateBytes) throws CertificateException {
-        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-        return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
-    }
-
     private void assertAuthenticationIdentityValid(AuthenticationIdentity authenticationIdentity, X509Certificate certificate) {
-        LdapName ln;
-        try {
-            ln = new LdapName(certificate.getSubjectDN().getName());
-        } catch (InvalidNameException e) {
-            throw new RuntimeException(e);
-        }
-        for (Rdn rdn : ln.getRdns()) {
-            if (rdn.getType().equalsIgnoreCase("GIVENNAME")) {
-                assertEquals(rdn.getValue().toString(), authenticationIdentity.getGivenName());
-            } else if (rdn.getType().equalsIgnoreCase("SURNAME")) {
-                assertEquals(rdn.getValue().toString(), authenticationIdentity.getSurname());
-            } else if (rdn.getType().equalsIgnoreCase("SERIALNUMBER")) {
-                assertEquals(rdn.getValue().toString().split("-", 2)[1], authenticationIdentity.getIdentityNumber());
-            } else if (rdn.getType().equalsIgnoreCase("C")) {
-                assertEquals(rdn.getValue().toString(), authenticationIdentity.getCountry());
-            }
+        String distinguishedName = certificate.getSubjectX500Principal().getName();
+        var x500name = new X500Name(distinguishedName);
+        assertEquals(getAttribute(x500name, BCStyle.GIVENNAME), authenticationIdentity.getGivenName());
+        assertEquals(getAttribute(x500name, BCStyle.SURNAME), authenticationIdentity.getSurname());
+        assertEquals(getAttribute(x500name, BCStyle.SERIALNUMBER).split("-", 2)[1], authenticationIdentity.getIdentityNumber());
+        assertEquals(getAttribute(x500name, BCStyle.C), authenticationIdentity.getCountry());
+    }
 
-        }
+    private static String getAttribute(X500Name x500name, ASN1ObjectIdentifier oid) {
+        RDN[] rdns = x500name.getRDNs(oid);
+        return IETFUtils.valueToString(rdns[0].getFirst().getValue());
     }
 }

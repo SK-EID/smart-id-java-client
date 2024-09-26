@@ -30,7 +30,6 @@ import static ee.sk.smartid.DummyData.createSessionEndResult;
 import static ee.sk.smartid.DummyData.createUserRefusedSessionStatus;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,6 +38,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.cert.X509Certificate;
 
+import javax.security.auth.x500.X500Principal;
+
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -272,7 +278,8 @@ public class CertificateRequestBuilderTest {
         assertNotNull(certificate);
         assertNotNull(certificate.getCertificate());
         X509Certificate cert = certificate.getCertificate();
-        assertThat(cert.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
+        String serialNumber = getAttributeValue(cert.getSubjectX500Principal(), BCStyle.SERIALNUMBER);
+        assertEquals("PNOEE-31111111111", serialNumber);
         assertEquals("QUALIFIED", certificate.getCertificateLevel());
         assertEquals("PNOEE-31111111111", certificate.getDocumentNumber());
     }
@@ -325,5 +332,11 @@ public class CertificateRequestBuilderTest {
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"))
                 .withCertificateLevel("QUALIFIED")
                 .fetch();
+    }
+
+    private static String getAttributeValue(X500Principal subjectX500Principal, ASN1ObjectIdentifier oid) {
+        var x500name = new X500Name(subjectX500Principal.getName());
+        RDN[] rdns = x500name.getRDNs(oid);
+        return IETFUtils.valueToString(rdns[0].getFirst().getValue());
     }
 }

@@ -26,18 +26,29 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import static ee.sk.smartid.AuthenticationResponseValidatorTest.getX509Certificate;
-import static ee.sk.smartid.AuthenticationResponseValidatorTest.getX509CertificateBytes;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
+import java.util.Optional;
+import java.util.stream.Stream;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+
+import ee.sk.CertificateUtil;
 
 public class CertificateAttributeUtilTest {
 
@@ -46,7 +57,7 @@ public class CertificateAttributeUtilTest {
 
     @Test
     public void getDateOfBirthFromCertificateAttribute_datePresent_returns() throws CertificateException {
-        X509Certificate certificateWithDob = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LV_WITH_DOB));
+        X509Certificate certificateWithDob = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV_WITH_DOB);
 
         LocalDate dateOfBirthCertificateAttribute = CertificateAttributeUtil.getDateOfBirth(certificateWithDob);
 
@@ -56,11 +67,45 @@ public class CertificateAttributeUtilTest {
 
     @Test
     public void getDateOfBirthFromCertificateAttribute_dateNotPresent_returnsEmpty() throws CertificateException {
-        X509Certificate certificateWithoutDobAttribute = getX509Certificate(getX509CertificateBytes(AUTH_CERTIFICATE_LV));
+        X509Certificate certificateWithoutDobAttribute = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV);
 
         LocalDate dateOfBirthCertificateAttribute = CertificateAttributeUtil.getDateOfBirth(certificateWithoutDobAttribute);
 
         assertThat(dateOfBirthCertificateAttribute, is(nullValue()));
     }
 
+    @ParameterizedTest
+    @ArgumentsSource(AttributeArgumentProvider.class)
+    void getAttributeValue(ASN1ObjectIdentifier attribute, String expectedValue) throws CertificateException {
+        X509Certificate certificate = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV_WITH_DOB);
+        String distinguishedName = certificate.getSubjectX500Principal().getName();
+
+        Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(distinguishedName, attribute);
+
+        assertTrue(attributeValue.isPresent());
+        assertThat(attributeValue.get(), is(expectedValue));
+    }
+
+    @Test
+    void getAttributeValue_valueDoesNotExist_returnEmptyOptional() throws CertificateException {
+        X509Certificate certificate = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV_WITH_DOB);
+        String distinguishedName = certificate.getSubjectX500Principal().getName();
+
+        Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.GENDER);
+
+        assertTrue(attributeValue.isEmpty());
+    }
+
+    private static class AttributeArgumentProvider implements ArgumentsProvider {
+
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of(Named.of("Given name", BCStyle.GIVENNAME), "BOD"),
+                    Arguments.of(Named.of("Surname", BCStyle.SURNAME), "TESTNUMBER"),
+                    Arguments.of(Named.of("Serial number", BCStyle.SERIALNUMBER), "PNOLV-329999-99901"),
+                    Arguments.of(Named.of("Country", BCStyle.C), "LV")
+            );
+        }
+    }
 }

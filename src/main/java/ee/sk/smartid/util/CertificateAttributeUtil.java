@@ -12,10 +12,10 @@ package ee.sk.smartid.util;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,13 +25,6 @@ package ee.sk.smartid.util;
  * THE SOFTWARE.
  * #L%
  */
-
-import ee.sk.smartid.AuthenticationIdentity;
-import org.bouncycastle.asn1.*;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.asn1.x509.Extension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,6 +36,24 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Optional;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1GeneralizedTime;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DLSequence;
+import org.bouncycastle.asn1.DLSet;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.bouncycastle.asn1.x509.Extension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ee.sk.smartid.AuthenticationIdentity;
+
 public class CertificateAttributeUtil {
     private static final Logger logger = LoggerFactory.getLogger(CertificateAttributeUtil.class);
 
@@ -51,10 +62,9 @@ public class CertificateAttributeUtil {
      * <p>
      * NB! This attribute may be present on some newer certificates (since ~ May 2021) but not all.
      *
-     * @see NationalIdentityNumberUtil#getDateOfBirth(AuthenticationIdentity) for fallback.
-     *
      * @param x509Certificate Certificate to read the date-of-birth attribute from
      * @return Person date of birth or null if this attribute is not set.
+     * @see NationalIdentityNumberUtil#getDateOfBirth(AuthenticationIdentity) for fallback.
      */
     public static LocalDate getDateOfBirth(X509Certificate x509Certificate) {
         Optional<Date> dateOfBirth = getDateOfBirthCertificateAttribute(x509Certificate);
@@ -62,15 +72,29 @@ public class CertificateAttributeUtil {
         return dateOfBirth.map(date -> date.toInstant().atZone(ZoneOffset.UTC).toLocalDate()).orElse(null);
     }
 
-    private static Optional<Date> getDateOfBirthCertificateAttribute(X509Certificate x509Certificate) {
+    /**
+     * Get value of attribute in X.500 principal.
+     *
+     * @param distinguishedName X.500 distinguished name using the format defined in RFC 2253.
+     * @param oid               Object Identifier (OID) of the attribute to extract
+     * @return Attribute value
+     */
 
+    public static Optional<String> getAttributeValue(String distinguishedName, ASN1ObjectIdentifier oid) {
+        var x500name = new X500Name(distinguishedName);
+        RDN[] rdns = x500name.getRDNs(oid);
+        if (rdns.length == 0) {
+            return Optional.empty();
+        }
+        return Optional.of(IETFUtils.valueToString(rdns[0].getFirst().getValue()));
+    }
+
+    private static Optional<Date> getDateOfBirthCertificateAttribute(X509Certificate x509Certificate) {
         try {
             return Optional.ofNullable(getDateOfBirthFromAttributeInternal(x509Certificate));
-        }
-        catch (IOException | ClassCastException e) {
+        } catch (IOException | ClassCastException e) {
             logger.info("Could not extract date-of-birth from certificate attribute. It seems the attribute does not exist in certificate.");
-        }
-        catch (ParseException e) {
+        } catch (ParseException e) {
             logger.warn("Date of birth field existed in certificate but failed to parse the value");
         }
         return Optional.empty();
