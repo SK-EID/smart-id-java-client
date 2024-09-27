@@ -597,7 +597,7 @@ Session status request by default is a long poll method, meaning the request met
 
     As Smart-ID Java client uses Jersey client for network communication underneath, we've exposed Jersey API for network connection configuration.
 
-Here's an example how to configure HTTP connector's custom socket timeouts for the Smart-ID client:
+    Here's an example how to configure HTTP connector's custom socket timeouts for the Smart-ID client:
 
      */
 
