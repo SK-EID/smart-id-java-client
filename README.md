@@ -58,7 +58,7 @@ The Smart-ID Java client can be used for easy integration of the [Smart-ID](http
 * creating digital signature
 
 ## Requirements
-* Java 8 or later
+ * Java 17 or later
 
 ## Getting the library
 
@@ -280,7 +280,7 @@ from a separate field of the certificate but for some older Smart-id accounts
 More info about the availability of the separate field in certificates:
 https://github.com/SK-EID/smart-id-documentation/wiki/FAQ#where-can-i-find-users-date-of-birth
 
-```
+```java
 Optional<LocalDate> dateOfBirth = authIdentity.getDateOfBirth();
 ```
 
@@ -289,7 +289,7 @@ and then construct authentication identity from that
 and extract the date-of-birth from there.
 Read below about how to obtain the signer's certificate.
 
-```
+```java
 AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(signersCertificate);
 Optional<LocalDate> dateOfBirthExtracted = identity.getDateOfBirth();
 ```
