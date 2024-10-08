@@ -197,6 +197,18 @@ public class AuthenticationResponseValidator {
         trustedCACertificates.clear();
     }
 
+    public static AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
+        AuthenticationIdentity identity = new AuthenticationIdentity(certificate);
+        String distinguishedName = certificate.getSubjectX500Principal().getName();
+        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.GIVENNAME).ifPresent(identity::setGivenName);
+        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SURNAME).ifPresent(identity::setSurname);
+        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SERIALNUMBER)
+                .ifPresent(serialNumber -> identity.setIdentityNumber(serialNumber.split("-", 2)[1]));
+        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.C).ifPresent(identity::setCountry);
+        identity.setDateOfBirth(getDateOfBirth(identity));
+        return identity;
+    }
+
     private void initializeTrustedCACertificatesFromKeyStore() {
         try (InputStream is = AuthenticationResponseValidator.class.getResourceAsStream("/trusted_certificates.jks")) {
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -276,18 +288,6 @@ public class AuthenticationResponseValidator {
         System.arraycopy(digestInfoPrefix, 0, digestWithPrefix, 0, digestInfoPrefix.length);
         System.arraycopy(digest, 0, digestWithPrefix, digestInfoPrefix.length, digest.length);
         return digestWithPrefix;
-    }
-
-    public static AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
-        AuthenticationIdentity identity = new AuthenticationIdentity(certificate);
-        String distinguishedName = certificate.getSubjectX500Principal().getName();
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.GIVENNAME).ifPresent(identity::setGivenName);
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SURNAME).ifPresent(identity::setSurname);
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SERIALNUMBER)
-                .ifPresent(serialNumber -> identity.setIdentityNumber(serialNumber.split("-", 2)[1]));
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.C).ifPresent(identity::setCountry);
-        identity.setDateOfBirth(getDateOfBirth(identity));
-        return identity;
     }
 
     private static LocalDate getDateOfBirth(AuthenticationIdentity identity) {
