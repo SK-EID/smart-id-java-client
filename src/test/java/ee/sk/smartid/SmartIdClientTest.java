@@ -41,7 +41,6 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.oneOf;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,6 +56,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.x500.RDN;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.style.BCStyle;
+import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -1157,8 +1161,8 @@ public class SmartIdClientTest {
     private void assertCertificateResponseValid(SmartIdCertificate certificate) {
         assertNotNull(certificate);
         assertNotNull(certificate.getCertificate());
-        X509Certificate cert = certificate.getCertificate();
-        assertThat(cert.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
+        String name = certificate.getCertificate().getSubjectX500Principal().getName();
+        assertThat(getAttribute(name, BCStyle.SERIALNUMBER), is("PNOEE-31111111111"));
         assertEquals("PNOEE-31111111111", certificate.getDocumentNumber());
         assertEquals("QUALIFIED", certificate.getCertificateLevel());
     }
@@ -1178,5 +1182,11 @@ public class SmartIdClientTest {
         assertThat(authenticationResponse.getSignatureValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
         assertEquals("sha256WithRSAEncryption", authenticationResponse.getAlgorithmName());
         assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
+    }
+
+    private static String getAttribute(String name, ASN1ObjectIdentifier oid) {
+        X500Name x500name = new X500Name(name);
+        RDN[] rdns = x500name.getRDNs(oid);
+        return IETFUtils.valueToString(rdns[0].getFirst().getValue());
     }
 }
