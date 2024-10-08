@@ -3,14 +3,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [3.0] - upcoming
+### Changed
+- Replaced deprecated `X509Certificate::getSubjectDN()` with `X509Certificate::getSubjectX500Principal()`
+- Typo fixes, code cleanup and improvements
+
+### Java and dependency updates
 - Updated java to version 17
 - Updated slf4j-api to version 2.0.16
 - Updated jackson dependencies to version 2.17.2
 - Added jakarta.ws.rs:jakarta.ws.rs-api
 - Updated jersey dependencies to version 3.1.8
 - Updated bouncy-castle artifact to bcprov-jdk18on on version 1.78.1
-- Typo fixes, code cleanup and improvements
-- Replaced deprecated `X509Certificate::getSubjectDN()` with `X509Certificate::getSubjectX500Principal()`
 - Updated jaxb-runtime to version 4.0.5
 
 ## [2.3] - 2023-05-06
