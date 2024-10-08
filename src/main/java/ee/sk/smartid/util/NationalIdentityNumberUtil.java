@@ -35,6 +35,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NationalIdentityNumberUtil {
     private static final Logger logger = LoggerFactory.getLogger(NationalIdentityNumberUtil.class);
@@ -89,7 +91,7 @@ public class NationalIdentityNumberUtil {
 
     public static LocalDate parseLvDateOfBirth(String lvNationalIdentityNumber) {
         String birthDay = lvNationalIdentityNumber.substring(0, 2);
-        if ("32".equals(birthDay)) {
+        if (isNonParsableLVPersonCodePrefix(birthDay)) {
             logger.debug("Person has newer type of Latvian ID-code that does not carry birthdate info");
             return null;
         }
@@ -111,4 +113,9 @@ public class NationalIdentityNumberUtil {
         }
     }
 
+    private static boolean isNonParsableLVPersonCodePrefix(String prefix) {
+        Pattern pattern = Pattern.compile("3[2-9]");
+        Matcher matcher = pattern.matcher(prefix);
+        return matcher.matches();
+    }
 }

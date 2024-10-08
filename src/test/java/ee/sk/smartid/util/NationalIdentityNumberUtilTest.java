@@ -37,6 +37,8 @@ import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ee.sk.CertificateUtil;
 import ee.sk.smartid.AuthenticationIdentity;
@@ -85,9 +87,10 @@ public class NationalIdentityNumberUtilTest {
         assertThat(dateOfBirth, is(LocalDate.of(1960, 9, 6)));
     }
 
-    @Test
-    public void parseLvDateOfBirth_withoutDateOfBirth_returnsNull() {
-        LocalDate birthDate = NationalIdentityNumberUtil.parseLvDateOfBirth("321205-1234");
+    @ParameterizedTest
+    @ValueSource(strings = {"321205-1234", "331205-1234", "341205-1234", "351205-1234", "361205-1234", "371205-1234", "381205-1234", "391205-1234"})
+    public void parseLvDateOfBirth_withoutDateOfBirth_returnsNull(String lvNationalIdentityNumber) {
+        LocalDate birthDate = NationalIdentityNumberUtil.parseLvDateOfBirth(lvNationalIdentityNumber);
         assertThat(birthDate, is(nullValue()));
     }
 
@@ -115,14 +118,6 @@ public class NationalIdentityNumberUtilTest {
                 () -> NationalIdentityNumberUtil.parseLvDateOfBirth("131365-1234"));
 
         assertThat(unprocessableSmartIdResponseException.getMessage(), is("Unable get birthdate from Latvian personal code 131365-1234"));
-    }
-
-    @Test
-    public void parseLvDateOfBirth_invalidIdCode_throwsException() {
-        var unprocessableSmartIdResponseException = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> NationalIdentityNumberUtil.parseLvDateOfBirth("331265-0234"));
-
-        assertThat(unprocessableSmartIdResponseException.getMessage(), is("Unable get birthdate from Latvian personal code 331265-0234"));
     }
 
     @Test

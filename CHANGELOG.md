@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Replaced deprecated `X509Certificate::getSubjectDN()` with `X509Certificate::getSubjectX500Principal()`
 - Typo fixes, code cleanup and improvements
+- Modified NationalIdentityNumberUtil to handle LV person codes with prefixes 33-39 without throwing an exception during parsing.
 
 ### Java and dependency updates
 - Updated java to version 17
