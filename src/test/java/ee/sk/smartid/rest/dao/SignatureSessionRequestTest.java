@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,13 +26,18 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import org.junit.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.jupiter.api.Test;
 
 public class SignatureSessionRequestTest {
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void setDisplayText() {
-        SignatureSessionRequest signatureSessionRequest = new SignatureSessionRequest();
-        signatureSessionRequest.setDisplayText("test");
+        assertThrows(UnsupportedOperationException.class, () -> {
+            SignatureSessionRequest signatureSessionRequest = new SignatureSessionRequest();
+            signatureSessionRequest.setDisplayText("test");
+        });
     }
 }

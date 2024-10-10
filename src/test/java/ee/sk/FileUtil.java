@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,35 +26,30 @@ package ee.sk.smartid;
  * #L%
  */
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-public class CertificateLevel {
+public final class FileUtil {
 
-  private final String certificateLevel;
-
-  private static final Map<String, Integer> certificateLevels = new HashMap<>();
-
-  static {
-    certificateLevels.put("ADVANCED", 1);
-    certificateLevels.put("QUALIFIED", 2);
-  }
-
-  public CertificateLevel(String certificateLevel) {
-    if (certificateLevel == null) {
-      throw new IllegalArgumentException("certificateLevel cannot be null");
+    private FileUtil() {
     }
-    this.certificateLevel = certificateLevel;
-  }
 
-  public boolean isEqualOrAbove(String certificateLevel) {
-    if (this.certificateLevel.equalsIgnoreCase(certificateLevel)) {
-      return true;
+    public static String readFileToString(String fileName) {
+        return new String(readFileBytes(fileName), StandardCharsets.UTF_8);
     }
-    else if (certificateLevels.get(certificateLevel) != null && certificateLevels.get(this.certificateLevel) != null) {
-      return certificateLevels.get(certificateLevel) <= certificateLevels.get(this.certificateLevel);
+
+    private static byte[] readFileBytes(String fileName) {
+        try {
+            ClassLoader classLoader = FileUtil.class.getClassLoader();
+            URL resource = classLoader.getResource(fileName);
+            assertNotNull(resource, "File not found: " + fileName);
+            return Files.readAllBytes(Paths.get(resource.toURI()));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception: " + e.getMessage(), e);
+        }
     }
-    return false;
-  }
 }

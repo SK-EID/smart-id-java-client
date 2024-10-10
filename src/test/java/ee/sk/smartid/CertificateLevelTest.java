@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,54 +26,54 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.Test;
 
 public class CertificateLevelTest {
 
-  @Test
-  public void testBothCertificateLevelsQualified() {
-    String certificateLevelString = "QUALIFIED";
-    CertificateLevel certificateLevel = new CertificateLevel(certificateLevelString);
-    assertTrue(certificateLevel.isEqualOrAbove(certificateLevelString));
-  }
+    @Test
+    public void testBothCertificateLevelsQualified() {
+        String certificateLevelString = "QUALIFIED";
+        CertificateLevel certificateLevel = new CertificateLevel(certificateLevelString);
+        assertTrue(certificateLevel.isEqualOrAbove(certificateLevelString));
+    }
 
-  @Test
-  public void testBothCertificateLevelsAdvanced() {
-    String certificateLevelString = "ADVANCED";
-    CertificateLevel certificateLevel = new CertificateLevel(certificateLevelString);
-    assertTrue(certificateLevel.isEqualOrAbove(certificateLevelString));
-  }
+    @Test
+    public void testBothCertificateLevelsAdvanced() {
+        String certificateLevelString = "ADVANCED";
+        CertificateLevel certificateLevel = new CertificateLevel(certificateLevelString);
+        assertTrue(certificateLevel.isEqualOrAbove(certificateLevelString));
+    }
 
-  @Test
-  public void testFirstCertificateLevelHigher() {
-    CertificateLevel certificateLevel = new CertificateLevel("QUALIFIED");
-    assertTrue(certificateLevel.isEqualOrAbove("ADVANCED"));
-  }
+    @Test
+    public void testFirstCertificateLevelHigher() {
+        CertificateLevel certificateLevel = new CertificateLevel("QUALIFIED");
+        assertTrue(certificateLevel.isEqualOrAbove("ADVANCED"));
+    }
 
-  @Test
-  public void testFirstCertificateLevelLower() {
-    CertificateLevel certificateLevel = new CertificateLevel("ADVANCED");
-    assertFalse(certificateLevel.isEqualOrAbove("QUALIFIED"));
-  }
+    @Test
+    public void testFirstCertificateLevelLower() {
+        CertificateLevel certificateLevel = new CertificateLevel("ADVANCED");
+        assertFalse(certificateLevel.isEqualOrAbove("QUALIFIED"));
+    }
 
-  @Test
-  public void testFirstCertLevelUnknown() {
-    CertificateLevel certificateLevel = new CertificateLevel("SOME UNKNOWN LEVEL");
-    assertFalse(certificateLevel.isEqualOrAbove("ADVANCED"));
-  }
+    @Test
+    public void testFirstCertLevelUnknown() {
+        CertificateLevel certificateLevel = new CertificateLevel("SOME UNKNOWN LEVEL");
+        assertFalse(certificateLevel.isEqualOrAbove("ADVANCED"));
+    }
 
-  @Test
-  public void testSecondCertLevelUnknown() {
-    CertificateLevel certificateLevel = new CertificateLevel("ADVANCED");
-    assertFalse(certificateLevel.isEqualOrAbove("SOME UNKNOWN LEVEL"));
-  }
+    @Test
+    public void testSecondCertLevelUnknown() {
+        CertificateLevel certificateLevel = new CertificateLevel("ADVANCED");
+        assertFalse(certificateLevel.isEqualOrAbove("SOME UNKNOWN LEVEL"));
+    }
 
-
-  @Test(expected = IllegalArgumentException.class)
-  public void certificateLevel_nullArgumentToConstructor() {
-    new CertificateLevel(null);
-  }
+    @Test
+    public void certificateLevel_nullArgumentToConstructor() {
+        assertThrows(IllegalArgumentException.class, () -> new CertificateLevel(null));
+    }
 }

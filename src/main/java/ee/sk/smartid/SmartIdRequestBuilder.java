@@ -47,8 +47,9 @@ import static ee.sk.smartid.util.StringUtil.isEmpty;
 public abstract class SmartIdRequestBuilder {
 
   private static final Logger logger = LoggerFactory.getLogger(SmartIdRequestBuilder.class);
-  private SmartIdConnector connector;
-  private SessionStatusPoller sessionStatusPoller;
+
+  private final SmartIdConnector connector;
+  private final SessionStatusPoller sessionStatusPoller;
   protected String relyingPartyUUID;
   protected String relyingPartyName;
   protected SemanticsIdentifier semanticsIdentifier;

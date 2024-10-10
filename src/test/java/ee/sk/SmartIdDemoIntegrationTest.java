@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,35 +26,15 @@ package ee.sk.smartid;
  * #L%
  */
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-public class CertificateLevel {
-
-  private final String certificateLevel;
-
-  private static final Map<String, Integer> certificateLevels = new HashMap<>();
-
-  static {
-    certificateLevels.put("ADVANCED", 1);
-    certificateLevels.put("QUALIFIED", 2);
-  }
-
-  public CertificateLevel(String certificateLevel) {
-    if (certificateLevel == null) {
-      throw new IllegalArgumentException("certificateLevel cannot be null");
-    }
-    this.certificateLevel = certificateLevel;
-  }
-
-  public boolean isEqualOrAbove(String certificateLevel) {
-    if (this.certificateLevel.equalsIgnoreCase(certificateLevel)) {
-      return true;
-    }
-    else if (certificateLevels.get(certificateLevel) != null && certificateLevels.get(this.certificateLevel) != null) {
-      return certificateLevels.get(certificateLevel) <= certificateLevels.get(this.certificateLevel);
-    }
-    return false;
-  }
+@Target({ElementType.TYPE, ElementType.METHOD}) // Can be applied to classes or methods
+@Retention(RetentionPolicy.RUNTIME)
+@ExtendWith(SmartIdDemoCondition.class)
+public @interface SmartIdDemoIntegrationTest {
 }

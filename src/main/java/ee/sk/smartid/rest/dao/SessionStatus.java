@@ -94,7 +94,7 @@ public class SessionStatus implements Serializable {
 
   /**
    * IP-address of the device running the App.
-   *
+   * <p>
    * Present only if withShareMdClientIpAddress() was specified with the request
    * Also, the RelyingParty must be subscribed for the service.
    * Also, the data must be available (e.g. not present in case state is TIMEOUT).

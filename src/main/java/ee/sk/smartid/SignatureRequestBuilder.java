@@ -163,7 +163,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * can be used to select the wanted hash type
    * and the data is hashed for you.
    *
-   * @param dataToSign dat to be signed
+   * @param dataToSign data to be signed
    * @return this builder
    */
   public SignatureRequestBuilder withSignableData(SignableData dataToSign) {
@@ -203,7 +203,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Sets the request's nonce
    * <p>
-   * By default the signature's initiation request
+   * By default, the signature's initiation request
    * has idempotent behaviour meaning when the request
    * is repeated inside a given time frame with exactly
    * the same parameters, session ID of an existing session
@@ -224,7 +224,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   /**
    * Specifies capabilities of the user
    * <p>
-   * By default there are no specified capabilities.
+   * By default, there are no specified capabilities.
    * The capabilities need to be specified in case of
    * a restricted Smart ID user
    * {@link #withCapabilities(String...)}
@@ -241,7 +241,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * Specifies capabilities of the user
    * <p>
    *
-   * By default there are no specified capabilities.
+   * By default, there are no specified capabilities.
    * The capabilities need to be specified in case of
    * a restricted Smart ID user
    * {@link #withCapabilities(Capability...)}
@@ -279,7 +279,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * Send the signature request and get the response
    * <p>
    * This method uses automatic session status polling internally
-   * and therefore blocks the current thread until signing is concluded/interupted etc.
+   * and therefore blocks the current thread until signing is concluded/interrupted etc.
    *
    * @throws UserAccountNotFoundException when the user account was not found
    * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
@@ -300,12 +300,12 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
   }
 
   /**
-   * Send the signature request and get the session Id
+   * Send the signature request and get the session ID
    *
    * @throws UserAccountNotFoundException when the user account was not found
    * @throws ServerMaintenanceException when the server is under maintenance
    *
-   * @return session Id - later to be used for manual session status polling
+   * @return session ID - later to be used for manual session status polling
    */
   public String initiateSigning() throws UserAccountNotFoundException, ServerMaintenanceException {
     validateParameters();
@@ -329,7 +329,7 @@ public class SignatureRequestBuilder extends SmartIdRequestBuilder {
    * @throws UserRefusedException when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
    * @throws SessionTimeoutException when there was a timeout, i.e. end user did not confirm or refuse the operation within given timeframe
    * @throws DocumentUnusableException when for some reason, this relying party request cannot be completed.
-   * @throws UnprocessableSmartIdResponseException when session status response's result is missing or it has some unknown value
+   * @throws UnprocessableSmartIdResponseException when session status response's result is missing, or it has some unknown value
    *
    * @param sessionStatus session status response
    * @return the authentication response

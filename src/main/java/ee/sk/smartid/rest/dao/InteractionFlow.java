@@ -35,7 +35,7 @@ public enum InteractionFlow {
     VERIFICATION_CODE_CHOICE("verificationCodeChoice"),
     CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE("confirmationMessageAndVerificationCodeChoice");
 
-    private String code;
+    private final String code;
 
     InteractionFlow(String code) {
         this.code = code;

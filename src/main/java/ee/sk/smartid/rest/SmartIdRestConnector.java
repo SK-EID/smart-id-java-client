@@ -46,6 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+
+import java.io.Serial;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +55,11 @@ import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 
 public class SmartIdRestConnector implements SmartIdConnector {
 
+  @Serial
+  private static final long serialVersionUID = 43L;
+
   private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
+
   private static final String SESSION_STATUS_URI = "/session/{sessionId}";
 
   private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
@@ -65,12 +71,11 @@ public class SmartIdRestConnector implements SmartIdConnector {
   private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
   private static final String AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/authentication/etsi/{semanticsIdentifier}";
 
-  private String endpointUrl;
+  private final String endpointUrl;
   private transient Configuration clientConfig;
   private transient Client configuredClient;
   private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
   private long sessionStatusResponseSocketOpenTimeValue;
-  private static final long serialVersionUID = 42L;
   private transient SSLContext sslContext;
 
   public SmartIdRestConnector(String endpointUrl) {
@@ -102,7 +107,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
       logger.warn("Session " + request + " not found: " + e.getMessage());
       throw new SessionNotFoundException();
     }
-
   }
 
   @Override

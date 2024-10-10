@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,35 +26,27 @@ package ee.sk.smartid;
  * #L%
  */
 
+import java.lang.reflect.AnnotatedElement;
+import java.util.Optional;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class CertificateLevel {
+public class SmartIdDemoCondition implements ExecutionCondition {
 
-  private final String certificateLevel;
+    /**
+     * Allows switching off tests going against smart-id demo env.
+     * This is sometimes needed if the test data in smart-id is temporarily broken.
+     */
+    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
 
-  private static final Map<String, Integer> certificateLevels = new HashMap<>();
-
-  static {
-    certificateLevels.put("ADVANCED", 1);
-    certificateLevels.put("QUALIFIED", 2);
-  }
-
-  public CertificateLevel(String certificateLevel) {
-    if (certificateLevel == null) {
-      throw new IllegalArgumentException("certificateLevel cannot be null");
+    @Override
+    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+        Optional<AnnotatedElement> element = context.getElement();
+        if (element.isPresent() && element.get().isAnnotationPresent(SmartIdDemoIntegrationTest.class) && !TEST_AGAINST_SMART_ID_DEMO) {
+            return ConditionEvaluationResult.disabled("Running against Smart-ID demo is turned off");
+        }
+        return ConditionEvaluationResult.enabled("Running against Smart-ID demo is turned on");
     }
-    this.certificateLevel = certificateLevel;
-  }
-
-  public boolean isEqualOrAbove(String certificateLevel) {
-    if (this.certificateLevel.equalsIgnoreCase(certificateLevel)) {
-      return true;
-    }
-    else if (certificateLevels.get(certificateLevel) != null && certificateLevels.get(this.certificateLevel) != null) {
-      return certificateLevels.get(certificateLevel) <= certificateLevels.get(this.certificateLevel);
-    }
-    return false;
-  }
 }

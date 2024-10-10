@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,24 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 public class SignableHashTest {
 
-  @Test
-  public void calculateVerificationCodeWithSha256() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
-    Assert.assertEquals("4240", hashToSign.calculateVerificationCode());
-  }
+    @Test
+    public void calculateVerificationCodeWithSha256() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA256);
+        hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+        assertEquals("4240", hashToSign.calculateVerificationCode());
+    }
 
-  @Test
-  public void calculateVerificationCodeWithSha512() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA512);
-    hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));
-    Assert.assertEquals("4664", hashToSign.calculateVerificationCode());
-  }
+    @Test
+    public void calculateVerificationCodeWithSha512() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA512);
+        hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));
+        assertEquals("4664", hashToSign.calculateVerificationCode());
+    }
 }

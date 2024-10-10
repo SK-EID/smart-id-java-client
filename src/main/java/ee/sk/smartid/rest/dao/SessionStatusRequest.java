@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SessionStatusRequest implements Serializable {
 
-  private String sessionId;
+  private final String sessionId;
   private TimeUnit responseSocketOpenTimeUnit;
   private long responseSocketOpenTimeValue;
 
@@ -45,10 +45,10 @@ public class SessionStatusRequest implements Serializable {
 
   /**
    * Request long poll timeout value. If not provided, a default is used.
-   *
+   * <p>
    * This parameter is used for a long poll method, meaning the request method might not return until a timeout expires
    * set by this parameter.
-   *
+   * <p>
    * Caller can tune the request parameters inside the bounds set by service operator.
    *
    * @param timeUnit time unit of how much time a network request socket should be kept open.
