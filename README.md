@@ -6,7 +6,7 @@
 
 # Smart-ID Java client
 
-This version of the library uses Smart-ID API v 2.0.
+This library now supports both Smart-ID API v2.0 and v3.0.
 
 
 # Table of contents
@@ -50,6 +50,7 @@ This version of the library uses Smart-ID API v 2.0.
 ## Introduction
 
 The Smart-ID Java client can be used for easy integration of the [Smart-ID](https://www.smart-id.com) solution to information systems or e-services.
+This library now supports both Smart-ID API v2.0 and v3.0. The existing code for API v2.0 has been moved to the ee.sk.smartid.v2 package, and support for API v3.0 has been added in the ee.sk.smartid.v3 package.
 
 ## Features
 
@@ -81,8 +82,13 @@ You can use the library as a Maven dependency from the [Maven Central](https://s
 
 Changes introduced with new library versions are described in [CHANGELOG.md](CHANGELOG.md)
 
+In this version, the existing code has been moved into the ee.sk.smartid.v2 package for clarity. This is a breaking change for current users of the library. 
+To update your application:
+Change your import statements from ee.sk.smartid.* to ee.sk.smartid.v2.*
+Update any references to classes, methods, or packages accordingly.
+Support for Smart-ID API v3.0 has been added in the ee.sk.smartid.v3 package. Documentation for v3.0 is currently limited as it is in the early stages of development.
 
-# How to use it
+# How to use API v2.0
 
 ## Test accounts for testing
 
@@ -93,10 +99,10 @@ Changes introduced with new library versions are described in [CHANGELOG.md](CHA
 
 ### Log request payloads
 
-To log requests going to Smart-ID API set ee.sk.smartid.rest.LoggingFilter to log at trace level.
+To log requests going to Smart-ID API set ee.sk.smartid.v2.rest.LoggingFilter to log at trace level.
 For applications on Spring Boot this can be done by adding following line to application.yml:
 ```
-logging.level.ee.sk.smartid.rest.LoggingFilter: trace
+logging.level.ee.sk.smartid.v2.rest.LoggingFilter: trace
 ```
 
 ### Get the IP address of user's device
@@ -115,7 +121,7 @@ The returned info can be retrieved using one of:
 
 * [SmartIdAuthenticationResponse.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdAuthenticationResponse.java) -> getDeviceIpAddress()
 * [SmartIdSignature.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdSignature.java) -> getDeviceIpAddress()
-* [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/rest/dao/SessionStatus.java) -> getDeviceIpAddress()
+* [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/v2/rest/dao/SessionStatus.java) -> getDeviceIpAddress()
 
 
 ## Example of configuring the client
@@ -636,3 +642,12 @@ you have two alternatives:
     client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
 ```
 
+# How to use API v3.0
+
+Support for Smart-ID API v3.0 has been added to the library. The code for v3.0 is located under the ee.sk.smartid.v3 package.
+
+To use the v3.0 API, import the relevant classes from the ee.sk.smartid.v3 package.
+```java 
+ import ee.sk.smartid.v3.SmartIdClient;
+ import ee.sk.smartid.v3.SmartIdConnector;
+```
