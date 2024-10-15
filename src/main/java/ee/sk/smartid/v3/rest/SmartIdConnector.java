@@ -32,55 +32,14 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.v3.rest.dao.SignatureSessionResponse;
 
 public interface SmartIdConnector extends Serializable {
 
     /**
-     * Retrieve the session status for a dynamic-link session (QR/App2App flow)
-     *
-     * @param sessionId ID of the session to retrieve status for
-     * @return session status
-     * @throws SessionNotFoundException if session is not found
-     */
-    SessionStatus getDynamicLinkSessionStatus(String sessionId) throws SessionNotFoundException;
-
-    /**
-     * Retrieve the session status for a notification-based session (push notification flow)
-     *
-     * @param sessionId ID of the session to retrieve status for
-     * @return session status
-     * @throws SessionNotFoundException if session is not found
-     */
-    SessionStatus getNotificationSessionStatus(String sessionId) throws SessionNotFoundException;
-
-    /**
-     * Sign using dynamic link (QR/App2App flow)
-     *
-     * @param identifier The semantics identifier for the user
-     * @param request The signature session request
-     * @return The signature session response
-     */
-    SignatureSessionResponse signWithDynamicLink(SemanticsIdentifier identifier, SignatureSessionRequest request);
-
-    /**
-     * Authenticate using dynamic link (QR/App2App flow)
-     *
-     * @param identity The semantics identifier for the user
-     * @param request The authentication session request
-     * @return The authentication session response
-     */
-    AuthenticationSessionResponse authenticateWithDynamicLink(SemanticsIdentifier identity, AuthenticationSessionRequest request);
-
-    /**
      * Set the session status response socket open time
      *
-     * @param sessionStatusResponseSocketOpenTimeUnit The time unit of the open time
+     * @param sessionStatusResponseSocketOpenTimeUnit  The time unit of the open time
      * @param sessionStatusResponseSocketOpenTimeValue The value of the open time
      */
     void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);

@@ -44,13 +44,8 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.rest.LoggingFilter;
-import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.v3.rest.dao.SignatureSessionResponse;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.NotAuthorizedException;
@@ -67,15 +62,11 @@ import jakarta.ws.rs.core.UriBuilder;
 public class SmartIdRestConnector implements SmartIdConnector {
 
     @Serial
-    private static final long serialVersionUID = 43L;
+    private static final long serialVersionUID = 44L;
 
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
-    private static final String DYNAMIC_LINK_SESSION_STATUS_URI = "/dynamic-link/session/{sessionId}";
-    private static final String NOTIFICATION_SESSION_STATUS_URI = "/notification/session/{sessionId}";
-
-    private static final String DYNAMIC_LINK_AUTHENTICATE_URI = "/dynamic-link/authentication/{semanticsIdentifier}";
-    private static final String DYNAMIC_LINK_SIGNATURE_URI = "/dynamic-link/signature/{semanticsIdentifier}";
+    private static final String SESSION_STATUS_URI = "/session/{sessionId}";
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -98,18 +89,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
         this.configuredClient = configuredClient;
     }
 
-    @Override
-    public SessionStatus getDynamicLinkSessionStatus(String sessionId) throws SessionNotFoundException {
-        logger.debug("Fetching dynamic link session status for session ID: " + sessionId);
-        return getSessionStatus(sessionId, DYNAMIC_LINK_SESSION_STATUS_URI);
-    }
-
-    @Override
-    public SessionStatus getNotificationSessionStatus(String sessionId) throws SessionNotFoundException {
-        logger.debug("Fetching notification session status for session ID: " + sessionId);
-        return getSessionStatus(sessionId, NOTIFICATION_SESSION_STATUS_URI);
-    }
-
     private SessionStatus getSessionStatus(String sessionId, String path) throws SessionNotFoundException {
         SessionStatusRequest request = createSessionStatusRequest(sessionId);
         UriBuilder uriBuilder = UriBuilder.fromUri(endpointUrl).path(path);
@@ -121,34 +100,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
             logger.warn("Session " + request + " not found: " + e.getMessage());
             throw new SessionNotFoundException();
         }
-    }
-
-    @Override
-    public SignatureSessionResponse signWithDynamicLink(SemanticsIdentifier semanticsIdentifier, SignatureSessionRequest request) {
-        logger.debug("Signing with dynamic link for semantics identifier: " + semanticsIdentifier.getIdentifier());
-        URI uri = UriBuilder
-                .fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_SIGNATURE_URI)
-                .build(semanticsIdentifier.getIdentifier());
-        return postSigningRequest(uri, request);
-    }
-
-    @Override
-    public AuthenticationSessionResponse authenticateWithDynamicLink(SemanticsIdentifier semanticsIdentifier, AuthenticationSessionRequest request) {
-        logger.debug("Authenticating with dynamic link for " + semanticsIdentifier);
-        URI uri = UriBuilder
-                .fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_AUTHENTICATE_URI)
-                .build(semanticsIdentifier.getIdentifier());
-        return postAuthenticationRequest(uri, request);
-    }
-
-    private SignatureSessionResponse postSigningRequest(URI uri, SignatureSessionRequest request) {
-        return postRequest(uri, request, SignatureSessionResponse.class);
-    }
-
-    private AuthenticationSessionResponse postAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
-        return postRequest(uri, request, AuthenticationSessionResponse.class);
     }
 
     private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
