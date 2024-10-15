@@ -34,7 +34,7 @@ import static ee.sk.smartid.v3.rest.dao.InteractionFlow.VERIFICATION_CODE_CHOICE
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.v3.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Interaction implements Serializable {

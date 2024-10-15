@@ -54,12 +54,12 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraccount.CertificateLevelMismatchException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.v2.util.CertificateAttributeUtil;
 import ee.sk.smartid.v2.util.NationalIdentityNumberUtil;
-import ee.sk.smartid.v2.util.StringUtil;
+import ee.sk.smartid.util.StringUtil;
 
 /**
  * Class used to validate the authentication

@@ -67,24 +67,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.RelyingPartyAccountConfigurationException;
-import ee.sk.smartid.v2.exception.permanent.ServerMaintenanceException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.v2.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
-import ee.sk.smartid.v2.exception.useraccount.PersonShouldViewSmartIdPortalException;
-import ee.sk.smartid.v2.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.v2.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.v2.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedException;
-import ee.sk.smartid.v2.rest.SmartIdConnector;
-import ee.sk.smartid.v2.rest.SmartIdRestConnector;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
+import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier.CountryCode;
-import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier.IdentityType;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
+import ee.sk.smartid.v2.rest.SmartIdConnector;
+import ee.sk.smartid.v2.rest.SmartIdRestConnector;
 
 @WireMockTest(httpPort = 18089)
 class SmartIdClientTest {
@@ -310,7 +308,7 @@ class SmartIdClientTest {
 
         assertEquals("1796", hashToSign.calculateVerificationCode());
 
-        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789");
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, SemanticsIdentifier.CountryCode.EE, "AA3456789");
 
         SmartIdSignature signature = client
                 .createSignature()
@@ -665,7 +663,7 @@ class SmartIdClientTest {
 
     @Test
     void authenticateWithManualSessionStatusRequesting() {
-        var semanticsIdentifier = new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111");
+        var semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111");
 
         var authenticationHash = new AuthenticationHash();
         authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
@@ -693,7 +691,7 @@ class SmartIdClientTest {
 
     @Test
     void authenticateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
-        var semanticsIdentifier = new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111");
+        var semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111");
 
         var authenticationHash = new AuthenticationHash();
         authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
@@ -886,7 +884,7 @@ class SmartIdClientTest {
     void getCertificateByETSIPNO_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
         SmartIdCertificate cer = client
                 .getCertificate()
-                .withSemanticsIdentifier(new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
+                .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
                 .withCertificateLevel("ADVANCED")
                 .fetch();
 
@@ -898,7 +896,7 @@ class SmartIdClientTest {
         SmartIdCertificate cer = client
                 .getCertificate()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, SemanticsIdentifier.CountryCode.EE, "987654321012"))
                 .withCertificateLevel("ADVANCED")
                 .fetch();
 
@@ -910,7 +908,7 @@ class SmartIdClientTest {
         SmartIdCertificate cer = client
                 .getCertificate()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, SemanticsIdentifier.CountryCode.EE, "AA3456789"))
                 .withCertificateLevel("ADVANCED")
                 .fetch();
 
@@ -927,7 +925,7 @@ class SmartIdClientTest {
         SmartIdAuthenticationResponse authResponse = client
                 .createAuthentication()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
                 .withCertificateLevel("ADVANCED")
                 .withAuthenticationHash(authenticationHash)
                 .withAllowedInteractionsOrder(asList(
@@ -949,7 +947,7 @@ class SmartIdClientTest {
         SmartIdAuthenticationResponse authResponse = client
                 .createAuthentication()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, SemanticsIdentifier.CountryCode.EE, "987654321012"))
                 .withCertificateLevel("ADVANCED")
                 .withAuthenticationHash(authenticationHash)
                 .withAllowedInteractionsOrder(asList(
@@ -971,7 +969,7 @@ class SmartIdClientTest {
         SmartIdAuthenticationResponse authResponse = client
                 .createAuthentication()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, SemanticsIdentifier.CountryCode.EE, "AA3456789"))
                 .withCertificateLevel("ADVANCED")
                 .withAuthenticationHash(authenticationHash)
                 .withAllowedInteractionsOrder(asList(
@@ -993,7 +991,7 @@ class SmartIdClientTest {
         SmartIdSignature signResponse = client
                 .createSignature()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
                 .withCertificateLevel("ADVANCED")
                 .withSignableHash(signableHash)
                 .withAllowedInteractionsOrder(asList(
@@ -1015,7 +1013,7 @@ class SmartIdClientTest {
         SmartIdSignature signResponse = client
                 .createSignature()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, SemanticsIdentifier.CountryCode.EE, "987654321012"))
                 .withCertificateLevel("ADVANCED")
                 .withSignableHash(signableHash)
                 .withAllowedInteractionsOrder(asList(
@@ -1037,7 +1035,7 @@ class SmartIdClientTest {
         SmartIdSignature signResponse = client
                 .createSignature()
                 .withSemanticsIdentifier(
-                        new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
+                        new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, SemanticsIdentifier.CountryCode.EE, "AA3456789"))
                 .withCertificateLevel("ADVANCED")
                 .withSignableHash(signableHash)
                 .withAllowedInteractionsOrder(asList(
@@ -1113,7 +1111,7 @@ class SmartIdClientTest {
     private void makeGetCertificateRequest() {
         client
                 .getCertificate()
-                .withSemanticsIdentifier(new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
+                .withSemanticsIdentifier(new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.EE, "31111111111"))
                 .withCertificateLevel("ADVANCED")
                 .fetch();
     }

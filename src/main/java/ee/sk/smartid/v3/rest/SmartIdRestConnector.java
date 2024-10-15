@@ -37,17 +37,15 @@ import javax.net.ssl.SSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.v3.exception.SessionNotFoundException;
-import ee.sk.smartid.v3.exception.permanent.RelyingPartyAccountConfigurationException;
-import ee.sk.smartid.v3.exception.permanent.ServerMaintenanceException;
-import ee.sk.smartid.v3.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v3.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
-import ee.sk.smartid.v3.exception.useraccount.PersonShouldViewSmartIdPortalException;
-import ee.sk.smartid.v3.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
+import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
+import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionResponse;
-import ee.sk.smartid.v3.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
@@ -55,7 +53,6 @@ import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SignatureSessionResponse;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ClientErrorException;
-import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.ServerErrorException;
@@ -74,16 +71,11 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
-    private static final String SESSION_STATUS_URI = "/session/{sessionId}";
+    private static final String DYNAMIC_LINK_SESSION_STATUS_URI = "/dynamic-link/session/{sessionId}";
+    private static final String NOTIFICATION_SESSION_STATUS_URI = "/notification/session/{sessionId}";
 
-    private static final String CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH = "/certificatechoice/document/{documentNumber}";
-    private static final String CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/certificatechoice/etsi/{semanticsIdentifier}";
-
-    private static final String SIGNATURE_BY_DOCUMENT_NUMBER_PATH = "/signature/document/{documentNumber}";
-    private static final String SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/signature/etsi/{semanticsIdentifier}";
-
-    private static final String AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH = "/authentication/document/{documentNumber}";
-    private static final String AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER = "/authentication/etsi/{semanticsIdentifier}";
+    private static final String DYNAMIC_LINK_AUTHENTICATE_URI = "/dynamic-link/authentication/{semanticsIdentifier}";
+    private static final String DYNAMIC_LINK_SIGNATURE_URI = "/dynamic-link/signature/{semanticsIdentifier}";
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -107,12 +99,20 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
-        logger.debug("Getting session status for " + sessionId);
+    public SessionStatus getDynamicLinkSessionStatus(String sessionId) throws SessionNotFoundException {
+        logger.debug("Fetching dynamic link session status for session ID: " + sessionId);
+        return getSessionStatus(sessionId, DYNAMIC_LINK_SESSION_STATUS_URI);
+    }
+
+    @Override
+    public SessionStatus getNotificationSessionStatus(String sessionId) throws SessionNotFoundException {
+        logger.debug("Fetching notification session status for session ID: " + sessionId);
+        return getSessionStatus(sessionId, NOTIFICATION_SESSION_STATUS_URI);
+    }
+
+    private SessionStatus getSessionStatus(String sessionId, String path) throws SessionNotFoundException {
         SessionStatusRequest request = createSessionStatusRequest(sessionId);
-        UriBuilder uriBuilder = UriBuilder
-                .fromUri(endpointUrl)
-                .path(SESSION_STATUS_URI);
+        UriBuilder uriBuilder = UriBuilder.fromUri(endpointUrl).path(path);
         addResponseSocketOpenTimeUrlParameter(request, uriBuilder);
         URI uri = uriBuilder.build(request.getSessionId());
         try {
@@ -124,148 +124,31 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request) {
-        logger.debug("Getting certificate for document " + documentNumber);
+    public SignatureSessionResponse signWithDynamicLink(SemanticsIdentifier semanticsIdentifier, SignatureSessionRequest request) {
+        logger.debug("Signing with dynamic link for semantics identifier: " + semanticsIdentifier.getIdentifier());
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(CERTIFICATE_CHOICE_BY_DOCUMENT_NUMBER_PATH)
-                .build(documentNumber);
-        return postCertificateRequest(uri, request);
-    }
-
-    @Override
-    public CertificateChoiceResponse getCertificate(SemanticsIdentifier semanticsIdentifier,
-                                                    CertificateRequest request) {
-        logger.debug("Getting certificate for identifier " + semanticsIdentifier.getIdentifier());
-        URI uri = UriBuilder
-                .fromUri(endpointUrl)
-                .path(CERTIFICATE_CHOICE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
+                .path(DYNAMIC_LINK_SIGNATURE_URI)
                 .build(semanticsIdentifier.getIdentifier());
-        return postCertificateRequest(uri, request);
-    }
-
-    @Override
-    public SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request) {
-        logger.debug("Signing for document " + documentNumber);
-        URI uri = UriBuilder
-                .fromUri(endpointUrl)
-                .path(SIGNATURE_BY_DOCUMENT_NUMBER_PATH)
-                .build(documentNumber);
-
         return postSigningRequest(uri, request);
     }
 
     @Override
-    public SignatureSessionResponse sign(SemanticsIdentifier semanticsIdentifier, SignatureSessionRequest request) {
-        logger.debug("Signing for " + semanticsIdentifier);
+    public AuthenticationSessionResponse authenticateWithDynamicLink(SemanticsIdentifier semanticsIdentifier, AuthenticationSessionRequest request) {
+        logger.debug("Authenticating with dynamic link for " + semanticsIdentifier);
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(SIGNATURE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
-                .build(semanticsIdentifier.getIdentifier());
-
-        return postSigningRequest(uri, request);
-    }
-
-    @Override
-    public AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request) {
-        logger.debug("Authenticating for document " + documentNumber);
-        URI uri = UriBuilder
-                .fromUri(endpointUrl)
-                .path(AUTHENTICATE_BY_DOCUMENT_NUMBER_PATH)
-                .build(documentNumber);
-        return postAuthenticationRequest(uri, request);
-    }
-
-    @Override
-    public AuthenticationSessionResponse authenticate(SemanticsIdentifier semanticsIdentifier, AuthenticationSessionRequest request) {
-        logger.debug("Authenticating for " + semanticsIdentifier);
-        URI uri = UriBuilder
-                .fromUri(endpointUrl)
-                .path(AUTHENTICATE_BY_NATURAL_PERSON_SEMANTICS_IDENTIFIER)
+                .path(DYNAMIC_LINK_AUTHENTICATE_URI)
                 .build(semanticsIdentifier.getIdentifier());
         return postAuthenticationRequest(uri, request);
-    }
-
-    @Override
-    public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
-        this.sessionStatusResponseSocketOpenTimeUnit = sessionStatusResponseSocketOpenTimeUnit;
-        this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
-    }
-
-    protected Invocation.Builder prepareClient(URI uri) {
-        Client client;
-        if (this.configuredClient == null) {
-            ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-            if (null != this.clientConfig) {
-                clientBuilder.withConfig(this.clientConfig);
-            }
-            if (null != this.sslContext) {
-                clientBuilder.sslContext(this.sslContext);
-            }
-            client = clientBuilder.build();
-        } else {
-            client = this.configuredClient;
-        }
-
-        return client
-                .register(new LoggingFilter())
-                .target(uri)
-                .request()
-                .accept(APPLICATION_JSON_TYPE)
-                .header("User-Agent", buildUserAgentString());
-    }
-
-    protected String buildUserAgentString() {
-        return "smart-id-java-client/" + getClientVersion() + " (Java/" + getJdkMajorVersion() + ")";
-    }
-
-    protected String getClientVersion() {
-        String clientVersion = getClass().getPackage().getImplementationVersion();
-        return clientVersion == null ? "-" : clientVersion;
-    }
-
-    protected String getJdkMajorVersion() {
-        try {
-            return System.getProperty("java.version").split("_")[0];
-        } catch (Exception e) {
-            return "-";
-        }
-    }
-
-    private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
-        try {
-            return postRequest(uri, request, CertificateChoiceResponse.class);
-        } catch (NotFoundException e) {
-            logger.warn("Certificate not found for URI " + uri, e);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException e) {
-            logger.warn("No permission to issue the request", e);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
-        }
-    }
-
-    private AuthenticationSessionResponse postAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
-        try {
-            return postRequest(uri, request, AuthenticationSessionResponse.class);
-        } catch (NotFoundException e) {
-            logger.warn("User account not found for URI " + uri, e);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException e) {
-            logger.warn("No permission to issue the request", e);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
-        }
     }
 
     private SignatureSessionResponse postSigningRequest(URI uri, SignatureSessionRequest request) {
-        try {
-            return postRequest(uri, request, SignatureSessionResponse.class);
-        } catch (NotFoundException e) {
-            logger.warn("User account not found for URI " + uri, e);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException e) {
-            logger.warn("No permission to issue the request", e);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
-        }
+        return postRequest(uri, request, SignatureSessionResponse.class);
+    }
+
+    private AuthenticationSessionResponse postAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
+        return postRequest(uri, request, AuthenticationSessionResponse.class);
     }
 
     private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
@@ -301,9 +184,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-
     private SessionStatusRequest createSessionStatusRequest(String sessionId) {
-        SessionStatusRequest request = new SessionStatusRequest(sessionId);
+        var request = new SessionStatusRequest(sessionId);
         if (sessionStatusResponseSocketOpenTimeUnit != null && sessionStatusResponseSocketOpenTimeValue > 0) {
             request.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
         }
@@ -312,11 +194,55 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private void addResponseSocketOpenTimeUrlParameter(SessionStatusRequest request, UriBuilder uriBuilder) {
         if (request.isResponseSocketOpenTimeSet()) {
-            TimeUnit timeUnit = request.getResponseSocketOpenTimeUnit();
-            long timeValue = request.getResponseSocketOpenTimeValue();
-            long queryTimeoutInMilliseconds = timeUnit.toMillis(timeValue);
+            long queryTimeoutInMilliseconds = sessionStatusResponseSocketOpenTimeUnit.toMillis(sessionStatusResponseSocketOpenTimeValue);
             uriBuilder.queryParam("timeoutMs", queryTimeoutInMilliseconds);
         }
+    }
+
+    protected Invocation.Builder prepareClient(URI uri) {
+        Client client;
+        if (this.configuredClient == null) {
+            ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+            if (clientConfig != null) {
+                clientBuilder.withConfig(clientConfig);
+            }
+            if (sslContext != null) {
+                clientBuilder.sslContext(sslContext);
+            }
+            client = clientBuilder.build();
+        } else {
+            client = this.configuredClient;
+        }
+
+        return client
+                .register(new LoggingFilter())
+                .target(uri)
+                .request()
+                .accept(APPLICATION_JSON_TYPE)
+                .header("User-Agent", buildUserAgentString());
+    }
+
+    protected String buildUserAgentString() {
+        return "smart-id-java-client/" + getClientVersion() + " (Java/" + getJdkMajorVersion() + ")";
+    }
+
+    protected String getClientVersion() {
+        String clientVersion = getClass().getPackage().getImplementationVersion();
+        return clientVersion == null ? "-" : clientVersion;
+    }
+
+    protected String getJdkMajorVersion() {
+        try {
+            return System.getProperty("java.version").split("_")[0];
+        } catch (Exception e) {
+            return "-";
+        }
+    }
+
+    @Override
+    public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
+        this.sessionStatusResponseSocketOpenTimeUnit = sessionStatusResponseSocketOpenTimeUnit;
+        this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
     }
 
     @Override

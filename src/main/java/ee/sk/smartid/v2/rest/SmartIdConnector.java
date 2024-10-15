@@ -26,7 +26,7 @@ package ee.sk.smartid.v2.rest;
  * #L%
  */
 
-import ee.sk.smartid.v2.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;

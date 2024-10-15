@@ -26,13 +26,13 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.ServerMaintenanceException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.v2.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.v2.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.v2.rest.SessionStatusPoller;
 import ee.sk.smartid.v2.rest.dao.Capability;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;
@@ -52,8 +52,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static ee.sk.smartid.v2.util.StringUtil.isEmpty;
-import static ee.sk.smartid.v2.util.StringUtil.isNotEmpty;
+import static ee.sk.smartid.util.StringUtil.isEmpty;
+import static ee.sk.smartid.util.StringUtil.isNotEmpty;
 
 /**
  * Class for building certificate choice request and getting the response

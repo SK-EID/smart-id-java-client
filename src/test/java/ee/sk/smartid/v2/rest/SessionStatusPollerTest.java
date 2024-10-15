@@ -45,12 +45,14 @@ import javax.net.ssl.SSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.v2.rest.SessionStatusPoller;
+import ee.sk.smartid.v2.rest.SmartIdConnector;
+import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.v2.rest.dao.CertificateRequest;
-import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.dao.SessionStatusRequest;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionRequest;

@@ -49,6 +49,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import ee.sk.smartid.v2.CertificateUtil;
+import ee.sk.smartid.v2.util.CertificateAttributeUtil;
 
 public class CertificateAttributeUtilTest {
 

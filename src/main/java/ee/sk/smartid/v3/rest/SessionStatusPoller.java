@@ -31,52 +31,16 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.v3.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v3.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.v3.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.v3.exception.useraction.UserRefusedException;
-import ee.sk.smartid.v3.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.v3.rest.dao.SessionStatus;
-
 public class SessionStatusPoller {
 
     private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
 
-    private final ee.sk.smartid.v3.rest.SmartIdConnector connector;
+    private final SmartIdConnector connector;
     private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
     private long pollingSleepTimeout = 1L;
 
     public SessionStatusPoller(SmartIdConnector connector) {
         this.connector = connector;
-    }
-
-    public SessionStatus fetchFinalSessionStatus(String sessionId) throws UserRefusedException, UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
-        logger.debug("Starting to poll session status for session " + sessionId);
-        try {
-            return pollForFinalSessionStatus(sessionId);
-        } catch (InterruptedException e) {
-            logger.error("Failed to poll session status: " + e.getMessage());
-            throw new UnprocessableSmartIdResponseException("Failed to poll session status: " + e.getMessage(), e);
-        }
-    }
-
-    private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
-        SessionStatus sessionStatus = null;
-        while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
-            sessionStatus = pollSessionStatus(sessionId);
-            if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
-                break;
-            }
-            logger.debug("Sleeping for " + pollingSleepTimeout + " " + pollingSleepTimeUnit);
-            pollingSleepTimeUnit.sleep(pollingSleepTimeout);
-        }
-        logger.debug("Got session final session status response");
-        return sessionStatus;
-    }
-
-    private SessionStatus pollSessionStatus(String sessionId) {
-        logger.debug("Polling session status");
-        return connector.getSessionStatus(sessionId);
     }
 
     public void setPollingSleepTime(TimeUnit unit, long timeout) {

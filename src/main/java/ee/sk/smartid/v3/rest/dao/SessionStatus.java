@@ -30,15 +30,15 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import ee.sk.smartid.v2.rest.dao.SessionCertificate;
+import ee.sk.smartid.v2.rest.dao.SessionSignature;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionStatus implements Serializable {
 
   private String state;
   private SessionResult result;
-  private SessionSignature signature;
 
-  private SessionCertificate cert;
   private String[] ignoredProperties = {};
 
   private String interactionFlowUsed;
@@ -58,22 +58,6 @@ public class SessionStatus implements Serializable {
 
   public void setResult(SessionResult result) {
     this.result = result;
-  }
-
-  public SessionCertificate getCert() {
-    return cert;
-  }
-
-  public void setCert(SessionCertificate cert) {
-    this.cert = cert;
-  }
-
-  public SessionSignature getSignature() {
-    return signature;
-  }
-
-  public void setSignature(SessionSignature signature) {
-    this.signature = signature;
   }
 
   public String[] getIgnoredProperties() {

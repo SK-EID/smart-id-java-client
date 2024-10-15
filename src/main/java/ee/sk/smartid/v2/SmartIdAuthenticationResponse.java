@@ -26,7 +26,7 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 import java.io.Serializable;
 import java.security.cert.X509Certificate;

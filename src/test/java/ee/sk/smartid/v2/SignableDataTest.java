@@ -32,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.v2.HashType;
+import ee.sk.smartid.v2.SignableData;
+
 public class SignableDataTest {
 
     private static final byte[] DATA_TO_SIGN = "Hello World!".getBytes();

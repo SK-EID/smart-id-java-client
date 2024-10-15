@@ -49,8 +49,8 @@ import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.useraccount.CertificateLevelMismatchException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 
 public class AuthenticationResponseValidatorTest {
 

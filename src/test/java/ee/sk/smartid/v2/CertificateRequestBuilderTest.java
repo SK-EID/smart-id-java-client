@@ -26,8 +26,6 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import static ee.sk.smartid.v2.DummyData.createSessionEndResult;
-import static ee.sk.smartid.v2.DummyData.createUserRefusedSessionStatus;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,12 +43,14 @@ import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.v2.rest.SessionStatusPoller;
 import ee.sk.smartid.v2.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.v2.rest.dao.Capability;
@@ -139,8 +139,8 @@ public class CertificateRequestBuilderTest {
                 .fetch();
         assertCertificateResponseValid(certificate);
 
-        assertNotNull(connector.certificateRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
-        assertTrue(connector.certificateRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be true");
+        Assertions.assertNotNull(connector.certificateRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
+        Assertions.assertTrue(connector.certificateRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be true");
         assertThat(certificate.getDeviceIpAddress(), is("5.5.5.5"));
 
         assertCorrectSessionRequestMade();
@@ -158,8 +158,8 @@ public class CertificateRequestBuilderTest {
                 .fetch();
         assertCertificateResponseValid(certificate);
 
-        assertNotNull(connector.certificateRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
-        assertFalse(connector.certificateRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be false");
+        Assertions.assertNotNull(connector.certificateRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
+        Assertions.assertFalse(connector.certificateRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be false");
 
         assertCorrectSessionRequestMade();
         assertValidCertificateChoiceRequestMade("ADVANCED");
@@ -224,7 +224,7 @@ public class CertificateRequestBuilderTest {
     @Test
     public void getCertificate_whenUserRefuses_shouldThrowException() {
         assertThrows(UserRefusedException.class, () -> {
-            connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED");
+            connector.sessionStatusToRespond = DummyData.createUserRefusedSessionStatus("USER_REFUSED");
             makeCertificateRequest();
         });
     }
@@ -232,7 +232,7 @@ public class CertificateRequestBuilderTest {
     @Test
     public void getCertificate_withDocumentNumber_whenUserRefuses_shouldThrowException() {
         assertThrows(UserRefusedException.class, () -> {
-            connector.sessionStatusToRespond = createUserRefusedSessionStatus("USER_REFUSED");
+            connector.sessionStatusToRespond = DummyData.createUserRefusedSessionStatus("USER_REFUSED");
             builder
                     .withRelyingPartyUUID("relying-party-uuid")
                     .withRelyingPartyName("relying-party-name")
@@ -289,25 +289,25 @@ public class CertificateRequestBuilderTest {
     }
 
     private void assertValidCertificateChoiceRequestMade(String certificateLevel) {
-        assertThat(connector.semanticsIdentifierUsed.getIdentifier(), is("PNOEE-31111111111"));
+        MatcherAssert.assertThat(connector.semanticsIdentifierUsed.getIdentifier(), is("PNOEE-31111111111"));
 
-        assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
-        assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
-        assertEquals(certificateLevel, connector.certificateRequestUsed.getCertificateLevel());
+        Assertions.assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
+        Assertions.assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
+        Assertions.assertEquals(certificateLevel, connector.certificateRequestUsed.getCertificateLevel());
     }
 
     private void assertValidCertificateRequestMadeWithDocumentNumber(String certificateLevel) {
         assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
-        assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
-        assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
-        assertEquals(certificateLevel, connector.certificateRequestUsed.getCertificateLevel());
+        Assertions.assertEquals("relying-party-uuid", connector.certificateRequestUsed.getRelyingPartyUUID());
+        Assertions.assertEquals("relying-party-name", connector.certificateRequestUsed.getRelyingPartyName());
+        Assertions.assertEquals(certificateLevel, connector.certificateRequestUsed.getCertificateLevel());
     }
 
     private SessionStatus createCertificateSessionStatusCompleteResponse() {
         SessionStatus status = new SessionStatus();
         status.setState("COMPLETE");
         status.setCert(createSessionCertificate());
-        status.setResult(createSessionEndResult());
+        status.setResult(DummyData.createSessionEndResult());
         status.setDeviceIpAddress("5.5.5.5");
         return status;
     }

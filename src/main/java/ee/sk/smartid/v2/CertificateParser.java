@@ -26,7 +26,7 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

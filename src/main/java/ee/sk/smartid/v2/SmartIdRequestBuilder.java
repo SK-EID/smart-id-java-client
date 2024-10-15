@@ -26,30 +26,31 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.v2.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.v2.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedCertChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedConfirmationMessageException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedDisplayTextAndPinException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedVerificationChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.v2.rest.SessionStatusPoller;
-import ee.sk.smartid.v2.rest.SmartIdConnector;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.SessionResult;
+import ee.sk.smartid.v2.rest.SessionStatusPoller;
+import ee.sk.smartid.v2.rest.SmartIdConnector;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
 
-import static ee.sk.smartid.v2.util.StringUtil.isEmpty;
+import static ee.sk.smartid.util.StringUtil.isEmpty;
 
 public abstract class SmartIdRequestBuilder {
 

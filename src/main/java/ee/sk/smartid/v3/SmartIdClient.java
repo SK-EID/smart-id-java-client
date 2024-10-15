@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-import ee.sk.smartid.v3.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
 import jakarta.ws.rs.client.Client;
@@ -232,15 +232,4 @@ public class SmartIdClient {
     public void setSmartIdConnector(SmartIdConnector smartIdConnector) {
         this.connector = smartIdConnector;
     }
-
-    /**
-     * Use setTrustStore() instead
-     *
-     * @param trustStore Trust store to load certificates from.
-     */
-    @Deprecated
-    public void loadSslCertificatesFromKeystore(KeyStore trustStore) {
-        this.setTrustStore(trustStore);
-    }
-
 }

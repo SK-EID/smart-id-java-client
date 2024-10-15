@@ -40,25 +40,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedCertChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedConfirmationMessageException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedDisplayTextAndPinException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedVerificationChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.v2.rest.SessionStatusPoller;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.v2.rest.SmartIdConnectorSpy;
-import ee.sk.smartid.v2.rest.dao.Capability;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SessionSignature;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.v2.rest.SessionStatusPoller;
+import ee.sk.smartid.v2.rest.dao.Capability;
 
 public class SignatureRequestBuilderTest {
 
@@ -155,9 +156,9 @@ public class SignatureRequestBuilderTest {
 
         assertCorrectSignatureRequestMade("QUALIFIED");
 
-        assertNotNull(connector.signatureSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
+        Assertions.assertNotNull(connector.signatureSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
 
-        assertTrue(connector.signatureSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(),
+        Assertions.assertTrue(connector.signatureSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(),
                 "requestProperties.shareMdClientIpAddress must be true");
 
         assertCorrectSessionRequestMade();
@@ -183,9 +184,9 @@ public class SignatureRequestBuilderTest {
 
         assertCorrectSignatureRequestMade("QUALIFIED");
 
-        assertNotNull(connector.signatureSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
+        Assertions.assertNotNull(connector.signatureSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
 
-        assertFalse(connector.signatureSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(),
+        Assertions.assertFalse(connector.signatureSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(),
                 "requestProperties.shareMdClientIpAddress must be false");
 
         assertCorrectSessionRequestMade();
@@ -488,11 +489,11 @@ public class SignatureRequestBuilderTest {
 
     private void assertCorrectSignatureRequestMade(String expectedCertificateLevel) {
         assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
-        assertEquals("relying-party-uuid", connector.signatureSessionRequestUsed.getRelyingPartyUUID());
-        assertEquals("relying-party-name", connector.signatureSessionRequestUsed.getRelyingPartyName());
-        assertEquals(expectedCertificateLevel, connector.signatureSessionRequestUsed.getCertificateLevel());
-        assertEquals("SHA256", connector.signatureSessionRequestUsed.getHashType());
-        assertEquals("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=", connector.signatureSessionRequestUsed.getHash());
+        Assertions.assertEquals("relying-party-uuid", connector.signatureSessionRequestUsed.getRelyingPartyUUID());
+        Assertions.assertEquals("relying-party-name", connector.signatureSessionRequestUsed.getRelyingPartyName());
+        Assertions.assertEquals(expectedCertificateLevel, connector.signatureSessionRequestUsed.getCertificateLevel());
+        Assertions.assertEquals("SHA256", connector.signatureSessionRequestUsed.getHashType());
+        Assertions.assertEquals("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=", connector.signatureSessionRequestUsed.getHash());
     }
 
     private void assertCorrectSessionRequestMade() {

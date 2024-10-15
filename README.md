@@ -8,7 +8,6 @@
 
 This library now supports both Smart-ID API v2.0 and v3.0.
 
-
 # Table of contents
 
 * [Smart-ID Java client](#smart-id-java-client)
@@ -99,10 +98,10 @@ Support for Smart-ID API v3.0 has been added in the ee.sk.smartid.v3 package. Do
 
 ### Log request payloads
 
-To log requests going to Smart-ID API set ee.sk.smartid.v2.rest.LoggingFilter to log at trace level.
+To log requests going to Smart-ID API set ee.sk.smartid.rest.LoggingFilter to log at trace level.
 For applications on Spring Boot this can be done by adding following line to application.yml:
 ```
-logging.level.ee.sk.smartid.v2.rest.LoggingFilter: trace
+logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 ```
 
 ### Get the IP address of user's device
@@ -645,9 +644,21 @@ you have two alternatives:
 # How to use API v3.0
 
 Support for Smart-ID API v3.0 has been added to the library. The code for v3.0 is located under the ee.sk.smartid.v3 package.
+This version introduces new dynamic link and notification-based flows for both authentication and signing.
 
 To use the v3.0 API, import the relevant classes from the ee.sk.smartid.v3 package.
 ```java 
  import ee.sk.smartid.v3.SmartIdClient;
  import ee.sk.smartid.v3.SmartIdConnector;
+```
+
+## Setting up SmartIdClient for v3.0
+
+```java 
+    import ee.sk.smartid.v3.SmartIdClient;
+
+var client = new SmartIdClient();
+        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        client.setRelyingPartyName("DEMO");
+        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 ```

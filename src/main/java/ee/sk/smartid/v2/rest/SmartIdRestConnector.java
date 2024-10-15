@@ -26,19 +26,20 @@ package ee.sk.smartid.v2.rest;
  * #L%
  */
 
-import ee.sk.smartid.v2.exception.SessionNotFoundException;
-import ee.sk.smartid.v2.exception.permanent.RelyingPartyAccountConfigurationException;
-import ee.sk.smartid.v2.exception.permanent.ServerMaintenanceException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
-import ee.sk.smartid.v2.exception.useraccount.PersonShouldViewSmartIdPortalException;
-import ee.sk.smartid.v2.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
+import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.rest.LoggingFilter;
+import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.v2.rest.dao.SessionStatus;
-import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.CertificateRequest;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.dao.SessionStatusRequest;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionResponse;

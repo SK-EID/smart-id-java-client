@@ -26,14 +26,13 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.ServerMaintenanceException;
-import ee.sk.smartid.v2.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.v2.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.v2.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedException;
-import ee.sk.smartid.v2.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.v2.rest.SessionStatusPoller;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.exception.useraction.SessionTimeoutException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.v2.rest.dao.Capability;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.RequestProperties;
@@ -42,6 +41,7 @@ import ee.sk.smartid.v2.rest.dao.SessionSignature;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionResponse;
+import ee.sk.smartid.v2.rest.SessionStatusPoller;
 import ee.sk.smartid.v2.rest.SmartIdConnector;
 
 import org.slf4j.Logger;
@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static ee.sk.smartid.v2.util.StringUtil.isNotEmpty;
+import static ee.sk.smartid.util.StringUtil.isNotEmpty;
 
 /**
  * Class for building signature request and getting the response

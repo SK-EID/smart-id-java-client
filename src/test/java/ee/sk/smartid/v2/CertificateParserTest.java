@@ -30,7 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.v2.CertificateParser;
 
 public class CertificateParserTest {
 

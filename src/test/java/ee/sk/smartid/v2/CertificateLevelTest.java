@@ -32,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.v2.CertificateLevel;
+
 public class CertificateLevelTest {
 
     @Test

@@ -41,19 +41,19 @@ import java.security.cert.CertificateEncodingException;
 import java.util.Collections;
 
 import org.apache.commons.codec.binary.Base64;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedCertChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedConfirmationMessageException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedDisplayTextAndPinException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedException;
-import ee.sk.smartid.v2.exception.useraction.UserRefusedVerificationChoiceException;
-import ee.sk.smartid.v2.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.v2.rest.SessionStatusPoller;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
+import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
+import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.v2.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.Capability;
@@ -62,6 +62,7 @@ import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.SessionCertificate;
 import ee.sk.smartid.v2.rest.dao.SessionSignature;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
+import ee.sk.smartid.v2.rest.SessionStatusPoller;
 
 public class AuthenticationRequestBuilderTest {
 
@@ -188,8 +189,8 @@ public class AuthenticationRequestBuilderTest {
                 .withShareMdClientIpAddress(true)
                 .authenticate();
 
-        assertNotNull(connector.authenticationSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
-        assertTrue(connector.authenticationSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be true");
+        Assertions.assertNotNull(connector.authenticationSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
+        Assertions.assertTrue(connector.authenticationSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be true");
 
         assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), "QUALIFIED");
         assertCorrectSessionRequestMade();
@@ -212,9 +213,9 @@ public class AuthenticationRequestBuilderTest {
 
         assertCorrectAuthenticationRequestMadeWithDocumentNumber(authenticationHash.getHashInBase64(), "QUALIFIED");
 
-        assertNotNull(connector.authenticationSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
+        Assertions.assertNotNull(connector.authenticationSessionRequestUsed.getRequestProperties(), "getRequestProperties must be set withShareMdClientIpAddress");
 
-        assertFalse(connector.authenticationSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be false");
+        Assertions.assertFalse(connector.authenticationSessionRequestUsed.getRequestProperties().getShareMdClientIpAddress(), "requestProperties.shareMdClientIpAddress must be false");
 
         assertCorrectSessionRequestMade();
         assertAuthenticationResponseCorrect(authenticationResponse, authenticationHash.getHashInBase64());
@@ -554,20 +555,20 @@ public class AuthenticationRequestBuilderTest {
 
     private void assertCorrectAuthenticationRequestMadeWithDocumentNumber(String expectedHashToSignInBase64, String expectedCertificateLevel) {
         assertEquals("PNOEE-31111111111", connector.documentNumberUsed);
-        assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
-        assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
-        assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
-        assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
-        assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
+        Assertions.assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
+        Assertions.assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
+        Assertions.assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
+        Assertions.assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
+        Assertions.assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
     }
 
     private void assertCorrectAuthenticationRequestMadeWithSemanticsIdentifier(String expectedHashToSignInBase64, String expectedCertificateLevel) {
-        assertEquals("IDCCZ-1234567890", connector.semanticsIdentifierUsed.getIdentifier());
-        assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
-        assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
-        assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
-        assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
-        assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
+        Assertions.assertEquals("IDCCZ-1234567890", connector.semanticsIdentifierUsed.getIdentifier());
+        Assertions.assertEquals("relying-party-uuid", connector.authenticationSessionRequestUsed.getRelyingPartyUUID());
+        Assertions.assertEquals("relying-party-name", connector.authenticationSessionRequestUsed.getRelyingPartyName());
+        Assertions.assertEquals(expectedCertificateLevel, connector.authenticationSessionRequestUsed.getCertificateLevel());
+        Assertions.assertEquals("SHA512", connector.authenticationSessionRequestUsed.getHashType());
+        Assertions.assertEquals(expectedHashToSignInBase64, connector.authenticationSessionRequestUsed.getHash());
     }
 
     private void assertCorrectSessionRequestMade() {

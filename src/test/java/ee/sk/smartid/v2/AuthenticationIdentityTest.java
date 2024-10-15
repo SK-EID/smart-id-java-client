@@ -32,6 +32,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.v2.AuthenticationIdentity;
+
 public class AuthenticationIdentityTest {
 
     @SuppressWarnings("deprecation")

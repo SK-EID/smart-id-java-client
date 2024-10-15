@@ -42,8 +42,8 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.exception.permanent.RelyingPartyAccountConfigurationException;
-import ee.sk.smartid.v2.integration.SmartIdIntegrationTest;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.integration.SmartIdIntegrationTest;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -101,7 +101,7 @@ public class EndpointSslVerificationIntegrationTest {
     @Test
     public void makeRequestToLiveApi_trustStoreFile() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("demo_server_trusted_ssl_certs.jks");
+            InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
             KeyStore trustStore = KeyStore.getInstance("JKS");
             trustStore.load(is, "changeit".toCharArray());
 
@@ -123,7 +123,7 @@ public class EndpointSslVerificationIntegrationTest {
     @Test
     public void makeRequestToLiveApi_trustStoreContext() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("demo_server_trusted_ssl_certs.jks");
+            InputStream is = SmartIdIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
             KeyStore trustStore = KeyStore.getInstance("JKS");
             trustStore.load(is, "changeit".toCharArray());
 
