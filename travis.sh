@@ -7,13 +7,13 @@ echo "Is pull request: $TRAVIS_PULL_REQUEST"
 echo "Tag:             $TRAVIS_TAG"
 echo "JDK version:     $TRAVIS_JDK_VERSION"
 
-if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ] && [ "$TRAVIS_JDK_VERSION" == "openjdk8" ]; then
+if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ] && [ "$TRAVIS_JDK_VERSION" == "openjdk17" ]; then
   echo "Starting to publish"
   ./publish.sh
   echo "Finished"
-elif [ "$TRAVIS_JDK_VERSION" == "openjdk8" ]; then
+elif [ "$TRAVIS_JDK_VERSION" == "openjdk17" ]; then
   ./mvnw test
-  ./mvnw org.owasp:dependency-check-maven:check
+  ./mvnw org.owasp:dependency-check-maven:check -DnvdApiKey=$NVD_key
   ./mvnw spotbugs:check
 else
   ./mvnw test
