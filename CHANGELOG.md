@@ -2,8 +2,13 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [3.0] - upcoming
+## [3.0] - 2023-10-14
+
+### Added
+- Support for Smart-ID API v3.0 has been added under the ee.sk.smartid.v3 package.
+
 ### Changed
+- Existing code for Smart-ID API v2.0 has been moved into the ee.sk.smartid.v2 package for clarity.
 - Replaced deprecated `X509Certificate::getSubjectDN()` with `X509Certificate::getSubjectX500Principal()`
 - Typo fixes, code cleanup and improvements
 - Modified NationalIdentityNumberUtil to handle LV person codes with prefixes 33-39 without throwing an exception during parsing.
@@ -56,7 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - [SmartIdAuthenticationResponse.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdAuthenticationResponse.java#:~:text=getDeviceIpAddress())
 - [SmartIdSignature.getDeviceIpAddress()](src/main/java/ee/sk/smartid/SmartIdSignature.java#:~:text=getDeviceIpAddress())
-- [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/rest/dao/SessionStatus.java#:~:text=getDeviceIpAddress())
+- [SessionStatus.getDeviceIpAddress()](src/main/java/ee/sk/smartid/v2/rest/dao/SessionStatus.java#:~:text=getDeviceIpAddress())
 
 ## [2.1.4] - 2022-01-14
 
