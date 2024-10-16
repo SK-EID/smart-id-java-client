@@ -14,7 +14,7 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ] && [ "$TRAVI
 elif [ "$TRAVIS_JDK_VERSION" == "openjdk17" ]; then
   ./mvnw test
   ./mvnw -DnvdApiKey="$NVD_key" org.owasp:dependency-check-maven:check
-  ./mvnw spotbugs:spotbugs # results should be analyzed before turning back to spotbugs:check
+  ./mvnw spotbugs:check
 else
   ./mvnw test
 fi

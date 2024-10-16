@@ -265,6 +265,9 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>4.8.6.4</version>
+                <configuration>
+                    <failOnError>false</failOnError> <!-- results should be analyzed before turning back to true -->
+                </configuration>
             </plugin>
 
             <plugin>
