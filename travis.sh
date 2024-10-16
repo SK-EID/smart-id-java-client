@@ -11,10 +11,9 @@ if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_TAG" != "" ] && [ "$TRAVI
   echo "Starting to publish"
   ./publish.sh
   echo "Finished"
-elif [ "$TRAVIS_JDK_VERSION" == "openjdk17" ]; then
-  ./mvnw test
+elif [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_JDK_VERSION" == "openjdk17" ]; then
   ./mvnw -DnvdApiKey="$NVD_key" org.owasp:dependency-check-maven:check
-  ./mvnw spotbugs:check
 else
   ./mvnw test
+  ./mvnw spotbugs:check
 fi
