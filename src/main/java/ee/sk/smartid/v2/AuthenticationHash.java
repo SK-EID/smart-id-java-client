@@ -28,6 +28,9 @@ package ee.sk.smartid.v2;
 
 import java.security.SecureRandom;
 
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.SignableHash;
+
 /**
  * Class containing the hash and its hash type used for authentication
  */

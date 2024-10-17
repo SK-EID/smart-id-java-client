@@ -33,6 +33,8 @@ import java.lang.annotation.Target;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import ee.sk.smartid.v2.SmartIdDemoCondition;
+
 @Target({ElementType.TYPE, ElementType.METHOD}) // Can be applied to classes or methods
 @Retention(RetentionPolicy.RUNTIME)
 @ExtendWith(SmartIdDemoCondition.class)

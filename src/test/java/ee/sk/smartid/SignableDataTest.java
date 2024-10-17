@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -32,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.HashType;
-import ee.sk.smartid.v2.SignableData;
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.SignableData;
 
 public class SignableDataTest {
 

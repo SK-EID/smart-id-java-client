@@ -26,6 +26,7 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
+import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;

@@ -36,18 +36,9 @@ import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 public interface SmartIdConnector extends Serializable {
 
-    /**
-     * Set the session status response socket open time
-     *
-     * @param sessionStatusResponseSocketOpenTimeUnit  The time unit of the open time
-     * @param sessionStatusResponseSocketOpenTimeValue The value of the open time
-     */
+    SessionStatus getSessionStatus(String sessionId, long timeoutMs) throws SessionNotFoundException;
+
     void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
 
-    /**
-     * Set the SSL context to use for secure communication
-     *
-     * @param sslContext The SSL context
-     */
     void setSslContext(SSLContext sslContext);
 }

@@ -49,6 +49,8 @@ import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.CertificateParser;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 

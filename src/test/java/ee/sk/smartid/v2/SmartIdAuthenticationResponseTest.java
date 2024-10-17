@@ -35,6 +35,7 @@ import java.security.cert.CertificateEncodingException;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 

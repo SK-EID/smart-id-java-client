@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
@@ -26,17 +26,28 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import org.junit.jupiter.api.Test;
+import java.io.Serializable;
 
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.CertificateParser;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SessionCertificate implements Serializable {
+    private String value;
+    private String certificateLevel;
 
-public class CertificateParserTest {
+    public String getValue() {
+        return value;
+    }
 
-    @Test
-    public void testBothCertificateLevelsQualified() {
-        assertThrows(SmartIdClientException.class, () -> CertificateParser.parseX509Certificate("invalid"));
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getCertificateLevel() {
+        return certificateLevel;
+    }
+
+    public void setCertificateLevel(String certificateLevel) {
+        this.certificateLevel = certificateLevel;
     }
 }

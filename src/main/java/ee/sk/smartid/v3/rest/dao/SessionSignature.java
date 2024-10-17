@@ -1,10 +1,10 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,21 +26,47 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import java.io.Serializable;
 
-import java.security.MessageDigest;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-public class DigestCalculator {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SessionSignature implements Serializable {
 
-  public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
-      return digest.digest(dataToDigest);
+    private String value;
+    private String serverRandom;
+    private String signatureAlgorithm;
+    private String hashAlgorithm;
+
+    public String getValue() {
+        return value;
     }
-    catch (Exception e) {
-      throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
-    }
-  }
 
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public String getServerRandom() {
+        return serverRandom;
+    }
+
+    public void setServerRandom(String serverRandom) {
+        this.serverRandom = serverRandom;
+    }
+
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
+    }
+
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
+    }
+
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
+    public void setHashAlgorithm(String hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+    }
 }
