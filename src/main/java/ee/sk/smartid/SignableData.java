@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -29,50 +29,46 @@ package ee.sk.smartid.v2;
 import java.io.Serializable;
 import java.util.Base64;
 
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.SignableHash;
+import ee.sk.smartid.v2.DigestCalculator;
+import ee.sk.smartid.v2.VerificationCodeCalculator;
+
 /**
- * This class can be used to contain the hash
- * to be signed
+ * This class can be used to contain the data
+ * to be signed when it is not yet in hashed format
  * <p>
- * {@link #setHash(byte[])} can be used
- * to set the hash.
  * {@link #setHashType(HashType)} can be used
- * to set the hash type.
+ * to set the wanted hash type. SHA-512 is default.
  * <p>
- * {@link SignableData} can be used
- * instead when the data to be signed is not already
+ * {@link #calculateHash()} and
+ * {@link #calculateHashInBase64()} methods
+ * are used to calculate the hash for signing request.
+ * <p>
+ * {@link SignableHash} can be used
+ * instead when the data to be signed is already
  * in hashed format.
  */
-public class SignableHash implements Serializable {
+public class SignableData implements Serializable {
 
-  private byte[] hash;
-  private HashType hashType;
+  private final byte[] dataToSign;
+  private HashType hashType = HashType.SHA512;
 
-  public void setHash(byte[] hash) {
-    this.hash = hash.clone();
+  public SignableData(byte[] dataToSign) {
+    this.dataToSign = dataToSign.clone();
   }
 
-  public void setHashInBase64(String hashInBase64) {
-    hash = Base64.getDecoder().decode(hashInBase64);
+  public String calculateHashInBase64() {
+    byte[] digest = calculateHash();
+    return Base64.getEncoder().encodeToString(digest);
   }
 
-  public String getHashInBase64() {
-    return Base64.getEncoder().encodeToString(hash);
-  }
-
-  public HashType getHashType() {
-    return hashType;
-  }
-
-  public void setHashType(HashType hashType) {
-    this.hashType = hashType;
-  }
-
-  public boolean areFieldsFilled() {
-    return hashType != null && hash != null && hash.length > 0;
+  public byte[] calculateHash() {
+    return DigestCalculator.calculateDigest(dataToSign, hashType);
   }
 
   /**
-   * Calculates the verification code from the hash
+   * Calculates the verification code from the data
    * <p>
    * Verification code should be displayed on the web page or some sort of web service
    * so the person signing through the Smart-ID mobile app can verify if the verification code
@@ -81,6 +77,15 @@ public class SignableHash implements Serializable {
    * @return the verification code
    */
   public String calculateVerificationCode() {
-    return VerificationCodeCalculator.calculate(hash);
+    byte[] digest = calculateHash();
+    return VerificationCodeCalculator.calculate(digest);
+  }
+
+  public void setHashType(HashType hashType) {
+    this.hashType = hashType;
+  }
+
+  public HashType getHashType() {
+    return hashType;
   }
 }

@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid.v2;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,31 +26,29 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-public enum HashType {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-  SHA256("SHA-256", "SHA256", new byte[] { 0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte) 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 0x00, 0x04, 0x20 }),
-  SHA384("SHA-384", "SHA384", new byte[] { 0x30, 0x41, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte) 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05, 0x00, 0x04, 0x30 }),
-  SHA512("SHA-512", "SHA512", new byte[] { 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, (byte) 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x03, 0x05, 0x00, 0x04, 0x40 });
+import org.junit.jupiter.api.Test;
 
-  private final String algorithmName;
-  private final String hashTypeName;
-  private final byte[] digestInfoPrefix;
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.SignableHash;
+import ee.sk.smartid.v2.DigestCalculator;
 
-  HashType(String algorithmName, String hashTypeName, byte[] digestInfoPrefix) {
-    this.algorithmName = algorithmName;
-    this.hashTypeName = hashTypeName;
-    this.digestInfoPrefix = digestInfoPrefix.clone();
-  }
+public class SignableHashTest {
 
-  public String getAlgorithmName() {
-    return algorithmName;
-  }
+    @Test
+    public void calculateVerificationCodeWithSha256() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA256);
+        hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+        assertEquals("4240", hashToSign.calculateVerificationCode());
+    }
 
-  public String getHashTypeName() {
-    return hashTypeName;
-  }
-
-  public byte[] getDigestInfoPrefix() {
-    return digestInfoPrefix.clone();
-  }
+    @Test
+    public void calculateVerificationCodeWithSha512() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA512);
+        hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));
+        assertEquals("4664", hashToSign.calculateVerificationCode());
+    }
 }

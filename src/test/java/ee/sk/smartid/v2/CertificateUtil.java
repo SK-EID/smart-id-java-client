@@ -31,7 +31,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
-import ee.sk.smartid.v2.CertificateParser;
+import ee.sk.smartid.CertificateParser;
 
 public final class CertificateUtil {
 

@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,71 +27,81 @@ package ee.sk.smartid.v3.rest.dao;
  */
 
 import java.io.Serializable;
-import java.util.Arrays;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import ee.sk.smartid.v2.rest.dao.SessionCertificate;
-import ee.sk.smartid.v2.rest.dao.SessionSignature;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionStatus implements Serializable {
 
-  private String state;
-  private SessionResult result;
+    private String state;
+    private SessionResult result;
+    private SignatureProtocol signatureProtocol;
+    private SessionSignature signature;
+    private SessionCertificate cert;
+    private String[] ignoredProperties;
+    private String interactionFlowUsed;
+    private String deviceIpAddress;
 
-  private String[] ignoredProperties = {};
+    public String getState() {
+        return state;
+    }
 
-  private String interactionFlowUsed;
-  private String deviceIpAddress;
+    public void setState(String state) {
+        this.state = state;
+    }
 
-  public String getState() {
-    return state;
-  }
+    public SessionResult getResult() {
+        return result;
+    }
 
-  public void setState(String state) {
-    this.state = state;
-  }
+    public void setResult(SessionResult result) {
+        this.result = result;
+    }
 
-  public SessionResult getResult() {
-    return result;
-  }
+    public SignatureProtocol getSignatureProtocol() {
+        return signatureProtocol;
+    }
 
-  public void setResult(SessionResult result) {
-    this.result = result;
-  }
+    public void setSignatureProtocol(SignatureProtocol signatureProtocol) {
+        this.signatureProtocol = signatureProtocol;
+    }
 
-  public String[] getIgnoredProperties() {
-    return Arrays.copyOf(ignoredProperties, ignoredProperties.length);
-  }
+    public SessionSignature getSignature() {
+        return signature;
+    }
 
-  public void setIgnoredProperties(String[] ignoredProperties) {
-    this.ignoredProperties = Arrays.copyOf(ignoredProperties, ignoredProperties.length);
-  }
+    public void setSignature(SessionSignature signature) {
+        this.signature = signature;
+    }
 
-  public String getInteractionFlowUsed() {
-    return interactionFlowUsed;
-  }
+    public SessionCertificate getCert() {
+        return cert;
+    }
 
-  public void setInteractionFlowUsed(String interactionFlowUsed) {
-    this.interactionFlowUsed = interactionFlowUsed;
-  }
+    public void setCert(SessionCertificate cert) {
+        this.cert = cert;
+    }
 
-  /**
-   * IP-address of the device running the App.
-   * <p>
-   * Present only if withShareMdClientIpAddress() was specified with the request
-   * Also, the RelyingParty must be subscribed for the service.
-   * Also, the data must be available (e.g. not present in case state is TIMEOUT).
-   * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
-   *
-   * @return IP address of the device running Smart-ID app (or null if not returned)
-   */
-  public String getDeviceIpAddress() {
-    return deviceIpAddress;
-  }
+    public String[] getIgnoredProperties() {
+        return ignoredProperties;
+    }
 
-  public void setDeviceIpAddress(String deviceIpAddress) {
-    this.deviceIpAddress = deviceIpAddress;
-  }
+    public void setIgnoredProperties(String[] ignoredProperties) {
+        this.ignoredProperties = ignoredProperties;
+    }
 
+    public String getInteractionFlowUsed() {
+        return interactionFlowUsed;
+    }
+
+    public void setInteractionFlowUsed(String interactionFlowUsed) {
+        this.interactionFlowUsed = interactionFlowUsed;
+    }
+
+    public String getDeviceIpAddress() {
+        return deviceIpAddress;
+    }
+
+    public void setDeviceIpAddress(String deviceIpAddress) {
+        this.deviceIpAddress = deviceIpAddress;
+    }
 }
