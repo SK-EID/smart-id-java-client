@@ -44,9 +44,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.v2.DigestCalculator;
-import ee.sk.smartid.v2.HashType;
-import ee.sk.smartid.v2.rest.SmartIdConnector;
-import ee.sk.smartid.v2.rest.SmartIdRestConnector;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.v2.rest.dao.CertificateRequest;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;

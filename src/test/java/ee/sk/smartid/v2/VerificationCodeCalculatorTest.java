@@ -33,9 +33,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.DigestCalculator;
-import ee.sk.smartid.v2.HashType;
-import ee.sk.smartid.v2.VerificationCodeCalculator;
+import ee.sk.smartid.HashType;
 
 
 public class VerificationCodeCalculatorTest {

@@ -36,6 +36,8 @@ import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 public interface SmartIdConnector extends Serializable {
 
+    SessionStatus getSessionStatus(String sessionId, long timeoutMs) throws SessionNotFoundException;
+
     /**
      * Set the session status response socket open time
      *
