@@ -43,6 +43,7 @@ import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
@@ -50,6 +51,7 @@ import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.ServerErrorException;
@@ -64,11 +66,13 @@ import jakarta.ws.rs.core.UriBuilder;
 public class SmartIdRestConnector implements SmartIdConnector {
 
     @Serial
-    private static final long serialVersionUID = 44L;
+    private static final long serialVersionUID = 2024_10_18;
 
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
+
+    private static final String ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH = "authentication/dynamic-link/anonymous";
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -204,7 +208,23 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest) {
-        return null;
+    public DynamicLinkAuthenticationSessionResponse initAnonymousDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest) {
+        logger.debug("Starting anonymous dynamic link authentication session");
+        URI uri = UriBuilder.fromUri(endpointUrl)
+                .path(ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH)
+                .build();
+        return postAuthenticationRequest(uri, authenticationRequest);
+    }
+
+    private DynamicLinkAuthenticationSessionResponse postAuthenticationRequest(URI uri, DynamicLinkAuthenticationSessionRequest request) {
+        try {
+            return postRequest(uri, request, DynamicLinkAuthenticationSessionResponse.class);
+        } catch (NotFoundException e) {
+            logger.warn("User account not found for URI " + uri, e);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException e) {
+            logger.warn("No permission to issue the request", e);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
+        }
     }
 }

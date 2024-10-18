@@ -47,7 +47,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         public void initAuthenticationSession_ok() {
-            when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
             var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -59,7 +59,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .initAuthenticationSession();
 
             ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
-            verify(connector).initDynamicLinkAuthentication(requestCaptor.capture());
+            verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
             DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
@@ -75,7 +75,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CertificateLevelArgumentProvider.class)
         public void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
-            when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
@@ -89,7 +89,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .initAuthenticationSession();
 
             ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
-            verify(connector).initDynamicLinkAuthentication(requestCaptor.capture());
+            verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
             DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedValue, request.getCertificateLevel());
@@ -98,7 +98,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(ValidNonceArgumentSourceProvider.class)
         public void initAuthenticationSession_nonce_ok(String nonce) {
-            when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
@@ -112,7 +112,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .initAuthenticationSession();
 
             ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
-            verify(connector).initDynamicLinkAuthentication(requestCaptor.capture());
+            verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
             DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(nonce, request.getNonce());
@@ -120,7 +120,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         public void initAuthenticationSession_ipQueryingNotUsed_doNotCreatedRequestProperties_ok() {
-            when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
@@ -133,7 +133,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .initAuthenticationSession();
 
             ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
-            verify(connector).initDynamicLinkAuthentication(requestCaptor.capture());
+            verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
             DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertNull(request.getRequestProperties());
@@ -142,7 +142,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ValueSource(booleans = {true, false})
         public void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
-            when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
@@ -156,7 +156,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .initAuthenticationSession();
 
             ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
-            verify(connector).initDynamicLinkAuthentication(requestCaptor.capture());
+            verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
             DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertNotNull(request.getRequestProperties());
@@ -166,7 +166,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CapabilitiesArgumentProvider.class)
         public void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
-            when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
             var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -179,7 +179,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .initAuthenticationSession();
 
             ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
-            verify(connector).initDynamicLinkAuthentication(requestCaptor.capture());
+            verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
             DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedCapabilities, request.getCapabilities());
@@ -342,8 +342,8 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         public void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
-                dynamicLinkAuthenticationSessionResponse.setSessionId(sessionId);
-                when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+                dynamicLinkAuthenticationSessionResponse.setSessionID(sessionId);
+                when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
             });
@@ -355,9 +355,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         public void initAuthenticationSession_sessionTokenIsNotPresentInTheResponse_throwException(String sessionToken) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
-                dynamicLinkAuthenticationSessionResponse.setSessionId("00000000-0000-0000-0000-000000000000");
+                dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(sessionToken);
-                when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+                when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
             });
@@ -369,10 +369,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         public void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
-                dynamicLinkAuthenticationSessionResponse.setSessionId("00000000-0000-0000-0000-000000000000");
+                dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
                 dynamicLinkAuthenticationSessionResponse.setSessionSecret(sessionSecret);
-                when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+                when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
             });
@@ -393,7 +393,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
     private DynamicLinkAuthenticationSessionResponse createDynamicLinkAuthenticationResponse() {
         var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
-        dynamicLinkAuthenticationSessionResponse.setSessionId("00000000-0000-0000-0000-000000000000");
+        dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
         dynamicLinkAuthenticationSessionResponse.setSessionSecret(generateBase64String("sessionSecret"));
         return dynamicLinkAuthenticationSessionResponse;

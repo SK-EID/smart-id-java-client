@@ -2,16 +2,16 @@ package ee.sk.smartid.v3;
 
 public class DynamicLinkAuthenticationSessionResponse {
 
-    private String sessionId;
+    private String sessionID;
     private String sessionToken;
     private String sessionSecret;
 
-    public String getSessionId() {
-        return sessionId;
+    public String getSessionID() {
+        return sessionID;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
     }
 
     public String getSessionToken() {

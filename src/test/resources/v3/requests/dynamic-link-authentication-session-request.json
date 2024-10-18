@@ -1,0 +1,12 @@
+{
+  "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
+  "relyingPartyName": "DEMO",
+  "signatureProtocol": "ACSP_V1",
+  "signatureProtocolParameters": {
+    "signatureAlgorithm": "sha512WithRSAEncryption",
+    "randomChallenge": "cmFuZG9tQ2hhbGxlbmdl"
+  },
+  "allowedInteractionsOrder": [
+    {"type": "displayTextAndPIN", "displayText60": "Log in?"}
+  ]
+}

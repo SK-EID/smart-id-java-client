@@ -146,7 +146,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     public DynamicLinkAuthenticationSessionResponse initAuthenticationSession() {
         validateRequestParameters();
         DynamicLinkAuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
-        DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse = connector.initDynamicLinkAuthentication(authenticationRequest);
+        DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse = connector.initAnonymousDynamicLinkAuthentication(authenticationRequest);
         validateResponseParameters(dynamicLinkAuthenticationSessionResponse);
         return dynamicLinkAuthenticationSessionResponse;
     }
@@ -235,7 +235,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateResponseParameters(DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse) {
-        if (StringUtil.isEmpty(dynamicLinkAuthenticationSessionResponse.getSessionId())) {
+        if (StringUtil.isEmpty(dynamicLinkAuthenticationSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
             throw new SmartIdClientException("Session ID is missing from the response");
         }
