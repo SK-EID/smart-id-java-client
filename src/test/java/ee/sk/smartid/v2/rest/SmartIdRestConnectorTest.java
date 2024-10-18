@@ -33,12 +33,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static ee.sk.smartid.v2.SmartIdRestServiceStubs.stubBadRequestResponse;
-import static ee.sk.smartid.v2.SmartIdRestServiceStubs.stubErrorResponse;
-import static ee.sk.smartid.v2.SmartIdRestServiceStubs.stubForbiddenResponse;
-import static ee.sk.smartid.v2.SmartIdRestServiceStubs.stubNotFoundResponse;
-import static ee.sk.smartid.v2.SmartIdRestServiceStubs.stubRequestWithResponse;
-import static ee.sk.smartid.v2.SmartIdRestServiceStubs.stubUnauthorizedResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubBadRequestResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubErrorResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubForbiddenResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubUnauthorizedResponse;
 import static java.util.Arrays.asList;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,8 +57,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import ee.sk.smartid.v2.rest.SmartIdConnector;
-import ee.sk.smartid.v2.rest.SmartIdRestConnector;
 import ee.sk.smartid.v2.rest.dao.CertificateRequest;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
@@ -95,14 +93,14 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getRunningSessionStatus() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunning.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusRunning.json");
         assertNotNull(sessionStatus);
         assertEquals("RUNNING", sessionStatus.getState());
     }
 
     @Test
     void getRunningSessionStatus_withIgnoredProperties() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunningWithIgnoredProperties.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusRunningWithIgnoredProperties.json");
         assertNotNull(sessionStatus);
         assertEquals("RUNNING", sessionStatus.getState());
         assertNotNull(sessionStatus.getIgnoredProperties());
@@ -113,7 +111,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getSessionStatus_forSuccessfulCertificateRequest() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusForSuccessfulCertificateRequest.json");
         assertSuccessfulResponse(sessionStatus);
         assertNotNull(sessionStatus.getCert());
         MatcherAssert.assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
@@ -122,7 +120,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getSessionStatus_forSuccessfulSigningRequest() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusForSuccessfulSigningRequest.json");
         assertSuccessfulResponse(sessionStatus);
         assertNotNull(sessionStatus.getSignature());
         MatcherAssert.assertThat(sessionStatus.getSignature().getValue(), startsWith("luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv"));
@@ -131,7 +129,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getSessionStatus_hasUserAgentHeader() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusForSuccessfulSigningRequest.json");
         assertSuccessfulResponse(sessionStatus);
 
         verify(getRequestedFor(urlMatching("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
@@ -141,61 +139,61 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getSessionStatus_userHasRefused() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedGeneral.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
     }
 
     @Test
     void getSessionStatus_userHasRefusedConfirmationMessage() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessage.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedConfirmationMessage.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE");
     }
 
     @Test
     void getSessionStatus_userHasRefusedRefusedConfirmationMessageWithVerificationCodeChoice() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessageWithVerificationCodeChoice.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedConfirmationMessageWithVerificationCodeChoice.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
     }
 
     @Test
     void getSessionStatus_userHasRefusedWhenUserRefusedDisplayTextAndPin() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedDisplayTextAndPin.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedDisplayTextAndPin.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_DISPLAYTEXTANDPIN");
     }
 
     @Test
     void getSessionStatus_userHasRefusedWhenUserRefusedGeneral() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedGeneral.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
     }
 
     @Test
     void getSessionStatus_userHasRefusedWhenUserRefusedVerificationCodeChoice() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedVerificationCodeChoice.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedVerificationCodeChoice.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_VC_CHOICE");
     }
 
     @Test
     void getSessionStatus_timeout() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenTimeout.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenTimeout.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "TIMEOUT");
     }
 
     @Test
     void getSessionStatus_userHasSelectedWrongVcCode() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
     }
 
     @Test
     void getSessionStatus_whenDocumentUnusable() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenDocumentUnusable.json");
+        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenDocumentUnusable.json");
         assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
     }
 
     @Test
     void getSessionStatus_withTimeoutParameter() {
-        stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
+        stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "v2/responses/sessionStatusForSuccessfulCertificateRequest.json");
         connector.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
         SessionStatus sessionStatus = connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
         assertSuccessfulResponse(sessionStatus);
@@ -204,7 +202,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getCertificate_usingDocumentNumber() {
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
         CertificateRequest request = createDummyCertificateRequest();
         CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
         assertNotNull(response);
@@ -213,7 +211,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getCertificate_usingSemanticsIdentifier() {
-        stubRequestWithResponse("/certificatechoice/etsi/PASKZ-987654321012", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/etsi/PASKZ-987654321012", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
 
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PASKZ-987654321012");
 
@@ -225,7 +223,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getCertificate_withNonce_usingDocumentNumber() {
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequestWithNonce.json", "v2/responses/certificateChoiceResponse.json");
         CertificateRequest request = createDummyCertificateRequest();
         request.setNonce("zstOt2umlc");
         CertificateChoiceResponse response = connector.getCertificate("PNOEE-123456", request);
@@ -235,7 +233,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void getCertificate_withNonce_usingSemanticsIdentifier() {
-        stubRequestWithResponse("/certificatechoice/etsi/IDCCZ-1234567890", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/etsi/IDCCZ-1234567890", "v2/requests/certificateChoiceRequestWithNonce.json", "v2/responses/certificateChoiceResponse.json");
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, "CZ", "1234567890");
         CertificateRequest request = createDummyCertificateRequest();
         request.setNonce("zstOt2umlc");
@@ -247,7 +245,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_whenDocumentNumberNotFound_shoudThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+            stubNotFoundResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json");
             CertificateRequest request = createDummyCertificateRequest();
             connector.getCertificate("PNOEE-123456", request);
         });
@@ -256,7 +254,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_semanticsIdentifierNotFound_shouldThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/certificatechoice/etsi/IDCCZ-1234567890", "requests/certificateChoiceRequest.json");
+            stubNotFoundResponse("/certificatechoice/etsi/IDCCZ-1234567890", "v2/requests/certificateChoiceRequest.json");
 
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("IDCCZ-1234567890");
 
@@ -268,7 +266,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_withWrongAuthenticationParams_shuldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubUnauthorizedResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+            stubUnauthorizedResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json");
             CertificateRequest request = createDummyCertificateRequest();
             connector.getCertificate("PNOEE-123456", request);
         });
@@ -277,7 +275,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_withWrongRequestParams_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubBadRequestResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+            stubBadRequestResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json");
             CertificateRequest request = createDummyCertificateRequest();
             connector.getCertificate("PNOEE-123456", request);
         });
@@ -286,7 +284,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_whenRequestForbidden_shouldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubForbiddenResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json");
+            stubForbiddenResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json");
             CertificateRequest request = createDummyCertificateRequest();
             connector.getCertificate("PNOEE-123456", request);
         });
@@ -295,7 +293,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubErrorResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", 480);
+            stubErrorResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json", 480);
             CertificateRequest request = createDummyCertificateRequest();
             connector.getCertificate("PNOEE-123456", request);
         });
@@ -304,7 +302,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_whenSystemUnderMaintenance_shouldThrowException() {
         assertThrows(ServerMaintenanceException.class, () -> {
-            stubErrorResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", 580);
+            stubErrorResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json", 580);
             CertificateRequest request = createDummyCertificateRequest();
             connector.getCertificate("PNOEE-123456", request);
         });
@@ -312,7 +310,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_usingDocumentNumber() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
         SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
         assertNotNull(response);
@@ -321,7 +319,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_hasUserAgentHeader() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionResponse response = connector.sign("PNOEE-123456", createDummySignatureSessionRequest());
         assertNotNull(response);
 
@@ -332,7 +330,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_withNonce_usingDocumentNumber() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequestWithNonce.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
         request.setNonce("zstOt2umlc");
         SignatureSessionResponse response = connector.sign("PNOEE-123456", request);
@@ -342,7 +340,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_withAllowedInteractionsOrder_confirmationMessageAndFallbackToDisplayTextAndPIN() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_fallbackTo_displayTextAndPIN.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signingRequest_confirmationMessage_fallbackTo_displayTextAndPIN.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
 
         Interaction confirmationMessageInteraction = Interaction.confirmationMessage("Do you want to transfer 200 Bison dollars from savings account to Oceanic Airlines?");
@@ -356,7 +354,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_withAllowedInteractionsOrder_confirmationMessageAndNoFallback() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_noFallback.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signingRequest_confirmationMessage_noFallback.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
 
         Interaction confi = Interaction.confirmationMessage("Do you want to transfer 999 Bison dollars from savings account to Oceanic Airlines?");
@@ -369,7 +367,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_withAllowedInteractionsOrder_verificationCodeChoiceAndFallbackToDisplayTextAndPIN() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_verificationCodeChoice_fallbackTo_displayTextAndPIN.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signingRequest_verificationCodeChoice_fallbackTo_displayTextAndPIN.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
 
         Interaction verificationCodeChoice = Interaction.verificationCodeChoice("Transfer 444 BSD to Oceanic Airlines?");
@@ -383,7 +381,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_withAllowedInteractionsOrder_confirmationMessageAndFallbackToVerificationCodeChoice() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessage_fallbackTo_verificationCodeChoice.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signingRequest_confirmationMessage_fallbackTo_verificationCodeChoice.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
 
         Interaction confirmationMessage = Interaction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
@@ -397,7 +395,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void sign_withAllowedInteractionsOrder_confirmationMessageAndVerificationCodeChoice_fallbackToVerificationCodeChoice() {
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signingRequest_confirmationMessageAndVerificationCodeChoice_fallbackTo_verificationCodeChoice.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signingRequest_confirmationMessageAndVerificationCodeChoice_fallbackTo_verificationCodeChoice.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
 
         Interaction confirmationMessage = Interaction.confirmationMessage("Do you want to transfer 707 Bison dollars from savings account to Oceanic Airlines?");
@@ -412,7 +410,7 @@ class SmartIdRestConnectorTest {
     @Test
     void sign_whenDocumentNumberNotFound_shouldThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+            stubNotFoundResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json");
             SignatureSessionRequest request = createDummySignatureSessionRequest();
             connector.sign("PNOEE-123456", request);
         });
@@ -421,7 +419,7 @@ class SmartIdRestConnectorTest {
     @Test
     void sign_withWrongAuthenticationParams_shouldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubUnauthorizedResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+            stubUnauthorizedResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json");
             SignatureSessionRequest request = createDummySignatureSessionRequest();
             connector.sign("PNOEE-123456", request);
         });
@@ -430,7 +428,7 @@ class SmartIdRestConnectorTest {
     @Test
     void sign_withWrongRequestParams_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubBadRequestResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+            stubBadRequestResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json");
             SignatureSessionRequest request = createDummySignatureSessionRequest();
             connector.sign("PNOEE-123456", request);
         });
@@ -439,7 +437,7 @@ class SmartIdRestConnectorTest {
     @Test
     void sign_whenRequestForbidden_shouldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubForbiddenResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json");
+            stubForbiddenResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json");
             SignatureSessionRequest request = createDummySignatureSessionRequest();
             connector.sign("PNOEE-123456", request);
         });
@@ -448,7 +446,7 @@ class SmartIdRestConnectorTest {
     @Test
     void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubErrorResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", 480);
+            stubErrorResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json", 480);
             SignatureSessionRequest request = createDummySignatureSessionRequest();
             connector.sign("PNOEE-123456", request);
         });
@@ -457,7 +455,7 @@ class SmartIdRestConnectorTest {
     @Test
     void sign_whenSystemUnderMaintenance_shouldThrowException() {
         assertThrows(ServerMaintenanceException.class, () -> {
-            stubErrorResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", 580);
+            stubErrorResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json", 580);
             SignatureSessionRequest request = createDummySignatureSessionRequest();
             connector.sign("PNOEE-123456", request);
         });
@@ -465,7 +463,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void authenticate_usingDocumentNumber() {
-        stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
         AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
         AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
         assertNotNull(response);
@@ -474,7 +472,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void authenticate_usingSemanticsIdentifier() {
-        stubRequestWithResponse("/authentication/etsi/PASKZ-987654321012", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/etsi/PASKZ-987654321012", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
 
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, "KZ", "987654321012");
 
@@ -486,7 +484,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void authenticate_withNonce_usingDocumentNumber() {
-        stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequestWithNonce.json", "v2/responses/authenticationSessionResponse.json");
         AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
         request.setNonce("g9rp4kjca3");
         AuthenticationSessionResponse response = connector.authenticate("PNOEE-123456", request);
@@ -496,7 +494,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void authenticate_withNonce_usingSemanticsIdentifier() {
-        stubRequestWithResponse("/authentication/etsi/PASEE-48308230504", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/etsi/PASEE-48308230504", "v2/requests/authenticationSessionRequestWithNonce.json", "v2/responses/authenticationSessionResponse.json");
 
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PAS, SemanticsIdentifier.CountryCode.EE, "48308230504");
 
@@ -510,7 +508,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void authenticate_withSingleAllowedInteraction_usingSemanticsIdentifier() {
-        stubRequestWithResponse("/authentication/etsi/PNOLT-48010010101", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/etsi/PNOLT-48010010101", "v2/requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "v2/responses/authenticationSessionResponse.json");
 
         SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOLT-48010010101");
 
@@ -524,7 +522,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void authenticate_withSingleAllowedInteraction_usingDocumentNumber() {
-        stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "v2/responses/authenticationSessionResponse.json");
         AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
         request.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
 
@@ -535,7 +533,7 @@ class SmartIdRestConnectorTest {
 
     @Test
     void authenticate_hasUserAgentHeader() {
-        stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequestWithSingleAllowedInteraction.json", "v2/responses/authenticationSessionResponse.json");
         AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
         request.setAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")));
 
@@ -549,7 +547,7 @@ class SmartIdRestConnectorTest {
     @Test
     void authenticate_whenDocumentNumberNotFound_shouldThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+            stubNotFoundResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json");
             AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
             connector.authenticate("PNOEE-123456", request);
         });
@@ -558,7 +556,7 @@ class SmartIdRestConnectorTest {
     @Test
     void authenticate_whenSemanticsIdentifierNotFound_shouldThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/authentication/etsi/IDCLV-230883-19894", "requests/authenticationSessionRequest.json");
+            stubNotFoundResponse("/authentication/etsi/IDCLV-230883-19894", "v2/requests/authenticationSessionRequest.json");
 
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.IDC, SemanticsIdentifier.CountryCode.LV, "230883-19894");
 
@@ -570,7 +568,7 @@ class SmartIdRestConnectorTest {
     @Test
     void authenticate_withWrongAuthenticationParams_shuldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubUnauthorizedResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+            stubUnauthorizedResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json");
             AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
             connector.authenticate("PNOEE-123456", request);
         });
@@ -579,7 +577,7 @@ class SmartIdRestConnectorTest {
     @Test
     void authenticate_withWrongRequestParams_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubBadRequestResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+            stubBadRequestResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json");
             AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
             connector.authenticate("PNOEE-123456", request);
         });
@@ -588,7 +586,7 @@ class SmartIdRestConnectorTest {
     @Test
     void authenticate_whenRequestForbidden_shouldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubForbiddenResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json");
+            stubForbiddenResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json");
             AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
             connector.authenticate("PNOEE-123456", request);
         });
@@ -597,7 +595,7 @@ class SmartIdRestConnectorTest {
     @Test
     void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubErrorResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", 480);
+            stubErrorResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json", 480);
             AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
             connector.authenticate("PNOEE-123456", request);
         });
@@ -606,7 +604,7 @@ class SmartIdRestConnectorTest {
     @Test
     void authenticate_whenSystemUnderMaintenance_shouldThrowException() {
         assertThrows(ServerMaintenanceException.class, () -> {
-            stubErrorResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", 580);
+            stubErrorResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json", 580);
             AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
             connector.authenticate("PNOEE-123456", request);
         });
@@ -620,7 +618,7 @@ class SmartIdRestConnectorTest {
         Map<String, String> headers = new HashMap<>();
         headers.put(headerName, headerValue);
         connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
-        stubRequestWithResponse("/authentication/document/PNOEE-123456", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-123456", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
         AuthenticationSessionRequest request = createDummyAuthenticationSessionRequest();
         connector.authenticate("PNOEE-123456", request);
 
@@ -636,7 +634,7 @@ class SmartIdRestConnectorTest {
         Map<String, String> headers = new HashMap<>();
         headers.put(headerName, headerValue);
         connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
-        stubRequestWithResponse("/signature/document/PNOEE-123456", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-123456", "v2/requests/signatureSessionRequest.json", "v2/responses/signatureSessionResponse.json");
         SignatureSessionRequest request = createDummySignatureSessionRequest();
         connector.sign("PNOEE-123456", request);
 
@@ -652,7 +650,7 @@ class SmartIdRestConnectorTest {
         Map<String, String> headers = new HashMap<>();
         headers.put(headerName, headerValue);
         connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
         CertificateRequest request = createDummyCertificateRequest();
         connector.getCertificate("PNOEE-123456", request);
 
@@ -663,7 +661,7 @@ class SmartIdRestConnectorTest {
     @Test
     void getCertificate_hasUserAgentHeader() {
         connector = new SmartIdRestConnector("http://localhost:18089");
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-123456", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
         connector.getCertificate("PNOEE-123456", createDummyCertificateRequest());
 
         verify(postRequestedFor(urlMatching("/certificatechoice/document/PNOEE-123456"))
@@ -679,7 +677,7 @@ class SmartIdRestConnectorTest {
         Map<String, String> headers = new HashMap<>();
         headers.put(headerName, headerValue);
         connector = new SmartIdRestConnector("http://localhost:18089", getClientConfigWithCustomRequestHeader(headers));
-        stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
+        stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "v2/responses/sessionStatusForSuccessfulCertificateRequest.json");
         connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
 
         verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
