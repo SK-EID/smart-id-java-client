@@ -45,8 +45,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.SignableData;
-import ee.sk.smartid.SignableHash;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;

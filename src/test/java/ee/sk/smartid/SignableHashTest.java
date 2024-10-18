@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.SignableHash;
+import ee.sk.smartid.v2.SignableHash;
 import ee.sk.smartid.v2.DigestCalculator;
 
 public class SignableHashTest {

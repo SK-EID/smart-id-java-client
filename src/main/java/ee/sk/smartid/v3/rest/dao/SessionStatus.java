@@ -34,7 +34,7 @@ public class SessionStatus implements Serializable {
 
     private String state;
     private SessionResult result;
-    private SignatureProtocol signatureProtocol;
+    private String signatureProtocol;
     private SessionSignature signature;
     private SessionCertificate cert;
     private String[] ignoredProperties;
@@ -57,11 +57,11 @@ public class SessionStatus implements Serializable {
         this.result = result;
     }
 
-    public SignatureProtocol getSignatureProtocol() {
+    public String getSignatureProtocol() {
         return signatureProtocol;
     }
 
-    public void setSignatureProtocol(SignatureProtocol signatureProtocol) {
+    public void setSignatureProtocol(String signatureProtocol) {
         this.signatureProtocol = signatureProtocol;
     }
 

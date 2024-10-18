@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -26,45 +26,21 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import java.security.SecureRandom;
+import java.security.MessageDigest;
 
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
-/**
- * Class containing the hash and its hash type used for authentication
- */
-public class AuthenticationHash extends SignableHash {
+public class DigestCalculator {
 
-  /**
-   * creates {@link AuthenticationHash} instance
-   * containing a randomly generated hash
-   * of the chosen hash type
-   *
-   * @param hashType hash type of the randomly generated hash
-   * @return authentication hash
-   */
-  public static AuthenticationHash generateRandomHash(HashType hashType) {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    byte[] generatedDigest = DigestCalculator.calculateDigest(getRandomBytes(), hashType);
-    authenticationHash.setHash(generatedDigest);
-    authenticationHash.setHashType(hashType);
-    return authenticationHash;
-  }
-
-  /**
-   * creates {@link AuthenticationHash} instance
-   * containing a randomly generated SHA-512 hash
-   *
-   * @return authentication hash
-   */
-  public static AuthenticationHash generateRandomHash() {
-    return generateRandomHash(HashType.SHA512);
-  }
-
-  private static byte[] getRandomBytes() {
-    byte[] randBytes = new byte[64];
-    new SecureRandom().nextBytes(randBytes);
-    return randBytes;
+  public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
+      return digest.digest(dataToDigest);
+    }
+    catch (Exception e) {
+      throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
+    }
   }
 
 }

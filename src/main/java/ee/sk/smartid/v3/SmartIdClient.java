@@ -46,7 +46,6 @@ import javax.net.ssl.TrustManagerFactory;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.service.SmartIdRequestBuilderService;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -175,9 +174,9 @@ public class SmartIdClient {
         pollingSleepTimeout = timeout;
     }
 
-    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector, SmartIdRequestBuilderService requestBuilder) {
+    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
         connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
-        var sessionStatusPoller = new SessionStatusPoller(connector, requestBuilder);
+        var sessionStatusPoller = new SessionStatusPoller(connector);
         sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
         return sessionStatusPoller;
     }

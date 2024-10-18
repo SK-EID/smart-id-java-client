@@ -27,8 +27,6 @@ package ee.sk.smartid.v2;
  */
 
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.SignableData;
-import ee.sk.smartid.SignableHash;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;

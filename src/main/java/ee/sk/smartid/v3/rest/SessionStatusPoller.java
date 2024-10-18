@@ -33,28 +33,25 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.service.SmartIdRequestBuilderService;
 
 public class SessionStatusPoller {
 
     private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
     private final SmartIdConnector connector;
-    private final SmartIdRequestBuilderService requestBuilder;
     private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
     private long pollingSleepTimeout = 1L;
 
-    public SessionStatusPoller(SmartIdConnector connector, SmartIdRequestBuilderService requestBuilder) {
+    public SessionStatusPoller(SmartIdConnector connector) {
         this.connector = connector;
-        this.requestBuilder = requestBuilder;
     }
 
     public SessionStatus fetchFinalSessionStatus(String sessionId, long timeoutMs) {
-        logger.debug("Starting to poll session status for session " + sessionId);
+        logger.debug("Starting to poll session status for session {}", sessionId);
         try {
             return pollForFinalSessionStatus(sessionId, timeoutMs);
-        } catch (InterruptedException e) {
-            logger.error("Failed to poll session status: " + e.getMessage());
-            throw new SmartIdClientException("Failed to poll session status", e);
+        } catch (InterruptedException ex) {
+            logger.error("Failed to poll session status", ex);
+            throw new SmartIdClientException("Failed to poll session status", ex);
         }
     }
 
@@ -65,7 +62,7 @@ public class SessionStatusPoller {
             if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
                 break;
             }
-            logger.debug("Sleeping for " + pollingSleepTimeout + " " + pollingSleepTimeUnit);
+            logger.debug("Sleeping for {} {}", pollingSleepTimeout, pollingSleepTimeUnit);
             pollingSleepTimeUnit.sleep(pollingSleepTimeout);
         }
         logger.debug("Got final session status response");
@@ -78,7 +75,7 @@ public class SessionStatusPoller {
     }
 
     public void setPollingSleepTime(TimeUnit unit, long timeout) {
-        logger.debug("Setting polling sleep time to " + timeout + " " + unit.toString());
+        logger.debug("Setting polling sleep time to {} {}", timeout, unit);
         this.pollingSleepTimeUnit = unit;
         this.pollingSleepTimeout = timeout;
     }

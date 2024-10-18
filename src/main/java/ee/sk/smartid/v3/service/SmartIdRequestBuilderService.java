@@ -39,8 +39,8 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.SignableData;
-import ee.sk.smartid.SignableHash;
+import ee.sk.smartid.v3.SignableData;
+import ee.sk.smartid.v3.SignableHash;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
@@ -140,6 +140,17 @@ public class SmartIdRequestBuilderService {
         String endResult = sessionResult.getEndResult();
         if ("OK".equalsIgnoreCase(endResult)) {
             logger.info("Session completed successfully");
+
+            if (sessionResult.getDocumentNumber() == null || sessionResult.getDocumentNumber().isEmpty()) {
+                logger.error("Document number is missing in the session result");
+                throw new SmartIdClientException("Document number is missing in the session result");
+            }
+
+            if (sessionStatus.getInteractionFlowUsed() == null || sessionStatus.getInteractionFlowUsed().isEmpty()) {
+                logger.error("InteractionFlowUsed is missing in the session status");
+                throw new SmartIdClientException("InteractionFlowUsed is missing in the session status");
+            }
+
             validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
             validateSignature(sessionStatus, expectedDigest, randomChallenge);
         } else {
@@ -184,7 +195,7 @@ public class SmartIdRequestBuilderService {
     }
 
     private void validateSignature(SessionStatus sessionStatus, String expectedDigest, String randomChallenge) {
-        String signatureProtocol = sessionStatus.getSignatureProtocol().name();
+        String signatureProtocol = sessionStatus.getSignatureProtocol();
 
         if ("ACSP_V1".equalsIgnoreCase(signatureProtocol)) {
             validateAcspV1Signature(sessionStatus, randomChallenge);
@@ -210,8 +221,8 @@ public class SmartIdRequestBuilderService {
                 throw new SmartIdClientException("ACSP_V1 signature validation failed. Expected: " + expectedSignature
                         + ", but got: " + signatureValue);
             }
-        } catch (NoSuchAlgorithmException e) {
-            throw new SmartIdClientException("Error while creating digest for ACSP_V1 signature validation", e);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new SmartIdClientException("Error while creating digest for ACSP_V1 signature validation", ex);
         }
 
         logger.info("ACSP_V1 signature successfully validated.");

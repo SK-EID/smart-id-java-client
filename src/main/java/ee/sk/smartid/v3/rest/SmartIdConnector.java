@@ -38,7 +38,18 @@ public interface SmartIdConnector extends Serializable {
 
     SessionStatus getSessionStatus(String sessionId, long timeoutMs) throws SessionNotFoundException;
 
+    /**
+     * Set the session status response socket open time
+     *
+     * @param sessionStatusResponseSocketOpenTimeUnit  The time unit of the open time
+     * @param sessionStatusResponseSocketOpenTimeValue The value of the open time
+     */
     void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
 
+    /**
+     * Set the SSL context to use for secure communication
+     *
+     * @param sslContext The SSL context
+     */
     void setSslContext(SSLContext sslContext);
 }

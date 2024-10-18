@@ -36,7 +36,7 @@ public class SessionSignature implements Serializable {
     private String value;
     private String serverRandom;
     private String signatureAlgorithm;
-    private String hashAlgorithm;
+    private SignatureAlgorithmParameters signatureAlgorithmParameters;
 
     public String getValue() {
         return value;
@@ -62,11 +62,11 @@ public class SessionSignature implements Serializable {
         this.signatureAlgorithm = signatureAlgorithm;
     }
 
-    public String getHashAlgorithm() {
-        return hashAlgorithm;
+    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
+        return signatureAlgorithmParameters;
     }
 
-    public void setHashAlgorithm(String hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
+    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
+        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
     }
 }

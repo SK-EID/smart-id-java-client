@@ -48,7 +48,7 @@ import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.FileUtil;
 import ee.sk.smartid.v2.SmartIdDemoIntegrationTest;
-import ee.sk.smartid.SignableData;
+import ee.sk.smartid.v2.SignableData;
 import ee.sk.smartid.v2.SmartIdAuthenticationResponse;
 import ee.sk.smartid.v2.SmartIdCertificate;
 import ee.sk.smartid.v2.SmartIdClient;

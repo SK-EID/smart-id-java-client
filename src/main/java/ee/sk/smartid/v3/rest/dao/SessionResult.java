@@ -35,15 +35,6 @@ public class SessionResult implements Serializable {
 
   private String endResult;
   private String documentNumber;
-  private String signatureProtocol;
-
-  public String getDocumentNumber() {
-    return documentNumber;
-  }
-
-  public void setDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
-  }
 
   public String getEndResult() {
     return endResult;
@@ -53,11 +44,11 @@ public class SessionResult implements Serializable {
     this.endResult = endResult;
   }
 
-  public String getSignatureProtocol() {
-    return signatureProtocol;
+  public String getDocumentNumber() {
+    return documentNumber;
   }
 
-  public void setSignatureProtocol(String signatureProtocol) {
-    this.signatureProtocol = signatureProtocol;
+  public void setDocumentNumber(String documentNumber) {
+    this.documentNumber = documentNumber;
   }
 }

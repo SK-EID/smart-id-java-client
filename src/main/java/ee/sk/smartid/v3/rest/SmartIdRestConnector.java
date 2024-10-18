@@ -70,7 +70,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     @Override
     public SessionStatus getSessionStatus(String sessionId, long timeoutMs) throws SessionNotFoundException {
-        logger.debug("Getting session status for sessionId: " + sessionId);
+        logger.debug("Getting session status for sessionId: {}", sessionId);
         SessionStatusRequest request = createSessionStatusRequest(sessionId, timeoutMs);
         UriBuilder uriBuilder = UriBuilder
                 .fromUri(endpointUrl)
@@ -80,8 +80,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
         try {
             return prepareClient(uri).get(SessionStatus.class);
-        } catch (NotFoundException e) {
-            logger.warn("Session " + request + " not found: " + e.getMessage());
+        } catch (NotFoundException ex) {
+            logger.warn("Session {} not found: {}", request, ex.getMessage());
             throw new SessionNotFoundException();
         }
     }
