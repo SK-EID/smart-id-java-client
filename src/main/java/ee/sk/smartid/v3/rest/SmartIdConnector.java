@@ -31,8 +31,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.v3.rest.dao.SessionStatus;
+import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 
 public interface SmartIdConnector extends Serializable {
 
@@ -50,4 +50,12 @@ public interface SmartIdConnector extends Serializable {
      * @param sslContext The SSL context
      */
     void setSslContext(SSLContext sslContext);
+
+    /**
+     * Create authentication session with dynamic link
+     *
+     * @param authenticationRequest The dynamic link authentication session request
+     * @return The dynamic link authentication session response
+     */
+    DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest);
 }
