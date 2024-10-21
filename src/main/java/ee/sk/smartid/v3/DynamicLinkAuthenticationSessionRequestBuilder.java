@@ -220,9 +220,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
             logger.error("Parameter nonce value has to be at least 1 character long");
             throw new SmartIdClientException("Parameter nonce value has to be at least 1 character long");
         }
-        if (nonce.length() > 32) {
-            logger.error("Nonce cannot be longer that 32 chars");
-            throw new SmartIdClientException("Nonce cannot be longer that 32 chars");
+        if (nonce.length() > 30) {
+            logger.error("Nonce cannot be longer that 30 chars");
+            throw new SmartIdClientException("Nonce cannot be longer that 30 chars");
         }
     }
 

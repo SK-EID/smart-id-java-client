@@ -440,7 +440,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
     private static class ValidNonceArgumentSourceProvider implements ArgumentsProvider {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(null, "a", "a".repeat(32)).map(Arguments::of);
+            return Stream.of(null, "a", "a".repeat(30)).map(Arguments::of);
         }
     }
 
@@ -460,7 +460,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                     Arguments.of(Named.of("Empty string as value", ""), "Parameter nonce value has to be at least 1 character long"),
-                    Arguments.of(Named.of("Exceeded char length", "123456789012345678901234567890123"), "Nonce cannot be longer that 32 chars")
+                    Arguments.of(Named.of("Exceeded char length", "a".repeat(31)), "Nonce cannot be longer that 30 chars")
             );
         }
     }
