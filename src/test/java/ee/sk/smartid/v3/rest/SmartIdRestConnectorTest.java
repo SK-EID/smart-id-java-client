@@ -60,7 +60,7 @@ class SmartIdRestConnectorTest {
 
     @Nested
     @WireMockTest(httpPort = 18082)
-    class SemanticsIdentifierAuthentication {
+    class SemanticsIdentifierDynamicLinkAuthentication {
 
         private SmartIdRestConnector connector;
 
@@ -90,6 +90,42 @@ class SmartIdRestConnectorTest {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
                 SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            });
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18083)
+    class DocumentNumberDynamicLinkAuthentication {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18083");
+        }
+
+        @Test
+        void initDynamicLinkAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkAuthenticationSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+            });
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
     }

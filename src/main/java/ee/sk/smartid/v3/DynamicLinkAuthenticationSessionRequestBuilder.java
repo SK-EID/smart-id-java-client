@@ -37,6 +37,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
     private SemanticsIdentifier semanticsIdentifier;
+    private String documentNumber;
 
     /**
      * Constructs a new DynamicLinkAuthenticationSessionRequestBuilder with the given Smart-ID connector
@@ -154,7 +155,27 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
+     * Sets the document number
+     * <p>
+     * Setting this value will make the authentication session request use the document number
+     *
+     * @param documentNumber the document number
+     * @return this builder
+     */
+    public DynamicLinkAuthenticationSessionRequestBuilder withDocumentNumber(String documentNumber) {
+        this.documentNumber = documentNumber;
+        return this;
+    }
+
+    /**
      * Sends the authentication request and get the init session response
+     * <p>
+     * There are 3 supported ways to start authentication session:
+     * <ul>
+     *     <li>with semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
+     *     <li>with document number by using {@link #withDocumentNumber(String)} </li>
+     *     <li>anonymously if semantics identifier and document number are not provided </li>
+     * </ul>
      *
      * @return init session response
      */
@@ -169,8 +190,11 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     private DynamicLinkAuthenticationSessionResponse initAuthenticationSession(DynamicLinkAuthenticationSessionRequest authenticationRequest) {
         if (semanticsIdentifier != null) {
             return connector.initDynamicLinkAuthentication(authenticationRequest, semanticsIdentifier);
+        } else if (documentNumber != null) {
+            return connector.initDynamicLinkAuthentication(authenticationRequest, documentNumber);
+        } else {
+            return connector.initAnonymousDynamicLinkAuthentication(authenticationRequest);
         }
-        return connector.initAnonymousDynamicLinkAuthentication(authenticationRequest);
     }
 
     private void validateRequestParameters() {

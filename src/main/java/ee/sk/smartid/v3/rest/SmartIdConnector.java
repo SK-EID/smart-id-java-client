@@ -68,4 +68,13 @@ public interface SmartIdConnector extends Serializable {
      * @return The dynamic link authentication session response
      */
     DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
+
+    /**
+     * Create authentication session with dynamic link using document number
+     *
+     * @param authenticationRequest The dynamic link authentication session request
+     * @param documentNumber        The document number
+     * @return The dynamic link authentication session response
+     */
+    DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, String documentNumber);
 }

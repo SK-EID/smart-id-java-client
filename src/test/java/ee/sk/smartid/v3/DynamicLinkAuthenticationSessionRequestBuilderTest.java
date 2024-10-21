@@ -407,12 +407,33 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                 .initAuthenticationSession();
 
-        ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
         ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
-        verify(connector).initDynamicLinkAuthentication(requestCaptor.capture(), semanticsIdentifierCaptor.capture());
-        SemanticsIdentifier semanticsIdentifier = semanticsIdentifierCaptor.getValue();
+        verify(connector).initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
+        SemanticsIdentifier capturedSemanticsIdentifier = semanticsIdentifierCaptor.getValue();
 
-        assertEquals("PNOEE-48010010101", semanticsIdentifier.getIdentifier());
+        assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
+    }
+
+    @Test
+    void initAuthenticationSession_withDocumentNumber() {
+        when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), any(String.class)))
+                .thenReturn(createDynamicLinkAuthenticationResponse());
+
+        var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
+        new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withSignatureProtocol(SignatureProtocol.ACSP_V1)
+                .withSignatureProtocolParameters(signatureProtocolParameters)
+                .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
+                .initAuthenticationSession();
+
+        ArgumentCaptor<String> documentNumberCaptor = ArgumentCaptor.forClass(String.class);
+        verify(connector).initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), documentNumberCaptor.capture());
+        String capturedDocumentNumber = documentNumberCaptor.getValue();
+
+        assertEquals("PNOEE-48010010101-MOCK-Q", capturedDocumentNumber);
     }
 
     private DynamicLinkAuthenticationSessionResponse createDynamicLinkAuthenticationResponse() {
