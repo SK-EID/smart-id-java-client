@@ -54,7 +54,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                     .withSignatureProtocolParameters(signatureProtocolParameters)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
@@ -84,7 +83,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withCertificateLevel(certificateLevel)
-                    .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                     .withSignatureProtocolParameters(signatureProtocolParameters)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
@@ -106,7 +104,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                     .withSignatureProtocolParameters(signatureProtocolParameters)
                     .withNonce(nonce)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
@@ -128,7 +125,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                     .withSignatureProtocolParameters(signatureProtocolParameters)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
@@ -150,7 +146,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                     .withSignatureProtocolParameters(signatureProtocolParameters)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .withSharedMdClientIpAddress(ipRequested)
@@ -173,7 +168,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                     .withSignatureProtocolParameters(signatureProtocolParameters)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .withCapabilities(capabilities)
@@ -219,7 +213,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                         .withSignatureProtocolParameters(signatureProtocolParameters)
                         .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                         .initAuthenticationSession();
@@ -228,25 +221,11 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @Test
-        public void initAuthenticationSession_signatureProtocolNotSet_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () ->
-                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withSignatureProtocol(null)
-                            .withSignatureProtocolParameters(toSignatureProtocolParameters("sha512WithRSAEncryption"))
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
-            assertEquals("Parameter signatureProtocol must be set", exception.getMessage());
-        }
-
-        @Test
         public void initAuthenticationSession_signatureProtocolParametersIsNotSet_throwException() {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
-                            .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                             .withSignatureProtocolParameters(null)
                             .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
@@ -261,7 +240,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                         .withSignatureProtocolParameters(signatureProtocolParameters)
                         .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                         .initAuthenticationSession();
@@ -277,7 +255,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                         .withSignatureProtocolParameters(signatureProtocolParameters)
                         .withNonce(invalidNonce)
                         .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
@@ -294,7 +271,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                         .withSignatureProtocolParameters(signatureProtocolParameters)
                         .withAllowedInteractionsOrder(interactions)
                         .initAuthenticationSession();
@@ -310,7 +286,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                         .withSignatureProtocolParameters(signatureProtocolParameters)
                         .withAllowedInteractionsOrder(List.of(interaction))
                         .initAuthenticationSession();
@@ -326,7 +301,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                         .withSignatureProtocolParameters(signatureProtocolParameters)
                         .withAllowedInteractionsOrder(List.of(interaction))
                         .initAuthenticationSession();
@@ -385,7 +359,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                     .withSignatureProtocolParameters(signatureProtocolParameters)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
@@ -401,7 +374,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
-                .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                 .withSignatureProtocolParameters(signatureProtocolParameters)
                 .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
@@ -423,7 +395,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
-                .withSignatureProtocol(SignatureProtocol.ACSP_V1)
                 .withSignatureProtocolParameters(signatureProtocolParameters)
                 .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                 .withDocumentNumber("PNOEE-48010010101-MOCK-Q")

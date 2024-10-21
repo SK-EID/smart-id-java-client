@@ -30,7 +30,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     private String relyingPartyUUID;
     private String relyingPartyName;
     private AuthenticationCertificateLevel certificateLevel;
-    private SignatureProtocol signatureProtocol;
     private SignatureProtocolParameters signatureProtocolParameters;
     private String nonce;
     private List<Interaction> allowedInteractionsOrder;
@@ -72,17 +71,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      */
     public DynamicLinkAuthenticationSessionRequestBuilder withCertificateLevel(AuthenticationCertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
-        return this;
-    }
-
-    /**
-     * Sets the signature protocol
-     *
-     * @param signatureProtocol the signature protocol
-     * @return this builder
-     */
-    public DynamicLinkAuthenticationSessionRequestBuilder withSignatureProtocol(SignatureProtocol signatureProtocol) {
-        this.signatureProtocol = signatureProtocol;
         return this;
     }
 
@@ -212,11 +200,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateSignatureParameters() {
-        if (signatureProtocol == null) {
-            logger.error("Parameter signatureProtocol must be set");
-            throw new SmartIdClientException("Parameter signatureProtocol must be set");
-        }
-
         if (signatureProtocolParameters == null) {
             logger.error("Parameter signatureProtocolParameters must be set");
             throw new SmartIdClientException("Parameter signatureProtocolParameters must be set");
