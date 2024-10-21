@@ -18,19 +18,20 @@ import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
-@WireMockTest(httpPort = 18089)
 class SmartIdRestConnectorTest {
 
-    private SmartIdRestConnector connector;
-
-    @BeforeEach
-    void setUp() {
-        connector = new SmartIdRestConnector("http://localhost:18089");
-    }
-
     @Nested
+    @WireMockTest(httpPort = 18081)
     class AnonymousDynamicLinkAuthentication {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18081");
+        }
 
         @Test
         void initAnonymousDynamicLinkAuthentication() {
@@ -55,21 +56,57 @@ class SmartIdRestConnectorTest {
                 connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
             });
         }
+    }
 
-        private DynamicLinkAuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
-            var dynamicLinkAuthenticationSessionRequest = new DynamicLinkAuthenticationSessionRequest();
-            dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-            dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
+    @Nested
+    @WireMockTest(httpPort = 18082)
+    class SemanticsIdentifierAuthentication {
 
-            var signatureProtocolParameters = new SignatureProtocolParameters();
-            signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("randomChallenge".getBytes()));
-            signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
-            dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
+        private SmartIdRestConnector connector;
 
-            Interaction interaction = Interaction.displayTextAndPIN("Log in?");
-            dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
-
-            return dynamicLinkAuthenticationSessionRequest;
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18082");
         }
+
+        @Test
+        void initDynamicLinkAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkAuthenticationSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            });
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            });
+        }
+    }
+
+    private DynamicLinkAuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
+        var dynamicLinkAuthenticationSessionRequest = new DynamicLinkAuthenticationSessionRequest();
+        dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
+
+        var signatureProtocolParameters = new SignatureProtocolParameters();
+        signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("randomChallenge".getBytes()));
+        signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+        dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
+
+        Interaction interaction = Interaction.displayTextAndPIN("Log in?");
+        dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
+
+        return dynamicLinkAuthenticationSessionRequest;
     }
 }

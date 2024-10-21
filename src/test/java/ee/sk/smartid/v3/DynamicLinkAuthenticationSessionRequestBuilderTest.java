@@ -32,6 +32,7 @@ import org.mockito.ArgumentCaptor;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
@@ -389,6 +390,29 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
         }
+    }
+
+    @Test
+    void initAuthenticationSession_withSemanticsIdentifier() {
+        when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
+                .thenReturn(createDynamicLinkAuthenticationResponse());
+
+        var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
+        new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withSignatureProtocol(SignatureProtocol.ACSP_V1)
+                .withSignatureProtocolParameters(signatureProtocolParameters)
+                .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
+                .initAuthenticationSession();
+
+        ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+        ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
+        verify(connector).initDynamicLinkAuthentication(requestCaptor.capture(), semanticsIdentifierCaptor.capture());
+        SemanticsIdentifier semanticsIdentifier = semanticsIdentifierCaptor.getValue();
+
+        assertEquals("PNOEE-48010010101", semanticsIdentifier.getIdentifier());
     }
 
     private DynamicLinkAuthenticationSessionResponse createDynamicLinkAuthenticationResponse() {

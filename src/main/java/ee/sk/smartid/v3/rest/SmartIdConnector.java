@@ -33,6 +33,7 @@ import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 public interface SmartIdConnector extends Serializable {
 
@@ -58,4 +59,13 @@ public interface SmartIdConnector extends Serializable {
      * @return The dynamic link authentication session response
      */
     DynamicLinkAuthenticationSessionResponse initAnonymousDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest);
+
+    /**
+     * Create authentication session with dynamic link using semantics identifier
+     *
+     * @param authenticationRequest The dynamic link authentication session request
+     * @param semanticsIdentifier   The semantics identifier
+     * @return The dynamic link authentication session response
+     */
+    DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
 }

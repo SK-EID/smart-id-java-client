@@ -47,6 +47,7 @@ import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
 import jakarta.ws.rs.BadRequestException;
@@ -73,6 +74,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
 
     private static final String ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH = "authentication/dynamic-link/anonymous";
+    private static final String DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/dynamic-link/etsi";
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -212,6 +214,16 @@ public class SmartIdRestConnector implements SmartIdConnector {
         logger.debug("Starting anonymous dynamic link authentication session");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH)
+                .build();
+        return postAuthenticationRequest(uri, authenticationRequest);
+    }
+
+    @Override
+    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
+        logger.debug("Starting dynamic link authentication session with semantics identifier");
+        URI uri = UriBuilder.fromUri(endpointUrl)
+                .path(DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
+                .path(semanticsIdentifier.getIdentifier())
                 .build();
         return postAuthenticationRequest(uri, authenticationRequest);
     }

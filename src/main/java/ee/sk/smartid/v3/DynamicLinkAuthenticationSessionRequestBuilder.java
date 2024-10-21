@@ -13,6 +13,7 @@ import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.InteractionFlow;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 /**
  * Class for building a dynamic link authentication session request
@@ -35,6 +36,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     private List<Interaction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
+    private SemanticsIdentifier semanticsIdentifier;
 
     /**
      * Constructs a new DynamicLinkAuthenticationSessionRequestBuilder with the given Smart-ID connector
@@ -139,6 +141,19 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
+     * Sets the semantics identifier
+     * <p>
+     * Setting this value will make the authentication session request use the semantics identifier
+     *
+     * @param semanticsIdentifier the semantics identifier
+     * @return this builder
+     */
+    public DynamicLinkAuthenticationSessionRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
+        this.semanticsIdentifier = semanticsIdentifier;
+        return this;
+    }
+
+    /**
      * Sends the authentication request and get the init session response
      *
      * @return init session response
@@ -146,9 +161,16 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     public DynamicLinkAuthenticationSessionResponse initAuthenticationSession() {
         validateRequestParameters();
         DynamicLinkAuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
-        DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse = connector.initAnonymousDynamicLinkAuthentication(authenticationRequest);
+        DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(dynamicLinkAuthenticationSessionResponse);
         return dynamicLinkAuthenticationSessionResponse;
+    }
+
+    private DynamicLinkAuthenticationSessionResponse initAuthenticationSession(DynamicLinkAuthenticationSessionRequest authenticationRequest) {
+        if (semanticsIdentifier != null) {
+            return connector.initDynamicLinkAuthentication(authenticationRequest, semanticsIdentifier);
+        }
+        return connector.initAnonymousDynamicLinkAuthentication(authenticationRequest);
     }
 
     private void validateRequestParameters() {
