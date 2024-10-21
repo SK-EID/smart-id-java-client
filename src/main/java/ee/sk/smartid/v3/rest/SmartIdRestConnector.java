@@ -69,9 +69,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public SessionStatus getSessionStatus(String sessionId, long timeoutMs) throws SessionNotFoundException {
+    public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
         logger.debug("Getting session status for sessionId: {}", sessionId);
-        SessionStatusRequest request = createSessionStatusRequest(sessionId, timeoutMs);
+        SessionStatusRequest request = createSessionStatusRequest(sessionId);
         UriBuilder uriBuilder = UriBuilder
                 .fromUri(endpointUrl)
                 .path(SESSION_STATUS_URI);
@@ -132,9 +132,11 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private SessionStatusRequest createSessionStatusRequest(String sessionId, long timeoutMs) {
+    private SessionStatusRequest createSessionStatusRequest(String sessionId) {
         var request = new SessionStatusRequest(sessionId);
-        request.setResponseSocketOpenTime(TimeUnit.MILLISECONDS, timeoutMs);
+        if (sessionStatusResponseSocketOpenTimeUnit != null && sessionStatusResponseSocketOpenTimeValue > 0) {
+            request.setResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+        }
         return request;
     }
 

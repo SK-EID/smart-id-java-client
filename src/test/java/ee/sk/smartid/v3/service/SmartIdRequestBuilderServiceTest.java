@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.anyString;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -44,11 +43,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -78,7 +81,7 @@ import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.rest.dao.SignatureProtocol;
+import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
 class SmartIdRequestBuilderServiceTest {
 
@@ -126,10 +129,10 @@ class SmartIdRequestBuilderServiceTest {
         mockSessionStatus.setState("COMPLETE");
         mockSessionStatus.setResult(sessionResult);
 
-        when(connector.getSessionStatus(anyString(), anyLong())).thenReturn(mockSessionStatus);
+        when(connector.getSessionStatus(anyString())).thenReturn(mockSessionStatus);
 
         var poller = new SessionStatusPoller(connector);
-        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id", 10000);
+        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id");
 
         assertEquals("COMPLETE", sessionStatus.getState());
         assertEquals("OK", sessionStatus.getResult().getEndResult());
@@ -139,16 +142,17 @@ class SmartIdRequestBuilderServiceTest {
     void documentValidatingSessionStatus() throws Exception {
         SmartIdConnector connector = mock(SmartIdConnector.class);
 
-        SessionStatus mockSessionStatus = createMockSessionStatus();
+        String randomChallenge = "randomChallenge";
+        SessionStatus mockSessionStatus = createMockSessionStatus(randomChallenge);
 
-        when(connector.getSessionStatus(anyString(), anyLong())).thenReturn(mockSessionStatus);
+        when(connector.getSessionStatus(anyString())).thenReturn(mockSessionStatus);
 
         var poller = new SessionStatusPoller(connector);
-        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id", 10000);
+        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id");
 
         SmartIdRequestBuilderService requestBuilder = new SmartIdRequestBuilderService();
 
-        byte[] dataToSignBytes = "dataToBeSigned".getBytes();
+        byte[] dataToSignBytes = "dataToBeSigned".getBytes(StandardCharsets.UTF_8);
         var signableData = new SignableData(dataToSignBytes);
         signableData.setHashType(HashType.SHA512);
 
@@ -156,12 +160,31 @@ class SmartIdRequestBuilderServiceTest {
         dataToSignField.setAccessible(true);
         dataToSignField.set(requestBuilder, signableData);
 
-        requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
+        requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", null, randomChallenge);
 
-        SmartIdAuthenticationResponse response = requestBuilder.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
+        SmartIdAuthenticationResponse response = requestBuilder.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", null, randomChallenge);
 
         assertEquals("OK", response.getEndResult());
         assertEquals("QUALIFIED", response.getCertificateLevel());
+    }
+
+    @Test
+    void validateSessionResult_missingInteractionFlowUsed() throws Exception {
+        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSessionResult", SessionStatus.class, String.class, String.class, String.class);
+        method.setAccessible(true);
+
+        var sessionStatus = new SessionStatus();
+        var sessionResult = new SessionResult();
+        sessionResult.setEndResult("OK");
+        sessionResult.setDocumentNumber("PNOEE-12345678901");
+
+        sessionStatus.setResult(sessionResult);
+        sessionStatus.setInteractionFlowUsed(null);
+
+        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+
+        assertTrue(ex.getCause() instanceof SmartIdClientException);
+        assertEquals("InteractionFlowUsed is missing in the session status", ex.getCause().getMessage());
     }
 
     @Test
@@ -197,143 +220,171 @@ class SmartIdRequestBuilderServiceTest {
         assertEquals("Document number is missing in the session result", ex.getCause().getMessage());
     }
 
-    @Test
-    void validateCertificate_missingCertificate() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-        method.setAccessible(true);
+    @Nested
+    class CertificateValidation {
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, null, "QUALIFIED"));
+        @Test
+        void validateCertificate_missingCertificate() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
+            method.setAccessible(true);
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertEquals("Missing certificate in session response", ex.getCause().getMessage());
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, null, "QUALIFIED"));
+
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertEquals("Missing certificate in session response", ex.getCause().getMessage());
+        }
+
+        @Test
+        void validateCertificate_missingCertificateValue() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
+            method.setAccessible(true);
+
+            var sessionCertificate = new SessionCertificate();
+            sessionCertificate.setValue(null);
+
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertEquals("Missing certificate in session response", ex.getCause().getMessage());
+        }
+
+        @Test
+        void validateCertificate_certificateLevelMismatch() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
+            method.setAccessible(true);
+
+            var sessionCertificate = new SessionCertificate();
+            sessionCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
+            sessionCertificate.setCertificateLevel("ADVANCED");
+
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertTrue(ex.getCause().getCause() instanceof CertificateLevelMismatchException);
+        }
+
+        @Test
+        void validateCertificate_certificateParsingFails() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
+            method.setAccessible(true);
+
+            var sessionCertificate = new SessionCertificate();
+            sessionCertificate.setValue("InvalidCertificateData");
+            sessionCertificate.setCertificateLevel("QUALIFIED");
+
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertEquals("Certificate validation failed", ex.getCause().getMessage());
+        }
     }
 
-    @Test
-    void validateCertificate_missingCertificateValue() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-        method.setAccessible(true);
+    @Nested
+    class SignatureValidation {
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(null);
+        @Test
+        void validateRawDigestSignature_successful() throws Exception {
+            SessionStatus mockSessionStatus = mock(SessionStatus.class);
+            SessionSignature mockSessionSignature = mock(SessionSignature.class);
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+            when(mockSessionSignature.getValue()).thenReturn("expectedDigest");
+            when(mockSessionSignature.getSignatureAlgorithm()).thenReturn("sha512WithRSAEncryption");
+            when(mockSessionStatus.getSignature()).thenReturn(mockSessionSignature);
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertEquals("Missing certificate in session response", ex.getCause().getMessage());
-    }
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
+            method.setAccessible(true);
 
-    @Test
-    void validateCertificate_certificateLevelMismatch() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-        method.setAccessible(true);
+            assertDoesNotThrow(() -> method.invoke(service, mockSessionStatus, "expectedDigest"));
+        }
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
-        sessionCertificate.setCertificateLevel("ADVANCED");
+        @Test
+        void validateSignature_withRawDigestSignatureProtocol() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSignature", SessionStatus.class, String.class, String.class);
+            method.setAccessible(true);
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertTrue(ex.getCause().getCause() instanceof CertificateLevelMismatchException);
-    }
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("expectedDigest");
+            sessionSignature.setSignatureAlgorithm("sha512WithRSAEncryption");
+            sessionStatus.setSignature(sessionSignature);
 
-    @Test
-    void validateCertificate_certificateParsingFails() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-        method.setAccessible(true);
+            assertDoesNotThrow(() -> method.invoke(service, sessionStatus, "expectedDigest", "randomChallenge"));
+        }
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue("InvalidCertificateData");
-        sessionCertificate.setCertificateLevel("QUALIFIED");
+        @Test
+        void validateSignature_unknownProtocol() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSignature", SessionStatus.class, String.class, String.class);
+            method.setAccessible(true);
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setSignatureProtocol("UNKNOWN_PROTOCOL");
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertEquals("Certificate validation failed", ex.getCause().getMessage());
-    }
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest", "randomChallenge"));
 
-    @Test
-    void validateSignature_unknownProtocol() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSignature", SessionStatus.class, String.class, String.class);
-        method.setAccessible(true);
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertEquals("Unknown signature protocol: UNKNOWN_PROTOCOL", ex.getCause().getMessage());
+        }
 
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setSignatureProtocol("UNKNOWN_PROTOCOL");
+        @Test
+        void validateAcspV1Signature_signatureMismatch() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateAcspV1Signature", SessionStatus.class, String.class);
+            method.setAccessible(true);
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest", "randomChallenge"));
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("InvalidSignatureValue");
+            sessionSignature.setServerRandom("serverRandomValue");
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertEquals("Unknown signature protocol: UNKNOWN_PROTOCOL", ex.getCause().getMessage());
-    }
+            var sigAlgParams = new SignatureAlgorithmParameters();
+            sigAlgParams.setHashAlgorithm("SHA-256");
+            sessionSignature.setSignatureAlgorithmParameters(sigAlgParams);
 
-    @Test
-    void validateAcspV1Signature_signatureMismatch() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateAcspV1Signature", SessionStatus.class, String.class);
-        method.setAccessible(true);
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setSignature(sessionSignature);
+            sessionStatus.setSignatureProtocol("ACSP_V1");
 
-        var sessionSignature = new SessionSignature();
-        sessionSignature.setValue("InvalidSignatureValue");
-        sessionSignature.setServerRandom("serverRandomValue");
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "randomChallenge"));
 
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setSignature(sessionSignature);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertTrue(ex.getCause().getMessage().contains("ACSP_V1 signature validation failed"));
+        }
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "randomChallenge"));
+        @Test
+        void validateRawDigestSignature_signatureMismatch() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
+            method.setAccessible(true);
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertTrue(ex.getCause().getMessage().contains("ACSP_V1 signature validation failed"));
-    }
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("actualDigest");
+            sessionSignature.setSignatureAlgorithm("sha512WithRSAEncryption");
 
-    @Test
-    void validateRawDigestSignature_signatureMismatch() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
-        method.setAccessible(true);
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setSignature(sessionSignature);
 
-        var sessionSignature = new SessionSignature();
-        sessionSignature.setValue("actualDigest");
-        sessionSignature.setSignatureAlgorithm("sha512WithRSAEncryption");
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest"));
 
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setSignature(sessionSignature);
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertTrue(ex.getCause().getMessage().contains("RAW_DIGEST_SIGNATURE validation failed"));
+        }
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest"));
+        @Test
+        void validateRawDigestSignature_unexpectedAlgorithm() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
+            method.setAccessible(true);
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertTrue(ex.getCause().getMessage().contains("RAW_DIGEST_SIGNATURE validation failed"));
-    }
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("expectedDigest");
+            sessionSignature.setSignatureAlgorithm("unexpectedAlgorithm");
 
-    @Test
-    void validateRawDigestSignature_unexpectedAlgorithm() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
-        method.setAccessible(true);
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setSignature(sessionSignature);
 
-        var sessionSignature = new SessionSignature();
-        sessionSignature.setValue("expectedDigest");
-        sessionSignature.setSignatureAlgorithm("unexpectedAlgorithm");
+            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest"));
 
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setSignature(sessionSignature);
-
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest"));
-
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertTrue(ex.getCause().getMessage().contains("Unexpected signature algorithm"));
-    }
-
-    @Test
-    void validateRawDigestSignature_successful() throws Exception {
-        SessionStatus mockSessionStatus = mock(SessionStatus.class);
-        SessionSignature mockSessionSignature = mock(SessionSignature.class);
-
-        when(mockSessionSignature.getValue()).thenReturn("expectedDigest");
-        when(mockSessionSignature.getSignatureAlgorithm()).thenReturn("sha512WithRSAEncryption");
-        when(mockSessionStatus.getSignature()).thenReturn(mockSessionSignature);
-
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
-        method.setAccessible(true);
-
-        assertDoesNotThrow(() -> method.invoke(service, mockSessionStatus, "expectedDigest"));
+            assertTrue(ex.getCause() instanceof SmartIdClientException);
+            assertTrue(ex.getCause().getMessage().contains("Unexpected signature algorithm"));
+        }
     }
 
     @Test
@@ -342,16 +393,16 @@ class SmartIdRequestBuilderServiceTest {
         var mockSessionStatus = new SessionStatus();
         mockSessionStatus.setState("COMPLETE");
 
-        when(connector.getSessionStatus(anyString(), anyLong())).thenReturn(mockSessionStatus);
+        when(connector.getSessionStatus(anyString())).thenReturn(mockSessionStatus);
 
         var poller = new SessionStatusPoller(connector);
-        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id", 10000);
+        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id");
 
         assertEquals("COMPLETE", sessionStatus.getState());
     }
 
     @ParameterizedTest
-    @ArgumentsSource(EndResultArgumentsProvider.class)
+    @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
     void handleSessionEndResultErrors(String endResult, Class<? extends Exception> expectedException) throws Exception {
         Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("handleSessionEndResultErrors", String.class);
         method.setAccessible(true);
@@ -361,7 +412,7 @@ class SmartIdRequestBuilderServiceTest {
         assertEquals(expectedException, ex.getCause().getClass());
     }
 
-    private static SessionStatus createMockSessionStatus() {
+    private static SessionStatus createMockSessionStatus(String randomChallenge) throws NoSuchAlgorithmException {
         var mockSessionResult = new SessionResult();
         mockSessionResult.setEndResult("OK");
         mockSessionResult.setDocumentNumber("PNOEE-12345678901");
@@ -371,8 +422,21 @@ class SmartIdRequestBuilderServiceTest {
         mockCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
 
         var mockSessionSignature = new SessionSignature();
-        String serverRandom = "base64EncodedServerRandom";
-        String expectedSignature = "9P5/bhUBCdSA2bk7pGxOVQKt1Q4gsgjtUm9NEnVDYH8=";
+        String serverRandom = "serverRandomValue";
+        String signatureProtocol = "ACSP_V1";
+
+        String dataToHash = signatureProtocol + ";" +
+                Base64.getEncoder().encodeToString(serverRandom.getBytes(StandardCharsets.UTF_8)) + ";" +
+                Base64.getEncoder().encodeToString(randomChallenge.getBytes(StandardCharsets.UTF_8));
+
+        var sigAlgParams = new SignatureAlgorithmParameters();
+        sigAlgParams.setHashAlgorithm("SHA-512");
+        mockSessionSignature.setSignatureAlgorithmParameters(sigAlgParams);
+
+        MessageDigest digest = MessageDigest.getInstance(sigAlgParams.getHashAlgorithm());
+        byte[] hashedData = digest.digest(dataToHash.getBytes(StandardCharsets.UTF_8));
+        String expectedSignature = Base64.getEncoder().encodeToString(hashedData);
+
         mockSessionSignature.setValue(expectedSignature);
         mockSessionSignature.setServerRandom(serverRandom);
         mockSessionSignature.setSignatureAlgorithm("sha512WithRSAEncryption");
@@ -382,13 +446,13 @@ class SmartIdRequestBuilderServiceTest {
         mockSessionStatus.setResult(mockSessionResult);
         mockSessionStatus.setCert(mockCertificate);
         mockSessionStatus.setSignature(mockSessionSignature);
-        mockSessionStatus.setSignatureProtocol(SignatureProtocol.ACSP_V1.name());
+        mockSessionStatus.setSignatureProtocol(signatureProtocol);
         mockSessionStatus.setInteractionFlowUsed("displayTextAndPIN");
 
         return mockSessionStatus;
     }
 
-    static class EndResultArgumentsProvider implements ArgumentsProvider {
+    static class SessionEndResultErrorArgumentsProvider implements ArgumentsProvider {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(

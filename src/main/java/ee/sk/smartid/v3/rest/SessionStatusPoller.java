@@ -45,20 +45,20 @@ public class SessionStatusPoller {
         this.connector = connector;
     }
 
-    public SessionStatus fetchFinalSessionStatus(String sessionId, long timeoutMs) {
+    public SessionStatus fetchFinalSessionStatus(String sessionId) {
         logger.debug("Starting to poll session status for session {}", sessionId);
         try {
-            return pollForFinalSessionStatus(sessionId, timeoutMs);
+            return pollForFinalSessionStatus(sessionId);
         } catch (InterruptedException ex) {
             logger.error("Failed to poll session status", ex);
             throw new SmartIdClientException("Failed to poll session status", ex);
         }
     }
 
-    private SessionStatus pollForFinalSessionStatus(String sessionId, long timeoutMs) throws InterruptedException {
+    private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
         SessionStatus sessionStatus = null;
         while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
-            sessionStatus = pollSessionStatus(sessionId, timeoutMs);
+            sessionStatus = pollSessionStatus(sessionId);
             if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
                 break;
             }
@@ -69,9 +69,9 @@ public class SessionStatusPoller {
         return sessionStatus;
     }
 
-    private SessionStatus pollSessionStatus(String sessionId, long timeoutMs) {
+    private SessionStatus pollSessionStatus(String sessionId) {
         logger.debug("Polling session status");
-        return connector.getSessionStatus(sessionId, timeoutMs);
+        return connector.getSessionStatus(sessionId);
     }
 
     public void setPollingSleepTime(TimeUnit unit, long timeout) {

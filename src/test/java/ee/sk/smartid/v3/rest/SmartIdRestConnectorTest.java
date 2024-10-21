@@ -32,6 +32,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.concurrent.TimeUnit;
 
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
@@ -58,22 +59,14 @@ class SmartIdRestConnectorTest {
     }
 
     @Test
-    void getNotExistingSessionStatus() {
-        assertThrows(SessionNotFoundException.class, () -> {
-            stubNotFoundResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016");
-            connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016", 10000L);
-        });
-    }
-
-    @Test
-    void getRunningSessionStatus() {
+    void getSessionStatus_running() {
         SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunning.json");
         assertNotNull(sessionStatus);
         assertEquals("RUNNING", sessionStatus.getState());
     }
 
     @Test
-    void getRunningSessionStatus_withIgnoredProperties() {
+    void getSessionStatus_running_withIgnoredProperties() {
         SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunningWithIgnoredProperties.json");
         assertNotNull(sessionStatus);
         assertEquals("RUNNING", sessionStatus.getState());
@@ -88,7 +81,7 @@ class SmartIdRestConnectorTest {
         SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
         assertSuccessfulResponse(sessionStatus);
         assertNotNull(sessionStatus.getCert());
-        MatcherAssert.assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
+        assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
         assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
     }
 
@@ -97,72 +90,78 @@ class SmartIdRestConnectorTest {
         SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
         assertSuccessfulResponse(sessionStatus);
 
-        verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000"))
+        verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
                 .withHeader("User-Agent", containing("smart-id-java-client/"))
                 .withHeader("User-Agent", containing("Java/")));
-    }
-
-    @Test
-    void getSessionStatus_userHasRefused() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
-    }
-
-    @Test
-    void getSessionStatus_userHasRefusedConfirmationMessage() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessage.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE");
-    }
-
-    @Test
-    void getSessionStatus_userHasRefusedRefusedConfirmationMessageWithVerificationCodeChoice() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessageWithVerificationCodeChoice.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
-    }
-
-    @Test
-    void getSessionStatus_userHasRefusedWhenUserRefusedDisplayTextAndPin() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedDisplayTextAndPin.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_DISPLAYTEXTANDPIN");
-    }
-
-    @Test
-    void getSessionStatus_userHasRefusedWhenUserRefusedGeneral() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
-    }
-
-    @Test
-    void getSessionStatus_userHasRefusedWhenUserRefusedVerificationCodeChoice() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedVerificationCodeChoice.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_VC_CHOICE");
-    }
-
-    @Test
-    void getSessionStatus_timeout() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenTimeout.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "TIMEOUT");
-    }
-
-    @Test
-    void getSessionStatus_userHasSelectedWrongVcCode() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
-    }
-
-    @Test
-    void getSessionStatus_whenDocumentUnusable() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenDocumentUnusable.json");
-        assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
     }
 
     @Test
     void getSessionStatus_withTimeoutParameter() {
         stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
         connector.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
-        SessionStatus sessionStatus = connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016", 10000L);
+        SessionStatus sessionStatus = connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
         assertSuccessfulResponse(sessionStatus);
         verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000")));
+    }
+
+    @Nested
+    class ErrorCases {
+
+        @Test
+        void getSessionStatus_whenSessionNotFound() {
+            assertThrows(SessionNotFoundException.class, () -> {
+                stubNotFoundResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016");
+                connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+            });
+        }
+
+        @Test
+        void getSessionStatus_userHasRefused() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedGeneral.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
+        }
+
+        @Test
+        void getSessionStatus_userHasRefusedConfirmationMessage() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessage.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE");
+        }
+
+        @Test
+        void getSessionStatus_userHasRefusedConfirmationMessageWithVerificationCodeChoice() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedConfirmationMessageWithVerificationCodeChoice.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
+        }
+
+        @Test
+        void getSessionStatus_userHasRefusedDisplayTextAndPin() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedDisplayTextAndPin.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_DISPLAYTEXTANDPIN");
+        }
+
+        @Test
+        void getSessionStatus_userHasRefusedVerificationCodeChoice() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserRefusedVerificationCodeChoice.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_VC_CHOICE");
+        }
+
+        @Test
+        void getSessionStatus_timeout() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenTimeout.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "TIMEOUT");
+        }
+
+        @Test
+        void getSessionStatus_userHasSelectedWrongVcCode() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
+        }
+
+        @Test
+        void getSessionStatus_whenDocumentUnusable() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenDocumentUnusable.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
+        }
     }
 
     private void assertSuccessfulResponse(SessionStatus sessionStatus) {
@@ -179,6 +178,6 @@ class SmartIdRestConnectorTest {
 
     private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {
         stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
-        return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016", 10000L);
+        return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
     }
 }

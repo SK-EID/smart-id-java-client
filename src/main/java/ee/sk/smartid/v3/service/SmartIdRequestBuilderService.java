@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.SignableData;
 import ee.sk.smartid.v3.SignableHash;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
@@ -61,6 +63,7 @@ import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
+import ee.sk.smartid.v3.rest.dao.SignatureProtocol;
 
 public class SmartIdRequestBuilderService {
 
@@ -118,15 +121,6 @@ public class SmartIdRequestBuilderService {
             throw new UnprocessableSmartIdResponseException("Session status is null");
         }
         validateSessionResult(sessionStatus, requestedCertificateLevel, expectedDigest, randomChallenge);
-
-        if (sessionStatus.getSignature() == null) {
-            logger.error("Signature was not present in the response");
-            throw new UnprocessableSmartIdResponseException("Signature was not present in the response");
-        }
-        if (sessionStatus.getCert() == null) {
-            logger.error("Certificate was not present in the response");
-            throw new UnprocessableSmartIdResponseException("Certificate was not present in the response");
-        }
     }
 
     public void validateSessionResult(SessionStatus sessionStatus, String requestedCertificateLevel, String expectedDigest, String randomChallenge) {
@@ -141,12 +135,12 @@ public class SmartIdRequestBuilderService {
         if ("OK".equalsIgnoreCase(endResult)) {
             logger.info("Session completed successfully");
 
-            if (sessionResult.getDocumentNumber() == null || sessionResult.getDocumentNumber().isEmpty()) {
+            if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
                 logger.error("Document number is missing in the session result");
                 throw new SmartIdClientException("Document number is missing in the session result");
             }
 
-            if (sessionStatus.getInteractionFlowUsed() == null || sessionStatus.getInteractionFlowUsed().isEmpty()) {
+            if (StringUtil.isEmpty(sessionStatus.getInteractionFlowUsed())) {
                 logger.error("InteractionFlowUsed is missing in the session status");
                 throw new SmartIdClientException("InteractionFlowUsed is missing in the session status");
             }
@@ -197,9 +191,9 @@ public class SmartIdRequestBuilderService {
     private void validateSignature(SessionStatus sessionStatus, String expectedDigest, String randomChallenge) {
         String signatureProtocol = sessionStatus.getSignatureProtocol();
 
-        if ("ACSP_V1".equalsIgnoreCase(signatureProtocol)) {
+        if (SignatureProtocol.ACSP_V1.name().equalsIgnoreCase(signatureProtocol)) {
             validateAcspV1Signature(sessionStatus, randomChallenge);
-        } else if ("RAW_DIGEST_SIGNATURE".equalsIgnoreCase(signatureProtocol)) {
+        } else if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
             validateRawDigestSignature(sessionStatus, expectedDigest);
         } else {
             throw new SmartIdClientException("Unknown signature protocol: " + signatureProtocol);
@@ -213,7 +207,7 @@ public class SmartIdRequestBuilderService {
                 Base64.getEncoder().encodeToString(randomChallenge.getBytes(StandardCharsets.UTF_8));
 
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            MessageDigest digest = MessageDigest.getInstance(sessionStatus.getSignature().getSignatureAlgorithmParameters().getHashAlgorithm());
             byte[] hashedData = digest.digest(dataToHash.getBytes(StandardCharsets.UTF_8));
             String expectedSignature = Base64.getEncoder().encodeToString(hashedData);
 
@@ -237,8 +231,9 @@ public class SmartIdRequestBuilderService {
                     + ", but got: " + signatureValue);
         }
 
-        if (!"sha512WithRSAEncryption".equals(signatureAlgorithm)) {
-            throw new SmartIdClientException("Unexpected signature algorithm. Expected: sha512WithRSAEncryption, but got: " + signatureAlgorithm);
+        List<String> allowedSignatureAlgorithms = Arrays.asList("sha256WithRSAEncryption", "sha384WithRSAEncryption", "sha512WithRSAEncryption");
+        if (!allowedSignatureAlgorithms.contains(signatureAlgorithm)) {
+            throw new SmartIdClientException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signatureAlgorithm);
         }
 
         logger.info("RAW_DIGEST_SIGNATURE successfully validated.");
