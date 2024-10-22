@@ -223,99 +223,92 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         public void initAuthenticationSession_randomChallengeIsEmpty_throwException(String randomChallenge) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
-                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                        .withRelyingPartyName("DEMO")
-                        .withRandomChallenge(randomChallenge)
-                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                        .initAuthenticationSession();
-            });
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRandomChallenge(randomChallenge)
+                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .initAuthenticationSession());
             assertEquals("Parameter randomChallenge must be set", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidRandomChallengeArgumentProvider.class)
         public void initAuthenticationSession_randomChallengeIsInvalid_throwException(String randomChallenge, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
-                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                        .withRelyingPartyName("DEMO")
-                        .withRandomChallenge(randomChallenge)
-                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                        .initAuthenticationSession();
-            });
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRandomChallenge(randomChallenge)
+                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
 
         @Test
         public void initAuthenticationSession_signatureAlgorithmIsSetToNull_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
-                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                        .withRelyingPartyName("DEMO")
-                        .withRandomChallenge(generateBase64String("a".repeat(32)))
-                        .withSignatureAlgorithm(null)
-                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                        .initAuthenticationSession();
-            });
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRandomChallenge(generateBase64String("a".repeat(32)))
+                            .withSignatureAlgorithm(null)
+                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .initAuthenticationSession());
             assertEquals("Parameter signatureAlgorithm must be set", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidNonceProvider.class)
         public void initAuthenticationSession_nonceOutOfBounds_throwException(String invalidNonce, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
-                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                        .withRelyingPartyName("DEMO")
-                        .withRandomChallenge(generateBase64String("a".repeat(32)))
-                        .withNonce(invalidNonce)
-                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                        .initAuthenticationSession();
-            });
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRandomChallenge(generateBase64String("a".repeat(32)))
+                            .withNonce(invalidNonce)
+                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         public void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<Interaction> interactions) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
-                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                        .withRelyingPartyName("DEMO")
-                        .withRandomChallenge(generateBase64String("a".repeat(32)))
-                        .withAllowedInteractionsOrder(interactions)
-                        .initAuthenticationSession();
-            });
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRandomChallenge(generateBase64String("a".repeat(32)))
+                            .withAllowedInteractionsOrder(interactions)
+                            .initAuthenticationSession());
             assertEquals("Parameter allowedInteractionsOrder must be set", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(NotSupportedInteractionsProvider.class)
         public void initAuthenticationSession_allowedInteractionsOrderContainsNotSupportedInteraction_throwException(Interaction interaction, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
-                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                        .withRelyingPartyName("DEMO")
-                        .withRandomChallenge(generateBase64String("a".repeat(32)))
-                        .withAllowedInteractionsOrder(List.of(interaction))
-                        .initAuthenticationSession();
-            });
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRandomChallenge(generateBase64String("a".repeat(32)))
+                            .withAllowedInteractionsOrder(List.of(interaction))
+                            .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidInteractionsProvider.class)
         public void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(Interaction interaction, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
-                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                        .withRelyingPartyName("DEMO")
-                        .withRandomChallenge(generateBase64String("a".repeat(32)))
-                        .withAllowedInteractionsOrder(List.of(interaction))
-                        .initAuthenticationSession();
-            });
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRandomChallenge(generateBase64String("a".repeat(32)))
+                            .withAllowedInteractionsOrder(List.of(interaction))
+                            .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
     }
@@ -421,13 +414,6 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
         dynamicLinkAuthenticationSessionResponse.setSessionSecret(generateBase64String("sessionSecret"));
         return dynamicLinkAuthenticationSessionResponse;
-    }
-
-    private static SignatureProtocolParameters toSignatureProtocolParameters(String signatureAlgorithm) {
-        var signatureProtocolParameters = new SignatureProtocolParameters();
-        signatureProtocolParameters.setRandomChallenge(generateBase64String("a".repeat(32)));
-        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm);
-        return signatureProtocolParameters;
     }
 
     private static String generateBase64String(String text) {
