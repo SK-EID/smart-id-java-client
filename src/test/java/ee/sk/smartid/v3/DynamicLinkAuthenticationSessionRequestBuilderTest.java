@@ -25,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -50,11 +51,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         public void initAuthenticationSession_ok() {
             when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
-            var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocolParameters(signatureProtocolParameters)
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -78,12 +78,11 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withCertificateLevel(certificateLevel)
-                    .withSignatureProtocolParameters(signatureProtocolParameters)
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -100,11 +99,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocolParameters(signatureProtocolParameters)
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withNonce(nonce)
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
@@ -116,16 +114,36 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             assertEquals(nonce, request.getNonce());
         }
 
+        @ParameterizedTest
+        @EnumSource
+        public void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
+            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+                    .thenReturn(createDynamicLinkAuthenticationResponse());
+
+            new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                    .withRelyingPartyName("DEMO")
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
+                    .withSignatureAlgorithm(signatureAlgorithm)
+                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .initAuthenticationSession();
+
+            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
+            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+
+            assertEquals(signatureAlgorithm.getAlgorithmName(), request.getSignatureProtocolParameters().getSignatureAlgorithm());
+        }
+
         @Test
         public void initAuthenticationSession_ipQueryingNotUsed_doNotCreatedRequestProperties_ok() {
             when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocolParameters(signatureProtocolParameters)
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -142,11 +160,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocolParameters(signatureProtocolParameters)
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .withSharedMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
@@ -164,11 +181,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         public void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
             when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
-            var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocolParameters(signatureProtocolParameters)
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .withCapabilities(capabilities)
                     .initAuthenticationSession();
@@ -208,39 +224,38 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         public void initAuthenticationSession_randomChallengeIsEmpty_throwException(String randomChallenge) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var signatureProtocolParameters = new SignatureProtocolParameters();
-                signatureProtocolParameters.setRandomChallenge(randomChallenge);
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocolParameters(signatureProtocolParameters)
+                        .withRandomChallenge(randomChallenge)
                         .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                         .initAuthenticationSession();
             });
             assertEquals("Parameter randomChallenge must be set", exception.getMessage());
         }
 
-        @Test
-        public void initAuthenticationSession_signatureProtocolParametersIsNotSet_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () ->
-                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withSignatureProtocolParameters(null)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
-            assertEquals("Parameter signatureProtocolParameters must be set", exception.getMessage());
-        }
-
         @ParameterizedTest
-        @NullAndEmptySource
-        public void initAuthenticationSession_signatureAlgorithmIsEmpty_throwException(String signatureAlgorithm) {
+        @ArgumentsSource(InvalidRandomChallengeArgumentProvider.class)
+        public void initAuthenticationSession_randomChallengeIsInvalid_throwException(String randomChallenge, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var signatureProtocolParameters = toSignatureProtocolParameters(signatureAlgorithm);
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocolParameters(signatureProtocolParameters)
+                        .withRandomChallenge(randomChallenge)
+                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                        .initAuthenticationSession();
+            });
+            assertEquals(expectedException, exception.getMessage());
+        }
+
+        @Test
+        public void initAuthenticationSession_signatureAlgorithmIsSetToNull_throwException() {
+            var exception = assertThrows(SmartIdClientException.class, () -> {
+                new DynamicLinkAuthenticationSessionRequestBuilder(connector)
+                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                        .withRelyingPartyName("DEMO")
+                        .withRandomChallenge(generateBase64String("a".repeat(32)))
+                        .withSignatureAlgorithm(null)
                         .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                         .initAuthenticationSession();
             });
@@ -251,11 +266,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ArgumentsSource(InvalidNonceProvider.class)
         public void initAuthenticationSession_nonceOutOfBounds_throwException(String invalidNonce, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocolParameters(signatureProtocolParameters)
+                        .withRandomChallenge(generateBase64String("a".repeat(32)))
                         .withNonce(invalidNonce)
                         .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                         .initAuthenticationSession();
@@ -267,11 +281,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         public void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<Interaction> interactions) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocolParameters(signatureProtocolParameters)
+                        .withRandomChallenge(generateBase64String("a".repeat(32)))
                         .withAllowedInteractionsOrder(interactions)
                         .initAuthenticationSession();
             });
@@ -282,11 +295,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ArgumentsSource(NotSupportedInteractionsProvider.class)
         public void initAuthenticationSession_allowedInteractionsOrderContainsNotSupportedInteraction_throwException(Interaction interaction, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocolParameters(signatureProtocolParameters)
+                        .withRandomChallenge(generateBase64String("a".repeat(32)))
                         .withAllowedInteractionsOrder(List.of(interaction))
                         .initAuthenticationSession();
             });
@@ -297,11 +309,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ArgumentsSource(InvalidInteractionsProvider.class)
         public void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(Interaction interaction, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
                 new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
-                        .withSignatureProtocolParameters(signatureProtocolParameters)
+                        .withRandomChallenge(generateBase64String("a".repeat(32)))
                         .withAllowedInteractionsOrder(List.of(interaction))
                         .initAuthenticationSession();
             });
@@ -355,11 +366,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         }
 
         private void initAuthentication() {
-            var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
-                    .withSignatureProtocolParameters(signatureProtocolParameters)
+                    .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
         }
@@ -370,11 +380,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
                 .thenReturn(createDynamicLinkAuthenticationResponse());
 
-        var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
         new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
-                .withSignatureProtocolParameters(signatureProtocolParameters)
+                .withRandomChallenge(generateBase64String("a".repeat(32)))
                 .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                 .initAuthenticationSession();
@@ -391,11 +400,10 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), any(String.class)))
                 .thenReturn(createDynamicLinkAuthenticationResponse());
 
-        var signatureProtocolParameters = toSignatureProtocolParameters("sha512WithRSAEncryption");
         new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
-                .withSignatureProtocolParameters(signatureProtocolParameters)
+                .withRandomChallenge(generateBase64String("a".repeat(32)))
                 .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
                 .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
                 .initAuthenticationSession();
@@ -417,7 +425,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
     private static SignatureProtocolParameters toSignatureProtocolParameters(String signatureAlgorithm) {
         var signatureProtocolParameters = new SignatureProtocolParameters();
-        signatureProtocolParameters.setRandomChallenge(generateBase64String("randomChallenge"));
+        signatureProtocolParameters.setRandomChallenge(generateBase64String("a".repeat(32)));
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm);
         return signatureProtocolParameters;
     }
@@ -451,6 +459,20 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     Arguments.of(new String[0], Collections.emptySet()),
                     Arguments.of(new String[]{"ADVANCED"}, Set.of("ADVANCED")),
                     Arguments.of(new String[]{"ADVANCED", "QUALIFIED"}, Set.of("ADVANCED", "QUALIFIED"))
+            );
+        }
+    }
+
+    private static class InvalidRandomChallengeArgumentProvider implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of(Named.of("provided string is not in Base64 format", "invalid value"),
+                            "Parameter randomChallenge is not a valid Base64 encoded string"),
+                    Arguments.of(Named.of("provided value sizes is less than allowed", Base64.toBase64String("a".repeat(31).getBytes())),
+                            "Size of parameter randomChallenge must be between 32 and 64 bytes"),
+                    Arguments.of(Named.of("provided value sizes exceeds max range value", Base64.toBase64String("a".repeat(65).getBytes())),
+                            "Size of parameter randomChallenge must be between 32 and 64 bytes")
             );
         }
     }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,8 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     private String relyingPartyUUID;
     private String relyingPartyName;
     private AuthenticationCertificateLevel certificateLevel;
-    private SignatureProtocolParameters signatureProtocolParameters;
+    private String randomChallenge;
+    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
     private String nonce;
     private List<Interaction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
@@ -75,13 +77,26 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the signature protocol parameters
+     * Sets the random challenge
+     * <p>
+     * The provided random challenge must be a Base64 encoded string
      *
-     * @param signatureProtocolParameters the signature protocol parameters
+     * @param randomChallenge the signature protocol parameters
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withSignatureProtocolParameters(SignatureProtocolParameters signatureProtocolParameters) {
-        this.signatureProtocolParameters = signatureProtocolParameters;
+    public DynamicLinkAuthenticationSessionRequestBuilder withRandomChallenge(String randomChallenge) {
+        this.randomChallenge = randomChallenge;
+        return this;
+    }
+
+    /**
+     * Sets the signature algorithm
+     *
+     * @param signatureAlgorithm the signature algorithm
+     * @return this builder
+     */
+    public DynamicLinkAuthenticationSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
 
@@ -200,15 +215,28 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateSignatureParameters() {
-        if (signatureProtocolParameters == null) {
-            logger.error("Parameter signatureProtocolParameters must be set");
-            throw new SmartIdClientException("Parameter signatureProtocolParameters must be set");
-        } else if (StringUtil.isEmpty(signatureProtocolParameters.getRandomChallenge())) {
+        if (StringUtil.isEmpty(randomChallenge)) {
             logger.error("Parameter randomChallenge must be set");
             throw new SmartIdClientException("Parameter randomChallenge must be set");
-        } else if (StringUtil.isEmpty(signatureProtocolParameters.getSignatureAlgorithm())) {
+        }
+        byte[] challenge = getDecodedRandomChallenge();
+        if (challenge.length < 32 || challenge.length > 64) {
+            logger.error("Size of parameter randomChallenge must be between 32 and 64 bytes");
+            throw new SmartIdClientException("Size of parameter randomChallenge must be between 32 and 64 bytes");
+        }
+        if (signatureAlgorithm == null) {
             logger.error("Parameter signatureAlgorithm must be set");
             throw new SmartIdClientException("Parameter signatureAlgorithm must be set");
+        }
+    }
+
+    private byte[] getDecodedRandomChallenge() {
+        Base64.Decoder decoder = Base64.getDecoder();
+        try {
+            return decoder.decode(randomChallenge);
+        } catch (IllegalArgumentException e) {
+            logger.error("Parameter randomChallenge is not a valid Base64 encoded string");
+            throw new SmartIdClientException("Parameter randomChallenge is not a valid Base64 encoded string");
         }
     }
 
@@ -250,6 +278,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
             request.setCertificateLevel(certificateLevel.name());
         }
 
+        var signatureProtocolParameters = new SignatureProtocolParameters();
+        signatureProtocolParameters.setRandomChallenge(randomChallenge);
+        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
         request.setAllowedInteractionsOrder(allowedInteractionsOrder);

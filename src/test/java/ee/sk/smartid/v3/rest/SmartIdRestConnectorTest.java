@@ -136,7 +136,7 @@ class SmartIdRestConnectorTest {
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
 
         var signatureProtocolParameters = new SignatureProtocolParameters();
-        signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("randomChallenge".getBytes()));
+        signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
         signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
