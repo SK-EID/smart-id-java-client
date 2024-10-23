@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.SessionStore;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
@@ -51,7 +52,7 @@ public class CertificateRequestBuilderService {
 
     private String relyingPartyUUID;
     private String relyingPartyName;
-    private String certificateLevel;
+    private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
     private RequestProperties requestProperties;
@@ -76,7 +77,7 @@ public class CertificateRequestBuilderService {
         return this;
     }
 
-    public CertificateRequestBuilderService withCertificateLevel(String certificateLevel) {
+    public CertificateRequestBuilderService withCertificateLevel(CertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
         return this;
     }
@@ -130,7 +131,11 @@ public class CertificateRequestBuilderService {
         var request = new CertificateRequest();
         request.setRelyingPartyUUID(relyingPartyUUID);
         request.setRelyingPartyName(relyingPartyName);
-        request.setCertificateLevel(certificateLevel);
+
+        if (certificateLevel != null) {
+            request.setCertificateLevel(certificateLevel.name());
+        }
+
         request.setNonce(nonce);
         request.setCapabilities(capabilities);
         request.setRequestProperties(requestProperties);

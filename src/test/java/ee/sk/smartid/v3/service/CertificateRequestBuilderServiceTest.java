@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.SessionStore;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
@@ -38,7 +39,7 @@ class CertificateRequestBuilderServiceTest {
         builderService = new CertificateRequestBuilderService(connector, sessionStatusPoller)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withCertificateLevel("QUALIFIED")
+                .withCertificateLevel(CertificateLevel.QUALIFIED)
                 .withNonce("1234567890")
                 .withSessionStore(sessionStore);
     }
