@@ -52,6 +52,15 @@ public class SmartIdRestServiceStubs {
                         .withBody("Not found")));
     }
 
+    public static void stubPostRequestWithResponse(String url, String responseFile) {
+        stubFor(post(urlEqualTo(url))
+                .withHeader("Accept", equalTo("application/json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(readFileBody(responseFile))));
+    }
+
     public static void stubNotFoundResponse(String url, String requestFile) {
         stubErrorResponse(url, requestFile, 404);
     }
@@ -109,6 +118,15 @@ public class SmartIdRestServiceStubs {
                         .withBody(readFileBody(responseFile)))
                 .willSetStateTo(endState)
         );
+    }
+
+    public static void stubPostErrorResponse(String url, int errorStatus) {
+        stubFor(post(urlEqualTo(url))
+                .withHeader("Accept", equalTo("application/json"))
+                .willReturn(aResponse()
+                        .withStatus(errorStatus)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("")));
     }
 
     private static String readFileBody(String fileName) {

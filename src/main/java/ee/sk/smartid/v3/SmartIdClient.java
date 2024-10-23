@@ -47,6 +47,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
+import ee.sk.smartid.v3.service.CertificateRequestBuilderService;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Configuration;
@@ -195,6 +196,19 @@ public class SmartIdClient {
             setSmartIdConnector(connector);
         }
         return connector;
+    }
+
+    /**
+     * Gets an instance of the certificate request builder service for dynamic link.
+     *
+     * @return certificate request builder service instance
+     */
+    public CertificateRequestBuilderService createCertificateRequest() {
+        SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
+        var builder = new CertificateRequestBuilderService(getSmartIdConnector(), sessionStatusPoller);
+        builder.withRelyingPartyUUID(this.getRelyingPartyUUID());
+        builder.withRelyingPartyName(this.getRelyingPartyName());
+        return builder;
     }
 
     public static SSLContext createSslContext(List<String> sslCertificates)

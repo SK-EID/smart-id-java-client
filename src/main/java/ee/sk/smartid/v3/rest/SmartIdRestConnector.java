@@ -37,20 +37,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
+import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
+import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
+import ee.sk.smartid.v3.rest.dao.CertificateRequest;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.ServerErrorException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.core.Configuration;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriBuilder;
 
 public class SmartIdRestConnector implements SmartIdConnector {
 
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
+    private static final String CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH = "/certificatechoice/dynamic-link/anonymous";
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -84,6 +100,17 @@ public class SmartIdRestConnector implements SmartIdConnector {
             logger.warn("Session {} not found: {}", request, ex.getMessage());
             throw new SessionNotFoundException();
         }
+    }
+
+    @Override
+    public CertificateChoiceResponse getCertificate(CertificateRequest request) {
+        logger.debug("Initiating dynamic link based certificate choice request");
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH)
+                .build();
+
+        return postCertificateRequest(uri, request);
     }
 
     @Override
@@ -129,6 +156,55 @@ public class SmartIdRestConnector implements SmartIdConnector {
             return System.getProperty("java.version").split("_")[0];
         } catch (Exception e) {
             return "-";
+        }
+    }
+
+    private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
+        try {
+            return postRequest(uri, request, CertificateChoiceResponse.class);
+        } catch (NotFoundException ex) {
+            logger.warn("User account not found for URI {}", uri, ex);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
+        }
+    }
+
+    private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
+        try {
+            Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
+            return prepareClient(uri).post(requestEntity, responseType);
+        }
+        catch (NotAuthorizedException ex) {
+            logger.warn("Request is unauthorized for URI {}", uri, ex);
+            throw new RelyingPartyAccountConfigurationException("Request is unauthorized for URI " + uri, ex);
+        }
+        catch (BadRequestException ex) {
+            logger.warn("Request is invalid for URI {}", uri, ex);
+            throw new SmartIdClientException("Server refused the request", ex);
+        }
+        catch (ClientErrorException ex) {
+            if (ex.getResponse().getStatus() == 471) {
+                logger.warn("No suitable account of requested type found, but user has some other accounts.", ex);
+                throw new NoSuitableAccountOfRequestedTypeFoundException();
+            }
+            if (ex.getResponse().getStatus() == 472) {
+                logger.warn("Person should view Smart-ID app or Smart-ID self-service portal now.", ex);
+                throw new PersonShouldViewSmartIdPortalException();
+            }
+            if (ex.getResponse().getStatus() == 480) {
+                logger.warn("Client-side API is too old and not supported anymore");
+                throw new SmartIdClientException("Client-side API is too old and not supported anymore");
+            }
+            throw ex;
+        }
+        catch (ServerErrorException ex) {
+            if (ex.getResponse().getStatus() == 580) {
+                logger.warn("Server is under maintenance, retry later", ex);
+                throw new ServerMaintenanceException();
+            }
+            throw ex;
         }
     }
 
