@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -45,7 +45,7 @@ import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalExceptio
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
 import jakarta.ws.rs.BadRequestException;
@@ -103,7 +103,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public CertificateChoiceResponse getCertificate(CertificateRequest request) {
+    public DynamicLinkCertificateChoiceResponse getCertificate(CertificateRequest request) {
         logger.debug("Initiating dynamic link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
@@ -159,9 +159,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private CertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
+    private DynamicLinkCertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
         try {
-            return postRequest(uri, request, CertificateChoiceResponse.class);
+            return postRequest(uri, request, DynamicLinkCertificateChoiceResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI {}", uri, ex);
             throw new UserAccountNotFoundException();

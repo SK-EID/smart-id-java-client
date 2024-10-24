@@ -33,7 +33,7 @@ import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 public interface SmartIdConnector extends Serializable {
@@ -54,7 +54,7 @@ public interface SmartIdConnector extends Serializable {
      * @param request CertificateRequest containing necessary parameters
      * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
      */
-    CertificateChoiceResponse getCertificate(CertificateRequest request);
+    DynamicLinkCertificateChoiceResponse getCertificate(CertificateRequest request);
 
     /**
      * Set the SSL context to use for secure communication

@@ -46,6 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
@@ -54,81 +55,69 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.v3.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
-@WireMockTest(httpPort = 18089)
 class SmartIdRestConnectorTest {
 
-    private SmartIdConnector connector;
-
-    @BeforeEach
-    public void setUp() {
-        connector = new SmartIdRestConnector("http://localhost:18089");
-    }
-
-    @Test
-    void getSessionStatus_running() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunning.json");
-        assertNotNull(sessionStatus);
-        assertEquals("RUNNING", sessionStatus.getState());
-    }
-
-    @Test
-    void getSessionStatus_running_withIgnoredProperties() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunningWithIgnoredProperties.json");
-        assertNotNull(sessionStatus);
-        assertEquals("RUNNING", sessionStatus.getState());
-        assertNotNull(sessionStatus.getIgnoredProperties());
-        assertEquals(2, sessionStatus.getIgnoredProperties().length);
-        assertEquals("testingIgnored", sessionStatus.getIgnoredProperties()[0]);
-        assertEquals("testingIgnoredTwo", sessionStatus.getIgnoredProperties()[1]);
-    }
-
-    @Test
-    void getSessionStatus_forSuccessfulCertificateRequest() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
-        assertSuccessfulResponse(sessionStatus);
-        assertNotNull(sessionStatus.getCert());
-        assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
-        assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
-    }
-
-    @Test
-    void getSessionStatus_hasUserAgentHeader() {
-        SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
-        assertSuccessfulResponse(sessionStatus);
-
-        verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
-                .withHeader("User-Agent", containing("smart-id-java-client/"))
-                .withHeader("User-Agent", containing("Java/")));
-    }
-
-    @Test
-    void getSessionStatus_withTimeoutParameter() {
-        stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
-        connector.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
-        SessionStatus sessionStatus = connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
-        assertSuccessfulResponse(sessionStatus);
-        verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000")));
-    }
-
-    @Test
-    void getCertificate() {
-        stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "responses/dynamicLinkCertificateChoiceResponse.json");
-
-        CertificateRequest request = createCertificateRequest();
-        CertificateChoiceResponse response = connector.getCertificate(request);
-
-        assertNotNull(response);
-        assertEquals("de305d54-75b4-431b-adb2-eb6b9e546016", response.getSessionID());
-        assertEquals("session-token-value", response.getSessionToken());
-        assertEquals("session-secret-value", response.getSessionSecret());
-    }
-
     @Nested
-    class ErrorCases {
+    @WireMockTest(httpPort = 18089)
+    class SessionStatusTests {
+
+        private SmartIdConnector connector;
+
+        @BeforeEach
+        public void setUp() {
+            WireMock.configureFor("localhost", 18089);
+            connector = new SmartIdRestConnector("http://localhost:18089");
+        }
+
+        @Test
+        void getSessionStatus_running() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunning.json");
+            assertNotNull(sessionStatus);
+            assertEquals("RUNNING", sessionStatus.getState());
+        }
+
+        @Test
+        void getSessionStatus_running_withIgnoredProperties() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusRunningWithIgnoredProperties.json");
+            assertNotNull(sessionStatus);
+            assertEquals("RUNNING", sessionStatus.getState());
+            assertNotNull(sessionStatus.getIgnoredProperties());
+            assertEquals(2, sessionStatus.getIgnoredProperties().length);
+            assertEquals("testingIgnored", sessionStatus.getIgnoredProperties()[0]);
+            assertEquals("testingIgnoredTwo", sessionStatus.getIgnoredProperties()[1]);
+        }
+
+        @Test
+        void getSessionStatus_forSuccessfulCertificateRequest() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulCertificateRequest.json");
+            assertSuccessfulResponse(sessionStatus);
+            assertNotNull(sessionStatus.getCert());
+            assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
+            assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
+        }
+
+        @Test
+        void getSessionStatus_hasUserAgentHeader() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusForSuccessfulSigningRequest.json");
+            assertSuccessfulResponse(sessionStatus);
+
+            verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
+                    .withHeader("User-Agent", containing("smart-id-java-client/"))
+                    .withHeader("User-Agent", containing("Java/")));
+        }
+
+        @Test
+        void getSessionStatus_withTimeoutParameter() {
+            stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "responses/sessionStatusForSuccessfulCertificateRequest.json");
+            connector.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
+            SessionStatus sessionStatus = connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+            assertSuccessfulResponse(sessionStatus);
+            verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000")));
+        }
 
         @Test
         void getSessionStatus_whenSessionNotFound() {
@@ -184,6 +173,49 @@ class SmartIdRestConnectorTest {
         void getSessionStatus_whenDocumentUnusable() {
             SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/sessionStatusWhenDocumentUnusable.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
+        }
+
+        private void assertSuccessfulResponse(SessionStatus sessionStatus) {
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertNotNull(sessionStatus.getResult());
+            assertEquals("OK", sessionStatus.getResult().getEndResult());
+            assertEquals("PNOEE-31111111111", sessionStatus.getResult().getDocumentNumber());
+        }
+
+        private void assertSessionStatusErrorWithEndResult(SessionStatus sessionStatus, String endResult) {
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals(endResult, sessionStatus.getResult().getEndResult());
+        }
+
+        private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {
+            stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
+            return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class CertificateChoiceTests {
+
+        private SmartIdConnector connector;
+
+        @BeforeEach
+        public void setUp() {
+            WireMock.configureFor("localhost", 18089);
+            connector = new SmartIdRestConnector("http://localhost:18089");
+        }
+
+        @Test
+        void getCertificate() {
+            stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "responses/dynamicLinkCertificateChoiceResponse.json");
+
+            CertificateRequest request = createCertificateRequest();
+            DynamicLinkCertificateChoiceResponse response = connector.getCertificate(request);
+
+            assertNotNull(response);
+            assertEquals("de305d54-75b4-431b-adb2-eb6b9e546016", response.getSessionID());
+            assertEquals("session-token-value", response.getSessionToken());
+            assertEquals("session-secret-value", response.getSessionSecret());
         }
 
         @Test
@@ -271,23 +303,6 @@ class SmartIdRestConnectorTest {
 
             assertThrows(ServerMaintenanceException.class, () -> connector.getCertificate(request));
         }
-    }
-
-    private void assertSuccessfulResponse(SessionStatus sessionStatus) {
-        assertEquals("COMPLETE", sessionStatus.getState());
-        assertNotNull(sessionStatus.getResult());
-        assertEquals("OK", sessionStatus.getResult().getEndResult());
-        assertEquals("PNOEE-31111111111", sessionStatus.getResult().getDocumentNumber());
-    }
-
-    private void assertSessionStatusErrorWithEndResult(SessionStatus sessionStatus, String endResult) {
-        assertEquals("COMPLETE", sessionStatus.getState());
-        assertEquals(endResult, sessionStatus.getResult().getEndResult());
-    }
-
-    private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {
-        stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
-        return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
     }
 
     private CertificateRequest createCertificateRequest() {

@@ -28,7 +28,7 @@ package ee.sk.smartid.v3.rest.dao;
 
 import java.io.Serializable;
 
-public class CertificateChoiceResponse implements Serializable {
+public class DynamicLinkCertificateChoiceResponse implements Serializable {
 
     private String sessionID;
     private String sessionToken;

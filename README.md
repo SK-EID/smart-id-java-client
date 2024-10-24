@@ -842,35 +842,31 @@ The request parameters for the dynamic link certificate choice session are the s
 Here's an example of how to initiate a dynamic link certificate choice request using the Smart-ID Java client.
 
 ```java
-import ee.sk.smartid.v3.SmartIdClient;
-import ee.sk.smartid.v3.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.v3.service.CertificateRequestBuilderService;
-import ee.sk.smartid.v3.rest.dao.RequestProperties;
-import ee.sk.smartid.v3.SessionStore;
 
-SmartIdClient client = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-client.setRelyingPartyName("DEMO");
-client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+
+SmartIdClient client=new SmartIdClient();
+        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        client.setRelyingPartyName("DEMO");
+        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 
 // Create a session store to store session information
-SessionStore sessionStore = new InMemorySessionStore();
+        SessionStore sessionStore=new InMemorySessionStore();
 
-var builder = new CertificateRequestBuilderService(client.getSmartIdConnector(), client.getSessionStatusPoller())
-    .withSessionStore(sessionStore)
-    .withRelyingPartyUUID(client.getRelyingPartyUUID())
-    .withRelyingPartyName(client.getRelyingPartyName())
-    .withCertificateLevel("QUALIFIED")
-    .withNonce("1234567890")
-    .withRequestProperties(new RequestProperties().withShareMdClientIpAddress(true));
+        var builder=new CertificateRequestBuilderService(client.getSmartIdConnector(),client.getSessionStatusPoller())
+        .withSessionStore(sessionStore)
+        .withRelyingPartyUUID(client.getRelyingPartyUUID())
+        .withRelyingPartyName(client.getRelyingPartyName())
+        .withCertificateLevel("QUALIFIED")
+        .withNonce("1234567890")
+        .withRequestProperties(new RequestProperties().withShareMdClientIpAddress(true));
 
 // Initiate the dynamic link certificate choice
-CertificateChoiceResponse response = builder.initiateCertificateChoice();
+        CertificateChoiceResponse response=builder.initiateCertificateChoice();
 
 // Store session information
-String sessionId = response.getSessionID();
-String sessionToken = response.getSessionToken();
-String sessionSecret = response.getSessionSecret();
+        String sessionId=response.getSessionID();
+        String sessionToken=response.getSessionToken();
+        String sessionSecret=response.getSessionSecret();
 
 // The sessionToken and sessionSecret should be stored securely and used in subsequent requests
 ```

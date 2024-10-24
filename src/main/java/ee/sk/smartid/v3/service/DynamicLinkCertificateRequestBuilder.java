@@ -38,13 +38,14 @@ import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.SessionStore;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.rest.dao.CertificateChoiceResponse;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
+import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
-public class CertificateRequestBuilderService {
+public class DynamicLinkCertificateRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(CertificateRequestBuilderService.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamicLinkCertificateRequestBuilder.class);
 
     private final SmartIdConnector connector;
     private final SessionStatusPoller sessionStatusPoller;
@@ -57,42 +58,42 @@ public class CertificateRequestBuilderService {
     private Set<String> capabilities;
     private RequestProperties requestProperties;
 
-    public CertificateRequestBuilderService(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
+    public DynamicLinkCertificateRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
         this.connector = connector;
         this.sessionStatusPoller = sessionStatusPoller;
     }
 
-    public CertificateRequestBuilderService withSessionStore(SessionStore sessionStore) {
+    public DynamicLinkCertificateRequestBuilder withSessionStore(SessionStore sessionStore) {
         this.sessionStore = sessionStore;
         return this;
     }
 
-    public CertificateRequestBuilderService withRelyingPartyUUID(String relyingPartyUUID) {
+    public DynamicLinkCertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
         this.relyingPartyUUID = relyingPartyUUID;
         return this;
     }
 
-    public CertificateRequestBuilderService withRelyingPartyName(String relyingPartyName) {
+    public DynamicLinkCertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
         this.relyingPartyName = relyingPartyName;
         return this;
     }
 
-    public CertificateRequestBuilderService withCertificateLevel(CertificateLevel certificateLevel) {
+    public DynamicLinkCertificateRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
         return this;
     }
 
-    public CertificateRequestBuilderService withNonce(String nonce) {
+    public DynamicLinkCertificateRequestBuilder withNonce(String nonce) {
         this.nonce = nonce;
         return this;
     }
 
-    public CertificateRequestBuilderService withCapabilities(Set<String> capabilities) {
+    public DynamicLinkCertificateRequestBuilder withCapabilities(Set<String> capabilities) {
         this.capabilities = capabilities;
         return this;
     }
 
-    public CertificateRequestBuilderService withRequestProperties(RequestProperties requestProperties) {
+    public DynamicLinkCertificateRequestBuilder withRequestProperties(RequestProperties requestProperties) {
         this.requestProperties = requestProperties;
         return this;
     }
@@ -102,14 +103,21 @@ public class CertificateRequestBuilderService {
      *
      * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
      */
-    public CertificateChoiceResponse initiateCertificateChoice() {
+    public DynamicLinkCertificateChoiceResponse initiateCertificateChoice() {
         validateParameters();
         CertificateRequest request = createCertificateRequest();
-        CertificateChoiceResponse response = connector.getCertificate(request);
+        DynamicLinkCertificateChoiceResponse response = connector.getCertificate(request);
+        SessionStatus sessionStatus = sessionStatusPoller.fetchFinalSessionStatus(response.getSessionID());
 
-        if (sessionStore != null) {
-            sessionStore.storeSession(response.getSessionID(), response.getSessionToken(), response.getSessionSecret());
+        if ("OK".equalsIgnoreCase(sessionStatus.getResult().getEndResult())) {
+            if (sessionStore != null) {
+                sessionStore.storeSession(response.getSessionID(), "certificate-choice", null);
+            }
+        } else {
+            logger.warn("Certificate choice session was not successful, session ID: {}", response.getSessionID());
+            throw new SmartIdClientException("Certificate choice session was not successful");
         }
+
         return response;
     }
 
