@@ -191,9 +191,9 @@ public class SmartIdRequestBuilderService {
     private void validateSignature(SessionStatus sessionStatus, String expectedDigest, String randomChallenge) {
         String signatureProtocol = sessionStatus.getSignatureProtocol();
 
-        if (SignatureProtocol.ACSP_V1.name().equalsIgnoreCase(signatureProtocol)) {
+        if (SignatureProtocol.ACSP_V1.name().equals(signatureProtocol)) {
             validateAcspV1Signature(sessionStatus, randomChallenge);
-        } else if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
+        } else if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equals(signatureProtocol)) {
             validateRawDigestSignature(sessionStatus, expectedDigest);
         } else {
             throw new SmartIdClientException("Unknown signature protocol: " + signatureProtocol);
@@ -231,7 +231,7 @@ public class SmartIdRequestBuilderService {
                     + ", but got: " + signatureValue);
         }
 
-        List<String> allowedSignatureAlgorithms = Arrays.asList("sha256WithRSAEncryption", "sha384WithRSAEncryption", "sha512WithRSAEncryption");
+        Set<String> allowedSignatureAlgorithms = Set.of("sha256WithRSAEncryption", "sha384WithRSAEncryption", "sha512WithRSAEncryption");
         if (!allowedSignatureAlgorithms.contains(signatureAlgorithm)) {
             throw new SmartIdClientException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signatureAlgorithm);
         }

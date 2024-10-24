@@ -698,7 +698,7 @@ The session status response includes various fields depending on whether the ses
 }
 ```
 
-### Successful response after completion, dynamic flow, protocol ACSP_V1
+### ACSP_V1 is returned in the session status OK response for authentication sessions in both dynamic-link and notification-based flows.
 
 ```json
   {
@@ -723,7 +723,7 @@ The session status response includes various fields depending on whether the ses
 }
 ``` 
 
-### Successful response after completion, notification-based flow, protocol RAW_DIGEST_SIGNATURE
+### RAW_DIGEST_SIGNATURE is returned in the session status OK response for signature sessions in both dynamic link and notification-based flows.
 
 ```json
 {
@@ -756,6 +756,12 @@ SmartIdClient client = new SmartIdClient();
 client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
 client.setRelyingPartyName("DEMO");
 client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+
+// Client setup with TrustStore. Requests will not work without a valid certificate.
+        InputStream is = SmartIdClient.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
+        KeyStore trustStore = KeyStore.getInstance("JKS");
+        trustStore.load(is, "changeit".toCharArray());
+        client.setTrustStore(trustStore);
 
 var poller = new SessionStatusPoller(client.getSmartIdConnector(), new SmartIdRequestBuilderService());
 SessionStatus sessionStatus = poller.fetchFinalSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016", 10000);
