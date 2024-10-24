@@ -668,7 +668,7 @@ var client = new SmartIdClient();
 
 ### Examples of performing authentication
 
-#### Authenticating with semantics identifier
+#### Initiating authentication session with semantics identifier
 
 More info about Semantics Identifier can be found [here](https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.01.00_30/en_31941201v010100v.pdf)
 
@@ -688,7 +688,7 @@ String randomChallenge = RandomChallenge.generate();
 DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
         .createDynamicLinkAuthentication()
         .withSemanticsIdentifier(semanticsIdentifier)
-        .withCertificateLevel("QUALIFIED") // Certificate level can either be "QUALIFIED" or "ADVANCED"
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         // Smart-ID app will display verification code to the user and user must insert PIN1
         .withRandomChallenge(randomChallenge)
         .withAllowedInteractionsOrder(
@@ -710,7 +710,7 @@ String sessionSecret = authenticationSessionResponse.getSessionSecret();
 ```
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
 
-#### Authenticating with document number
+#### Initiating authentication session with document number
 
 If you already know the documentNumber you can use this for (re-)authentication.
 
@@ -726,7 +726,7 @@ DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
         .createDynamicLinkAuthentication()
         .withDocumentNumber(documentNumber)
         .withRandomChallenge(randomChallenge)
-        .withCertificateLevel("QUALIFIED") // Certificate level can either be "QUALIFIED" or "ADVANCED"
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         // Smart-ID app will display verification code to the user and user must insert PIN1
         .withAllowedInteractionsOrder(
                 Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")
@@ -747,9 +747,10 @@ String sessionSecret = authenticationSessionResponse.getSessionSecret();
 ```
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
 
-### Anonymous authentication
+### Initiating anonymous authentication session
 
 Anonymous authentication is a new feature in Smart-ID API v3.0. It allows to authenticate users without knowing their identity.
+RP can learn the user's identity only after the user has authenticated themselves.
 
 ```java
 // For security reasons a new hash value must be created for each new authentication request
@@ -761,7 +762,7 @@ DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
     .createAuthentication()
     // to use anonymous authentication, do not set semantics identifier or document number
     .withRandomChallenge(randomChallenge)
-    .withCertificateLevel("QUALIFIED")
+    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
     .withAllowedInteractionsOrder(Collections.singletonList(
             // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
             Interaction.verificationCodeChoice("Log in to self-service?")
