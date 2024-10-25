@@ -45,12 +45,10 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.v2.DigestCalculator;
 import ee.sk.smartid.v2.HashType;
-import ee.sk.smartid.v2.rest.SmartIdConnector;
-import ee.sk.smartid.v2.rest.SmartIdRestConnector;
 import ee.sk.smartid.v2.rest.dao.CertificateRequest;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.v2.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;
