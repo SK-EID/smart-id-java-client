@@ -43,7 +43,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.DigestCalculator;
+import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.v2.rest.dao.CertificateRequest;
 import ee.sk.smartid.v2.rest.dao.Interaction;

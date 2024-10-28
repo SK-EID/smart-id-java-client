@@ -84,7 +84,7 @@ class DynamicLinkCertificateRequestBuilderTest {
 
     @Test
     void initiateCertificateChoice_nullRequestProperties() {
-        builderService.withRequestProperties(null);
+        builderService.withShareMdClientIpAddress(false);
         when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
         when(sessionStatusPoller.fetchFinalSessionStatus(any(String.class))).thenReturn(createSessionStatus());
 

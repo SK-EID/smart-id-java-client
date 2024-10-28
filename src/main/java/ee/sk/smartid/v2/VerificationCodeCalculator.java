@@ -28,6 +28,7 @@ package ee.sk.smartid.v2;
 
 import java.nio.ByteBuffer;
 
+import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
 
 public class VerificationCodeCalculator {

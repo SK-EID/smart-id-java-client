@@ -54,6 +54,7 @@ import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.util.StringUtil;
+import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.SignableData;
 import ee.sk.smartid.v3.SignableHash;
 import ee.sk.smartid.v3.SmartIdAuthenticationResponse;
@@ -179,13 +180,20 @@ public class SmartIdRequestBuilderService {
             X509Certificate cert = CertificateParser.parseX509Certificate(sessionCertificate.getValue());
             cert.checkValidity();
 
-            if (!requestedCertificateLevel.equals(sessionCertificate.getCertificateLevel())) {
+            if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
                 throw new CertificateLevelMismatchException();
             }
 
         } catch (Exception e) {
             throw new SmartIdClientException("Certificate validation failed", e);
         }
+    }
+
+    private boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
+        CertificateLevel requestedLevelEnum = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
+        CertificateLevel returnedLevelEnum = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
+
+        return requestedLevelEnum == CertificateLevel.QSCD ? returnedLevelEnum == CertificateLevel.QUALIFIED : requestedLevelEnum == returnedLevelEnum;
     }
 
     private void validateSignature(SessionStatus sessionStatus, String expectedDigest, String randomChallenge) {

@@ -33,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
 
 

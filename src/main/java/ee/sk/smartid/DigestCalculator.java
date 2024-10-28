@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,10 +26,10 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
+import java.security.MessageDigest;
+
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-
-import java.security.MessageDigest;
 
 public class DigestCalculator {
 

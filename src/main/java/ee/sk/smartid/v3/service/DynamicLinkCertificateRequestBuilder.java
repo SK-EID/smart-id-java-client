@@ -50,38 +50,80 @@ public class DynamicLinkCertificateRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private RequestProperties requestProperties;
+    private boolean shareMdClientIpAddress;
 
+    /**
+     * Constructs a new DynamicLinkCertificateRequestBuilder with the given Smart-ID connector
+     *
+     * @param connector the Smart-ID connector
+     */
     public DynamicLinkCertificateRequestBuilder(SmartIdConnector connector) {
         this.connector = connector;
     }
 
+    /**
+     * Sets the relying party UUID
+     *
+     * @param relyingPartyUUID the relying party UUID
+     * @return this builder
+     */
     public DynamicLinkCertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
         this.relyingPartyUUID = relyingPartyUUID;
         return this;
     }
 
+    /**
+     * Sets the relying party name
+     *
+     * @param relyingPartyName the relying party name
+     * @return this builder
+     */
     public DynamicLinkCertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
         this.relyingPartyName = relyingPartyName;
         return this;
     }
 
+    /**
+     * Sets the certificate level
+     *
+     * @param certificateLevel the certificate level
+     * @return this builder
+     */
     public DynamicLinkCertificateRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
         return this;
     }
 
+    /**
+     * Sets the nonce
+     *
+     * @param nonce the nonce
+     * @return this builder
+     */
     public DynamicLinkCertificateRequestBuilder withNonce(String nonce) {
         this.nonce = nonce;
         return this;
     }
 
+    /**
+     * Sets the capabilities
+     *
+     * @param capabilities the capabilities
+     * @return this builder
+     */
     public void withCapabilities(Set<String> capabilities) {
         this.capabilities = capabilities;
     }
 
-    public void withRequestProperties(RequestProperties requestProperties) {
-        this.requestProperties = requestProperties;
+    /**
+     * Ask to return the IP address of the mobile device where Smart-ID app was running.
+     *
+     * @return this builder
+     * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
+     */
+    public DynamicLinkCertificateRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+        this.shareMdClientIpAddress = shareMdClientIpAddress;
+        return this;
     }
 
     /**
@@ -125,7 +167,12 @@ public class DynamicLinkCertificateRequestBuilder {
 
         request.setNonce(nonce);
         request.setCapabilities(capabilities);
-        request.setRequestProperties(requestProperties);
+
+        var requestProperties = new RequestProperties();
+        requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
+        if (requestProperties.hasProperties()) {
+            request.setRequestProperties(requestProperties);
+        }
 
         return request;
     }

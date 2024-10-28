@@ -277,6 +277,19 @@ class SmartIdRequestBuilderServiceTest {
             assertTrue(ex.getCause() instanceof SmartIdClientException);
             assertEquals("Certificate validation failed", ex.getCause().getMessage());
         }
+
+        @Test
+        void validateCertificate_withQscdRequestedAndQualifiedReturned() throws Exception {
+            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
+            method.setAccessible(true);
+
+            var sessionCertificate = new SessionCertificate();
+            sessionCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
+            sessionCertificate.setCertificateLevel("QUALIFIED");
+
+            assertDoesNotThrow(() -> method.invoke(service, sessionCertificate, "QSCD"));
+        }
+
     }
 
     @Nested

@@ -670,7 +670,7 @@ The Smart-ID v3.0 API includes new session status request paths for retrieving s
 ## Session status endpoint
 * Method: `GET`
 * Path: `BASE/v3/session/:sessionId`
-* Query parameter: `timeoutMs` (optional, long poll timeout value, default is halfway between max and min values)
+* Query parameter: `timeoutMs` (optional, long poll timeout value, default is halfway between max(120000ms) and min(1000ms) values)
 
 Example of the endpoint:
 https://rp-api.smart-id.com/v3/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000
@@ -761,7 +761,7 @@ var poller = new SessionStatusPoller(client.getSmartIdConnector(), new SmartIdRe
 SessionStatus sessionStatus = poller.fetchFinalSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016", 10000);
 
 if ("COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
-System.out.println("Session completed with result: " + sessionStatus.getResult().getEndResult());
+    System.out.println("Session completed with result: " + sessionStatus.getResult().getEndResult());
 }
 ```
 
