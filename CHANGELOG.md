@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Support for Smart-ID API v3.0 has been added under the ee.sk.smartid.v3 package.
-- Added handling for session status request handling. View V3 section in README.md for more information.
+- Added support for handling session status requests. View V3 section in README.md for more information.
 
 ### Changed
 - Existing code for Smart-ID API v2.0 has been moved into the ee.sk.smartid.v2 package for clarity.
