@@ -26,22 +26,21 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
-public interface SessionStore {
+public interface CertificateChoiceStatusStore {
 
     /**
-     * Stores session-related information necessary for dynamic link based signature sessions.
+     * Stores the certificate choice session state to track whether the certificate choice request was made.
      *
-     * @param sessionId     The session ID
-     * @param sessionToken  The session token
-     * @param sessionSecret The session secret
+     * @param userSessionId The session ID associated with the certificate choice request.
+     * @param value     A temporary value to indicate session tracking, e.g., "certificate-choice".
      */
-    void storeSession(String sessionId, String sessionToken, String sessionSecret);
+    void storeSession(String userSessionId, String value);
 
     /**
-     * Retrieves the session-related information for a given session ID.
+     * Checks if the certificate choice request was stored for a given session ID.
      *
-     * @param sessionId The session ID
-     * @return An array where index 0 is sessionToken and index 1 is sessionSecret
+     * @param sessionId The session ID to check.
+     * @return true if the session exists, false otherwise.
      */
-    String[] retrieveSession(String sessionId);
+    boolean hasCertificateChoice(String sessionId);
 }

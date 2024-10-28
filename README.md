@@ -849,11 +849,11 @@ SmartIdClient client=new SmartIdClient();
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 
-// Create a session store to store session information
-        SessionStore sessionStore=new InMemorySessionStore();
+// Create a session store to track certificate choice status
+        CertificateChoiceStatusStore certificateChoiceStatusStore=new InMemorySessionStore();
 
         var builder=new CertificateRequestBuilderService(client.getSmartIdConnector(),client.getSessionStatusPoller())
-        .withSessionStore(sessionStore)
+        .withSessionStore(certificateChoiceStatusStore)
         .withRelyingPartyUUID(client.getRelyingPartyUUID())
         .withRelyingPartyName(client.getRelyingPartyName())
         .withCertificateLevel("QUALIFIED")
@@ -863,12 +863,7 @@ SmartIdClient client=new SmartIdClient();
 // Initiate the dynamic link certificate choice
         CertificateChoiceResponse response=builder.initiateCertificateChoice();
 
-// Store session information
-        String sessionId=response.getSessionID();
-        String sessionToken=response.getSessionToken();
-        String sessionSecret=response.getSessionSecret();
-
-// The sessionToken and sessionSecret should be stored securely and used in subsequent requests
+// Track certificate choice status in CertificateChoiceStatusStore without storing sessionId or sessionToken
 ```
 
 ## Response on Successful Session Creation
@@ -888,12 +883,12 @@ The response from a successful dynamic link certificate choice session creation 
 ```
 
 ## Storing Session Information
-It's important to securely store the `sessionID`, `sessionToken`, and `sessionSecret` as they are required for validating the session status and completing the authentication or signing process.
+It’s important to store the certificate choice session state securely. The `CertificateChoiceStatusStore` interface allows you to track whether a certificate choice request has been made.
 
-You can implement a `SessionStore` interface to manage session data. The Java client provides an interface for session storage, allowing you to choose your own implementation.
+You can implement a `CertificateChoiceStatusStore` interface to manage session data. The Java client provides an interface for session storage, allowing you to choose your own implementation.
 ```java
-public interface SessionStore {
-    void storeSession(String sessionId, String sessionToken, String sessionSecret);
+public interface CertificateChoiceStatusStore {
+    void storeSession(String userSessionId, String value);
     // Methods to retrieve session information
 }
 ```

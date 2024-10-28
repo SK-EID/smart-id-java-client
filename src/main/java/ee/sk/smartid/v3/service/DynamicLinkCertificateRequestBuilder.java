@@ -35,22 +35,16 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.CertificateLevel;
-import ee.sk.smartid.v3.SessionStore;
-import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
-import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 public class DynamicLinkCertificateRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicLinkCertificateRequestBuilder.class);
 
     private final SmartIdConnector connector;
-    private final SessionStatusPoller sessionStatusPoller;
-    private SessionStore sessionStore;
-
     private String relyingPartyUUID;
     private String relyingPartyName;
     private CertificateLevel certificateLevel;
@@ -58,14 +52,8 @@ public class DynamicLinkCertificateRequestBuilder {
     private Set<String> capabilities;
     private RequestProperties requestProperties;
 
-    public DynamicLinkCertificateRequestBuilder(SmartIdConnector connector, SessionStatusPoller sessionStatusPoller) {
+    public DynamicLinkCertificateRequestBuilder(SmartIdConnector connector) {
         this.connector = connector;
-        this.sessionStatusPoller = sessionStatusPoller;
-    }
-
-    public DynamicLinkCertificateRequestBuilder withSessionStore(SessionStore sessionStore) {
-        this.sessionStore = sessionStore;
-        return this;
     }
 
     public DynamicLinkCertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
@@ -88,14 +76,12 @@ public class DynamicLinkCertificateRequestBuilder {
         return this;
     }
 
-    public DynamicLinkCertificateRequestBuilder withCapabilities(Set<String> capabilities) {
+    public void withCapabilities(Set<String> capabilities) {
         this.capabilities = capabilities;
-        return this;
     }
 
-    public DynamicLinkCertificateRequestBuilder withRequestProperties(RequestProperties requestProperties) {
+    public void withRequestProperties(RequestProperties requestProperties) {
         this.requestProperties = requestProperties;
-        return this;
     }
 
     /**
@@ -107,17 +93,10 @@ public class DynamicLinkCertificateRequestBuilder {
         validateParameters();
         CertificateRequest request = createCertificateRequest();
         DynamicLinkCertificateChoiceResponse response = connector.getCertificate(request);
-        SessionStatus sessionStatus = sessionStatusPoller.fetchFinalSessionStatus(response.getSessionID());
 
-        if ("OK".equalsIgnoreCase(sessionStatus.getResult().getEndResult())) {
-            if (sessionStore != null) {
-                sessionStore.storeSession(response.getSessionID(), "certificate-choice", null);
-            }
-        } else {
-            logger.warn("Certificate choice session was not successful, session ID: {}", response.getSessionID());
-            throw new SmartIdClientException("Certificate choice session was not successful");
+        if (response == null || response.getSessionID() == null) {
+            throw new SmartIdClientException("Dynamic link certificate choice session failed: invalid response received.");
         }
-
         return response;
     }
 

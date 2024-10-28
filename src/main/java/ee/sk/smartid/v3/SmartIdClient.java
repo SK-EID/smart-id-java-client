@@ -47,6 +47,8 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.service.DynamicLinkCertificateRequestBuilder;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -65,6 +67,11 @@ public class SmartIdClient {
     private long sessionStatusResponseSocketOpenTimeValue;
     private SmartIdConnector connector;
     private SSLContext trustSslContext;
+    private CertificateChoiceStatusStore certificateChoiceStatusStore;
+
+    public DynamicLinkCertificateRequestBuilder createDynamicLinkCertificateRequest() {
+        return new DynamicLinkCertificateRequestBuilder(getSmartIdConnector());
+    }
 
     /**
      * Sets the UUID of the relying party
@@ -175,11 +182,28 @@ public class SmartIdClient {
         pollingSleepTimeout = timeout;
     }
 
+    public void setSessionStore(CertificateChoiceStatusStore certificateChoiceStatusStore) {
+        this.certificateChoiceStatusStore = certificateChoiceStatusStore;
+    }
+
     private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
         connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
         var sessionStatusPoller = new SessionStatusPoller(connector);
         sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
         return sessionStatusPoller;
+    }
+
+    public void storeCertificateChoiceStatusIfOk(DynamicLinkCertificateChoiceResponse response) {
+        SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
+        SessionStatus sessionStatus = sessionStatusPoller.fetchFinalSessionStatus(response.getSessionID());
+
+        if ("OK".equalsIgnoreCase(sessionStatus.getResult().getEndResult())) {
+            if (certificateChoiceStatusStore != null) {
+                certificateChoiceStatusStore.storeSession(response.getSessionID(), "certificate-choice");
+            }
+        } else {
+            throw new SmartIdClientException("Certificate choice session was not successful");
+        }
     }
 
     public SmartIdConnector getSmartIdConnector() {
@@ -199,39 +223,25 @@ public class SmartIdClient {
     }
 
     /**
-     * Gets an instance of the certificate request builder service for dynamic link.
+     * Sets the SSL context for the client
+     * <p>
+     * Useful for configuring custom SSL context
+     * for the client.
      *
-     * @return certificate request builder service instance
+     * @param trustSslContext SSL context for the client
      */
-    public DynamicLinkCertificateRequestBuilder createCertificateRequest() {
-        SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
-        var builder = new DynamicLinkCertificateRequestBuilder(getSmartIdConnector(), sessionStatusPoller);
-        builder.withRelyingPartyUUID(this.getRelyingPartyUUID());
-        builder.withRelyingPartyName(this.getRelyingPartyName());
-        return builder;
-    }
-
-    public static SSLContext createSslContext(List<String> sslCertificates)
-            throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, KeyManagementException {
-        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        keyStore.load(null);
-        CertificateFactory factory = CertificateFactory.getInstance("X509");
-        int i = 0;
-        for (String sslCertificate : sslCertificates) {
-            Certificate certificate = factory.generateCertificate(new ByteArrayInputStream(sslCertificate.getBytes(StandardCharsets.UTF_8)));
-            keyStore.setCertificateEntry("sid_api_ssl_cert_" + (++i), certificate);
-        }
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
-        trustManagerFactory.init(keyStore);
-        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-        return sslContext;
-    }
-
     public void setTrustSslContext(SSLContext trustSslContext) {
         this.trustSslContext = trustSslContext;
     }
 
+    /**
+     * Sets the trust store for the client
+     * <p>
+     * Useful for configuring custom trust store
+     * for the client.
+     *
+     * @param trustStore trust store for the client
+     */
     public void setTrustStore(KeyStore trustStore) {
         try {
             SSLContext trustSslContext = SSLContext.getInstance("TLSv1.2");
@@ -265,5 +275,33 @@ public class SmartIdClient {
             clientBuilder.sslContext(trustSslContext);
         }
         return clientBuilder.build();
+    }
+
+    /**
+     * Creates an SSL context with the given certificates
+     *
+     * @param sslCertificates list of certificates in PEM format
+     * @return SSL context
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     * @throws IOException
+     * @throws CertificateException
+     * @throws KeyManagementException
+     */
+    public static SSLContext createSslContext(List<String> sslCertificates)
+            throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, KeyManagementException {
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        keyStore.load(null);
+        CertificateFactory factory = CertificateFactory.getInstance("X509");
+        int i = 0;
+        for (String sslCertificate : sslCertificates) {
+            Certificate certificate = factory.generateCertificate(new ByteArrayInputStream(sslCertificate.getBytes(StandardCharsets.UTF_8)));
+            keyStore.setCertificateEntry("sid_api_ssl_cert_" + (++i), certificate);
+        }
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
+        trustManagerFactory.init(keyStore);
+        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+        return sslContext;
     }
 }
