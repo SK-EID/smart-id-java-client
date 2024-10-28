@@ -37,12 +37,12 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
-public class DynamicLinkCertificateRequestBuilder {
+public class DynamicLinkCertificateChoiceSessionRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicLinkCertificateRequestBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(DynamicLinkCertificateChoiceSessionRequestBuilder.class);
 
     private final SmartIdConnector connector;
     private String relyingPartyUUID;
@@ -57,7 +57,7 @@ public class DynamicLinkCertificateRequestBuilder {
      *
      * @param connector the Smart-ID connector
      */
-    public DynamicLinkCertificateRequestBuilder(SmartIdConnector connector) {
+    public DynamicLinkCertificateChoiceSessionRequestBuilder(SmartIdConnector connector) {
         this.connector = connector;
     }
 
@@ -67,7 +67,7 @@ public class DynamicLinkCertificateRequestBuilder {
      * @param relyingPartyUUID the relying party UUID
      * @return this builder
      */
-    public DynamicLinkCertificateRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
+    public DynamicLinkCertificateChoiceSessionRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
         this.relyingPartyUUID = relyingPartyUUID;
         return this;
     }
@@ -78,7 +78,7 @@ public class DynamicLinkCertificateRequestBuilder {
      * @param relyingPartyName the relying party name
      * @return this builder
      */
-    public DynamicLinkCertificateRequestBuilder withRelyingPartyName(String relyingPartyName) {
+    public DynamicLinkCertificateChoiceSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
         this.relyingPartyName = relyingPartyName;
         return this;
     }
@@ -89,7 +89,7 @@ public class DynamicLinkCertificateRequestBuilder {
      * @param certificateLevel the certificate level
      * @return this builder
      */
-    public DynamicLinkCertificateRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
+    public DynamicLinkCertificateChoiceSessionRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
         return this;
     }
@@ -100,7 +100,7 @@ public class DynamicLinkCertificateRequestBuilder {
      * @param nonce the nonce
      * @return this builder
      */
-    public DynamicLinkCertificateRequestBuilder withNonce(String nonce) {
+    public DynamicLinkCertificateChoiceSessionRequestBuilder withNonce(String nonce) {
         this.nonce = nonce;
         return this;
     }
@@ -121,7 +121,7 @@ public class DynamicLinkCertificateRequestBuilder {
      * @return this builder
      * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
      */
-    public DynamicLinkCertificateRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public DynamicLinkCertificateChoiceSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }
@@ -131,10 +131,10 @@ public class DynamicLinkCertificateRequestBuilder {
      *
      * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
      */
-    public DynamicLinkCertificateChoiceResponse initiateCertificateChoice() {
+    public DynamicLinkCertificateChoiceSessionResponse initiateCertificateChoice() {
         validateParameters();
         CertificateRequest request = createCertificateRequest();
-        DynamicLinkCertificateChoiceResponse response = connector.getCertificate(request);
+        DynamicLinkCertificateChoiceSessionResponse response = connector.getCertificate(request);
 
         if (response == null || response.getSessionID() == null) {
             throw new SmartIdClientException("Dynamic link certificate choice session failed: invalid response received.");

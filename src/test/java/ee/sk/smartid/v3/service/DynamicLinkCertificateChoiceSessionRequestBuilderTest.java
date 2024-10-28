@@ -46,22 +46,22 @@ import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
-class DynamicLinkCertificateRequestBuilderTest {
+class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
 
     private SmartIdConnector connector;
     private SessionStatusPoller sessionStatusPoller;
-    private DynamicLinkCertificateRequestBuilder builderService;
+    private DynamicLinkCertificateChoiceSessionRequestBuilder builderService;
 
     @BeforeEach
     void setUp() {
         connector = mock(SmartIdConnector.class);
         sessionStatusPoller = mock(SessionStatusPoller.class);
 
-        builderService = new DynamicLinkCertificateRequestBuilder(connector)
+        builderService = new DynamicLinkCertificateChoiceSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
                 .withCertificateLevel(CertificateLevel.QUALIFIED)
@@ -72,7 +72,7 @@ class DynamicLinkCertificateRequestBuilderTest {
     void initiateCertificateChoice() {
         when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkCertificateChoiceResponse result = builderService.initiateCertificateChoice();
+        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
@@ -88,7 +88,7 @@ class DynamicLinkCertificateRequestBuilderTest {
         when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
         when(sessionStatusPoller.fetchFinalSessionStatus(any(String.class))).thenReturn(createSessionStatus());
 
-        DynamicLinkCertificateChoiceResponse result = builderService.initiateCertificateChoice();
+        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
         verify(connector).getCertificate(any(CertificateRequest.class));
@@ -100,7 +100,7 @@ class DynamicLinkCertificateRequestBuilderTest {
         when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
         when(sessionStatusPoller.fetchFinalSessionStatus(any(String.class))).thenReturn(createSessionStatus());
 
-        DynamicLinkCertificateChoiceResponse result = builderService.initiateCertificateChoice();
+        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
         verify(connector).getCertificate(any(CertificateRequest.class));
@@ -112,7 +112,7 @@ class DynamicLinkCertificateRequestBuilderTest {
         builderService.withCapabilities(capabilities);
         when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkCertificateChoiceResponse result = builderService.initiateCertificateChoice();
+        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
@@ -128,7 +128,7 @@ class DynamicLinkCertificateRequestBuilderTest {
         when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
         when(sessionStatusPoller.fetchFinalSessionStatus(any(String.class))).thenReturn(createSessionStatus());
 
-        DynamicLinkCertificateChoiceResponse result = builderService.initiateCertificateChoice();
+        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
         verify(connector).getCertificate(any(CertificateRequest.class));
@@ -147,7 +147,7 @@ class DynamicLinkCertificateRequestBuilderTest {
 
         @Test
         void initiateCertificateChoice_whenSessionIDIsNull() {
-            var responseWithNullSessionID = new DynamicLinkCertificateChoiceResponse();
+            var responseWithNullSessionID = new DynamicLinkCertificateChoiceSessionResponse();
             responseWithNullSessionID.setSessionToken("test-session-token");
             responseWithNullSessionID.setSessionSecret("test-session-secret");
             when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(responseWithNullSessionID);
@@ -196,8 +196,8 @@ class DynamicLinkCertificateRequestBuilderTest {
         }
     }
 
-    private static DynamicLinkCertificateChoiceResponse mockCertificateChoiceResponse() {
-        var response = new DynamicLinkCertificateChoiceResponse();
+    private static DynamicLinkCertificateChoiceSessionResponse mockCertificateChoiceResponse() {
+        var response = new DynamicLinkCertificateChoiceSessionResponse();
         response.setSessionID("test-session-id");
         response.setSessionToken("test-session-token");
         response.setSessionSecret("test-session-secret");

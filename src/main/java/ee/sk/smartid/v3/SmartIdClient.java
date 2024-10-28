@@ -47,9 +47,9 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.service.DynamicLinkCertificateRequestBuilder;
+import ee.sk.smartid.v3.service.DynamicLinkCertificateChoiceSessionRequestBuilder;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Configuration;
@@ -69,8 +69,8 @@ public class SmartIdClient {
     private SSLContext trustSslContext;
     private CertificateChoiceStatusStore certificateChoiceStatusStore;
 
-    public DynamicLinkCertificateRequestBuilder createDynamicLinkCertificateRequest() {
-        return new DynamicLinkCertificateRequestBuilder(getSmartIdConnector());
+    public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
+        return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector());
     }
 
     /**
@@ -193,7 +193,7 @@ public class SmartIdClient {
         return sessionStatusPoller;
     }
 
-    public void storeCertificateChoiceStatusIfOk(DynamicLinkCertificateChoiceResponse response) {
+    public void storeCertificateChoiceStatusIfOk(DynamicLinkCertificateChoiceSessionResponse response) {
         SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
         SessionStatus sessionStatus = sessionStatusPoller.fetchFinalSessionStatus(response.getSessionID());
 

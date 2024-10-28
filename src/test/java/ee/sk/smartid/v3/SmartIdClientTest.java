@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 
 @WireMockTest(httpPort = 18089)
 class SmartIdClientTest {
@@ -66,7 +66,7 @@ class SmartIdClientTest {
         SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/dynamic-link-certificate-choice-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
         SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
-        DynamicLinkCertificateChoiceResponse response = smartIdClient.createDynamicLinkCertificateRequest()
+        DynamicLinkCertificateChoiceSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withNonce(Base64.toBase64String("randomNonce".getBytes()))
@@ -86,7 +86,7 @@ class SmartIdClientTest {
         SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/dynamic-link-certificate-choice-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
         SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-not-ok.json");
 
-        DynamicLinkCertificateChoiceResponse response = smartIdClient.createDynamicLinkCertificateRequest()
+        DynamicLinkCertificateChoiceSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withNonce(Base64.toBase64String("randomNonce".getBytes()))

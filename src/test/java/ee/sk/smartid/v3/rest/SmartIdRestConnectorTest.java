@@ -55,7 +55,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
@@ -210,7 +210,7 @@ class SmartIdRestConnectorTest {
             stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v2/responses/dynamicLinkCertificateChoiceResponse.json");
 
             CertificateRequest request = createCertificateRequest();
-            DynamicLinkCertificateChoiceResponse response = connector.getCertificate(request);
+            DynamicLinkCertificateChoiceSessionResponse response = connector.getCertificate(request);
 
             assertNotNull(response);
             assertEquals("de305d54-75b4-431b-adb2-eb6b9e546016", response.getSessionID());

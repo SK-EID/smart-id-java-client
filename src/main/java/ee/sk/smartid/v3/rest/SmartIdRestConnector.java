@@ -45,7 +45,7 @@ import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalExceptio
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceResponse;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
 import jakarta.ws.rs.BadRequestException;
@@ -103,7 +103,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkCertificateChoiceResponse getCertificate(CertificateRequest request) {
+    public DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request) {
         logger.debug("Initiating dynamic link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
@@ -159,9 +159,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkCertificateChoiceResponse postCertificateRequest(URI uri, CertificateRequest request) {
+    private DynamicLinkCertificateChoiceSessionResponse postCertificateRequest(URI uri, CertificateRequest request) {
         try {
-            return postRequest(uri, request, DynamicLinkCertificateChoiceResponse.class);
+            return postRequest(uri, request, DynamicLinkCertificateChoiceSessionResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI {}", uri, ex);
             throw new UserAccountNotFoundException();
