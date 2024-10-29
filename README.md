@@ -894,18 +894,12 @@ The request parameters for the dynamic link certificate choice session are the s
 Here's an example of how to initiate a dynamic link certificate choice request using the Smart-ID Java client.
 
 ```java
-
-
 SmartIdClient client=new SmartIdClient();
         client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 
-// Create a session store to track certificate choice status
-        CertificateChoiceStatusStore certificateChoiceStatusStore=new InMemorySessionStore();
-
         var builder=new CertificateRequestBuilderService(client.getSmartIdConnector(),client.getSessionStatusPoller())
-        .withSessionStore(certificateChoiceStatusStore)
         .withRelyingPartyUUID(client.getRelyingPartyUUID())
         .withRelyingPartyName(client.getRelyingPartyName())
         .withCertificateLevel("QUALIFIED")
@@ -915,7 +909,7 @@ SmartIdClient client=new SmartIdClient();
 // Initiate the dynamic link certificate choice
         CertificateChoiceResponse response=builder.initiateCertificateChoice();
 
-// Track certificate choice status in CertificateChoiceStatusStore without storing sessionId or sessionToken
+// Note: After a certificate choice request, a notification-based signature choice must follow.
 ```
 
 ## Response on Successful Session Creation

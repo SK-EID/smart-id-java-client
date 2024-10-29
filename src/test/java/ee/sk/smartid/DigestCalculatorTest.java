@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -35,9 +35,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.HashType;
 
 public class DigestCalculatorTest {
 

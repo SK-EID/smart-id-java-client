@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.service;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,6 @@ package ee.sk.smartid.v3.service;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,14 +37,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,6 +53,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
@@ -139,330 +133,248 @@ class SmartIdRequestBuilderServiceTest {
     }
 
     @Test
-    void documentValidatingSessionStatus() throws Exception {
-        SmartIdConnector connector = mock(SmartIdConnector.class);
+    void createSmartIdAuthenticationResponse_validSessionStatus() {
+        SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
 
-        String randomChallenge = "randomChallenge";
-        SessionStatus mockSessionStatus = createMockSessionStatus(randomChallenge);
+        service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+        service.dataToSign.setHashType(HashType.SHA512);
 
-        when(connector.getSessionStatus(anyString())).thenReturn(mockSessionStatus);
-
-        var poller = new SessionStatusPoller(connector);
-        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id");
-
-        SmartIdRequestBuilderService requestBuilder = new SmartIdRequestBuilderService();
-
-        byte[] dataToSignBytes = "dataToBeSigned".getBytes(StandardCharsets.UTF_8);
-        var signableData = new SignableData(dataToSignBytes);
-        signableData.setHashType(HashType.SHA512);
-
-        Field dataToSignField = SmartIdRequestBuilderService.class.getDeclaredField("dataToSign");
-        dataToSignField.setAccessible(true);
-        dataToSignField.set(requestBuilder, signableData);
-
-        requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", null, randomChallenge);
-
-        SmartIdAuthenticationResponse response = requestBuilder.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", null, randomChallenge);
-
-        assertEquals("OK", response.getEndResult());
+        SmartIdAuthenticationResponse response = service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
         assertEquals("QUALIFIED", response.getCertificateLevel());
+        assertEquals("OK", response.getEndResult());
     }
 
     @Test
-    void validateSessionResult_missingInteractionFlowUsed() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSessionResult", SessionStatus.class, String.class, String.class, String.class);
-        method.setAccessible(true);
-
-        var sessionStatus = new SessionStatus();
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("OK");
-        sessionResult.setDocumentNumber("PNOEE-12345678901");
-
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setInteractionFlowUsed(null);
-
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
-
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertEquals("InteractionFlowUsed is missing in the session status", ex.getCause().getMessage());
-    }
-
-    @Test
-    void validateSessionResult_nullSessionResult() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSessionResult", SessionStatus.class, String.class, String.class, String.class);
-        method.setAccessible(true);
-
-        var sessionStatus = new SessionStatus();
+    void createSmartIdAuthenticationResponse_sessionResultNull() {
+        SessionStatus sessionStatus = new SessionStatus();
         sessionStatus.setResult(null);
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+        service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+        service.dataToSign.setHashType(HashType.SHA512);
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertEquals("Result is missing in the session status response", ex.getCause().getMessage());
+        var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+
+        assertEquals("Result is missing in the session status response", ex.getMessage());
     }
 
     @Test
-    void validateSessionResult_missingDocumentNumber() throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSessionResult", SessionStatus.class, String.class, String.class, String.class);
-        method.setAccessible(true);
+    void createSmartIdAuthenticationResponse_missingInteractionFlowUsed() {
+        SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+        sessionStatus.setInteractionFlowUsed(null);
 
-        var sessionStatus = new SessionStatus();
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("OK");
-        sessionResult.setDocumentNumber(null);
+        service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+        service.dataToSign.setHashType(HashType.SHA512);
 
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setInteractionFlowUsed("someInteraction");
+        var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
 
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+        assertEquals("InteractionFlowUsed is missing in the session status", ex.getMessage());
+    }
 
-        assertTrue(ex.getCause() instanceof SmartIdClientException);
-        assertEquals("Document number is missing in the session result", ex.getCause().getMessage());
+    @Test
+    void createSmartIdAuthenticationResponse_missingDocumentNumber() {
+        SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+        sessionStatus.getResult().setDocumentNumber(null);
+
+        service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+        service.dataToSign.setHashType(HashType.SHA512);
+
+        var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+
+        assertEquals("Document number is missing in the session result", ex.getMessage());
     }
 
     @Nested
     class CertificateValidation {
 
         @Test
-        void validateCertificate_missingCertificate() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-            method.setAccessible(true);
+        void createSmartIdAuthenticationResponse_missingCertificate() {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+            sessionStatus.setCert(null);
 
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, null, "QUALIFIED"));
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
 
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertEquals("Missing certificate in session response", ex.getCause().getMessage());
+            var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+
+            assertEquals("Missing certificate in session response", ex.getMessage());
         }
 
         @Test
-        void validateCertificate_missingCertificateValue() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-            method.setAccessible(true);
+        void createSmartIdAuthenticationResponse_missingCertificateValue() {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+            sessionStatus.getCert().setValue(null);
 
-            var sessionCertificate = new SessionCertificate();
-            sessionCertificate.setValue(null);
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
 
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+            var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
 
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertEquals("Missing certificate in session response", ex.getCause().getMessage());
+            assertEquals("Missing certificate in session response", ex.getMessage());
         }
 
         @Test
-        void validateCertificate_certificateLevelMismatch() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-            method.setAccessible(true);
+        void createSmartIdAuthenticationResponse_certificateLevelMismatch() {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+            sessionStatus.getCert().setCertificateLevel("ADVANCED");
 
-            var sessionCertificate = new SessionCertificate();
-            sessionCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
-            sessionCertificate.setCertificateLevel("ADVANCED");
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
 
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
+            var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
 
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertTrue(ex.getCause().getCause() instanceof CertificateLevelMismatchException);
+            assertTrue(ex.getCause() instanceof CertificateLevelMismatchException);
         }
 
         @Test
-        void validateCertificate_certificateParsingFails() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-            method.setAccessible(true);
+        void createSmartIdAuthenticationResponse_withQscdRequestedAndQualifiedReturned() {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+            sessionStatus.getCert().setCertificateLevel("QUALIFIED");
 
-            var sessionCertificate = new SessionCertificate();
-            sessionCertificate.setValue("InvalidCertificateData");
-            sessionCertificate.setCertificateLevel("QUALIFIED");
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
+            service.certificateLevel = "QSCD";
 
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionCertificate, "QUALIFIED"));
-
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertEquals("Certificate validation failed", ex.getCause().getMessage());
+            SmartIdAuthenticationResponse response = service.createSmartIdAuthenticationResponse(sessionStatus, "QSCD", "expectedDigest", "randomChallenge");
+            assertEquals("QUALIFIED", response.getCertificateLevel());
         }
-
-        @Test
-        void validateCertificate_withQscdRequestedAndQualifiedReturned() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateCertificate", SessionCertificate.class, String.class);
-            method.setAccessible(true);
-
-            var sessionCertificate = new SessionCertificate();
-            sessionCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
-            sessionCertificate.setCertificateLevel("QUALIFIED");
-
-            assertDoesNotThrow(() -> method.invoke(service, sessionCertificate, "QSCD"));
-        }
-
     }
 
     @Nested
     class SignatureValidation {
 
         @Test
-        void validateRawDigestSignature_successful() throws Exception {
-            SessionStatus mockSessionStatus = mock(SessionStatus.class);
-            SessionSignature mockSessionSignature = mock(SessionSignature.class);
-
-            when(mockSessionSignature.getValue()).thenReturn("expectedDigest");
-            when(mockSessionSignature.getSignatureAlgorithm()).thenReturn("sha512WithRSAEncryption");
-            when(mockSessionStatus.getSignature()).thenReturn(mockSessionSignature);
-
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
-            method.setAccessible(true);
-
-            assertDoesNotThrow(() -> method.invoke(service, mockSessionStatus, "expectedDigest"));
-        }
-
-        @Test
-        void validateSignature_withRawDigestSignatureProtocol() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSignature", SessionStatus.class, String.class, String.class);
-            method.setAccessible(true);
-
-            var sessionStatus = new SessionStatus();
+        void createSmartIdAuthenticationResponse_validRawDigestSignature() {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
             sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
 
-            var sessionSignature = new SessionSignature();
-            sessionSignature.setValue("expectedDigest");
-            sessionSignature.setSignatureAlgorithm("sha512WithRSAEncryption");
-            sessionStatus.setSignature(sessionSignature);
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
 
-            assertDoesNotThrow(() -> method.invoke(service, sessionStatus, "expectedDigest", "randomChallenge"));
+            SmartIdAuthenticationResponse response = service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
+            assertEquals("OK", response.getEndResult());
         }
 
         @Test
-        void validateSignature_unknownProtocol() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateSignature", SessionStatus.class, String.class, String.class);
-            method.setAccessible(true);
+        void createSmartIdAuthenticationResponse_rawDigestSignatureMismatch() {
+            SessionStatus sessionStatus = createMockSessionStatus("wrongDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+            sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
 
-            var sessionStatus = new SessionStatus();
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
+
+            var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+
+            assertTrue(ex.getMessage().contains("RAW_DIGEST_SIGNATURE validation failed"));
+        }
+
+        @Test
+        void createSmartIdAuthenticationResponse_rawDigestUnexpectedAlgorithm() {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "unexpectedAlgorithm", null);
+            sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
+            sessionStatus.getSignature().setSignatureAlgorithm("unexpectedAlgorithm");
+
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
+
+            var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+
+            assertTrue(ex.getMessage().contains("Unexpected signature algorithm"));
+        }
+
+        @Test
+        void createSmartIdAuthenticationResponse_acspV1SignatureMismatch() {
+            SessionStatus sessionStatus = createMockSessionStatus("wrongSignatureValue", "ACSP_V1",
+                    "sha512WithRSAEncryption", "SHA-512");
+
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
+
+            SmartIdClientException ex = assertThrows(SmartIdClientException.class, () ->
+                    service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", null, "randomChallenge"));
+
+            assertTrue(ex.getMessage().contains("ACSP_V1 signature validation failed"));
+        }
+
+        @Test
+        void createSmartIdAuthenticationResponse_acspV1NoSuchAlgorithmException() {
+            SessionStatus sessionStatus = createMockSessionStatus(null, "ACSP_V1",
+                    "sha512WithRSAEncryption", "INVALID_ALGORITHM");
+
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
+
+            SmartIdClientException ex = assertThrows(SmartIdClientException.class, () ->
+                    service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", null, "randomChallenge"));
+
+            assertEquals("Error while creating digest for ACSP_V1 signature validation", ex.getMessage());
+        }
+
+        @Test
+        void createSmartIdAuthenticationResponse_unknownSignatureProtocol() {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "UNKNOWN_PROTOCOL", "sha512WithRSAEncryption", null);
             sessionStatus.setSignatureProtocol("UNKNOWN_PROTOCOL");
 
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest", "randomChallenge"));
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
 
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertEquals("Unknown signature protocol: UNKNOWN_PROTOCOL", ex.getCause().getMessage());
+            var ex = assertThrows(SmartIdClientException.class, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
+
+            assertEquals("Unknown signature protocol: UNKNOWN_PROTOCOL", ex.getMessage());
+        }
+
+        @ParameterizedTest
+        @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
+        void createSmartIdAuthenticationResponse_handleSessionEndResultErrors(String endResult, Class<? extends Exception> expectedException) {
+            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption", null);
+            sessionStatus.getResult().setEndResult(endResult);
+
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
+
+            assertThrows(expectedException, () -> service.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge"));
         }
 
         @Test
-        void validateAcspV1Signature_signatureMismatch() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateAcspV1Signature", SessionStatus.class, String.class);
-            method.setAccessible(true);
+        void createSmartIdAuthenticationResponse_sessionStatusNull() {
+            service.dataToSign = new SignableData("dataToBeSigned".getBytes(StandardCharsets.UTF_8));
+            service.dataToSign.setHashType(HashType.SHA512);
 
-            var sessionSignature = new SessionSignature();
-            sessionSignature.setValue("InvalidSignatureValue");
-            sessionSignature.setServerRandom("serverRandomValue");
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> service.createSmartIdAuthenticationResponse(null, "QUALIFIED", "expectedDigest", "randomChallenge"));
 
+            assertEquals("Session status is null", ex.getMessage());
+        }
+    }
+
+    private static SessionStatus createMockSessionStatus(String signatureValue, String signatureProtocol, String signatureAlgorithm, String hashAlgorithm) {
+
+        var sessionResult = new SessionResult();
+        sessionResult.setEndResult("OK");
+        sessionResult.setDocumentNumber("PNOEE-12345678901");
+
+        var sessionCertificate = new SessionCertificate();
+        sessionCertificate.setCertificateLevel("QUALIFIED");
+        sessionCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
+
+        var sessionSignature = new SessionSignature();
+        sessionSignature.setValue(signatureValue);
+        sessionSignature.setSignatureAlgorithm(signatureAlgorithm);
+        sessionSignature.setServerRandom("serverRandomValue");
+
+        if ("ACSP_V1".equals(signatureProtocol)) {
             var sigAlgParams = new SignatureAlgorithmParameters();
-            sigAlgParams.setHashAlgorithm("SHA-256");
+            sigAlgParams.setHashAlgorithm(hashAlgorithm);
             sessionSignature.setSignatureAlgorithmParameters(sigAlgParams);
-
-            var sessionStatus = new SessionStatus();
-            sessionStatus.setSignature(sessionSignature);
-            sessionStatus.setSignatureProtocol("ACSP_V1");
-
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "randomChallenge"));
-
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertTrue(ex.getCause().getMessage().contains("ACSP_V1 signature validation failed"));
         }
 
-        @Test
-        void validateRawDigestSignature_signatureMismatch() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
-            method.setAccessible(true);
+        var sessionStatus = new SessionStatus();
+        sessionStatus.setState("COMPLETE");
+        sessionStatus.setResult(sessionResult);
+        sessionStatus.setCert(sessionCertificate);
+        sessionStatus.setSignature(sessionSignature);
+        sessionStatus.setSignatureProtocol(signatureProtocol);
+        sessionStatus.setInteractionFlowUsed("displayTextAndPIN");
 
-            var sessionSignature = new SessionSignature();
-            sessionSignature.setValue("actualDigest");
-            sessionSignature.setSignatureAlgorithm("sha512WithRSAEncryption");
-
-            var sessionStatus = new SessionStatus();
-            sessionStatus.setSignature(sessionSignature);
-
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest"));
-
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertTrue(ex.getCause().getMessage().contains("RAW_DIGEST_SIGNATURE validation failed"));
-        }
-
-        @Test
-        void validateRawDigestSignature_unexpectedAlgorithm() throws Exception {
-            Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("validateRawDigestSignature", SessionStatus.class, String.class);
-            method.setAccessible(true);
-
-            var sessionSignature = new SessionSignature();
-            sessionSignature.setValue("expectedDigest");
-            sessionSignature.setSignatureAlgorithm("unexpectedAlgorithm");
-
-            var sessionStatus = new SessionStatus();
-            sessionStatus.setSignature(sessionSignature);
-
-            var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, sessionStatus, "expectedDigest"));
-
-            assertTrue(ex.getCause() instanceof SmartIdClientException);
-            assertTrue(ex.getCause().getMessage().contains("Unexpected signature algorithm"));
-        }
-    }
-
-    @Test
-    void documentFetchingSessionStatus_mocked() {
-        SmartIdConnector connector = mock(SmartIdConnector.class);
-        var mockSessionStatus = new SessionStatus();
-        mockSessionStatus.setState("COMPLETE");
-
-        when(connector.getSessionStatus(anyString())).thenReturn(mockSessionStatus);
-
-        var poller = new SessionStatusPoller(connector);
-        SessionStatus sessionStatus = poller.fetchFinalSessionStatus("mocked_session_id");
-
-        assertEquals("COMPLETE", sessionStatus.getState());
-    }
-
-    @ParameterizedTest
-    @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
-    void handleSessionEndResultErrors(String endResult, Class<? extends Exception> expectedException) throws Exception {
-        Method method = SmartIdRequestBuilderService.class.getDeclaredMethod("handleSessionEndResultErrors", String.class);
-        method.setAccessible(true);
-
-        var ex = assertThrows(InvocationTargetException.class, () -> method.invoke(service, endResult));
-
-        assertEquals(expectedException, ex.getCause().getClass());
-    }
-
-    private static SessionStatus createMockSessionStatus(String randomChallenge) throws NoSuchAlgorithmException {
-        var mockSessionResult = new SessionResult();
-        mockSessionResult.setEndResult("OK");
-        mockSessionResult.setDocumentNumber("PNOEE-12345678901");
-
-        var mockCertificate = new SessionCertificate();
-        mockCertificate.setCertificateLevel("QUALIFIED");
-        mockCertificate.setValue(DEMO_HOST_SSL_CERTIFICATE);
-
-        var mockSessionSignature = new SessionSignature();
-        String serverRandom = "serverRandomValue";
-        String signatureProtocol = "ACSP_V1";
-
-        String dataToHash = signatureProtocol + ";" +
-                Base64.getEncoder().encodeToString(serverRandom.getBytes(StandardCharsets.UTF_8)) + ";" +
-                Base64.getEncoder().encodeToString(randomChallenge.getBytes(StandardCharsets.UTF_8));
-
-        var sigAlgParams = new SignatureAlgorithmParameters();
-        sigAlgParams.setHashAlgorithm("SHA-512");
-        mockSessionSignature.setSignatureAlgorithmParameters(sigAlgParams);
-
-        MessageDigest digest = MessageDigest.getInstance(sigAlgParams.getHashAlgorithm());
-        byte[] hashedData = digest.digest(dataToHash.getBytes(StandardCharsets.UTF_8));
-        String expectedSignature = Base64.getEncoder().encodeToString(hashedData);
-
-        mockSessionSignature.setValue(expectedSignature);
-        mockSessionSignature.setServerRandom(serverRandom);
-        mockSessionSignature.setSignatureAlgorithm("sha512WithRSAEncryption");
-
-        var mockSessionStatus = new SessionStatus();
-        mockSessionStatus.setState("COMPLETE");
-        mockSessionStatus.setResult(mockSessionResult);
-        mockSessionStatus.setCert(mockCertificate);
-        mockSessionStatus.setSignature(mockSessionSignature);
-        mockSessionStatus.setSignatureProtocol(signatureProtocol);
-        mockSessionStatus.setInteractionFlowUsed("displayTextAndPIN");
-
-        return mockSessionStatus;
+        return sessionStatus;
     }
 
     static class SessionEndResultErrorArgumentsProvider implements ArgumentsProvider {

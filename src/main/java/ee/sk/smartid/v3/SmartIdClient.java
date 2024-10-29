@@ -47,8 +47,6 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
-import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.service.DynamicLinkCertificateChoiceSessionRequestBuilder;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -67,7 +65,6 @@ public class SmartIdClient {
     private long sessionStatusResponseSocketOpenTimeValue;
     private SmartIdConnector connector;
     private SSLContext trustSslContext;
-    private CertificateChoiceStatusStore certificateChoiceStatusStore;
 
     public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
         return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector());
@@ -184,23 +181,6 @@ public class SmartIdClient {
     public void setPollingSleepTimeout(TimeUnit unit, long timeout) {
         pollingSleepTimeUnit = unit;
         pollingSleepTimeout = timeout;
-    }
-
-    public void setSessionStore(CertificateChoiceStatusStore certificateChoiceStatusStore) {
-        this.certificateChoiceStatusStore = certificateChoiceStatusStore;
-    }
-
-    public void storeCertificateChoiceStatusIfOk(DynamicLinkCertificateChoiceSessionResponse response) {
-        SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
-        SessionStatus sessionStatus = sessionStatusPoller.fetchFinalSessionStatus(response.getSessionID());
-
-        if ("OK".equalsIgnoreCase(sessionStatus.getResult().getEndResult())) {
-            if (certificateChoiceStatusStore != null) {
-                certificateChoiceStatusStore.storeSession(response.getSessionID(), "certificate-choice");
-            }
-        } else {
-            throw new SmartIdClientException("Certificate choice session was not successful");
-        }
     }
 
     public SmartIdConnector getSmartIdConnector() {
