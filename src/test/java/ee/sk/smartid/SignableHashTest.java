@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,17 +26,28 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v2.CertificateParser;
+import ee.sk.smartid.v2.SignableHash;
+import ee.sk.smartid.v2.DigestCalculator;
 
-public class CertificateParserTest {
+public class SignableHashTest {
 
     @Test
-    public void testBothCertificateLevelsQualified() {
-        assertThrows(SmartIdClientException.class, () -> CertificateParser.parseX509Certificate("invalid"));
+    public void calculateVerificationCodeWithSha256() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA256);
+        hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+        assertEquals("4240", hashToSign.calculateVerificationCode());
+    }
+
+    @Test
+    public void calculateVerificationCodeWithSha512() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA512);
+        hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));
+        assertEquals("4664", hashToSign.calculateVerificationCode());
     }
 }

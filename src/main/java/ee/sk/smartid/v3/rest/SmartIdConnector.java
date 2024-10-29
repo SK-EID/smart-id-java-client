@@ -31,11 +31,22 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 public interface SmartIdConnector extends Serializable {
+
+    /**
+     * Get session status for the given session ID.
+     *
+     * @param sessionId The session ID
+     * @return The session status
+     * @throws SessionNotFoundException If the session is not found
+     */
+    SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException;
 
     /**
      * Set the session status response socket open time

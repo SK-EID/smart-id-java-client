@@ -29,6 +29,8 @@ package ee.sk.smartid.v2;
 import java.io.Serializable;
 import java.util.Base64;
 
+import ee.sk.smartid.HashType;
+
 /**
  * This class can be used to contain the data
  * to be signed when it is not yet in hashed format

@@ -67,6 +67,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;

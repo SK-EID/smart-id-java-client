@@ -708,6 +708,162 @@ String sessionSecret = authenticationSessionResponse.getSessionSecret();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
 ```
+
+## Session status request handling for v3.0
+
+The Smart-ID v3.0 API includes new session status request paths for retrieving session results.
+
+## Session status endpoint
+* Method: `GET`
+* Path: `BASE/v3/session/:sessionId`
+* Query parameter: `timeoutMs` (optional, long poll timeout value, default is halfway between max and min values)
+
+Example of the endpoint:
+https://rp-api.smart-id.com/v3/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000
+
+## Session status response
+
+The session status response includes various fields depending on whether the session has completed or is still running. Below are the key fields returned in the response:
+
+* `state`: RUNNING or COMPLETE
+* `result.endResult`: Outcome of the session (e.g., OK, USER_REFUSED, TIMEOUT)
+* `signatureProtocol`: Either ACSP_V1 (for authentication) or RAW_DIGEST_SIGNATURE (for signature sessions)
+* `signature`: Contains the following fields based on the signatureProtocol used:
+   * For `ACSP_V1`: value, serverRandom, signatureAlgorithm, hashAlgorithm
+   * For `RAW_DIGEST_SIGNATURE`: value, signatureAlgorithm, hashAlgorithm
+* `cert`: Includes certificate information with value (Base64-encoded certificate) and certificateLevel (ADVANCED or QUALIFIED).
+* `ignoredProperties`: Any unsupported or ignored properties from the request.
+* `interactionFlowUsed`: The interaction flow used for the session.
+* `deviceIpAddress`: IP address of the mobile device, if requested.
+
+### Successful response when still waiting for user’s response
+
+```json
+{
+  "state": "RUNNING"
+}
+```
+
+### ACSP_V1 is returned in the session status OK response for authentication sessions in both dynamic-link and notification-based flows.
+
+```json
+  {
+  "state": "COMPLETE",
+  "result": {
+    "endResult": "OK",
+    "documentNumber": "PNOEE-372...."
+  },
+  "signatureProtocol": "ACSP_V1",
+  "signature": {
+    "serverRandom": "B+C9XVjIAZnCHH9vfBSv...",
+    "value": "B+A9CfjIBZnDHHav3B4F...",
+    "signatureAlgorithm": "sha512WithRSAEncryption",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA-512"
+    }
+  },
+  "cert": {
+    "value": "B+C9XVjIAZnCHH9vfBSv...",
+    "certificateLevel": "QUALIFIED"
+  }
+}
+``` 
+
+### RAW_DIGEST_SIGNATURE is returned in the session status OK response for signature sessions in both dynamic link and notification-based flows.
+
+```json
+{
+  "state": "COMPLETE",
+  "result": {
+    "endResult": "OK",
+    "documentNumber": "PNOEE-372...."
+  },
+  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
+  "signature": {
+    "value": "B+A9CfjIBZnDHHav3B4F...",
+    "signatureAlgorithm": "sha512WithRSAEncryption",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA-512"
+    }
+  },
+  "cert": {
+    "value": "B+C9XVjIAZnCHH9vfBSv...",
+    "certificateLevel": "QUALIFIED"
+  }
+}
+```
+
+## Example of fetching session status in v3.0
+
+The following example shows how to use the SessionStatusPoller to fetch the session status until it's complete.
+
+```java
+SmartIdClient client = new SmartIdClient();
+client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+client.setRelyingPartyName("DEMO");
+client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+
+// Client setup with TrustStore. Requests will not work without a valid certificate.
+        InputStream is = SmartIdClient.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks");
+        KeyStore trustStore = KeyStore.getInstance("JKS");
+        trustStore.load(is, "changeit".toCharArray());
+        client.setTrustStore(trustStore);
+
+var poller = new SessionStatusPoller(client.getSmartIdConnector(), new SmartIdRequestBuilderService());
+SessionStatus sessionStatus = poller.fetchFinalSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016", 10000);
+
+if ("COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
+System.out.println("Session completed with result: " + sessionStatus.getResult().getEndResult());
+}
+```
+
+## Validating session status response
+
+It's important to validate the session status response to ensure that the returned signature or authentication result is valid.
+
+* Validate that endResult is OK if the session was successful.
+* Check the certificate field to ensure it has the required certificate level and that it is signed by a trusted CA.
+* For `ACSP_V1` signature validation, compare the digest of the signature protocol, server random, and random challenge.
+* For `RAW_DIGEST_SIGNATURE`, validate the signature against the expected digest.
+
+### Example of validating the signature:
+    
+```java
+SmartIdRequestBuilderService requestBuilder = new SmartIdRequestBuilderService();
+requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
+
+SmartIdAuthenticationResponse response = requestBuilder.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
+
+System.out.println("Authentication result: " + response.getEndResult());
+```
+
+## Error handling for session status
+
+The session status response may return various error codes indicating the outcome of the session. Below are the possible endResult values for a completed session:
+
+* `OK`: Session completed successfully.
+* `USER_REFUSED`: User refused the session.
+* `TIMEOUT`: User did not respond in time.
+* `DOCUMENT_UNUSABLE`: Session could not be completed due to an issue with the document.
+* `WRONG_VC`: User selected the wrong verification code.
+* `REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP`: The requested interaction is not supported by the user's app.
+* `USER_REFUSED_CERT_CHOICE`: User has multiple accounts and pressed Cancel on device choice screen.
+* `USER_REFUSED_DISPLAYTEXTANDPIN`: User pressed Cancel on PIN screen (either during displayTextAndPIN or verificationCodeChoice flow).
+* `USER_REFUSED_VC_CHOICE`: User cancelled verificationCodeChoice screen.
+* `USER_REFUSED_CONFIRMATIONMESSAGE`: User cancelled on confirmationMessage screen.
+* `USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE`: User cancelled on confirmationMessageAndVerificationCodeChoice screen.
+
+### The error codes can be validated using the SmartIdRequestBuilderService
+    
+```java
+try {
+    requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
+} catch (UserRefusedException e) {
+    System.out.println("User refused the session");
+} catch (SessionTimeoutException e) {
+    System.out.println("Session timed out");
+}
+```
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
 
 #### Initiating authentication session with document number

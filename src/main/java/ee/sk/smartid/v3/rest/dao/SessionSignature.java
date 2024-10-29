@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,24 +31,42 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SessionResult implements Serializable {
+public class SessionSignature implements Serializable {
 
-  private String endResult;
-  private String documentNumber;
+    private String value;
+    private String serverRandom;
+    private String signatureAlgorithm;
+    private SignatureAlgorithmParameters signatureAlgorithmParameters;
 
-  public String getEndResult() {
-    return endResult;
-  }
+    public String getValue() {
+        return value;
+    }
 
-  public void setEndResult(String endResult) {
-    this.endResult = endResult;
-  }
+    public void setValue(String value) {
+        this.value = value;
+    }
 
-  public String getDocumentNumber() {
-    return documentNumber;
-  }
+    public String getServerRandom() {
+        return serverRandom;
+    }
 
-  public void setDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
-  }
+    public void setServerRandom(String serverRandom) {
+        this.serverRandom = serverRandom;
+    }
+
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
+    }
+
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
+    }
+
+    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
+        return signatureAlgorithmParameters;
+    }
+
+    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
+        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
+    }
 }

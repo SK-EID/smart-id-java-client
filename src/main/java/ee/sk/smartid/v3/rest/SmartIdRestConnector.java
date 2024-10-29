@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -80,17 +80,12 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private final String endpointUrl;
     private transient Configuration clientConfig;
     private transient Client configuredClient;
-    private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
-    private long sessionStatusResponseSocketOpenTimeValue;
     private transient SSLContext sslContext;
+    private long sessionStatusResponseSocketOpenTimeValue;
+    private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
 
     public SmartIdRestConnector(String endpointUrl) {
         this.endpointUrl = endpointUrl;
-    }
-
-    public SmartIdRestConnector(String endpointUrl, Configuration clientConfig) {
-        this(endpointUrl);
-        this.clientConfig = clientConfig;
     }
 
     public SmartIdRestConnector(String endpointUrl, Client configuredClient) {
@@ -98,16 +93,101 @@ public class SmartIdRestConnector implements SmartIdConnector {
         this.configuredClient = configuredClient;
     }
 
-    private SessionStatus getSessionStatus(String sessionId, String path) throws SessionNotFoundException {
+    @Override
+    public SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException {
+        logger.debug("Getting session status for sessionId: {}", sessionId);
         SessionStatusRequest request = createSessionStatusRequest(sessionId);
-        UriBuilder uriBuilder = UriBuilder.fromUri(endpointUrl).path(path);
+        UriBuilder uriBuilder = UriBuilder
+                .fromUri(endpointUrl)
+                .path(SESSION_STATUS_URI);
         addResponseSocketOpenTimeUrlParameter(request, uriBuilder);
-        URI uri = uriBuilder.build(request.getSessionId());
+        URI uri = uriBuilder.build(sessionId);
+
         try {
             return prepareClient(uri).get(SessionStatus.class);
-        } catch (NotFoundException e) {
-            logger.warn("Session " + request + " not found: " + e.getMessage());
+        } catch (NotFoundException ex) {
+            logger.warn("Session {} not found: {}", request, ex.getMessage());
             throw new SessionNotFoundException();
+        }
+    }
+
+    @Override
+    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
+        logger.debug("Starting dynamic link authentication session with semantics identifier");
+        URI uri = UriBuilder.fromUri(endpointUrl)
+                .path(DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
+                .path(semanticsIdentifier.getIdentifier())
+                .build();
+        return postAuthenticationRequest(uri, authenticationRequest);
+    }
+
+    @Override
+    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, String documentNumber) {
+        logger.debug("Starting dynamic link authentication session with document number");
+        URI uri = UriBuilder.fromUri(endpointUrl)
+                .path(DYNAMIC_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
+                .path(documentNumber)
+                .build();
+        return postAuthenticationRequest(uri, authenticationRequest);
+    }
+
+    @Override
+    public DynamicLinkAuthenticationSessionResponse initAnonymousDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest) {
+        logger.debug("Starting anonymous dynamic link authentication session");
+        URI uri = UriBuilder.fromUri(endpointUrl)
+                .path(ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH)
+                .build();
+        return postAuthenticationRequest(uri, authenticationRequest);
+    }
+
+    @Override
+    public void setSslContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
+    @Override
+    public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
+        this.sessionStatusResponseSocketOpenTimeUnit = sessionStatusResponseSocketOpenTimeUnit;
+        this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
+    }
+
+    protected Invocation.Builder prepareClient(URI uri) {
+        Client client;
+        if (this.configuredClient == null) {
+            ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+            if (null != this.clientConfig) {
+                clientBuilder.withConfig(this.clientConfig);
+            }
+            if (null != this.sslContext) {
+                clientBuilder.sslContext(this.sslContext);
+            }
+            client = clientBuilder.build();
+        } else {
+            client = this.configuredClient;
+        }
+
+        return client
+                .register(new LoggingFilter())
+                .target(uri)
+                .request()
+                .accept(APPLICATION_JSON_TYPE)
+                .header("User-Agent", buildUserAgentString());
+    }
+
+    protected String buildUserAgentString() {
+        return "smart-id-java-client/" + getClientVersion() + " (Java/" + getJdkMajorVersion() + ")";
+    }
+
+    protected String getClientVersion() {
+        String clientVersion = getClass().getPackage().getImplementationVersion();
+        return clientVersion == null ? "-" : clientVersion;
+    }
+
+    protected String getJdkMajorVersion() {
+        try {
+            return System.getProperty("java.version").split("_")[0];
+        } catch (Exception e) {
+            return "-";
         }
     }
 
@@ -154,89 +234,11 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private void addResponseSocketOpenTimeUrlParameter(SessionStatusRequest request, UriBuilder uriBuilder) {
         if (request.isResponseSocketOpenTimeSet()) {
-            long queryTimeoutInMilliseconds = sessionStatusResponseSocketOpenTimeUnit.toMillis(sessionStatusResponseSocketOpenTimeValue);
+            TimeUnit timeUnit = request.getResponseSocketOpenTimeUnit();
+            long timeValue = request.getResponseSocketOpenTimeValue();
+            long queryTimeoutInMilliseconds = timeUnit.toMillis(timeValue);
             uriBuilder.queryParam("timeoutMs", queryTimeoutInMilliseconds);
         }
-    }
-
-    protected Invocation.Builder prepareClient(URI uri) {
-        Client client;
-        if (this.configuredClient == null) {
-            ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-            if (clientConfig != null) {
-                clientBuilder.withConfig(clientConfig);
-            }
-            if (sslContext != null) {
-                clientBuilder.sslContext(sslContext);
-            }
-            client = clientBuilder.build();
-        } else {
-            client = this.configuredClient;
-        }
-
-        return client
-                .register(new LoggingFilter())
-                .target(uri)
-                .request()
-                .accept(APPLICATION_JSON_TYPE)
-                .header("User-Agent", buildUserAgentString());
-    }
-
-    protected String buildUserAgentString() {
-        return "smart-id-java-client/" + getClientVersion() + " (Java/" + getJdkMajorVersion() + ")";
-    }
-
-    protected String getClientVersion() {
-        String clientVersion = getClass().getPackage().getImplementationVersion();
-        return clientVersion == null ? "-" : clientVersion;
-    }
-
-    protected String getJdkMajorVersion() {
-        try {
-            return System.getProperty("java.version").split("_")[0];
-        } catch (Exception e) {
-            return "-";
-        }
-    }
-
-    @Override
-    public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
-        this.sessionStatusResponseSocketOpenTimeUnit = sessionStatusResponseSocketOpenTimeUnit;
-        this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
-    }
-
-    @Override
-    public void setSslContext(SSLContext sslContext) {
-        this.sslContext = sslContext;
-    }
-
-    @Override
-    public DynamicLinkAuthenticationSessionResponse initAnonymousDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest) {
-        logger.debug("Starting anonymous dynamic link authentication session");
-        URI uri = UriBuilder.fromUri(endpointUrl)
-                .path(ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH)
-                .build();
-        return postAuthenticationRequest(uri, authenticationRequest);
-    }
-
-    @Override
-    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
-        logger.debug("Starting dynamic link authentication session with semantics identifier");
-        URI uri = UriBuilder.fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
-                .path(semanticsIdentifier.getIdentifier())
-                .build();
-        return postAuthenticationRequest(uri, authenticationRequest);
-    }
-
-    @Override
-    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, String documentNumber) {
-         logger.debug("Starting dynamic link authentication session with document number");
-        URI uri = UriBuilder.fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
-                .path(documentNumber)
-                .build();
-        return postAuthenticationRequest(uri, authenticationRequest);
     }
 
     private DynamicLinkAuthenticationSessionResponse postAuthenticationRequest(URI uri, DynamicLinkAuthenticationSessionRequest request) {

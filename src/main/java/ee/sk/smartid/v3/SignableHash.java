@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid.v2;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,21 +26,50 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
+import java.io.Serializable;
+import java.util.Base64;
+
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
-import java.security.MessageDigest;
+/**
+ * This class can be used to contain the hash
+ * to be signed
+ * <p>
+ * {@link #setHash(byte[])} can be used
+ * to set the hash.
+ * {@link #setHashType(HashType)} can be used
+ * to set the hash type.
+ * <p>
+ * {@link SignableData} can be used
+ * instead when the data to be signed is not already
+ * in hashed format.
+ */
+public class SignableHash implements Serializable {
 
-public class DigestCalculator {
+    private byte[] hash;
+    private HashType hashType;
 
-  public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
-      return digest.digest(dataToDigest);
+    public void setHash(byte[] hash) {
+        this.hash = hash.clone();
     }
-    catch (Exception e) {
-      throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
-    }
-  }
 
+    public void setHashInBase64(String hashInBase64) {
+        hash = Base64.getDecoder().decode(hashInBase64);
+    }
+
+    public String getHashInBase64() {
+        return Base64.getEncoder().encodeToString(hash);
+    }
+
+    public HashType getHashType() {
+        return hashType;
+    }
+
+    public void setHashType(HashType hashType) {
+        this.hashType = hashType;
+    }
+
+    public boolean areFieldsFilled() {
+        return hashType != null && hash != null && hash.length > 0;
+    }
 }

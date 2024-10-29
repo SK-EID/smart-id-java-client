@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,10 +31,12 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.v3.rest.dao.SessionStatus;
+
 public class SessionStatusPoller {
 
     private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
-
     private final SmartIdConnector connector;
     private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
     private long pollingSleepTimeout = 1L;
@@ -43,9 +45,38 @@ public class SessionStatusPoller {
         this.connector = connector;
     }
 
+    public SessionStatus fetchFinalSessionStatus(String sessionId) {
+        logger.debug("Starting to poll session status for session {}", sessionId);
+        try {
+            return pollForFinalSessionStatus(sessionId);
+        } catch (InterruptedException ex) {
+            logger.error("Failed to poll session status", ex);
+            throw new SmartIdClientException("Failed to poll session status", ex);
+        }
+    }
+
+    private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
+        SessionStatus sessionStatus = null;
+        while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
+            sessionStatus = pollSessionStatus(sessionId);
+            if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
+                break;
+            }
+            logger.debug("Sleeping for {} {}", pollingSleepTimeout, pollingSleepTimeUnit);
+            pollingSleepTimeUnit.sleep(pollingSleepTimeout);
+        }
+        logger.debug("Got final session status response");
+        return sessionStatus;
+    }
+
+    private SessionStatus pollSessionStatus(String sessionId) {
+        logger.debug("Polling session status");
+        return connector.getSessionStatus(sessionId);
+    }
+
     public void setPollingSleepTime(TimeUnit unit, long timeout) {
-        logger.debug("Polling sleep time is " + timeout + " " + unit.toString());
-        pollingSleepTimeUnit = unit;
-        pollingSleepTimeout = timeout;
+        logger.debug("Setting polling sleep time to {} {}", timeout, unit);
+        this.pollingSleepTimeUnit = unit;
+        this.pollingSleepTimeout = timeout;
     }
 }

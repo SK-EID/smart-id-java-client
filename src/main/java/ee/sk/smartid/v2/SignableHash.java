@@ -12,10 +12,10 @@ package ee.sk.smartid.v2;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,6 +28,8 @@ package ee.sk.smartid.v2;
 
 import java.io.Serializable;
 import java.util.Base64;
+
+import ee.sk.smartid.HashType;
 
 /**
  * This class can be used to contain the hash
@@ -44,43 +46,43 @@ import java.util.Base64;
  */
 public class SignableHash implements Serializable {
 
-  private byte[] hash;
-  private HashType hashType;
+    private byte[] hash;
+    private HashType hashType;
 
-  public void setHash(byte[] hash) {
-    this.hash = hash.clone();
-  }
+    public void setHash(byte[] hash) {
+        this.hash = hash.clone();
+    }
 
-  public void setHashInBase64(String hashInBase64) {
-    hash = Base64.getDecoder().decode(hashInBase64);
-  }
+    public void setHashInBase64(String hashInBase64) {
+        hash = Base64.getDecoder().decode(hashInBase64);
+    }
 
-  public String getHashInBase64() {
-    return Base64.getEncoder().encodeToString(hash);
-  }
+    public String getHashInBase64() {
+        return Base64.getEncoder().encodeToString(hash);
+    }
 
-  public HashType getHashType() {
-    return hashType;
-  }
+    public HashType getHashType() {
+        return hashType;
+    }
 
-  public void setHashType(HashType hashType) {
-    this.hashType = hashType;
-  }
+    public void setHashType(HashType hashType) {
+        this.hashType = hashType;
+    }
 
-  public boolean areFieldsFilled() {
-    return hashType != null && hash != null && hash.length > 0;
-  }
+    public boolean areFieldsFilled() {
+        return hashType != null && hash != null && hash.length > 0;
+    }
 
-  /**
-   * Calculates the verification code from the hash
-   * <p>
-   * Verification code should be displayed on the web page or some sort of web service
-   * so the person signing through the Smart-ID mobile app can verify if the verification code
-   * displayed on the phone matches with the one shown on the web page.
-   *
-   * @return the verification code
-   */
-  public String calculateVerificationCode() {
-    return VerificationCodeCalculator.calculate(hash);
-  }
+    /**
+     * Calculates the verification code from the hash
+     * <p>
+     * Verification code should be displayed on the web page or some sort of web service
+     * so the person signing through the Smart-ID mobile app can verify if the verification code
+     * displayed on the phone matches with the one shown on the web page.
+     *
+     * @return the verification code
+     */
+    public String calculateVerificationCode() {
+        return VerificationCodeCalculator.calculate(hash);
+    }
 }

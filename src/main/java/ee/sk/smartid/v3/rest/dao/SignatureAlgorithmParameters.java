@@ -1,10 +1,10 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,21 +26,19 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.security.MessageDigest;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class SignatureAlgorithmParameters implements Serializable {
 
-public class DigestCalculator {
+    private String hashAlgorithm;
 
-  public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
-      return digest.digest(dataToDigest);
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
     }
-    catch (Exception e) {
-      throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
-    }
-  }
 
+    public void setHashAlgorithm(String hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+    }
 }

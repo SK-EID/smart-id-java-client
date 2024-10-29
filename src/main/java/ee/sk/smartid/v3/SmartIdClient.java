@@ -44,9 +44,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
 import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Configuration;
 
 public class SmartIdClient {
@@ -176,10 +178,17 @@ public class SmartIdClient {
         pollingSleepTimeout = timeout;
     }
 
+    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
+        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+        var sessionStatusPoller = new SessionStatusPoller(connector);
+        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+        return sessionStatusPoller;
+    }
+
     public SmartIdConnector getSmartIdConnector() {
         if (null == connector) {
-            // Fallback to REST connector when not initialised
-            SmartIdRestConnector connector = configuredClient != null ? new SmartIdRestConnector(hostUrl, configuredClient) : new SmartIdRestConnector(hostUrl, networkConnectionConfig);
+            Client client = configuredClient != null ? configuredClient : createClient();
+            SmartIdRestConnector connector = new SmartIdRestConnector(hostUrl, client);
             connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
 
             if (trustSslContext == null && configuredClient == null) {
@@ -235,5 +244,16 @@ public class SmartIdClient {
 
     public void setSmartIdConnector(SmartIdConnector smartIdConnector) {
         this.connector = smartIdConnector;
+    }
+
+    private Client createClient() {
+        ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+        if (networkConnectionConfig != null) {
+            clientBuilder.withConfig(networkConnectionConfig);
+        }
+        if (trustSslContext != null) {
+            clientBuilder.sslContext(trustSslContext);
+        }
+        return clientBuilder.build();
     }
 }
