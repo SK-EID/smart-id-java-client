@@ -32,6 +32,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.List;
+
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,8 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 @WireMockTest(httpPort = 18089)
 class SmartIdClientTest {
@@ -98,5 +102,55 @@ class SmartIdClientTest {
         assertNotNull(response.getSessionSecret());
 
         assertThrows(SmartIdClientException.class, () -> smartIdClient.storeCertificateChoiceStatusIfOk(response), "Certificate choice session was not successful");
+    }
+
+    @Test
+    void createDynamicLinkAuthentication_anonymous() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+        DynamicLinkAuthenticationSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                .initAuthenticationSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getSessionToken());
+        assertNotNull(response.getSessionSecret());
+    }
+
+    @Test
+    void createDynamicLinkAuthentication_withDocumentNumber() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+        DynamicLinkAuthenticationSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                .initAuthenticationSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getSessionToken());
+        assertNotNull(response.getSessionSecret());
+    }
+
+    @Test
+    void createDynamicLinkAuthentication_withSemanticsIdentifier() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+        DynamicLinkAuthenticationSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                .initAuthenticationSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getSessionToken());
+        assertNotNull(response.getSessionSecret());
     }
 }

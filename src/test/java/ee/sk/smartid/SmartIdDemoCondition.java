@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,30 +26,27 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.lang.reflect.AnnotatedElement;
+import java.util.Optional;
 
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public final class FileUtil {
+public class SmartIdDemoCondition implements ExecutionCondition {
 
-    private FileUtil() {
-    }
+    /**
+     * Allows switching off tests going against smart-id demo env.
+     * This is sometimes needed if the test data in smart-id is temporarily broken.
+     */
+    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
 
-    public static String readFileToString(String fileName) {
-        return new String(readFileBytes(fileName), StandardCharsets.UTF_8);
-    }
-
-    private static byte[] readFileBytes(String fileName) {
-        try {
-            ClassLoader classLoader = FileUtil.class.getClassLoader();
-            URL resource = classLoader.getResource(fileName);
-            assertNotNull(resource, "File not found: " + fileName);
-            return Files.readAllBytes(Paths.get(resource.toURI()));
-        } catch (Exception e) {
-            throw new RuntimeException("Exception: " + e.getMessage(), e);
+    @Override
+    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+        Optional<AnnotatedElement> element = context.getElement();
+        if (element.isPresent() && element.get().isAnnotationPresent(SmartIdDemoIntegrationTest.class) && !TEST_AGAINST_SMART_ID_DEMO) {
+            return ConditionEvaluationResult.disabled("Running against Smart-ID demo is turned off");
         }
+        return ConditionEvaluationResult.enabled("Running against Smart-ID demo is turned on");
     }
 }

@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,19 +26,30 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.security.MessageDigest;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-public class DigestCalculator {
+public final class FileUtil {
 
-    public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
-            return digest.digest(dataToDigest);
-        } catch (Exception e) {
-            throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
-        }
+    private FileUtil() {
     }
 
+    public static String readFileToString(String fileName) {
+        return new String(readFileBytes(fileName), StandardCharsets.UTF_8);
+    }
+
+    private static byte[] readFileBytes(String fileName) {
+        try {
+            ClassLoader classLoader = FileUtil.class.getClassLoader();
+            URL resource = classLoader.getResource(fileName);
+            assertNotNull(resource, "File not found: " + fileName);
+            return Files.readAllBytes(Paths.get(resource.toURI()));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception: " + e.getMessage(), e);
+        }
+    }
 }

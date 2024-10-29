@@ -48,7 +48,7 @@ import ee.sk.smartid.HashType;
 import ee.sk.smartid.v2.rest.dao.CertificateRequest;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.v2.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;

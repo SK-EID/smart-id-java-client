@@ -26,19 +26,26 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.security.MessageDigest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import org.junit.jupiter.api.Test;
+import ee.sk.smartid.v2.SignableHash;
 
-public class DigestCalculator {
+public class SignableHashTest {
 
-    public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
-            return digest.digest(dataToDigest);
-        } catch (Exception e) {
-            throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
-        }
+    @Test
+    public void calculateVerificationCodeWithSha256() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA256);
+        hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+        assertEquals("4240", hashToSign.calculateVerificationCode());
     }
 
+    @Test
+    public void calculateVerificationCodeWithSha512() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA512);
+        hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));
+        assertEquals("4664", hashToSign.calculateVerificationCode());
+    }
 }

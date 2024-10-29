@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -26,27 +26,19 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.Optional;
+public enum SignatureAlgorithm {
 
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtensionContext;
+    SHA256WITHRSA("sha256WithRSAEncryption"),
+    SHA384WITHRSA("sha384WithRSAEncryption"),
+    SHA512WITHRSA("sha512WithRSAEncryption");
 
-public class SmartIdDemoCondition implements ExecutionCondition {
+    private final String algorithmName;
 
-    /**
-     * Allows switching off tests going against smart-id demo env.
-     * This is sometimes needed if the test data in smart-id is temporarily broken.
-     */
-    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
+    SignatureAlgorithm(String algorithmName) {
+        this.algorithmName = algorithmName;
+    }
 
-    @Override
-    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        Optional<AnnotatedElement> element = context.getElement();
-        if (element.isPresent() && element.get().isAnnotationPresent(SmartIdDemoIntegrationTest.class) && !TEST_AGAINST_SMART_ID_DEMO) {
-            return ConditionEvaluationResult.disabled("Running against Smart-ID demo is turned off");
-        }
-        return ConditionEvaluationResult.enabled("Running against Smart-ID demo is turned on");
+    public String getAlgorithmName() {
+        return algorithmName;
     }
 }

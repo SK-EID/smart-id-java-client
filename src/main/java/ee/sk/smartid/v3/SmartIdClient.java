@@ -73,6 +73,10 @@ public class SmartIdClient {
         return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector());
     }
 
+    public DynamicLinkAuthenticationSessionRequestBuilder createDynamicLinkAuthentication() {
+        return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector());
+    }
+
     /**
      * Sets the UUID of the relying party
      * <p>
@@ -186,13 +190,6 @@ public class SmartIdClient {
         this.certificateChoiceStatusStore = certificateChoiceStatusStore;
     }
 
-    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
-        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
-        var sessionStatusPoller = new SessionStatusPoller(connector);
-        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
-        return sessionStatusPoller;
-    }
-
     public void storeCertificateChoiceStatusIfOk(DynamicLinkCertificateChoiceSessionResponse response) {
         SessionStatusPoller sessionStatusPoller = createSessionStatusPoller(getSmartIdConnector());
         SessionStatus sessionStatus = sessionStatusPoller.fetchFinalSessionStatus(response.getSessionID());
@@ -266,17 +263,6 @@ public class SmartIdClient {
         this.connector = smartIdConnector;
     }
 
-    private Client createClient() {
-        ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-        if (networkConnectionConfig != null) {
-            clientBuilder.withConfig(networkConnectionConfig);
-        }
-        if (trustSslContext != null) {
-            clientBuilder.sslContext(trustSslContext);
-        }
-        return clientBuilder.build();
-    }
-
     /**
      * Creates an SSL context with the given certificates
      *
@@ -303,5 +289,23 @@ public class SmartIdClient {
         trustManagerFactory.init(keyStore);
         sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
         return sslContext;
+    }
+
+    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
+        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+        var sessionStatusPoller = new SessionStatusPoller(connector);
+        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+        return sessionStatusPoller;
+    }
+
+    private Client createClient() {
+        ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+        if (networkConnectionConfig != null) {
+            clientBuilder.withConfig(networkConnectionConfig);
+        }
+        if (trustSslContext != null) {
+            clientBuilder.sslContext(trustSslContext);
+        }
+        return clientBuilder.build();
     }
 }
