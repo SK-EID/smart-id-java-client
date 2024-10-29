@@ -31,16 +31,17 @@ public interface CertificateChoiceStatusStore {
     /**
      * Stores the certificate choice session state to track whether the certificate choice request was made.
      *
-     * @param userSessionId The session ID associated with the certificate choice request.
-     * @param value     A temporary value to indicate session tracking, e.g., "certificate-choice".
+     * @param userSessionId An application-defined identifier for tracking the end-user session associated with the certificate choice.
+     *                      Used to verify that a certificate choice was completed before initiating a signing session.
+     * @param value         A temporary value to signify that a certificate choice session has occurred, e.g., "certificate-choice".
      */
     void storeSession(String userSessionId, String value);
 
     /**
      * Checks if the certificate choice request was stored for a given session ID.
      *
-     * @param sessionId The session ID to check.
-     * @return true if the session exists, false otherwise.
+     * @param userSessionId The application-defined identifier to check for a stored certificate choice.
+     * @return true if a certificate choice was recorded for the session, false otherwise.
      */
-    boolean hasCertificateChoice(String sessionId);
+    boolean hasCertificateChoice(String userSessionId);
 }

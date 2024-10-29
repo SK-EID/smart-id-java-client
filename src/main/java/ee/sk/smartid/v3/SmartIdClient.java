@@ -263,6 +263,24 @@ public class SmartIdClient {
         this.connector = smartIdConnector;
     }
 
+    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
+        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+        var sessionStatusPoller = new SessionStatusPoller(connector);
+        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+        return sessionStatusPoller;
+    }
+
+    private Client createClient() {
+        ClientBuilder clientBuilder = ClientBuilder.newBuilder();
+        if (networkConnectionConfig != null) {
+            clientBuilder.withConfig(networkConnectionConfig);
+        }
+        if (trustSslContext != null) {
+            clientBuilder.sslContext(trustSslContext);
+        }
+        return clientBuilder.build();
+    }
+
     /**
      * Creates an SSL context with the given certificates
      *
@@ -289,23 +307,5 @@ public class SmartIdClient {
         trustManagerFactory.init(keyStore);
         sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
         return sslContext;
-    }
-
-    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
-        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
-        var sessionStatusPoller = new SessionStatusPoller(connector);
-        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
-        return sessionStatusPoller;
-    }
-
-    private Client createClient() {
-        ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-        if (networkConnectionConfig != null) {
-            clientBuilder.withConfig(networkConnectionConfig);
-        }
-        if (trustSslContext != null) {
-            clientBuilder.sslContext(trustSslContext);
-        }
-        return clientBuilder.build();
     }
 }
