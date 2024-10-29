@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -26,27 +26,33 @@ package ee.sk.smartid.v2;
  * #L%
  */
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.Optional;
+public class DynamicLinkAuthenticationSessionResponse {
 
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtensionContext;
+    private String sessionID;
+    private String sessionToken;
+    private String sessionSecret;
 
-public class SmartIdDemoCondition implements ExecutionCondition {
+    public String getSessionID() {
+        return sessionID;
+    }
 
-    /**
-     * Allows switching off tests going against smart-id demo env.
-     * This is sometimes needed if the test data in smart-id is temporarily broken.
-     */
-    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
+    }
 
-    @Override
-    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        Optional<AnnotatedElement> element = context.getElement();
-        if (element.isPresent() && element.get().isAnnotationPresent(SmartIdDemoIntegrationTest.class) && !TEST_AGAINST_SMART_ID_DEMO) {
-            return ConditionEvaluationResult.disabled("Running against Smart-ID demo is turned off");
-        }
-        return ConditionEvaluationResult.enabled("Running against Smart-ID demo is turned on");
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public String getSessionSecret() {
+        return sessionSecret;
+    }
+
+    public void setSessionSecret(String sessionSecret) {
+        this.sessionSecret = sessionSecret;
     }
 }

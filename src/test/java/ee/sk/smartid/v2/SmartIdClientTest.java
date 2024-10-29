@@ -98,26 +98,26 @@ class SmartIdClientTest {
         client.setHostUrl("http://localhost:18089");
         client.setTrustedCertificates("-----BEGIN CERTIFICATE-----\nMIIGjjCCBXagAwIBAgIQA6feGFsbcuz3yYop3036xzANBgkqhkiG9w0BAQsFADBN\nMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMScwJQYDVQQDEx5E\naWdpQ2VydCBTSEEyIFNlY3VyZSBTZXJ2ZXIgQ0EwHhcNMTkxMTAxMDAwMDAwWhcN\nMjExMTA1MTIwMDAwWjBaMQswCQYDVQQGEwJFRTEQMA4GA1UEBxMHVGFsbGlubjEb\nMBkGA1UEChMSU0sgSUQgU29sdXRpb25zIEFTMRwwGgYDVQQDExNycC1hcGkuc21h\ncnQtaWQuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuycMJZaS\nlaHLAYvqSFLoTZUF61EPrU4SiYmNqpvoAR7A/ywfjsZUyil1xBYwKI9+wZ4fW1Lj\njgzAY5p26ueGQSx/qHSU5D4ISL6dYvV1zvg5KRYtf1PxPFCOIhwzvoj8XnuiJoBt\n/wZmekB90giFRaeUmM2hCU9j78AM6hVJxMsvjP9Kpua4Hc4RJJSZwpnjO8nLO1BO\ndRf1M6TFqkYqUYtSJ8Y2NTalgo2gcPw+peN74MomRRB7oIRK6jUsUzwMDaJ0GTan\ngnLY1VIgdJhN9EIrIkisJMQJYcabh6KV/s1JG+wTpoC8usqFE/r4ILmTU+BeXL38\nyJXHoGhmkyvCBQIDAQABo4IDWzCCA1cwHwYDVR0jBBgwFoAUD4BhHIIxYdUvKOeN\nRji0LOHG2eIwHQYDVR0OBBYEFDfsZsmLfC1FetD3tQu+TR6qdAlgMB4GA1UdEQQX\nMBWCE3JwLWFwaS5zbWFydC1pZC5jb20wDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW\nMBQGCCsGAQUFBwMBBggrBgEFBQcDAjBrBgNVHR8EZDBiMC+gLaArhilodHRwOi8v\nY3JsMy5kaWdpY2VydC5jb20vc3NjYS1zaGEyLWc2LmNybDAvoC2gK4YpaHR0cDov\nL2NybDQuZGlnaWNlcnQuY29tL3NzY2Etc2hhMi1nNi5jcmwwTAYDVR0gBEUwQzA3\nBglghkgBhv1sAQEwKjAoBggrBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQu\nY29tL0NQUzAIBgZngQwBAgIwfAYIKwYBBQUHAQEEcDBuMCQGCCsGAQUFBzABhhho\ndHRwOi8vb2NzcC5kaWdpY2VydC5jb20wRgYIKwYBBQUHMAKGOmh0dHA6Ly9jYWNl\ncnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFNIQTJTZWN1cmVTZXJ2ZXJDQS5jcnQw\nDAYDVR0TAQH/BAIwADCCAX0GCisGAQQB1nkCBAIEggFtBIIBaQFnAHYAu9nfvB+K\ncbWTlCOXqpJ7RzhXlQqrUugakJZkNo4e0YUAAAFuJnDpmQAABAMARzBFAiBOZX5E\noZTVzSXTZFgxNf16qm8UJz2h3ipNicc3Jk7T5gIhALLh+P1hMSmN+GZ6j2Q0Ithd\n0XCzzLyepocD9MoS5lGgAHYAh3W/51l8+IxDmV+9827/Vo1HVjb/SrVgwbTq/16g\ngw8AAAFuJnDp9wAABAMARzBFAiARiorj+Iahj3ht/QurQ8jhKY3G2gSTpLifh6YW\nw+I+egIhAIQCtaaIjKXP5a8jJbKSphUVmj0f78wX0F3flqSOqbyBAHUARJRlLrDu\nzq/EQAfYqP4owNrmgr7YyzG1P9MzlrW2gagAAAFuJnDpAAAABAMARjBEAiBnqbvU\n9b50/orscwLl8Ynyggfym7rsnfX4zkbq/Iun0gIgG1ar0X2/vLa7PKlgCWmnzNM1\nfM2ex6zBYjjBHNjN5GAwDQYJKoZIhvcNAQELBQADggEBACko+lWd1cqdlSv2GDU2\nFJC6f3rMLOcUr/H6A6taaThUQ9gJ1W/xtlSAldHkwC/X2J9Zuw3MbKn+jV17SFEg\nlWu4iMlOSd5RPM51Dc7DyALAceau/I5rchKrYH3hhspJydZhz1ghgyZ3mdwkQE6t\nYv5v+G4jeHwUXxJ5dFFnRLNCHeTDqpa2zOglA/ORRM83NDt4cKTl3CqXWeeteFyu\nulnrt7w+IuCVhV6zywolQsqI5T77nQ4GfB6Cco3s01JWTaOg+DcPnobjwqk0o0mi\n/rBcmf49zy9T5O8CW6sABOqRV7RKIRSPEiv3M9IKJd621F/OfgGYwWDepBIk4ex3\ndgE=\n-----END CERTIFICATE-----\n");
 
-        stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-        stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-        stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithSha512.json", "responses/signatureSessionResponse.json");
-        stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-31111111111", "v2/requests/signatureSessionRequest.json", "v2/responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-31111111111", "v2/requests/signatureSessionRequestWithSha512.json", "v2/responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/document/PNOEE-31111111111", "v2/requests/signatureSessionRequestWithNonce.json", "v2/responses/signatureSessionResponse.json");
 
-        stubRequestWithResponse("/signature/etsi/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-        stubRequestWithResponse("/signature/etsi/PASEE-987654321012", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-        stubRequestWithResponse("/signature/etsi/IDCEE-AA3456789", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-        stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
-        stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
+        stubRequestWithResponse("/signature/etsi/PNOEE-31111111111", "v2/requests/signatureSessionRequest.json", "v2/responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/etsi/PASEE-987654321012", "v2/requests/signatureSessionRequest.json", "v2/responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/signature/etsi/IDCEE-AA3456789", "v2/requests/signatureSessionRequest.json", "v2/responses/signatureSessionResponse.json");
+        stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "v2/responses/sessionStatusForSuccessfulCertificateRequest.json");
+        stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusForSuccessfulSigningRequest.json");
 
-        stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-        stubRequestWithResponse("/authentication/etsi/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-        stubRequestWithResponse("/authentication/etsi/PASEE-987654321012", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-        stubRequestWithResponse("/authentication/etsi/IDCEE-AA3456789", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/etsi/PNOEE-31111111111", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/etsi/PASEE-987654321012", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/etsi/IDCEE-AA3456789", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
 
-        stubRequestWithResponse("/certificatechoice/etsi/PASEE-987654321012", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-        stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-        stubRequestWithResponse("/certificatechoice/etsi/IDCEE-AA3456789", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-        stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json");
+        stubRequestWithResponse("/certificatechoice/etsi/PASEE-987654321012", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/etsi/IDCEE-AA3456789", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusForSuccessfulAuthenticationRequest.json");
     }
 
     @Test
@@ -201,7 +201,7 @@ class SmartIdClientTest {
 
     @Test
     void getCertificateUsingDocumentNumber() {
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
 
         SmartIdCertificate certificate = client
                 .getCertificate()
@@ -214,7 +214,7 @@ class SmartIdClientTest {
 
     @Test
     void getCertificateWithNonce() {
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-NONCE", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-NONCE", "v2/requests/certificateChoiceRequestWithNonce.json", "v2/responses/certificateChoiceResponse.json");
 
         SmartIdCertificate certificate = client
                 .getCertificate()
@@ -228,7 +228,7 @@ class SmartIdClientTest {
 
     @Test
     void getCertificateWithManualSessionStatusRequesting() {
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
 
         CertificateRequestBuilder builder = client.getCertificate();
         String sessionId = builder
@@ -263,7 +263,7 @@ class SmartIdClientTest {
 
     @Test
     void getCertificateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
 
         client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
         CertificateRequestBuilder builder = client.getCertificate();
@@ -405,7 +405,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenUserAccountNotFound_shouldThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json");
+            stubNotFoundResponse("/certificatechoice/etsi/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json");
             makeGetCertificateRequest();
         });
     }
@@ -413,7 +413,7 @@ class SmartIdClientTest {
     @Test
     void sign_whenUserAccountNotFound_shouldThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json");
+            stubNotFoundResponse("/signature/document/PNOEE-31111111111", "v2/requests/signatureSessionRequest.json");
             makeCreateSignatureRequest();
         });
     }
@@ -421,7 +421,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenUserCancels_shouldThrowException() {
         assertThrows(UserRefusedException.class, () -> {
-            stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenUserRefusedGeneral.json");
+            stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "v2/responses/sessionStatusWhenUserRefusedGeneral.json");
             makeGetCertificateRequest();
         });
     }
@@ -429,7 +429,7 @@ class SmartIdClientTest {
     @Test
     void sign_whenUserCancels_shouldThrowException() {
         assertThrows(UserRefusedException.class, () -> {
-            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenUserRefusedGeneral.json");
+            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusWhenUserRefusedGeneral.json");
             makeCreateSignatureRequest();
         });
     }
@@ -437,7 +437,7 @@ class SmartIdClientTest {
     @Test
     void sign_whenTimeout_shouldThrowException() {
         assertThrows(SessionTimeoutException.class, () -> {
-            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenTimeout.json");
+            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusWhenTimeout.json");
             makeCreateSignatureRequest();
         });
     }
@@ -445,8 +445,8 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenRequiredInteractionNotSupportedByApp_shouldThrowException() {
         assertThrows(RequiredInteractionNotSupportedByAppException.class, () -> {
-            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/signatureSessionResponse.json");
-            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenRequiredInteractionNotSupportedByApp.json");
+            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", "v2/responses/signatureSessionResponse.json");
+            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusWhenRequiredInteractionNotSupportedByApp.json");
             makeAuthenticationRequest();
         });
     }
@@ -454,8 +454,8 @@ class SmartIdClientTest {
     @Test
     void sign_whenRequiredInteractionNotSupportedByApp_shouldThrowException() {
         assertThrows(RequiredInteractionNotSupportedByAppException.class, () -> {
-            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/signatureSessionResponse.json");
-            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenRequiredInteractionNotSupportedByApp.json");
+            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", "v2/responses/signatureSessionResponse.json");
+            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusWhenRequiredInteractionNotSupportedByApp.json");
             makeAuthenticationRequest();
         });
     }
@@ -463,7 +463,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenDocumentUnusable_shouldThrowException() {
         assertThrows(DocumentUnusableException.class, () -> {
-            stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenDocumentUnusable.json");
+            stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "v2/responses/sessionStatusWhenDocumentUnusable.json");
             makeGetCertificateRequest();
         });
     }
@@ -471,7 +471,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenUnknownErrorCode_shouldThrowException() {
         assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenUnknownErrorCode.json");
+            stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "v2/responses/sessionStatusWhenUnknownErrorCode.json");
             makeGetCertificateRequest();
         });
     }
@@ -479,7 +479,7 @@ class SmartIdClientTest {
     @Test
     void sign_whenDocumentUnusable_shouldThrowException() {
         assertThrows(DocumentUnusableException.class, () -> {
-            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenDocumentUnusable.json");
+            stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusWhenDocumentUnusable.json");
             makeCreateSignatureRequest();
         });
     }
@@ -487,7 +487,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenRequestForbidden_shouldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubForbiddenResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json");
+            stubForbiddenResponse("/certificatechoice/etsi/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json");
             makeGetCertificateRequest();
         });
     }
@@ -495,7 +495,7 @@ class SmartIdClientTest {
     @Test
     void sign_whenRequestForbidden_shouldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubForbiddenResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json");
+            stubForbiddenResponse("/signature/document/PNOEE-31111111111", "v2/requests/signatureSessionRequest.json");
             makeCreateSignatureRequest();
         });
     }
@@ -503,7 +503,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenApiReturnsErrorStatusCode471_shouldThrowNoSuitableAccountOfRequestedTypeFoundException() {
         assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> {
-            stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", 471);
+            stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json", 471);
             makeGetCertificateRequest();
         });
     }
@@ -511,7 +511,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenApiReturnsErrorStatusCode472_shouldThrowPersonShouldViewSmartIdPortalExceptionn() {
         assertThrows(PersonShouldViewSmartIdPortalException.class, () -> {
-            stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", 472);
+            stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json", 472);
             makeGetCertificateRequest();
         });
     }
@@ -519,7 +519,7 @@ class SmartIdClientTest {
     @Test
     void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubErrorResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", 480);
+            stubErrorResponse("/signature/document/PNOEE-31111111111", "v2/requests/signatureSessionRequest.json", 480);
             makeCreateSignatureRequest();
         });
     }
@@ -527,7 +527,7 @@ class SmartIdClientTest {
     @Test
     void getCertificate_whenSystemUnderMaintenance_shouldThrowException() {
         assertThrows(ServerMaintenanceException.class, () -> {
-            stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", 580);
+            stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json", 580);
             makeGetCertificateRequest();
         });
     }
@@ -535,15 +535,15 @@ class SmartIdClientTest {
     @Test
     void sign_whenSystemUnderMaintenance_shouldThrowException() {
         assertThrows(ServerMaintenanceException.class, () -> {
-            stubErrorResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", 580);
+            stubErrorResponse("/signature/document/PNOEE-31111111111", "v2/requests/signatureSessionRequest.json", 580);
             makeCreateSignatureRequest();
         });
     }
 
     @Test
     void setPollingSleepTimeoutForSignatureCreation() {
-        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
+        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
         client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
         long duration = measureSigningDuration();
         assertTrue(duration > 2000L, "Duration is " + duration);
@@ -552,8 +552,8 @@ class SmartIdClientTest {
 
     @Test
     void createSignatureAndGetDeviceIpAddress_noIpAddressReturned() {
-        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
+        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
         SmartIdSignature signature = createSignature();
 
         assertThat(signature.getDeviceIpAddress(), is(nullValue()));
@@ -561,8 +561,8 @@ class SmartIdClientTest {
 
     @Test
     void createSignatureAndGetDeviceIpAddress() {
-        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
+        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+        stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "v2/responses/sessionStatusForSuccessfulSigningRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
         SmartIdSignature signature = createSignature();
 
         assertThat(signature.getInteractionFlowUsed(), is("displayTextAndPIN"));
@@ -571,10 +571,10 @@ class SmartIdClientTest {
 
     @Test
     void setPollingSleepTimeoutForCertificateChoice() {
-        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
+        stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "v2/requests/certificateChoiceRequest.json", "v2/responses/certificateChoiceResponse.json");
 
-        stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-        stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json", "COMPLETE", STARTED);
+        stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "v2/responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+        stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "v2/responses/sessionStatusForSuccessfulCertificateRequest.json", "COMPLETE", STARTED);
         client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
         long duration = measureCertificateChoiceDuration();
         assertTrue(duration > 2000L, "Duration is " + duration);
@@ -591,7 +591,7 @@ class SmartIdClientTest {
 
     @Test
     void authenticateUsingDocumentNumber() {
-        stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
 
         var authenticationHash = new AuthenticationHash();
         authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
@@ -638,7 +638,7 @@ class SmartIdClientTest {
 
     @Test
     void authenticateWithNonce() {
-        stubRequestWithResponse("/authentication/document/PNOEE-31111111111-WITH-NONCE", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-31111111111-WITH-NONCE", "v2/requests/authenticationSessionRequestWithNonce.json", "v2/responses/authenticationSessionResponse.json");
 
 
         var authenticationHash = new AuthenticationHash();
@@ -722,7 +722,7 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenUserAccountNotFound_shouldThrowException() {
         assertThrows(UserAccountNotFoundException.class, () -> {
-            stubNotFoundResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json");
+            stubNotFoundResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json");
             makeAuthenticationRequest();
         });
     }
@@ -730,8 +730,8 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenUserCancels_shouldThrowException() {
         assertThrows(UserRefusedException.class, () -> {
-            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-            stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenUserRefusedGeneral.json");
+            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
+            stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusWhenUserRefusedGeneral.json");
             makeAuthenticationRequest();
         });
     }
@@ -739,8 +739,8 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenTimeout_shouldThrowException() {
         assertThrows(SessionTimeoutException.class, () -> {
-            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-            stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenTimeout.json");
+            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
+            stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusWhenTimeout.json");
             makeAuthenticationRequest();
         });
     }
@@ -748,8 +748,8 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenDocumentUnusable_shouldThrowException() {
         assertThrows(DocumentUnusableException.class, () -> {
-            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-            stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenDocumentUnusable.json");
+            stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
+            stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusWhenDocumentUnusable.json");
             makeAuthenticationRequest();
         });
     }
@@ -757,7 +757,7 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenRequestForbidden_shouldThrowException() {
         assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-            stubForbiddenResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json");
+            stubForbiddenResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json");
             makeAuthenticationRequest();
         });
     }
@@ -765,7 +765,7 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
         assertThrows(SmartIdClientException.class, () -> {
-            stubErrorResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", 480);
+            stubErrorResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", 480);
             makeAuthenticationRequest();
         });
     }
@@ -773,15 +773,15 @@ class SmartIdClientTest {
     @Test
     void authenticate_whenSystemUnderMaintenance_shouldThrowException() {
         assertThrows(ServerMaintenanceException.class, () -> {
-            stubErrorResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", 580);
+            stubErrorResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", 580);
             makeAuthenticationRequest();
         });
     }
 
     @Test
     void setPollingSleepTimeoutForAuthentication() {
-        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
+        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
         client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
         long duration = measureAuthenticationDuration();
         assertTrue(duration > 2000L, "Duration is " + duration);
@@ -791,8 +791,8 @@ class SmartIdClientTest {
 
     @Test
     void getDeviceIpAddress_ipAddressNotPresent() {
-        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
+        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
 
         SmartIdAuthenticationResponse authentication = createAuthentication();
         assertThat(authentication.getDeviceIpAddress(), is(nullValue()));
@@ -800,8 +800,8 @@ class SmartIdClientTest {
 
     @Test
     void getDeviceIpAddress_ipAddressReturned() {
-        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
+        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusRunning.json", STARTED, "COMPLETE");
+        stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "v2/responses/sessionStatusForSuccessfulAuthenticationRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
 
         SmartIdAuthenticationResponse authentication = createAuthentication();
         assertThat(authentication.getDeviceIpAddress(), is("62.65.42.45"));
@@ -809,7 +809,7 @@ class SmartIdClientTest {
 
     @Test
     void verifyAuthentication_withNetworkConnectionConfigurationHavingCustomHeader() {
-        stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
+        stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "v2/requests/authenticationSessionRequest.json", "v2/responses/authenticationSessionResponse.json");
 
         String headerName = "custom-header";
         String headerValue = "Hi!";

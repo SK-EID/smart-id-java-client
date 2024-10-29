@@ -32,6 +32,9 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 public interface SmartIdConnector extends Serializable {
@@ -59,4 +62,30 @@ public interface SmartIdConnector extends Serializable {
      * @param sslContext The SSL context
      */
     void setSslContext(SSLContext sslContext);
+
+    /**
+     * Create anonymous authentication session with dynamic link
+     *
+     * @param authenticationRequest The dynamic link authentication session request
+     * @return The dynamic link authentication session response
+     */
+    DynamicLinkAuthenticationSessionResponse initAnonymousDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest);
+
+    /**
+     * Create authentication session with dynamic link using semantics identifier
+     *
+     * @param authenticationRequest The dynamic link authentication session request
+     * @param semanticsIdentifier   The semantics identifier
+     * @return The dynamic link authentication session response
+     */
+    DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
+
+    /**
+     * Create authentication session with dynamic link using document number
+     *
+     * @param authenticationRequest The dynamic link authentication session request
+     * @param documentNumber        The document number
+     * @return The dynamic link authentication session response
+     */
+    DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(DynamicLinkAuthenticationSessionRequest authenticationRequest, String documentNumber);
 }

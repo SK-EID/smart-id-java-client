@@ -65,6 +65,10 @@ public class SmartIdClient {
     private SmartIdConnector connector;
     private SSLContext trustSslContext;
 
+    public DynamicLinkAuthenticationSessionRequestBuilder createDynamicLinkAuthentication() {
+        return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector());
+    }
+
     /**
      * Sets the UUID of the relying party
      * <p>

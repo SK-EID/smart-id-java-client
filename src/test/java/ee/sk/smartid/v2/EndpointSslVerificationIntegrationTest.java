@@ -42,6 +42,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 import org.junit.jupiter.api.Test;
 
+import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
 import ee.sk.smartid.integration.SmartIdIntegrationTest;
 import jakarta.ws.rs.ProcessingException;
