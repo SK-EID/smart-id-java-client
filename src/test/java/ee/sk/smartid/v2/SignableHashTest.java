@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.v2;
 
 /*-
  * #%L
@@ -29,6 +29,9 @@ package ee.sk.smartid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
+
+import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.v2.SignableHash;
 
 public class SignableHashTest {
