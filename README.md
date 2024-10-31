@@ -966,19 +966,17 @@ Here's an example of how to initiate a dynamic link certificate choice request u
 
 ```java
 SmartIdClient client=new SmartIdClient();
-        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        client.setRelyingPartyName("DEMO");
-        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
-
-        client.createDynamicLinkCertificateRequest()
-        .withRelyingPartyUUID(client.getRelyingPartyUUID())
-        .withRelyingPartyName(client.getRelyingPartyName())
-        .withCertificateLevel("QUALIFIED")
-        .withNonce("1234567890")
-        .withRequestProperties(new RequestProperties().withShareMdClientIpAddress(true));
-
-// Initiate the dynamic link certificate choice
-        CertificateChoiceResponse response=builder.initiateCertificateChoice();
+    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+    client.setRelyingPartyName("DEMO");
+    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+        
+CertificateChoiceResponse response = client.createDynamicLinkCertificateRequest()
+    .withRelyingPartyUUID(client.getRelyingPartyUUID())
+    .withRelyingPartyName(client.getRelyingPartyName())
+    .withCertificateLevel("QUALIFIED")
+    .withNonce("1234567890")
+    .withShareMdClientIpAddress(true)
+    .initiateCertificateChoice();
 
 // Note: After a certificate choice request, a notification-based signature choice must follow.
 ```
@@ -1041,11 +1039,9 @@ try {
 
 ## Additional Information
 
-### `Request Properties`: To support various optional configurations, such as retrieving the IP address of the user's device, you can include additional properties in the request.
+### `Request Properties`:  If you need the IP address of the user's device, set only shareMdClientIpAddress to true. There is no need to create a full RequestProperties object for this.
 ```java
-var requestProperties = new RequestProperties();
-requestProperties.setShareMdClientIpAddress(true);
-builder.withRequestProperties(requestProperties);
+client.createDynamicLinkCertificateRequest().withShareMdClientIpAddress(true);
 ```
 
 ### `Capabilities`: The capabilities parameter is an optional field used only when an agreement is established with the Smart-ID provider. If this parameter is omitted, the requested capabilities are automatically derived from the `certificateLevel`. Supported certificate levels include:
@@ -1055,12 +1051,18 @@ builder.withRequestProperties(requestProperties);
 
 ### Example of Initiating a dynamic link certificate choice request with `QUALIFIED` certificate level and IP sharing enabled.
 ```java
-CertificateRequest request = new CertificateRequest();
-request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-request.setRelyingPartyName("DEMO");
-request.setCertificateLevel("QUALIFIED");
-request.setRequestProperties(new RequestProperties().withShareMdClientIpAddress(true));
-DynamicLinkCertificateChoiceSessionResponse response = client.getCertificate(request);
+SmartIdClient client = new SmartIdClient();
+        client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        client.setRelyingPartyName("DEMO");
+        client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+
+        DynamicLinkCertificateChoiceSessionResponse response = client.createDynamicLinkCertificateRequest()
+        .withRelyingPartyUUID(client.getRelyingPartyUUID())
+        .withRelyingPartyName(client.getRelyingPartyName())
+        .withCertificateLevel(CertificateLevel.QUALIFIED)
+        .withNonce("1234567890")
+        .withShareMdClientIpAddress(true)
+        .initiateCertificateChoice();
 ```
 
 ### Generating QR-code or dynamic link
