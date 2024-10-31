@@ -668,6 +668,76 @@ var client = new SmartIdClient();
 
 ### Examples of performing authentication
 
+#### Initiating authentication session with document number
+
+If you already know the documentNumber you can use this for (re-)authentication.
+
+```java
+String documentNumber = "PNOLT-30303039914-MOCK-Q"; // returned in authentication result and used for re-authentication
+
+// For security reasons a new hash value must be created for each new authentication request
+String randomChallenge = RandomChallenge.generate();
+// Store generated randomChallenge only on backend side. Do not expose it to the client side. 
+// Used for validating authentication sessions status OK response
+
+DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
+        .createDynamicLinkAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
+        // Smart-ID app will display verification code to the user and user must insert PIN1
+        .withAllowedInteractionsOrder(
+                Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")
+                ))
+        // we want to get the IP address of the device running Smart-ID app
+        // for the IP to be returned the service provider (SK) must switch on this option
+        .withShareMdClientIpAddress(true)
+        .initAuthenticationSession();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+
+String sessionToken = authenticationSessionResponse.getSessionToken();
+String sessionSecret = authenticationSessionResponse.getSessionSecret();
+// Store sessionSecret only on backend side. Do not expose it to the client side.
+
+// Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+```
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+
+### Initiating anonymous authentication session
+
+Anonymous authentication is a new feature in Smart-ID API v3.0. It allows to authenticate users without knowing their identity.
+RP can learn the user's identity only after the user has authenticated themselves.
+
+```java
+// For security reasons a new hash value must be created for each new authentication request
+String randomChallenge = RandomChallenge.generate();
+// Store generated randomChallenge only on backend side. Do not expose it to the client side. 
+// Used for validating authentication sessions status OK response
+
+DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
+    .createAuthentication()
+    // to use anonymous authentication, do not set semantics identifier or document number
+    .withRandomChallenge(randomChallenge)
+    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+    .withAllowedInteractionsOrder(Collections.singletonList(
+            // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
+            Interaction.verificationCodeChoice("Log in to self-service?")
+    ))
+    .initAuthenticationSession();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+
+String sessionToken = authenticationSessionResponse.getSessionToken();
+String sessionSecret = authenticationSessionResponse.getSessionSecret();
+// Store sessionSecret only on backend side. Do not expose it to the client side.
+
+// Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+```
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+
 #### Initiating authentication session with semantics identifier
 
 More info about Semantics Identifier can be found [here](https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.01.00_30/en_31941201v010100v.pdf)
@@ -708,6 +778,7 @@ String sessionSecret = authenticationSessionResponse.getSessionSecret();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
 ```
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
 
 ## Session status request handling for v3.0
 
@@ -744,7 +815,7 @@ The session status response includes various fields depending on whether the ses
 }
 ```
 
-### Successful response after completion, dynamic flow, protocol ACSP_V1
+### ACSP_V1 is returned in the session status OK response for authentication sessions in both dynamic-link and notification-based flows.
 
 ```json
   {
@@ -769,7 +840,7 @@ The session status response includes various fields depending on whether the ses
 }
 ``` 
 
-### Successful response after completion, notification-based flow, protocol RAW_DIGEST_SIGNATURE
+### RAW_DIGEST_SIGNATURE is returned in the session status OK response for signature sessions in both dynamic link and notification-based flows.
 
 ```json
 {
@@ -881,7 +952,7 @@ https://rp-api.smart-id.com/v3/certificatechoice/dynamic-link/anonymous
 
 ## Request Parameters
 
-The request parameters for the dynamic link certificate choice session are the same as those for the notification-based certificate choice request.
+The request parameters for the dynamic link certificate choice session are:
 
 * `relyingPartyUUID`: UUID of the Relying Party.
 * `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
@@ -899,7 +970,7 @@ SmartIdClient client=new SmartIdClient();
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 
-        var builder=new CertificateRequestBuilderService(client.getSmartIdConnector(),client.getSessionStatusPoller())
+        client.createDynamicLinkCertificateRequest()
         .withRelyingPartyUUID(client.getRelyingPartyUUID())
         .withRelyingPartyName(client.getRelyingPartyName())
         .withCertificateLevel("QUALIFIED")
@@ -928,28 +999,10 @@ The response from a successful dynamic link certificate choice session creation 
 }
 ```
 
-## Storing Session Information
-It’s important to store the certificate choice session state securely. The `CertificateChoiceStatusStore` interface allows you to track whether a certificate choice request has been made.
-
-You can implement a `CertificateChoiceStatusStore` interface to manage session data. The Java client provides an interface for session storage, allowing you to choose your own implementation.
-```java
-public interface CertificateChoiceStatusStore {
-    void storeSession(String userSessionId, String value);
-    // Methods to retrieve session information
-}
-```
-
 ## Fetching Session Status
 After initiating the dynamic link certificate choice session and storing the session information, you can fetch the session status to check if the user has completed the authentication process.
 
 ```java
-import ee.sk.smartid.v3.rest.SessionStatusPoller;
-import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.service.SmartIdRequestBuilderService;
-import ee.sk.smartid.v3.SmartIdAuthenticationResponse;
-import ee.sk.smartid.AuthenticationResponseValidator;
-import ee.sk.smartid.AuthenticationIdentity;
-
 // Fetch the final session status
 SessionStatusPoller poller = client.getSessionStatusPoller();
 SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
@@ -988,86 +1041,27 @@ try {
 
 ## Additional Information
 
-* `Request Properties`: You can include additional properties in the request, such as requesting the IP address of the user's device.
+### `Request Properties`: To support various optional configurations, such as retrieving the IP address of the user's device, you can include additional properties in the request.
 ```java
 var requestProperties = new RequestProperties();
 requestProperties.setShareMdClientIpAddress(true);
 builder.withRequestProperties(requestProperties);
 ```
-* `Capabilities`: Used only when agreed with the Smart-ID provider. When omitted, request capabilities are derived from the `certificateLevel` parameter.
 
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+### `Capabilities`: The capabilities parameter is an optional field used only when an agreement is established with the Smart-ID provider. If this parameter is omitted, the requested capabilities are automatically derived from the `certificateLevel`. Supported certificate levels include:
+* `ADVANCED`: A certificate for advanced electronic signatures.
+* `QUALIFIED`: A qualified certificate under the eIDAS regulation.
+* `QSCD`: A qualified certificate that is also QSCD-capable, marking a higher level of security for qualified signatures.
 
-#### Initiating authentication session with document number
-
-If you already know the documentNumber you can use this for (re-)authentication.
-
+### Example of Initiating a dynamic link certificate choice request with `QUALIFIED` certificate level and IP sharing enabled.
 ```java
-String documentNumber = "PNOLT-30303039914-MOCK-Q"; // returned in authentication result and used for re-authentication
-
-// For security reasons a new hash value must be created for each new authentication request
-String randomChallenge = RandomChallenge.generate();
-// Store generated randomChallenge only on backend side. Do not expose it to the client side. 
-// Used for validating authentication sessions status OK response
-
-DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
-        .withDocumentNumber(documentNumber)
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        // Smart-ID app will display verification code to the user and user must insert PIN1
-        .withAllowedInteractionsOrder(
-                Collections.singletonList(Interaction.displayTextAndPIN("Log in to self-service?")
-                ))
-        // we want to get the IP address of the device running Smart-ID app
-        // for the IP to be returned the service provider (SK) must switch on this option
-        .withShareMdClientIpAddress(true)
-        .initAuthenticationSession();
-
-String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
-
-String sessionToken = authenticationSessionResponse.getSessionToken();
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
-// Store sessionSecret only on backend side. Do not expose it to the client side.
-
-// Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+CertificateRequest request = new CertificateRequest();
+request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+request.setRelyingPartyName("DEMO");
+request.setCertificateLevel("QUALIFIED");
+request.setRequestProperties(new RequestProperties().withShareMdClientIpAddress(true));
+DynamicLinkCertificateChoiceSessionResponse response = client.getCertificate(request);
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
-
-### Initiating anonymous authentication session
-
-Anonymous authentication is a new feature in Smart-ID API v3.0. It allows to authenticate users without knowing their identity.
-RP can learn the user's identity only after the user has authenticated themselves.
-
-```java
-// For security reasons a new hash value must be created for each new authentication request
-String randomChallenge = RandomChallenge.generate();
-// Store generated randomChallenge only on backend side. Do not expose it to the client side. 
-// Used for validating authentication sessions status OK response
-
-DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
-    .createAuthentication()
-    // to use anonymous authentication, do not set semantics identifier or document number
-    .withRandomChallenge(randomChallenge)
-    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-    .withAllowedInteractionsOrder(Collections.singletonList(
-            // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
-            Interaction.verificationCodeChoice("Log in to self-service?")
-    ))
-    .initAuthenticationSession();
-
-String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
-
-String sessionToken = authenticationSessionResponse.getSessionToken();
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
-// Store sessionSecret only on backend side. Do not expose it to the client side.
-
-// Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
-```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
-
 
 ### Generating QR-code or dynamic link
 Todo: will be implemented in task SLIB-55

@@ -131,9 +131,6 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * This response includes essential values such as sessionID, sessionToken, and sessionSecret,
      * which can be used by the Relying Party to manage and verify the session independently.
      * <p>
-     * Note: The sessionToken and sessionSecret are not stored within this class and should be securely handled
-     * by the application that calls this method.
-     *
      * @return DynamicLinkCertificateChoiceSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
      */
