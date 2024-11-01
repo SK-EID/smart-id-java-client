@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,21 +26,35 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
-import java.security.MessageDigest;
+import java.io.Serializable;
 
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+public class DynamicLinkCertificateChoiceSessionResponse implements Serializable {
 
-public class DigestCalculator {
+    private String sessionID;
+    private String sessionToken;
+    private String sessionSecret;
 
-  public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
-    try {
-      MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
-      return digest.digest(dataToDigest);
+    public String getSessionID() {
+        return sessionID;
     }
-    catch (Exception e) {
-      throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
-    }
-  }
 
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
+    }
+
+    public String getSessionToken() {
+        return sessionToken;
+    }
+
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public String getSessionSecret() {
+        return sessionSecret;
+    }
+
+    public void setSessionSecret(String sessionSecret) {
+        this.sessionSecret = sessionSecret;
+    }
 }

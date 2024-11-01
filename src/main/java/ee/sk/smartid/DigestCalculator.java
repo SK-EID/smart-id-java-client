@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,19 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.security.MessageDigest;
 
-import org.junit.jupiter.api.extension.ExtendWith;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
-@Target({ElementType.TYPE, ElementType.METHOD}) // Can be applied to classes or methods
-@Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(SmartIdDemoCondition.class)
-public @interface SmartIdDemoIntegrationTest {
+public class DigestCalculator {
+
+    public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
+            return digest.digest(dataToDigest);
+        } catch (Exception e) {
+            throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
+        }
+    }
+
 }

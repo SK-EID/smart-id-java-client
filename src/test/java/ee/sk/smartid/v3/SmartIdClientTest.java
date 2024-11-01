@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,7 +25,6 @@ package ee.sk.smartid.v3;
  * THE SOFTWARE.
  * #L%
  */
-
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -37,12 +36,12 @@ import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.SmartIdRestServiceStubs;
-import ee.sk.smartid.FileUtil;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 @WireMockTest(httpPort = 18089)
-public class SmartIdClientTest {
+class SmartIdClientTest {
 
     private static final String DEMO_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_demo_sk_ee.pem");
 
@@ -55,6 +54,23 @@ public class SmartIdClientTest {
         smartIdClient.setRelyingPartyName("DEMO");
         smartIdClient.setHostUrl("http://localhost:18089");
         smartIdClient.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
+    }
+
+    @Test
+    void createDynamicLinkCertificateChoice() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/dynamic-link-certificate-choice-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
+        SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
+
+        DynamicLinkCertificateChoiceSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                .withCertificateLevel(CertificateLevel.ADVANCED)
+                .initiateCertificateChoice();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getSessionToken());
+        assertNotNull(response.getSessionSecret());
     }
 
     @Test

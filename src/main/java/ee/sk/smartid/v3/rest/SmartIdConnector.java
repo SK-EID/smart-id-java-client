@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.v3.rest.dao.CertificateRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
@@ -55,6 +57,14 @@ public interface SmartIdConnector extends Serializable {
      * @param sessionStatusResponseSocketOpenTimeValue The value of the open time
      */
     void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
+
+    /**
+     * Initiates a dynamic link based certificate choice request.
+     *
+     * @param request CertificateRequest containing necessary parameters
+     * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
+     */
+    DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request);
 
     /**
      * Set the SSL context to use for secure communication

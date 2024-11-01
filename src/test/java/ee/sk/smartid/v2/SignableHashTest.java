@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.v2;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,29 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
 
-@Target({ElementType.TYPE, ElementType.METHOD}) // Can be applied to classes or methods
-@Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(SmartIdDemoCondition.class)
-public @interface SmartIdDemoIntegrationTest {
+import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashType;
+import ee.sk.smartid.v2.SignableHash;
+
+public class SignableHashTest {
+
+    @Test
+    public void calculateVerificationCodeWithSha256() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA256);
+        hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
+        assertEquals("4240", hashToSign.calculateVerificationCode());
+    }
+
+    @Test
+    public void calculateVerificationCodeWithSha512() {
+        SignableHash hashToSign = new SignableHash();
+        hashToSign.setHashType(HashType.SHA512);
+        hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));
+        assertEquals("4664", hashToSign.calculateVerificationCode());
+    }
 }

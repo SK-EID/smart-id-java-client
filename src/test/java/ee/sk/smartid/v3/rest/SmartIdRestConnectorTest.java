@@ -31,6 +31,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubPostErrorResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubPostRequestWithResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -50,10 +52,16 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
+import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
+import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.SignatureProtocolParameters;
+import ee.sk.smartid.v3.rest.dao.CertificateRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
@@ -61,14 +69,14 @@ import ee.sk.smartid.v3.rest.dao.SessionStatus;
 class SmartIdRestConnectorTest {
 
     @Nested
-    @WireMockTest(httpPort = 18081)
+    @WireMockTest(httpPort = 18089)
     class SessionStatusTests {
 
         private SmartIdRestConnector connector;
 
         @BeforeEach
         void setUp() {
-            connector = new SmartIdRestConnector("http://localhost:18081");
+            connector = new SmartIdRestConnector("http://localhost:18089");
         }
 
         @Test
@@ -188,6 +196,117 @@ class SmartIdRestConnectorTest {
         private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {
             stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
             return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class CertificateChoiceTests {
+
+        private SmartIdConnector connector;
+
+        @BeforeEach
+        public void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18089");
+        }
+
+        @Test
+        void getCertificate() {
+            stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v2/responses/dynamicLinkCertificateChoiceResponse.json");
+
+            CertificateRequest request = createCertificateRequest();
+            DynamicLinkCertificateChoiceSessionResponse response = connector.getCertificate(request);
+
+            assertNotNull(response);
+            assertEquals("de305d54-75b4-431b-adb2-eb6b9e546016", response.getSessionID());
+            assertEquals("session-token-value", response.getSessionToken());
+            assertEquals("session-secret-value", response.getSessionSecret());
+        }
+
+        @Test
+        void getCertificate_invalidCertificateLevel_throwsBadRequestException() {
+            CertificateRequest request = createCertificateRequest();
+            request.setCertificateLevel("INVALID_LEVEL");
+
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
+
+            assertThrows(SmartIdClientException.class, () -> connector.getCertificate(request));
+        }
+
+        @Test
+        void getCertificate_userAccountNotFound() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 404);
+
+            CertificateRequest request = createCertificateRequest();
+            assertThrows(UserAccountNotFoundException.class, () -> connector.getCertificate(request));
+        }
+
+        @Test
+        void getCertificate_relyingPartyNoPermission() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 403);
+
+            CertificateRequest request = createCertificateRequest();
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.getCertificate(request));
+        }
+
+        @Test
+        void getCertificate_invalidRequest() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
+
+            CertificateRequest request = new CertificateRequest();
+            request.setRelyingPartyUUID("");
+            request.setRelyingPartyName("");
+
+            assertThrows(SmartIdClientException.class, () -> connector.getCertificate(request));
+        }
+
+        @Test
+        void getCertificate_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 401);
+
+            CertificateRequest request = createCertificateRequest();
+
+            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.getCertificate(request));
+
+            assertEquals("Request is unauthorized for URI http://localhost:18089/certificatechoice/dynamic-link/anonymous", exception.getMessage());
+        }
+
+        @Test
+        void getCertificate_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 471);
+
+            CertificateRequest request = createCertificateRequest();
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.getCertificate(request));
+        }
+
+        @Test
+        void getCertificate_throwsPersonShouldViewSmartIdPortalException() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 472);
+
+            CertificateRequest request = createCertificateRequest();
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.getCertificate(request));
+        }
+
+        @Test
+        void getCertificate_throwsSmartIdClientException() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 480);
+
+            CertificateRequest request = createCertificateRequest();
+
+            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.getCertificate(request));
+
+            assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
+        }
+
+        @Test
+        void getCertificate_throwsServerMaintenanceException() {
+            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 580);
+
+            CertificateRequest request = createCertificateRequest();
+
+            assertThrows(ServerMaintenanceException.class, () -> connector.getCertificate(request));
         }
     }
 
@@ -313,5 +432,13 @@ class SmartIdRestConnectorTest {
         dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
 
         return dynamicLinkAuthenticationSessionRequest;
+    }
+
+    private CertificateRequest createCertificateRequest() {
+        var request = new CertificateRequest();
+        request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
+        request.setRelyingPartyName("BANK123");
+        request.setCertificateLevel("ADVANCED");
+        return request;
     }
 }

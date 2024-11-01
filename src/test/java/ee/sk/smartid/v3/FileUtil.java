@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,28 +26,30 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.junit.jupiter.api.Test;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-import ee.sk.smartid.v2.SignableHash;
-import ee.sk.smartid.v2.DigestCalculator;
+public final class FileUtil {
 
-public class SignableHashTest {
-
-    @Test
-    public void calculateVerificationCodeWithSha256() {
-        SignableHash hashToSign = new SignableHash();
-        hashToSign.setHashType(HashType.SHA256);
-        hashToSign.setHashInBase64("jsflWgpkVcWOyICotnVn5lazcXdaIWvcvNOWTYPceYQ=");
-        assertEquals("4240", hashToSign.calculateVerificationCode());
+    private FileUtil() {
     }
 
-    @Test
-    public void calculateVerificationCodeWithSha512() {
-        SignableHash hashToSign = new SignableHash();
-        hashToSign.setHashType(HashType.SHA512);
-        hashToSign.setHash(DigestCalculator.calculateDigest("Hello World!".getBytes(), HashType.SHA512));
-        assertEquals("4664", hashToSign.calculateVerificationCode());
+    public static String readFileToString(String fileName) {
+        return new String(readFileBytes(fileName), StandardCharsets.UTF_8);
+    }
+
+    private static byte[] readFileBytes(String fileName) {
+        try {
+            ClassLoader classLoader = FileUtil.class.getClassLoader();
+            URL resource = classLoader.getResource(fileName);
+            assertNotNull(resource, "File not found: " + fileName);
+            return Files.readAllBytes(Paths.get(resource.toURI()));
+        } catch (Exception e) {
+            throw new RuntimeException("Exception: " + e.getMessage(), e);
+        }
     }
 }

@@ -29,6 +29,7 @@ package ee.sk.smartid.v2;
 import java.io.Serializable;
 import java.util.Base64;
 
+import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
 
 /**

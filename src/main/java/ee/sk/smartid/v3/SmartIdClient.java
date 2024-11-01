@@ -47,6 +47,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.SmartIdRestConnector;
+import ee.sk.smartid.v3.service.DynamicLinkCertificateChoiceSessionRequestBuilder;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Configuration;
@@ -64,6 +65,10 @@ public class SmartIdClient {
     private long sessionStatusResponseSocketOpenTimeValue;
     private SmartIdConnector connector;
     private SSLContext trustSslContext;
+
+    public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
+        return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector());
+    }
 
     public DynamicLinkAuthenticationSessionRequestBuilder createDynamicLinkAuthentication() {
         return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector());
@@ -178,13 +183,6 @@ public class SmartIdClient {
         pollingSleepTimeout = timeout;
     }
 
-    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
-        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
-        var sessionStatusPoller = new SessionStatusPoller(connector);
-        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
-        return sessionStatusPoller;
-    }
-
     public SmartIdConnector getSmartIdConnector() {
         if (null == connector) {
             Client client = configuredClient != null ? configuredClient : createClient();
@@ -201,27 +199,26 @@ public class SmartIdClient {
         return connector;
     }
 
-    public static SSLContext createSslContext(List<String> sslCertificates)
-            throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, KeyManagementException {
-        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        keyStore.load(null);
-        CertificateFactory factory = CertificateFactory.getInstance("X509");
-        int i = 0;
-        for (String sslCertificate : sslCertificates) {
-            Certificate certificate = factory.generateCertificate(new ByteArrayInputStream(sslCertificate.getBytes(StandardCharsets.UTF_8)));
-            keyStore.setCertificateEntry("sid_api_ssl_cert_" + (++i), certificate);
-        }
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
-        trustManagerFactory.init(keyStore);
-        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
-        return sslContext;
-    }
-
+    /**
+     * Sets the SSL context for the client
+     * <p>
+     * Useful for configuring custom SSL context
+     * for the client.
+     *
+     * @param trustSslContext SSL context for the client
+     */
     public void setTrustSslContext(SSLContext trustSslContext) {
         this.trustSslContext = trustSslContext;
     }
 
+    /**
+     * Sets the trust store for the client
+     * <p>
+     * Useful for configuring custom trust store
+     * for the client.
+     *
+     * @param trustStore trust store for the client
+     */
     public void setTrustStore(KeyStore trustStore) {
         try {
             SSLContext trustSslContext = SSLContext.getInstance("TLSv1.2");
@@ -246,6 +243,13 @@ public class SmartIdClient {
         this.connector = smartIdConnector;
     }
 
+    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
+        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
+        var sessionStatusPoller = new SessionStatusPoller(connector);
+        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+        return sessionStatusPoller;
+    }
+
     private Client createClient() {
         ClientBuilder clientBuilder = ClientBuilder.newBuilder();
         if (networkConnectionConfig != null) {
@@ -255,5 +259,33 @@ public class SmartIdClient {
             clientBuilder.sslContext(trustSslContext);
         }
         return clientBuilder.build();
+    }
+
+    /**
+     * Creates an SSL context with the given certificates
+     *
+     * @param sslCertificates list of certificates in PEM format
+     * @return SSL context
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     * @throws IOException
+     * @throws CertificateException
+     * @throws KeyManagementException
+     */
+    public static SSLContext createSslContext(List<String> sslCertificates)
+            throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, KeyManagementException {
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        keyStore.load(null);
+        CertificateFactory factory = CertificateFactory.getInstance("X509");
+        int i = 0;
+        for (String sslCertificate : sslCertificates) {
+            Certificate certificate = factory.generateCertificate(new ByteArrayInputStream(sslCertificate.getBytes(StandardCharsets.UTF_8)));
+            keyStore.setCertificateEntry("sid_api_ssl_cert_" + (++i), certificate);
+        }
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
+        trustManagerFactory.init(keyStore);
+        sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
+        return sslContext;
     }
 }

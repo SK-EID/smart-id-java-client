@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.service;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,9 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.util.StringUtil;
-import ee.sk.smartid.v3.SignableData;
-import ee.sk.smartid.v3.SignableHash;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
@@ -56,6 +53,10 @@ import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.util.StringUtil;
+import ee.sk.smartid.v3.CertificateLevel;
+import ee.sk.smartid.v3.SignableData;
+import ee.sk.smartid.v3.SignableHash;
 import ee.sk.smartid.v3.SmartIdAuthenticationResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
@@ -179,7 +180,7 @@ public class SmartIdRequestBuilderService {
             X509Certificate cert = CertificateParser.parseX509Certificate(sessionCertificate.getValue());
             cert.checkValidity();
 
-            if (!requestedCertificateLevel.equals(sessionCertificate.getCertificateLevel())) {
+            if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
                 throw new CertificateLevelMismatchException();
             }
 
@@ -188,12 +189,19 @@ public class SmartIdRequestBuilderService {
         }
     }
 
+    private boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
+        CertificateLevel requestedLevelEnum = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
+        CertificateLevel returnedLevelEnum = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
+
+        return requestedLevelEnum == CertificateLevel.QSCD ? returnedLevelEnum == CertificateLevel.QUALIFIED : requestedLevelEnum == returnedLevelEnum;
+    }
+
     private void validateSignature(SessionStatus sessionStatus, String expectedDigest, String randomChallenge) {
         String signatureProtocol = sessionStatus.getSignatureProtocol();
 
-        if (SignatureProtocol.ACSP_V1.name().equals(signatureProtocol)) {
+        if (SignatureProtocol.ACSP_V1.name().equalsIgnoreCase(signatureProtocol)) {
             validateAcspV1Signature(sessionStatus, randomChallenge);
-        } else if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equals(signatureProtocol)) {
+        } else if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
             validateRawDigestSignature(sessionStatus, expectedDigest);
         } else {
             throw new SmartIdClientException("Unknown signature protocol: " + signatureProtocol);
@@ -231,7 +239,7 @@ public class SmartIdRequestBuilderService {
                     + ", but got: " + signatureValue);
         }
 
-        Set<String> allowedSignatureAlgorithms = Set.of("sha256WithRSAEncryption", "sha384WithRSAEncryption", "sha512WithRSAEncryption");
+        List<String> allowedSignatureAlgorithms = Arrays.asList("sha256WithRSAEncryption", "sha384WithRSAEncryption", "sha512WithRSAEncryption");
         if (!allowedSignatureAlgorithms.contains(signatureAlgorithm)) {
             throw new SmartIdClientException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signatureAlgorithm);
         }

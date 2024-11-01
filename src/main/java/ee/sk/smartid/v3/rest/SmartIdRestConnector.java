@@ -48,6 +48,8 @@ import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.CertificateRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
 import jakarta.ws.rs.BadRequestException;
@@ -72,6 +74,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
+    private static final String CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH = "/certificatechoice/dynamic-link/anonymous";
 
     private static final String ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH = "authentication/dynamic-link/anonymous";
     private static final String DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/dynamic-link/etsi";
@@ -141,8 +144,14 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public void setSslContext(SSLContext sslContext) {
-        this.sslContext = sslContext;
+    public DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request) {
+        logger.debug("Initiating dynamic link based certificate choice request");
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH)
+                .build();
+
+        return postCertificateRequest(uri, request);
     }
 
     @Override
@@ -151,15 +160,20 @@ public class SmartIdRestConnector implements SmartIdConnector {
         this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
     }
 
+    @Override
+    public void setSslContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
     protected Invocation.Builder prepareClient(URI uri) {
         Client client;
         if (this.configuredClient == null) {
             ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-            if (null != this.clientConfig) {
-                clientBuilder.withConfig(this.clientConfig);
+            if (clientConfig != null) {
+                clientBuilder.withConfig(clientConfig);
             }
-            if (null != this.sslContext) {
-                clientBuilder.sslContext(this.sslContext);
+            if (sslContext != null) {
+                clientBuilder.sslContext(sslContext);
             }
             client = clientBuilder.build();
         } else {
@@ -188,6 +202,30 @@ public class SmartIdRestConnector implements SmartIdConnector {
             return System.getProperty("java.version").split("_")[0];
         } catch (Exception e) {
             return "-";
+        }
+    }
+
+    private DynamicLinkAuthenticationSessionResponse postAuthenticationRequest(URI uri, DynamicLinkAuthenticationSessionRequest request) {
+        try {
+            return postRequest(uri, request, DynamicLinkAuthenticationSessionResponse.class);
+        } catch (NotFoundException e) {
+            logger.warn("User account not found for URI " + uri, e);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException e) {
+            logger.warn("No permission to issue the request", e);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
+        }
+    }
+
+    private DynamicLinkCertificateChoiceSessionResponse postCertificateRequest(URI uri, CertificateRequest request) {
+        try {
+            return postRequest(uri, request, DynamicLinkCertificateChoiceSessionResponse.class);
+        } catch (NotFoundException ex) {
+            logger.warn("User account not found for URI {}", uri, ex);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
         }
     }
 
@@ -234,22 +272,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private void addResponseSocketOpenTimeUrlParameter(SessionStatusRequest request, UriBuilder uriBuilder) {
         if (request.isResponseSocketOpenTimeSet()) {
-            TimeUnit timeUnit = request.getResponseSocketOpenTimeUnit();
-            long timeValue = request.getResponseSocketOpenTimeValue();
-            long queryTimeoutInMilliseconds = timeUnit.toMillis(timeValue);
+            long queryTimeoutInMilliseconds = sessionStatusResponseSocketOpenTimeUnit.toMillis(sessionStatusResponseSocketOpenTimeValue);
             uriBuilder.queryParam("timeoutMs", queryTimeoutInMilliseconds);
-        }
-    }
-
-    private DynamicLinkAuthenticationSessionResponse postAuthenticationRequest(URI uri, DynamicLinkAuthenticationSessionRequest request) {
-        try {
-            return postRequest(uri, request, DynamicLinkAuthenticationSessionResponse.class);
-        } catch (NotFoundException e) {
-            logger.warn("User account not found for URI " + uri, e);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException e) {
-            logger.warn("No permission to issue the request", e);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
         }
     }
 }
