@@ -969,8 +969,8 @@ SmartIdClient client=new SmartIdClient();
     client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
     client.setRelyingPartyName("DEMO");
     client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
-        
-CertificateChoiceResponse response = client.createDynamicLinkCertificateRequest()
+
+DynamicLinkCertificateChoiceSessionResponse response = client.createDynamicLinkCertificateRequest()
     .withRelyingPartyUUID(client.getRelyingPartyUUID())
     .withRelyingPartyName(client.getRelyingPartyName())
     .withCertificateLevel("QUALIFIED")
