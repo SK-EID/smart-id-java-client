@@ -1065,5 +1065,334 @@ SmartIdClient client = new SmartIdClient();
         .initiateCertificateChoice();
 ```
 
+# Initiating a Dynamic Link Signature Session in API v3.0
+The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a signature session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the signing process using a dynamic link. The user can then access the link and complete the signing process.
+
+## Dynamic Link Signature Endpoints
+To initiate a dynamic link signature session, you can use one of the following endpoints:
+
+### Using Semantics Identifier:
+* Method: `POST`
+* Path: `BASE/v3/signature/dynamic-link/etsi/:id-etsi-qcs-SemanticsId-Natural`
+
+### Using Document Number:
+
+* Method: `POST`
+* Path: `BASE/v3/signature/dynamic-link/document/:documentNumber`
+
+Replace :id-etsi-qcs-SemanticsId-Natural with the user's Semantics Identifier and :documentNumber with the user's document number.
+
+## Request Parameters
+The request parameters for the dynamic link signature session are as follows:
+
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
+* `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
+* `signatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
+  * `digest`: Required. Base64 encoded digest to be signed.
+  * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
+  * `signatureAlgorithmParameters`: Optional. Additional parameters if required by the signature algorithm.
+    * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`.
+* `allowedInteractionsOrder`: Required. An array of interaction objects defining the allowed interactions in order of preference.
+  * Each interaction object includes:
+    * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
+    * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
+* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
+* `requestProperties`: requestProperties: 
+  * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
+* `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
+
+### Example: Initiating a Dynamic Link Signature Request
+Here's an example of how to initiate a dynamic link signature request using the Smart-ID Java client, using the Semantics Identifier endpoint.
+    
+```json
+    {
+  "relyingPartyUUID": "1f1bfa89-4f8b-420a-a98e-fb3a161a30bc",
+  "relyingPartyName": "DEMO",
+  "certificateLevel": "QUALIFIED",
+  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
+  "signatureProtocolParameters": {
+    "digest": "ZHNmYmhkZmdoZGcgZmRmMTM0NTM...",
+    "signatureAlgorithm": "sha512WithRSAEncryption"
+  },
+  "allowedInteractionsOrder": [
+    {
+      "type": "confirmationMessage",
+      "displayText200": "Up to 200 characters of text here.."
+    },
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Up to 60 characters of text here.."
+    }
+  ],
+  "requestProperties": {
+    "shareMdClientIpAddress": false
+  }
+}
+```
+
+## Examples of Allowed Interactions Order
+An app can support different interaction types, and a Relying Party can specify the preferred interactions with or without fallback options. Different interactions can support different amounts of data to display information to the user.
+
+Below are examples of `allowedInteractionsOrder` elements in JSON format:
+Example 1: `confirmationMessage` with Fallback to `displayTextAndPIN`
+Description: The RP's first choice is `confirmationMessage`; if not available, then fall back to `displayTextAndPIN`.
+```json
+{
+  "allowedInteractionsOrder": [
+    {
+      "type": "confirmationMessage",
+      "displayText200": "Up to 200 characters of text here.."
+    },
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Up to 60 characters of text here.."
+    }
+  ]
+}
+```
+
+Example 2: `confirmationMessage` with Fallback to `verificationCodeChoice`
+Description: The RP's first choice is `confirmationMessage`; if not available, then use `verificationCodeChoice`.
+```json
+{
+  "allowedInteractionsOrder": [
+    {
+      "type": "confirmationMessage",
+      "displayText200": "Up to 200 characters of text here.."
+    },
+    {
+      "type": "verificationCodeChoice",
+      "displayText60": "Up to 60 characters of text here.."
+    }
+  ]
+}
+```
+
+Example 3: `displayTextAndPIN` Only
+Description: Use `displayTextAndPIN` interaction only.
+```json
+{
+  "allowedInteractionsOrder": [
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Up to 60 characters of text here.."
+    }
+  ]
+}
+```
+
+Example 4: `verificationCodeChoice` with Fallback to `displayTextAndPIN`
+Description: Use `verificationCodeChoice`; if not available, then `displayTextAndPIN` should be used.
+```json
+{
+  "allowedInteractionsOrder": [
+    {
+      "type": "verificationCodeChoice",
+      "displayText60": "Up to 60 characters of text here.."
+    },
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Up to 60 characters of text here.."
+    }
+  ]
+}
+```
+
+Example 5: `confirmationMessage` Only (No Fallback)
+Description: Insist on `confirmationMessage`; if not available, then fail.
+```json
+{
+  "allowedInteractionsOrder": [
+    {
+      "type": "confirmationMessage",
+      "displayText200": "Up to 200 characters of text here.."
+    }
+  ]
+}
+```
+
+## Using Semantics Identifier
+```java
+var client = new SmartIdClient();
+    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+    client.setRelyingPartyName("DEMO");
+    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+
+// Create the signable data
+var signableData = new SignableData("Test data to sign".getBytes());
+signableData.setHashType(HashType.SHA256);
+
+// Create the Semantics Identifier
+var semanticsIdentifier = new SemanticsIdentifier(
+SemanticsIdentifier.IdentityType.PNO,
+SemanticsIdentifier.CountryCode.EE,"31111111111");
+
+// Build the dynamic link signature request
+var builder = client.createDynamicLinkSignature()
+    .withRelyingPartyUUID(client.getRelyingPartyUUID())
+    .withRelyingPartyName(client.getRelyingPartyName())
+    .withCertificateLevel(CertificateLevel.QUALIFIED)
+    .withSignableData(signableData)
+    .withSemanticsIdentifier(semanticsIdentifier)
+    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Please sign the document")));
+
+// Initiate the dynamic link signature
+DynamicLinkSignatureSessionResponse signatureResponse = builder.initSignatureSession();
+
+// Process the signature response
+String sessionID = signatureResponse.getSessionID();
+String sessionToken = signatureResponse.getSessionToken();
+String sessionSecret = signatureResponse.getSessionSecret();
+
+// Use the session information as needed
+```
+
+## Using Document Number
+```java
+SmartIdClient client = new SmartIdClient();
+    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+    client.setRelyingPartyName("DEMO");
+    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+
+// Create the signable data
+var signableData = new SignableData("Test data to sign".getBytes());
+signableData.setHashType(HashType.SHA256);
+
+// Specify the document number
+String documentNumber = "PNOEE-31111111111";
+
+// Build the dynamic link signature request
+var builder = client.createDynamicLinkSignature()
+    .withRelyingPartyUUID(client.getRelyingPartyUUID())
+    .withRelyingPartyName(client.getRelyingPartyName())
+    .withCertificateLevel(CertificateLevel.QUALIFIED)
+    .withSignableData(signableData)
+    .withDocumentNumber(documentNumber)
+    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Please sign the document")));
+
+// Initiate the dynamic link signature
+DynamicLinkSignatureSessionResponse signatureResponse = builder.initSignatureSession();
+
+// Process the signature response
+String sessionID = signatureResponse.getSessionID();
+String sessionToken = signatureResponse.getSessionToken();
+String sessionSecret = signatureResponse.getSessionSecret();
+
+// Use the session information as needed
+```
+
+## Response on Successful Session Creation
+Upon successful initiation, the session will proceed, and the user can complete the signing process using the dynamic link. The `sign()` method will handle polling the session status and return the `SmartIdSignature` once the user has signed.
+
+## Response Parameters
+The response from a successful dynamic link signature session creation contains the following parameters:
+
+* `sessionID`: A string that can be used to request the operation result.
+* `sessionToken`: Unique random value that will be used to connect this signature attempt between the relevant parties (RP, RP-API, mobile app).
+* `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+
+### Example of a Successful Response
+```json
+{
+  "sessionID": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "sessionToken": "hyBdQYUeQtvXEPqWC7K8a97L",
+  "sessionSecret": "dztL7Ur49D/YYgUzYl4sMg=="
+}
+```
+
+### Example of Signature in Session Status Response
+The session status response includes the signature details:
+```json
+{
+  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
+  "signature": {
+    "value": "B+A9CfjIBZnDHHav3B4F...",
+    "signatureAlgorithm": "sha512WithRSAEncryption",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA-512"
+    }
+  }
+}
+
+```
+
+## Error Handling
+Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `UserRefusedException`, `SessionTimeoutException`, and others.
+    
+```java
+try {
+DynamicLinkSignatureSessionResponse response = builder.initSignatureSession();
+
+String sessionID = response.getSessionID();
+String sessionToken = response.getSessionToken();
+String sessionSecret = response.getSessionSecret();
+
+System.out.println("Session ID: " + sessionID);
+System.out.println("Session Token: " + sessionToken);
+System.out.println("Session Secret: " + sessionSecret);
+
+} catch (UserAccountNotFoundException e) {
+System.out.println("User account not found.");
+} catch (RelyingPartyAccountConfigurationException e) {
+System.out.println("Relying party account configuration issue.");
+} catch (SessionNotFoundException e) {
+System.out.println("Session not found.");
+} catch (RequiredInteractionNotSupportedByAppException e) {
+System.out.println("The required interaction is not supported by the user's app.");
+} catch (ServerMaintenanceException e) {
+System.out.println("Server maintenance in progress, please try again later.");
+} catch (SmartIdClientException e) {
+System.out.println("An error occurred: " + e.getMessage());
+}
+```
+
+## Additional Information
+* `Allowed Interactions Order`: Define the preferred interactions for displaying text and asking for PIN. The app will pick the first interaction it supports from the list. Examples include `displayTextAndPIN`, `confirmationMessage`.
+
+```java
+builder.withAllowedInteractionsOrder(List.of(
+    Interaction.confirmationMessage("Please confirm the transaction of 1024.50 EUR"),
+    Interaction.displayTextAndPIN("Confirm transaction")
+));
+```
+
+* `Signature Protocol Parameters`: Specify the signature protocol parameters as required for `RAW_DIGEST_SIGNATURE`.
+
+```java
+var parameters = new SignatureProtocolParameters();
+parameters.setDigest(signableData.calculateHashInBase64());
+parameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+parameters.setSignatureAlgorithmParameters(new SignatureAlgorithmParameters("SHA-512"));
+builder.withSignatureProtocolParameters(parameters);
+```
+
+* `Request Properties`: Include additional properties in the request, such as requesting the IP address of the user's device.
+
+```java
+var requestProperties = new RequestProperties();
+requestProperties.setShareMdClientIpAddress(true);
+builder.withRequestProperties(requestProperties);
+```
+
+* `Nonce`: A random string up to 30 characters to associate the request with a specific session or transaction.
+
+```java
+builder.withNonce("randomNonce123");
+```
+
+* `Capabilities`: Specify capabilities if agreed with the Smart-ID provider. When omitted, capabilities are derived from the `certificateLevel`.
+
+```java
+builder.withCapabilities(Set.of("SIGN", "AUTH"));
+```
+
+* `Certificate Level`: Set the required certificate level (`ADVANCED` or `QUALIFIED`). Defaults to `QUALIFIED`.
+
+```java
+builder.withCertificateLevel(CertificateLevel.QUALIFIED);
+```
+
 ### Generating QR-code or dynamic link
 Todo: will be implemented in task SLIB-55

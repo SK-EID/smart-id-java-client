@@ -47,9 +47,11 @@ import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
 import jakarta.ws.rs.BadRequestException;
@@ -75,6 +77,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
     private static final String CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH = "/certificatechoice/dynamic-link/anonymous";
+    private static final String DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH = "/signature/dynamic-link/etsi";
+    private static final String DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/dynamic-link/document";
 
     private static final String ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH = "authentication/dynamic-link/anonymous";
     private static final String DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/dynamic-link/etsi";
@@ -155,6 +159,26 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
+    public DynamicLinkSignatureSessionResponse initDynamicLinkSignature(DynamicLinkSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
+                .path(semanticsIdentifier.getIdentifier())
+                .build();
+        return postSignatureRequest(uri, request);
+    }
+
+    @Override
+    public DynamicLinkSignatureSessionResponse initDynamicLinkSignature(DynamicLinkSignatureSessionRequest request, String documentNumber) {
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
+                .path(documentNumber)
+                .build();
+        return postSignatureRequest(uri, request);
+    }
+
+    @Override
     public void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue) {
         this.sessionStatusResponseSocketOpenTimeUnit = sessionStatusResponseSocketOpenTimeUnit;
         this.sessionStatusResponseSocketOpenTimeValue = sessionStatusResponseSocketOpenTimeValue;
@@ -169,11 +193,11 @@ public class SmartIdRestConnector implements SmartIdConnector {
         Client client;
         if (this.configuredClient == null) {
             ClientBuilder clientBuilder = ClientBuilder.newBuilder();
-            if (clientConfig != null) {
-                clientBuilder.withConfig(clientConfig);
+            if (null != this.clientConfig) {
+                clientBuilder.withConfig(this.clientConfig);
             }
-            if (sslContext != null) {
-                clientBuilder.sslContext(sslContext);
+            if (null != this.sslContext) {
+                clientBuilder.sslContext(this.sslContext);
             }
             client = clientBuilder.build();
         } else {
@@ -229,36 +253,48 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
+    private DynamicLinkSignatureSessionResponse postSignatureRequest(URI uri, DynamicLinkSignatureSessionRequest request) {
+        try {
+            return postRequest(uri, request, DynamicLinkSignatureSessionResponse.class);
+        } catch (NotFoundException ex) {
+            logger.warn("User account not found for URI " + uri, ex);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
+        }
+    }
+
     private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
         try {
             Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
             return prepareClient(uri).post(requestEntity, responseType);
-        } catch (NotAuthorizedException e) {
-            logger.warn("Request is unauthorized for URI " + uri, e);
-            throw new RelyingPartyAccountConfigurationException("Request is unauthorized for URI " + uri, e);
-        } catch (BadRequestException e) {
-            logger.warn("Request is invalid for URI " + uri, e);
-            throw new SmartIdClientException("Server refused the request", e);
-        } catch (ClientErrorException e) {
-            if (e.getResponse().getStatus() == 471) {
-                logger.warn("No suitable account of requested type found, but user has some other accounts.", e);
+        } catch (NotAuthorizedException ex) {
+            logger.warn("Request is unauthorized for URI {}", uri, ex);
+            throw new RelyingPartyAccountConfigurationException("Request is unauthorized for URI " + uri, ex);
+        } catch (BadRequestException ex) {
+            logger.warn("Request is invalid for URI {}", uri, ex);
+            throw new SmartIdClientException("Server refused the request", ex);
+        } catch (ClientErrorException ex) {
+            if (ex.getResponse().getStatus() == 471) {
+                logger.warn("No suitable account of requested type found, but user has some other accounts.", ex);
                 throw new NoSuitableAccountOfRequestedTypeFoundException();
             }
-            if (e.getResponse().getStatus() == 472) {
-                logger.warn("Person should view Smart-ID app or Smart-ID self-service portal now.", e);
+            if (ex.getResponse().getStatus() == 472) {
+                logger.warn("Person should view Smart-ID app or Smart-ID self-service portal now.", ex);
                 throw new PersonShouldViewSmartIdPortalException();
             }
-            if (e.getResponse().getStatus() == 480) {
+            if (ex.getResponse().getStatus() == 480) {
                 logger.warn("Client-side API is too old and not supported anymore");
                 throw new SmartIdClientException("Client-side API is too old and not supported anymore");
             }
-            throw e;
-        } catch (ServerErrorException e) {
-            if (e.getResponse().getStatus() == 580) {
-                logger.warn("Server is under maintenance, retry later", e);
+            throw ex;
+        } catch (ServerErrorException ex) {
+            if (ex.getResponse().getStatus() == 580) {
+                logger.warn("Server is under maintenance, retry later", ex);
                 throw new ServerMaintenanceException();
             }
-            throw e;
+            throw ex;
         }
     }
 
@@ -272,7 +308,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private void addResponseSocketOpenTimeUrlParameter(SessionStatusRequest request, UriBuilder uriBuilder) {
         if (request.isResponseSocketOpenTimeSet()) {
-            long queryTimeoutInMilliseconds = sessionStatusResponseSocketOpenTimeUnit.toMillis(sessionStatusResponseSocketOpenTimeValue);
+            TimeUnit timeUnit = request.getResponseSocketOpenTimeUnit();
+            long timeValue = request.getResponseSocketOpenTimeValue();
+            long queryTimeoutInMilliseconds = timeUnit.toMillis(timeValue);
             uriBuilder.queryParam("timeoutMs", queryTimeoutInMilliseconds);
         }
     }

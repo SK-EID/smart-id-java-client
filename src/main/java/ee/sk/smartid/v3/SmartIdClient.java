@@ -74,6 +74,10 @@ public class SmartIdClient {
         return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector());
     }
 
+    public DynamicLinkSignatureSessionRequestBuilder createDynamicLinkSignature() {
+        return new DynamicLinkSignatureSessionRequestBuilder(getSmartIdConnector());
+    }
+
     /**
      * Sets the UUID of the relying party
      * <p>

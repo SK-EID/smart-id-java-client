@@ -48,6 +48,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.SessionNotFoundException;
@@ -59,12 +60,16 @@ import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalExceptio
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
 import ee.sk.smartid.v3.SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
+import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.v3.rest.dao.SignatureProtocol;
 
 class SmartIdRestConnectorTest {
 
@@ -440,5 +445,155 @@ class SmartIdRestConnectorTest {
         request.setRelyingPartyName("BANK123");
         request.setCertificateLevel("ADVANCED");
         return request;
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class SignatureTests {
+
+        private SmartIdConnector connector;
+
+        @BeforeEach
+        public void setUp() {
+            WireMock.configureFor("localhost", 18089);
+            connector = new SmartIdRestConnector("http://localhost:18089");
+        }
+
+        @Test
+        void initDynamicLinkSignature_withSemanticsIdentifier_successful() {
+            stubPostRequestWithResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", "v3/responses/dynamic-link-signature-response.json");
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            DynamicLinkSignatureSessionResponse response = connector.initDynamicLinkSignature(request, semanticsIdentifier);
+
+            assertNotNull(response);
+            assertEquals("test-session-id", response.getSessionID());
+            assertEquals("test-session-token", response.getSessionToken());
+            assertEquals("test-session-secret", response.getSessionSecret());
+        }
+
+        @Test
+        void initDynamicLinkSignature_withDocumentNumber_successful() {
+            stubPostRequestWithResponse("/signature/dynamic-link/document/PNOEE-31111111111", "v3/responses/dynamic-link-signature-response.json");
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            String documentNumber = "PNOEE-31111111111";
+
+            DynamicLinkSignatureSessionResponse response = connector.initDynamicLinkSignature(request, documentNumber);
+
+            assertNotNull(response);
+            assertEquals("test-session-id", response.getSessionID());
+            assertEquals("test-session-token", response.getSessionToken());
+            assertEquals("test-session-secret", response.getSessionSecret());
+        }
+
+        @Test
+        void initDynamicLinkSignature_userAccountNotFound() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 404);
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_relyingPartyNoPermission() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 403);
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_invalidRequest() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 400);
+
+            DynamicLinkSignatureSessionRequest request = new DynamicLinkSignatureSessionRequest();
+            request.setRelyingPartyUUID("");
+            request.setRelyingPartyName("");
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 401);
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+
+            assertEquals("Request is unauthorized for URI http://localhost:18089/signature/dynamic-link/etsi/PNOEE-31111111111", exception.getMessage());
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 471);
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsPersonShouldViewSmartIdPortalException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 472);
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsSmartIdClientException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 480);
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+
+            assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsServerMaintenanceException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 580);
+
+            DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(ServerMaintenanceException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        private DynamicLinkSignatureSessionRequest createSignatureSessionRequest() {
+            var request = new DynamicLinkSignatureSessionRequest();
+            request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
+            request.setRelyingPartyName("BANK123");
+            request.setSignatureProtocol(SignatureProtocol.RAW_DIGEST_SIGNATURE);
+
+            var protocolParameters = new SignatureProtocolParameters();
+            protocolParameters.setDigest("base64-encoded-digest");
+            protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+
+            var algorithmParameters = new SignatureAlgorithmParameters();
+            algorithmParameters.setHashAlgorithm("SHA-512");
+            protocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
+
+            request.setSignatureProtocolParameters(protocolParameters);
+
+            request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign the document")));
+
+            return request;
+        }
     }
 }

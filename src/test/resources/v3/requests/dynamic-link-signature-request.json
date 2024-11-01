@@ -1,0 +1,22 @@
+{
+  "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
+  "relyingPartyName": "DEMO",
+  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
+  "signatureProtocolParameters": {
+    "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+    "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+    "signatureAlgorithm": "sha512WithRSAEncryption",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA-512"
+    }
+  },
+  "allowedInteractionsOrder": [
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Sign document?"
+    }
+  ],
+  "requestProperties": {
+    "shareMdClientIpAddress": false
+  }
+}
