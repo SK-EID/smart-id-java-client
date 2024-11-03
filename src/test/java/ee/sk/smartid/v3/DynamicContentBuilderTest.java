@@ -35,7 +35,7 @@ class DynamicContentBuilderTest {
                 .withSessionType(SessionType.AUTHENTICATION)
                 .withSessionToken("sessionToken")
                 .withResponseReceivedTime(Instant.now())
-                .withAuthCode(AuthCode.create(dynamicLinkType, SessionType.AUTHENTICATION, "sessionSecret", ZonedDateTime.now()))
+                .withAuthCode(AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, "sessionSecret", ZonedDateTime.now()))
                 .createUri();
 
         assertThat(uri.getScheme(), equalTo("https"));
@@ -64,7 +64,7 @@ class DynamicContentBuilderTest {
                 .withSessionType(sessionType)
                 .withSessionToken("sessionToken")
                 .withResponseReceivedTime(Instant.now())
-                .withAuthCode(AuthCode.create(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", ZonedDateTime.now()))
+                .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", ZonedDateTime.now()))
                 .createUri();
 
         assertThat(uri.getScheme(), equalTo("https"));
