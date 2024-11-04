@@ -16,7 +16,7 @@ This library now supports both Smart-ID API v2.0 and v3.0.
     *   [Requirements](#requirements)
     *   [Getting the library](#getting-the-library)
     *   [Changelog](#changelog)
-* [How to use it](#how-to-use-it)
+* [How to use it with RP API v2.0](#how-to-use-api-v20)
     * [Test accounts for testing]()
     * [Logging](#logging)
         *   [Log request payloads](#log-request-payloads)
@@ -45,6 +45,14 @@ This library now supports both Smart-ID API v2.0 and v3.0.
     * [Configuring a proxy](#configuring-a-proxy)
         * [Configuring a proxy using JBoss Resteasy library](#configuring-a-proxy-using-jboss-resteasy-library)
         * [Configuring a proxy using Jersey](#configuring-a-proxy-using-jersey)
+* [How to use it with RP API v3.0](#how-to-use-api-v30)
+    * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
+        * [Generating dynamic link ](#generating-dynamic-link)
+            * [Dynamic link parameters](#dynamic-link-parameters)
+            * [Overriding default values](#overriding-default-values)
+        * [Generating QR-code](#generating-qr-code)
+          * [Generate QR-code with custom height, width, quiet area and image format](#generate-qr-code-with-custom-height-width-quiet-area-and-image-format)
+
 
 ## Introduction
 
@@ -1065,5 +1073,105 @@ SmartIdClient client = new SmartIdClient();
         .initiateCertificateChoice();
 ```
 
-### Generating QR-code or dynamic link
-Todo: will be implemented in task SLIB-55
+## Generating QR-code or dynamic link
+
+#### Generating dynamic link
+
+Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app. 
+Providing QR-code as a dynamic link type will allow generating QR-code at frontend side.
+
+##### Dynamic link parameters
+
+* `baseUrl`: Base URL for the dynamic link. Default value is `https://smart-id.com/dynamic-link`.
+* `version`: Version of the dynamic link. Default value is `0.1`.
+* `dynamicLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
+* `sessionType`: Type of the sessions the dynamic link is for. Possible values are `auth`, `sign`, `cert`.
+* `sessionToken`: Token from the sessions response.
+* `elapsedTime`: Elapsed time from when the session response was received.
+* `userLanguage`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
+* `authCode`: Auth code is HMAC256 hash value generated from dynamicLinkType, sessionType and current time and session secret. Session secret can be found in the session response.
+
+```java
+DynamicLinkAuthenticationSessionResponse response; // response from the session initiation query.
+// Capture and store when initiating sessions response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link
+URI dynamicLink = client.createDynamicContent()
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // specify the type of dynamic link
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the session the dynamic link is for
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withResponseReceivedTime(responseReceivedTime) // used for calculating elapsed time
+        .withAuthCode(authCode)
+        .createUri();
+```
+
+##### Overriding default values
+
+```java
+DynamicLinkAuthenticationSessionResponse response; // response from the session initiation query.
+// Capture and store when initiating sessions response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link
+URI dynamicLink = client.createDynamicContent()
+        .withBaseUrl("https://example.com") // override default base URL (https://smart-id.com/dynamic-link)
+        .withVersion("0.2") // override default version (0.1)
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // specify the type of dynamic link
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withResponseReceivedTime(responseReceivedTime)
+        .withUserLanguage("est") // override default user language (eng)
+        .withAuthCode(authCode)
+        .createUri();
+```
+
+#### Generating QR-code
+
+Creating a QR-code uses the Zxing library to generate a QR-code image from the dynamic link. As default, generating a QR-code will use 
+a height and width of 570px and a quiet area of 4 modules size. The result will be a Base64 encoded image in PNG format and 
+can be used with `<img src="data:image/png;base64,qrCodeDataUri">`. Module in QR-code is a square in the QR-code matrix. The quiet area is 
+the white space around the QR-code. The Zxing library also evaluates the size of the QR-code content and sets QR code version accordingly. 
+This will impact the module pixel size and the number of modules in the QR-code.
+
+```java
+DynamicLinkAuthenticationSessionResponse response; // init auth sessions response
+// Capture and store when initiating sessions response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link
+String qrCodeDataUri = client.createDynamicContent()
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withResponseReceivedTime(responseReceivedTime)
+        .withAuthCode(authCode)
+        .createQrCode();
+```
+
+##### Generate QR-code with custom height, width, quiet area and image format
+
+```java
+DynamicLinkAuthenticationSessionResponse response; //  init auth sessions response
+// Capture and store when initiating session response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link
+URI dynamicLink = client.createDynamicContent()
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for, possible values (auth, sign, cert)
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withResponseReceivedTime(responseReceivedTime)
+        .withAuthCode(authCode)
+        .createUri();
+
+// Generate QR-code with height and width of 100px and quiet area of 2 modules.
+BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(dynamicLink, 100, 100, 2);
+
+// Convert BufferedImage to base64 encoded image with PNG format
+String qrCodeDataUri = QrCodeGenerator.convertToBase64(qrCodeBufferedImage, "PNG");
+```
