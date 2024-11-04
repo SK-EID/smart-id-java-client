@@ -1089,7 +1089,7 @@ The request parameters for the dynamic link signature session are as follows:
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
-* `signatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
+* `rawDigestSignatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
   * `digest`: Required. Base64 encoded digest to be signed.
   * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
   * `signatureAlgorithmParameters`: Optional. Additional parameters if required by the signature algorithm.
@@ -1112,7 +1112,7 @@ Here's an example of how to initiate a dynamic link signature request using the 
   "relyingPartyName": "DEMO",
   "certificateLevel": "QUALIFIED",
   "signatureProtocol": "RAW_DIGEST_SIGNATURE",
-  "signatureProtocolParameters": {
+  "acspV1SignatureProtocolParameters": {
     "digest": "ZHNmYmhkZmdoZGcgZmRmMTM0NTM...",
     "signatureAlgorithm": "sha512WithRSAEncryption"
   },

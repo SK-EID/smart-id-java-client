@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,10 +30,9 @@ import java.io.Serializable;
 
 import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
-public class SignatureProtocolParameters implements Serializable {
+public class RawDigestSignatureProtocolParameters implements Serializable {
 
     private String digest;
-    private String randomChallenge;
     private String signatureAlgorithm;
     private SignatureAlgorithmParameters signatureAlgorithmParameters;
 
@@ -43,14 +42,6 @@ public class SignatureProtocolParameters implements Serializable {
 
     public void setDigest(String digest) {
         this.digest = digest;
-    }
-
-    public String getRandomChallenge() {
-        return randomChallenge;
-    }
-
-    public void setRandomChallenge(String randomChallenge) {
-        this.randomChallenge = randomChallenge;
     }
 
     public String getSignatureAlgorithm() {

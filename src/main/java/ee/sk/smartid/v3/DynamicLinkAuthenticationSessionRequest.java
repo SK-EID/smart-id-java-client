@@ -45,7 +45,7 @@ public class DynamicLinkAuthenticationSessionRequest implements Serializable {
 
     private final SignatureProtocol signatureProtocol = SignatureProtocol.ACSP_V1;
 
-    private SignatureProtocolParameters signatureProtocolParameters;
+    private AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String nonce;
@@ -86,12 +86,12 @@ public class DynamicLinkAuthenticationSessionRequest implements Serializable {
         return signatureProtocol;
     }
 
-    public SignatureProtocolParameters getSignatureProtocolParameters() {
-        return signatureProtocolParameters;
+    public AcspV1SignatureProtocolParameters getSignatureProtocolParameters() {
+        return acspV1SignatureProtocolParameters;
     }
 
-    public void setSignatureProtocolParameters(SignatureProtocolParameters signatureProtocolParameters) {
-        this.signatureProtocolParameters = signatureProtocolParameters;
+    public void setSignatureProtocolParameters(AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters) {
+        this.acspV1SignatureProtocolParameters = acspV1SignatureProtocolParameters;
     }
 
     public String getNonce() {

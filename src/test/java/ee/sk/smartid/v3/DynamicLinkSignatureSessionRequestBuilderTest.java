@@ -70,7 +70,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     void sign_withSemanticsIdentifier() {
         var semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
         builder.withSemanticsIdentifier(semanticsIdentifier);
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), eq(semanticsIdentifier))).thenReturn(mockSignatureSessionResponse());
 
@@ -86,7 +85,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     void sign_withDocumentNumber() {
         String documentNumber = "PNOEE-31111111111";
         builder.withDocumentNumber(documentNumber);
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockSignatureSessionResponse());
 
@@ -100,7 +98,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void sign_withCertificateLevel() {
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
         builder.withCertificateLevel(CertificateLevel.QUALIFIED);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -113,7 +110,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void sign_withRequestProperties() {
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
         builder.withShareMdClientIpAddress(true);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -128,7 +124,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     void sign_withDefaultSignatureAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA512);
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
         builder.withSignableData(signableData);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -143,7 +138,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     void sign_withSHA384HashType() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA384);
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
         builder.withSignableData(signableData);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -159,7 +153,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         var signableHash = new SignableHash();
         signableHash.setHash("Test hash".getBytes());
         signableHash.setHashType(HashType.SHA256);
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
         builder.withSignableData(null).withSignableHash(signableHash);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -177,7 +170,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         customSignableData.setHashType(HashType.SHA384);
 
         builder.withSignableData(customSignableData)
-                .withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=")
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class)))
@@ -194,7 +186,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void sign_withCapabilities() {
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
         builder.withCapabilities(Set.of("SIGN", "AUTH"));
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -209,7 +200,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     void sign_withSHA384HashType_usesCorrectSignatureAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA384);
-        builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
         builder.withSignableData(signableData);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -261,7 +251,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         void sign_missingDocumentNumberAndSemanticsIdentifier() {
             builder.withDocumentNumber(null);
             builder.withSemanticsIdentifier(null);
-            builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
 
             var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
             assertEquals("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.", ex.getMessage());
@@ -269,27 +258,25 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         @Test
         void sign_whenCertificateChoiceMade() {
-            builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
             builder.withCertificateChoiceMade(true);
 
-            var ex = assertThrows(IllegalStateException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Certificate choice was made before using this method. Cannot proceed with signature request.", ex.getMessage());
         }
 
         @Test
         void sign_whenAllowedInteractionsOrderIsNull() {
             builder.withAllowedInteractionsOrder(null);
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
         }
 
         @Test
         void sign_whenNeitherSignableDataNorHashSet() {
-            builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
             builder.withSignableData(null).withSignableHash(null);
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
         }
 
@@ -297,7 +284,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         void sign_missingRelyingPartyUUID() {
             builder.withRelyingPartyUUID(null);
 
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Relying Party UUID must be set.", ex.getMessage());
         }
 
@@ -305,14 +292,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         void sign_missingRelyingPartyName() {
             builder.withRelyingPartyName(null);
 
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Relying Party Name must be set.", ex.getMessage());
         }
 
         @Test
         void sign_missingAllowedInteractionsOrder() {
             builder.withAllowedInteractionsOrder(null);
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
         }
 
@@ -326,53 +313,41 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
                     Interaction.displayTextAndPIN("Interaction 5")
             ));
 
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Allowed interactions order cannot contain more than 4 interactions.", ex.getMessage());
         }
 
         @Test
         void sign_invalidNonce() {
             builder.withNonce("1234567890123456789012345678901");
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
-        void sign_withInvalidRandomChallengeFormat() {
-            builder.withRandomChallenge("invalid_base64_value");
-            builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Parameter randomChallenge is not a valid Base64 encoded string", ex.getMessage());
-        }
-
-        @Test
-        void sign_withRandomChallengeOutOfBounds() {
-            builder.withRandomChallenge("shortBase64Value");
-            builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
-
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
-            assertEquals("randomChallenge must be between 32 and 64 bytes and in Base64 format.", ex.getMessage());
-        }
-
-        @Test
         void sign_missingSignableDataAndHash() {
-            builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
             builder.withSignableData(null).withSignableHash(null);
 
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
         }
 
         @Test
         void sign_whenSignableHashNotFilled() {
             var signableHash = new SignableHash();
-            builder.withRandomChallenge("c2FtcGxlQmFzZTY0RW5jb2RlZFZhbHVlMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM=");
             builder.withSignableData(null).withSignableHash(signableHash);
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
             var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
             assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
+        }
+
+        @Test
+        void sign_withNotSupportedInteractionType() {
+            builder.withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Please verify the code")));
+
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            assertEquals("AllowedInteractionsOrder contains not supported interaction VERIFICATION_CODE_CHOICE", ex.getMessage());
         }
     }
 

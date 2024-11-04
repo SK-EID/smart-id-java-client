@@ -4,7 +4,6 @@
   "signatureProtocol": "RAW_DIGEST_SIGNATURE",
   "signatureProtocolParameters": {
     "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
-    "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "sha512WithRSAEncryption",
     "signatureAlgorithmParameters": {
       "hashAlgorithm": "SHA-512"

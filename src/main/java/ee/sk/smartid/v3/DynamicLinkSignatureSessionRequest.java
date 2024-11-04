@@ -43,9 +43,9 @@ public class DynamicLinkSignatureSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String certificateLevel;
 
-    private SignatureProtocol signatureProtocol;
+    private final SignatureProtocol signatureProtocol = SignatureProtocol.RAW_DIGEST_SIGNATURE;
 
-    private SignatureProtocolParameters signatureProtocolParameters;
+    private RawDigestSignatureProtocolParameters signatureProtocolParameters;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String nonce;
@@ -87,15 +87,11 @@ public class DynamicLinkSignatureSessionRequest implements Serializable {
         return signatureProtocol;
     }
 
-    public void setSignatureProtocol(SignatureProtocol signatureProtocol) {
-        this.signatureProtocol = signatureProtocol;
-    }
-
-    public SignatureProtocolParameters getSignatureProtocolParameters() {
+    public RawDigestSignatureProtocolParameters getSignatureProtocolParameters() {
         return signatureProtocolParameters;
     }
 
-    public void setSignatureProtocolParameters(SignatureProtocolParameters signatureProtocolParameters) {
+    public void setSignatureProtocolParameters(RawDigestSignatureProtocolParameters signatureProtocolParameters) {
         this.signatureProtocolParameters = signatureProtocolParameters;
     }
 

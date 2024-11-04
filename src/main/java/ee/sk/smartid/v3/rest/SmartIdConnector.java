@@ -69,20 +69,20 @@ public interface SmartIdConnector extends Serializable {
     DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request);
 
     /**
-     * Initiates a dynamic link based signature request.
+     * Initiates a dynamic link based signature sessions.
      *
-     * @param request CertificateRequest containing necessary parameters
+     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
      * @param semanticsIdentifier The semantics identifier
-     * @return SignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
     DynamicLinkSignatureSessionResponse initDynamicLinkSignature(DynamicLinkSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
-     * Initiates a dynamic link based signature request.
+     * Initiates a dynamic link based signature sessions.
      *
-     * @param request CertificateRequest containing necessary parameters
+     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
      * @param documentNumber The document number
-     * @return SignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
     DynamicLinkSignatureSessionResponse initDynamicLinkSignature(DynamicLinkSignatureSessionRequest request, String documentNumber);
 

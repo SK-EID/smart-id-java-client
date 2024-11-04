@@ -3,7 +3,6 @@
   "relyingPartyName": "DEMO",
   "signatureProtocol": "ACSP_V1",
   "signatureProtocolParameters": {
-    "digest" : null,
     "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "sha512WithRSAEncryption",
     "signatureAlgorithmParameters" : null

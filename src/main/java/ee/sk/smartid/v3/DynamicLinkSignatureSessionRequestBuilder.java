@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,8 +26,8 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
-import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -37,14 +37,17 @@ import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.InteractionFlow;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.v3.rest.dao.SignatureProtocol;
 
 public class DynamicLinkSignatureSessionRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicLinkSignatureSessionRequestBuilder.class);
+
+    private static final Set<InteractionFlow> NOT_SUPPORTED_INTERACTION_FLOWS =
+            Set.of(InteractionFlow.VERIFICATION_CODE_CHOICE, InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
 
     private final SmartIdConnector connector;
 
@@ -54,11 +57,9 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private SemanticsIdentifier semanticsIdentifier;
     private CertificateLevel certificateLevel;
     private String nonce;
-    private String randomChallenge;
     private Set<String> capabilities;
     private List<Interaction> allowedInteractionsOrder;
     private boolean shareMdClientIpAddress;
-    private final SignatureProtocol signatureProtocol = SignatureProtocol.RAW_DIGEST_SIGNATURE;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
     private SignableData signableData;
     private SignableHash signableHash;
@@ -67,7 +68,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     /**
      * Constructs a new Smart-ID signature request builder with the given connector and session status poller.
      *
-     * @param connector           the connector
+     * @param connector the connector
      */
     public DynamicLinkSignatureSessionRequestBuilder(SmartIdConnector connector) {
         this.connector = connector;
@@ -136,17 +137,6 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      */
     public DynamicLinkSignatureSessionRequestBuilder withNonce(String nonce) {
         this.nonce = nonce;
-        return this;
-    }
-
-    /**
-     * Sets the random challenge.
-     *
-     * @param randomChallenge the random challenge
-     * @return this builder
-     */
-    public DynamicLinkSignatureSessionRequestBuilder withRandomChallenge(String randomChallenge) {
-        this.randomChallenge = randomChallenge;
         return this;
     }
 
@@ -252,16 +242,12 @@ public class DynamicLinkSignatureSessionRequestBuilder {
             request.setCertificateLevel(certificateLevel.name());
         }
 
-        request.setSignatureProtocol(signatureProtocol);
-
-        var signatureProtocolParameters = new SignatureProtocolParameters();
-        signatureProtocolParameters.setRandomChallenge(randomChallenge);
+        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
         signatureProtocolParameters.setDigest(getDigestToSignBase64());
         signatureProtocolParameters.setSignatureAlgorithm(getSignatureAlgorithm());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
         request.setAllowedInteractionsOrder(allowedInteractionsOrder);
-
 
         var algorithmParameters = new SignatureAlgorithmParameters();
         signatureProtocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
@@ -316,37 +302,38 @@ public class DynamicLinkSignatureSessionRequestBuilder {
 
     private void validateParameters() {
         if (relyingPartyUUID == null || relyingPartyUUID.isEmpty()) {
-            throw new IllegalArgumentException("Relying Party UUID must be set.");
+            throw new SmartIdClientException("Relying Party UUID must be set.");
         }
         if (relyingPartyName == null || relyingPartyName.isEmpty()) {
-            throw new IllegalArgumentException("Relying Party Name must be set.");
+            throw new SmartIdClientException("Relying Party Name must be set.");
         }
-        if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
-            throw new IllegalArgumentException("Allowed interactions order must be set and contain at least one interaction.");
-        }
-        if (allowedInteractionsOrder.size() > 4) {
-            throw new IllegalArgumentException("Allowed interactions order cannot contain more than 4 interactions.");
-        }
+        validateAllowedInteractions();
+
         if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
-            throw new IllegalArgumentException("Nonce length must be between 1 and 30 characters.");
-        }
-        if (randomChallenge == null || getDecodedRandomChallenge().length < 32 || getDecodedRandomChallenge().length > 64) {
-            throw new IllegalArgumentException("randomChallenge must be between 32 and 64 bytes and in Base64 format.");
+            throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
         }
         if (signableHash == null && signableData == null) {
-            throw new IllegalArgumentException("Either signableHash or signableData must be set.");
+            throw new SmartIdClientException("Either signableHash or signableData must be set.");
         }
         if (certificateChoiceMade) {
-            throw new IllegalStateException("Certificate choice was made before using this method. Cannot proceed with signature request.");
+            throw new SmartIdClientException("Certificate choice was made before using this method. Cannot proceed with signature request.");
         }
     }
 
-    private byte[] getDecodedRandomChallenge() {
-        try {
-            return Base64.getDecoder().decode(randomChallenge);
-        } catch (IllegalArgumentException e) {
-            logger.error("Parameter randomChallenge is not a valid Base64 encoded string");
-            throw new SmartIdClientException("Parameter randomChallenge is not a valid Base64 encoded string");
+    private void validateAllowedInteractions() {
+        if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
+            throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
         }
+        if (allowedInteractionsOrder.size() > 4) {
+            throw new SmartIdClientException("Allowed interactions order cannot contain more than 4 interactions.");
+        }
+        Optional<Interaction> notSupportedInteraction = allowedInteractionsOrder.stream()
+                .filter(interaction -> NOT_SUPPORTED_INTERACTION_FLOWS.contains(interaction.getType()))
+                .findFirst();
+        if (notSupportedInteraction.isPresent()) {
+            logger.error("AllowedInteractionsOrder contains not supported interaction {}", notSupportedInteraction.get().getType());
+            throw new SmartIdClientException("AllowedInteractionsOrder contains not supported interaction " + notSupportedInteraction.get().getType());
+        }
+        allowedInteractionsOrder.forEach(Interaction::validate);
     }
 }
