@@ -42,7 +42,7 @@ public final class FileUtil {
         return new String(readFileBytes(fileName), StandardCharsets.UTF_8);
     }
 
-    private static byte[] readFileBytes(String fileName) {
+    public static byte[] readFileBytes(String fileName) {
         try {
             ClassLoader classLoader = FileUtil.class.getClassLoader();
             URL resource = classLoader.getResource(fileName);

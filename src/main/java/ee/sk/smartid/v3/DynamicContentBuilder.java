@@ -122,7 +122,9 @@ public class DynamicContentBuilder {
     }
 
     /**
-     * Sets the auth code that was received from the Smart-ID server.
+     * Creates a URI that can be used as dynamic link or content for QR-code.
+     * <p>
+     * To get a QR code image, use {@link #createQrCode()} method.
      *
      * @return URI that can be used as dynamic link or content for QR-code
      */
@@ -131,12 +133,26 @@ public class DynamicContentBuilder {
         return UriBuilder.fromUri(baseUrl)
                 .queryParam("version", version)
                 .queryParam("sessionToken", sessionToken)
-                .queryParam("dynLinkType", dynamicLinkType.getValue())
+                .queryParam("dynamicLinkType", dynamicLinkType.getValue())
                 .queryParam("sessionType", sessionType.getValue())
                 .queryParam("elapsedSeconds", Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
                 .queryParam("lang", userLanguage)
                 .queryParam("authCode", authCode)
                 .build();
+    }
+
+    /**
+     * Creates a QR code image as a Base64 encoded string.
+     * <p>
+     * The dynamic link type must be QR_CODE to create a QR code image.
+     *
+     * @return QR code image as a Base64 encoded string
+     */
+    public String createQrCode() {
+        if (dynamicLinkType != DynamicLinkType.QR_CODE) {
+            throw new SmartIdClientException("Dynamic link type must be QR_CODE");
+        }
+        return QrCodeGenerator.generateBase64ImageData(createUri().toString());
     }
 
     private void validateInputParameters() {

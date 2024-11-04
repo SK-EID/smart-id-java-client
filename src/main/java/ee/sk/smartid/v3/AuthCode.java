@@ -10,6 +10,9 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
+/**
+ * This class is responsible for creating an authentication code hash for the dynamic link.
+ */
 public final class AuthCode {
 
     private static final String PAYLOAD_FORMAT = "%s.%s.%s";

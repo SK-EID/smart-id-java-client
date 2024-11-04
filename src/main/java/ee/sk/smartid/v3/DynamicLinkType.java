@@ -1,6 +1,5 @@
 package ee.sk.smartid.v3;
 
-
 /**
  * Enum for dynamic link types
  */

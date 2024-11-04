@@ -75,6 +75,15 @@ public class SmartIdClient {
     }
 
     /**
+     * Create builder for generating dynamic link or QR-code
+     *
+     * @return DynamicLinkRequestBuilder
+     */
+    public DynamicContentBuilder createDynamicContent() {
+        return new DynamicContentBuilder();
+    }
+
+    /**
      * Sets the UUID of the relying party
      * <p>
      * Can be set also on the builder level,
