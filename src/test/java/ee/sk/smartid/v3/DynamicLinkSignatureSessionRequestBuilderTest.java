@@ -67,7 +67,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withSemanticsIdentifier() {
+    void initSignatureSession_withSemanticsIdentifier() {
         var semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
         builder.withSemanticsIdentifier(semanticsIdentifier);
 
@@ -82,7 +82,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withDocumentNumber() {
+    void initSignatureSession_withDocumentNumber() {
         String documentNumber = "PNOEE-31111111111";
         builder.withDocumentNumber(documentNumber);
 
@@ -97,7 +97,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withCertificateLevel() {
+    void initSignatureSession_withCertificateLevel() {
         builder.withCertificateLevel(CertificateLevel.QUALIFIED);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -109,7 +109,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withRequestProperties() {
+    void initSignatureSession_withRequestProperties() {
         builder.withShareMdClientIpAddress(true);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -121,7 +121,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withDefaultSignatureAlgorithm() {
+    void initSignatureSession_withDefaultSignatureAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA512);
         builder.withSignableData(signableData);
@@ -135,7 +135,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withSHA384HashType() {
+    void initSignatureSession_withSHA384HashType() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA384);
         builder.withSignableData(signableData);
@@ -149,7 +149,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withSignableHash() {
+    void initSignatureSession_withSignableHash() {
         var signableHash = new SignableHash();
         signableHash.setHash("Test hash".getBytes());
         signableHash.setHashType(HashType.SHA256);
@@ -165,7 +165,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withCustomSignatureProtocolParameters() {
+    void initSignatureSession_withCustomSignatureProtocolParameters() {
         var customSignableData = new SignableData("Test data".getBytes());
         customSignableData.setHashType(HashType.SHA384);
 
@@ -185,7 +185,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withCapabilities() {
+    void initSignatureSession_withCapabilities() {
         builder.withCapabilities(Set.of("SIGN", "AUTH"));
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -197,7 +197,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void sign_withSHA384HashType_usesCorrectSignatureAlgorithm() {
+    void initSignatureSession_withSHA384HashType_usesCorrectSignatureAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA384);
         builder.withSignableData(signableData);
@@ -218,37 +218,20 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void getHashAlgorithm_whenHashTypeIsNull_returnsDefault() throws Exception {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(null);
-        builder.withSignableData(signableData).withSignableHash(null);
-
-        Method getHashAlgorithmMethod = DynamicLinkSignatureSessionRequestBuilder.class.getDeclaredMethod("getHashAlgorithm");
-        getHashAlgorithmMethod.setAccessible(true);
-
-        String hashAlgorithm = (String) getHashAlgorithmMethod.invoke(builder);
-
-        assertEquals("SHA-512", hashAlgorithm);
-    }
-
-    @Test
-    void getSignatureAlgorithm_whenSignableHashAndDataAreNull_returnsDefaultAlgorithm() throws Exception {
+    void initSignatureSession_whenSignableHashAndDataAreNull_usesDefaultSignatureAlgorithm() {
         builder.withSignableHash(null);
         builder.withSignableData(null);
+        builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        Method getSignatureAlgorithmMethod = DynamicLinkSignatureSessionRequestBuilder.class.getDeclaredMethod("getSignatureAlgorithm");
-        getSignatureAlgorithmMethod.setAccessible(true);
-
-        String signatureAlgorithm = (String) getSignatureAlgorithmMethod.invoke(builder);
-
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), signatureAlgorithm);
+        var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+        assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
     }
 
     @Nested
     class ErrorCases {
 
         @Test
-        void sign_missingDocumentNumberAndSemanticsIdentifier() {
+        void initSignatureSession_missingDocumentNumberAndSemanticsIdentifier() {
             builder.withDocumentNumber(null);
             builder.withSemanticsIdentifier(null);
 
@@ -257,7 +240,18 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_whenCertificateChoiceMade() {
+        void initSignatureSession_whenHashTypeIsNull_throwsException() {
+            var signableData = new SignableData("Test data".getBytes());
+            signableData.setHashType(null);
+            builder.withSignableData(signableData).withSignableHash(null);
+            builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            assertEquals("Problem with digest calculation. java.lang.NullPointerException: Cannot invoke \"ee.sk.smartid.HashType.getAlgorithmName()\" because \"hashType\" is null", ex.getMessage());
+        }
+
+        @Test
+        void initSignatureSession_whenCertificateChoiceMade() {
             builder.withCertificateChoiceMade(true);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -265,14 +259,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_whenAllowedInteractionsOrderIsNull() {
+        void initSignatureSession_whenAllowedInteractionsOrderIsNull() {
             builder.withAllowedInteractionsOrder(null);
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
         }
 
         @Test
-        void sign_whenNeitherSignableDataNorHashSet() {
+        void initSignatureSession_whenNeitherSignableDataNorHashSet() {
             builder.withSignableData(null).withSignableHash(null);
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -281,7 +275,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_missingRelyingPartyUUID() {
+        void initSignatureSession_missingRelyingPartyUUID() {
             builder.withRelyingPartyUUID(null);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -289,7 +283,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_missingRelyingPartyName() {
+        void initSignatureSession_missingRelyingPartyName() {
             builder.withRelyingPartyName(null);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -297,14 +291,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_missingAllowedInteractionsOrder() {
+        void initSignatureSession_missingAllowedInteractionsOrder() {
             builder.withAllowedInteractionsOrder(null);
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
         }
 
         @Test
-        void sign_tooManyAllowedInteractionsOrder() {
+        void initSignatureSession_tooManyAllowedInteractionsOrder() {
             builder.withAllowedInteractionsOrder(List.of(
                     Interaction.confirmationMessage("Interaction 1"),
                     Interaction.displayTextAndPIN("Interaction 2"),
@@ -318,14 +312,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_invalidNonce() {
+        void initSignatureSession_invalidNonce() {
             builder.withNonce("1234567890123456789012345678901");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
-        void sign_missingSignableDataAndHash() {
+        void initSignatureSession_missingSignableDataAndHash() {
             builder.withSignableData(null).withSignableHash(null);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -333,7 +327,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_whenSignableHashNotFilled() {
+        void initSignatureSession_whenSignableHashNotFilled() {
             var signableHash = new SignableHash();
             builder.withSignableData(null).withSignableHash(signableHash);
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
@@ -343,7 +337,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void sign_withNotSupportedInteractionType() {
+        void initSignatureSession_withNotSupportedInteractionType() {
             builder.withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Please verify the code")));
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
