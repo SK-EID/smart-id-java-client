@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.InteractionFlow;
@@ -66,7 +67,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private boolean certificateChoiceMade;
 
     /**
-     * Constructs a new Smart-ID signature request builder with the given connector and session status poller.
+     * Constructs a new Smart-ID signature request builder with the given connector.
      *
      * @param connector the connector
      */
@@ -219,8 +220,10 @@ public class DynamicLinkSignatureSessionRequestBuilder {
 
     public DynamicLinkSignatureSessionResponse initSignatureSession() {
         validateParameters();
-        DynamicLinkSignatureSessionRequest request = createSignatureSessionRequest();
-        return initSignatureSession(request);
+        DynamicLinkSignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
+        DynamicLinkSignatureSessionResponse dynamicLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
+        validateResponseParameters(dynamicLinkSignatureSessionResponse);
+        return dynamicLinkSignatureSessionResponse;
     }
 
     private DynamicLinkSignatureSessionResponse initSignatureSession(DynamicLinkSignatureSessionRequest request) {
@@ -335,5 +338,22 @@ public class DynamicLinkSignatureSessionRequestBuilder {
             throw new SmartIdClientException("AllowedInteractionsOrder contains not supported interaction " + notSupportedInteraction.get().getType());
         }
         allowedInteractionsOrder.forEach(Interaction::validate);
+    }
+
+    private void validateResponseParameters(DynamicLinkSignatureSessionResponse dynamicLinkSignatureSessionResponse) {
+        if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionID())) {
+            logger.error("Session ID is missing from the response");
+            throw new SmartIdClientException("Session ID is missing from the response");
+        }
+
+        if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionToken())) {
+            logger.error("Session token is missing from the response");
+            throw new SmartIdClientException("Session token is missing from the response");
+        }
+
+        if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionSecret())) {
+            logger.error("Session secret is missing from the response");
+            throw new SmartIdClientException("Session secret is missing from the response");
+        }
     }
 }

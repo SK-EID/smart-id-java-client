@@ -349,6 +349,48 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("AllowedInteractionsOrder contains not supported interaction VERIFICATION_CODE_CHOICE", ex.getMessage());
         }
+
+        @Test
+        void validateResponseParameters_missingSessionID() {
+            var response = new DynamicLinkSignatureSessionResponse();
+            response.setSessionID(null);
+            response.setSessionToken("test-session-token");
+            response.setSessionSecret("test-session-secret");
+
+            builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+            when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            assertEquals("Session ID is missing from the response", ex.getMessage());
+        }
+
+        @Test
+        void validateResponseParameters_missingSessionToken() {
+            var response = new DynamicLinkSignatureSessionResponse();
+            response.setSessionID("test-session-id");
+            response.setSessionToken(null);
+            response.setSessionSecret("test-session-secret");
+
+            builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+            when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            assertEquals("Session token is missing from the response", ex.getMessage());
+        }
+
+        @Test
+        void validateResponseParameters_missingSessionSecret() {
+            var response = new DynamicLinkSignatureSessionResponse();
+            response.setSessionID("test-session-id");
+            response.setSessionToken("test-session-token");
+            response.setSessionSecret(null);
+
+            builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+            when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            assertEquals("Session secret is missing from the response", ex.getMessage());
+        }
     }
 
     private DynamicLinkSignatureSessionResponse mockSignatureSessionResponse() {
