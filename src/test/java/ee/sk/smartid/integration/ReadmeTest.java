@@ -391,7 +391,7 @@ create the AsicE/BDoc container with files in it and get the hash to be signed.
 
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOLT-50609019996-MOCK-Q") // returned as authentication result
+                .withDocumentNumber("PNOLT-40504040001-MOCK-Q") // returned as authentication result
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
@@ -440,7 +440,7 @@ Every Smart-ID app supports this interaction flow and there is no need to provid
     public void documentInteractionOrderMostCommon() {
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
+                .withDocumentNumber("PNOLT-40504040001-MOCK-Q")
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(Collections.singletonList(
@@ -467,7 +467,7 @@ If user's app doesn't support displaying verification code choice then system fa
         try {
             SmartIdSignature smartIdSignature = client
                     .createSignature()
-                    .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
+                    .withDocumentNumber("PNOLT-40504040001-MOCK-Q")
                     .withSignableHash(hashToSign)
                     .withCertificateLevel("QUALIFIED")
                     .withAllowedInteractionsOrder(Arrays.asList(
@@ -494,7 +494,7 @@ If the Smart-ID app in user's smart device doesn't support this feature then the
     public void documentInteractionOrderConfirmationWithFallbackToPin() {
         SmartIdSignature smartIdSignature = client
                 .createSignature()
-                .withDocumentNumber("PNOLT-50609019996-MOCK-Q") //
+                .withDocumentNumber("PNOLT-40504040001-MOCK-Q") //
                 .withSignableHash(hashToSign)
                 .withCertificateLevel("QUALIFIED")
                 .withAllowedInteractionsOrder(asList(
@@ -558,7 +558,7 @@ If End User's phone doesn't support required flow the library throws `RequiredIn
         try {
             client
                     .createSignature()
-                    .withDocumentNumber("PNOLT-50609019996-MOCK-Q")
+                    .withDocumentNumber("PNOLT-40504040001-MOCK-Q")
                     .withSignableHash(hashToSign)
                     .withCertificateLevel("QUALIFIED")
                     .withAllowedInteractionsOrder(Collections.singletonList(

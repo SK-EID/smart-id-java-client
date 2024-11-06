@@ -4,8 +4,7 @@
   "signatureProtocol": "ACSP_V1",
   "signatureProtocolParameters": {
     "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
-    "signatureAlgorithm": "sha512WithRSAEncryption",
-    "signatureAlgorithmParameters" : null
+    "signatureAlgorithm": "sha512WithRSAEncryption"
   },
   "allowedInteractionsOrder": [
     {"type": "displayTextAndPIN", "displayText60": "Log in?"}

@@ -33,7 +33,6 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
-import ee.sk.smartid.v3.rest.dao.SignatureProtocol;
 
 public class DynamicLinkSignatureSessionRequest implements Serializable {
 

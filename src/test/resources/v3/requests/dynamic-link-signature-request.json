@@ -4,10 +4,7 @@
   "signatureProtocol": "RAW_DIGEST_SIGNATURE",
   "signatureProtocolParameters": {
     "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
-    "signatureAlgorithm": "sha512WithRSAEncryption",
-    "signatureAlgorithmParameters": {
-      "hashAlgorithm": "SHA-512"
-    }
+    "signatureAlgorithm": "sha512WithRSAEncryption"
   },
   "allowedInteractionsOrder": [
     {

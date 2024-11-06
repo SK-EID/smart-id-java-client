@@ -585,10 +585,6 @@ class SmartIdRestConnectorTest {
         protocolParameters.setDigest("base64-encoded-digest");
         protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
 
-        var algorithmParameters = new SignatureAlgorithmParameters();
-        algorithmParameters.setHashAlgorithm("SHA-512");
-        protocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
-
         request.setSignatureProtocolParameters(protocolParameters);
 
         request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign the document")));

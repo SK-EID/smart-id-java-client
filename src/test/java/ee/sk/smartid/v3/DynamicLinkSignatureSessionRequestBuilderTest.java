@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,20 +29,32 @@ package ee.sk.smartid.v3;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.lang.reflect.Method;
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.Interaction;
@@ -62,7 +74,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
                 .withRelyingPartyName("DEMO")
                 .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()))
-                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
                 .withCertificateChoiceMade(false);
     }
 
@@ -79,6 +90,11 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         assertEquals("test-session-id", signature.getSessionID());
         assertEquals("test-session-token", signature.getSessionToken());
         assertEquals("test-session-secret", signature.getSessionSecret());
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), eq(semanticsIdentifier));
+
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, requestCaptor.getValue().getSignatureProtocol());
     }
 
     @Test
@@ -94,18 +110,71 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         assertEquals("test-session-id", signature.getSessionID());
         assertEquals("test-session-token", signature.getSessionToken());
         assertEquals("test-session-secret", signature.getSessionSecret());
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), eq(documentNumber));
+
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, requestCaptor.getValue().getSignatureProtocol());
     }
 
-    @Test
-    void initSignatureSession_withCertificateLevel() {
-        builder.withCertificateLevel(CertificateLevel.QUALIFIED);
-        builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+    @ParameterizedTest
+    @ArgumentsSource(CertificateLevelArgumentProvider.class)
+    void initSignatureSession_withCertificateLevel(CertificateLevel certificateLevel, String expectedValue) {
+        builder.withCertificateLevel(certificateLevel).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest request = requestCaptor.getValue();
+
+        assertEquals(expectedValue, request.getCertificateLevel());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, request.getSignatureProtocol());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(ValidNonceArgumentSourceProvider.class)
+    void initSignatureSession_withNonce_ok(String nonce) {
+        builder.withNonce(nonce).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+
+        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+
+        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+
+        assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest request = requestCaptor.getValue();
+
+        assertEquals(nonce, request.getNonce());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, request.getSignatureProtocol());
+    }
+
+    @Test
+    void withSignatureAlgorithm_setsCorrectAlgorithm() {
+        var signableData = new SignableData("Test data".getBytes());
+        signableData.setHashType(HashType.SHA256);
+        builder.withSignableData(signableData);
+
+        builder.withSignatureAlgorithm(SignatureAlgorithm.SHA256WITHRSA);
+        builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+
+        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class)))
+                .thenReturn(mockSignatureSessionResponse());
+
+        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals(SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
     }
 
     @Test
@@ -118,6 +187,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        assertNotNull(capturedRequest.getRequestProperties());
+        assertTrue(capturedRequest.getRequestProperties().getShareMdClientIpAddress());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
     @Test
@@ -132,6 +209,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals("sha512WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
     @Test
@@ -146,47 +231,64 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals("sha384WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
-    @Test
-    void initSignatureSession_withSignableHash() {
+    @ParameterizedTest
+    @EnumSource(HashType.class)
+    void initSignatureSession_withSignableHash(HashType hashType) {
         var signableHash = new SignableHash();
         signableHash.setHash("Test hash".getBytes());
-        signableHash.setHashType(HashType.SHA256);
+        signableHash.setHashType(hashType);
         builder.withSignableData(null).withSignableHash(signableHash);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class)))
-                .thenReturn(mockSignatureSessionResponse());
+        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
-
         assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(Base64.getEncoder().encodeToString("Test hash".getBytes()), capturedRequest.getSignatureProtocolParameters().getDigest());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
-    @Test
-    void initSignatureSession_withCustomSignatureProtocolParameters() {
+    @ParameterizedTest
+    @EnumSource(HashType.class)
+    void initSignatureSession_withCustomSignatureProtocolParameters(HashType hashType) {
         var customSignableData = new SignableData("Test data".getBytes());
-        customSignableData.setHashType(HashType.SHA384);
+        customSignableData.setHashType(hashType);
 
-        builder.withSignableData(customSignableData)
-                .withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        builder.withSignableData(customSignableData).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class)))
-                .thenAnswer(invocation -> {
-                    DynamicLinkSignatureSessionRequest request = invocation.getArgument(0);
-                    assertEquals("sha384WithRSAEncryption", request.getSignatureProtocolParameters().getSignatureAlgorithm());
-                    return mockSignatureSessionResponse();
-                });
+        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
-
         assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(Base64.getEncoder().encodeToString(customSignableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
-    @Test
-    void initSignatureSession_withCapabilities() {
-        builder.withCapabilities(Set.of("SIGN", "AUTH"));
+    @ParameterizedTest
+    @ArgumentsSource(CapabilitiesArgumentProvider.class)
+    void initSignatureSession_withCapabilities(Set<String> capabilities, Set<String> expectedCapabilities) {
+        builder.withCapabilities(capabilities);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
@@ -194,37 +296,55 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        assertEquals(expectedCapabilities, capturedRequest.getCapabilities());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
+    }
+
+    @ParameterizedTest
+    @EnumSource(HashType.class)
+    void initSignatureSession_withHashType_usesCorrectSignatureAlgorithm(HashType hashType) {
+        var signableData = new SignableData("Test data".getBytes());
+        signableData.setHashType(hashType);
+        builder.withSignableData(signableData);
+        builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+
+        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+
+        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        assertNotNull(signature);
+
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
+
+        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
     @Test
-    void initSignatureSession_withSHA384HashType_usesCorrectSignatureAlgorithm() {
+    void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
         var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(HashType.SHA384);
+        signableData.setHashType(HashType.SHA256);
         builder.withSignableData(signableData);
         builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class)))
-                .thenAnswer(invocation -> {
-                    DynamicLinkSignatureSessionRequest request = invocation.getArgument(0);
-
-                    assertEquals("sha384WithRSAEncryption", request.getSignatureProtocolParameters().getSignatureAlgorithm());
-
-                    return mockSignatureSessionResponse();
-                });
+                .thenReturn(mockSignatureSessionResponse());
 
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
-
         assertNotNull(signature);
-    }
 
-    @Test
-    void initSignatureSession_whenSignableHashAndDataAreNull_usesDefaultSignatureAlgorithm() {
-        builder.withSignableHash(null);
-        builder.withSignableData(null);
-        builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
+        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-        assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
+        assertEquals(SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
     }
 
     @Nested
@@ -235,7 +355,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withDocumentNumber(null);
             builder.withSemanticsIdentifier(null);
 
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.", ex.getMessage());
         }
 
@@ -247,7 +367,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Problem with digest calculation. java.lang.NullPointerException: Cannot invoke \"ee.sk.smartid.HashType.getAlgorithmName()\" because \"hashType\" is null", ex.getMessage());
+            assertEquals("HashType must be set for signableData.", ex.getMessage());
         }
 
         @Test
@@ -259,56 +379,40 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void initSignatureSession_whenAllowedInteractionsOrderIsNull() {
-            builder.withAllowedInteractionsOrder(null);
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
-        }
-
-        @Test
-        void initSignatureSession_whenNeitherSignableDataNorHashSet() {
-            builder.withSignableData(null).withSignableHash(null);
+        void initSignatureSession_whenSignableHashAndDataAreNull_usesDefaultSignatureAlgorithm() {
+            builder.withSignableHash(null);
+            builder.withSignableData(null);
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
         }
 
-        @Test
-        void initSignatureSession_missingRelyingPartyUUID() {
-            builder.withRelyingPartyUUID(null);
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<Interaction> allowedInteractionsOrder) {
+            builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
+
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initSignatureSession_missingRelyingPartyUUID(String relyingPartyUUID) {
+            builder.withRelyingPartyUUID(relyingPartyUUID);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Relying Party UUID must be set.", ex.getMessage());
         }
 
-        @Test
-        void initSignatureSession_missingRelyingPartyName() {
-            builder.withRelyingPartyName(null);
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initSignatureSession_missingRelyingPartyName(String relyingPartyName) {
+            builder.withRelyingPartyName(relyingPartyName);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Relying Party Name must be set.", ex.getMessage());
-        }
-
-        @Test
-        void initSignatureSession_missingAllowedInteractionsOrder() {
-            builder.withAllowedInteractionsOrder(null);
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
-        }
-
-        @Test
-        void initSignatureSession_tooManyAllowedInteractionsOrder() {
-            builder.withAllowedInteractionsOrder(List.of(
-                    Interaction.confirmationMessage("Interaction 1"),
-                    Interaction.displayTextAndPIN("Interaction 2"),
-                    Interaction.verificationCodeChoice("Interaction 3"),
-                    Interaction.displayTextAndPIN("Interaction 4"),
-                    Interaction.displayTextAndPIN("Interaction 5")
-            ));
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Allowed interactions order cannot contain more than 4 interactions.", ex.getMessage());
         }
 
         @Test
@@ -319,11 +423,10 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void initSignatureSession_missingSignableDataAndHash() {
-            builder.withSignableData(null).withSignableHash(null);
-
+        void initSignatureSession_emptyNonce() {
+            builder.withNonce("");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
+            assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
@@ -336,53 +439,61 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
         }
 
-        @Test
-        void initSignatureSession_withNotSupportedInteractionType() {
-            builder.withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Please verify the code")));
+        @ParameterizedTest
+        @ArgumentsSource(UnsupportedInteractionArgumentsProvider.class)
+        void initSignatureSession_withNotSupportedInteractionType(Interaction interaction, String expectedErrorMessage) {
+            builder.withAllowedInteractionsOrder(List.of(interaction));
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("AllowedInteractionsOrder contains not supported interaction VERIFICATION_CODE_CHOICE", ex.getMessage());
+            assertEquals(expectedErrorMessage, ex.getMessage());
         }
+    }
 
-        @Test
-        void validateResponseParameters_missingSessionID() {
+    @Nested
+    class ResponseValidationTests {
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void validateResponseParameters_missingSessionID(String sessionID) {
             var response = new DynamicLinkSignatureSessionResponse();
-            response.setSessionID(null);
+            response.setSessionID(sessionID);
             response.setSessionToken("test-session-token");
             response.setSessionSecret("test-session-secret");
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("Session ID is missing from the response", ex.getMessage());
         }
 
-        @Test
-        void validateResponseParameters_missingSessionToken() {
+        @ParameterizedTest
+        @NullAndEmptySource
+        void validateResponseParameters_missingSessionToken(String sessionToken) {
             var response = new DynamicLinkSignatureSessionResponse();
             response.setSessionID("test-session-id");
-            response.setSessionToken(null);
+            response.setSessionToken(sessionToken);
             response.setSessionSecret("test-session-secret");
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("Session token is missing from the response", ex.getMessage());
         }
 
-        @Test
-        void validateResponseParameters_missingSessionSecret() {
+        @ParameterizedTest
+        @NullAndEmptySource
+        void validateResponseParameters_missingSessionSecret(String sessionSecret) {
             var response = new DynamicLinkSignatureSessionResponse();
             response.setSessionID("test-session-id");
             response.setSessionToken("test-session-token");
-            response.setSessionSecret(null);
+            response.setSessionSecret(sessionSecret);
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("Session secret is missing from the response", ex.getMessage());
         }
     }
@@ -393,5 +504,46 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         response.setSessionToken("test-session-token");
         response.setSessionSecret("test-session-secret");
         return response;
+    }
+
+    private static class CertificateLevelArgumentProvider implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of(null, null),
+                    Arguments.of(CertificateLevel.ADVANCED, "ADVANCED"),
+                    Arguments.of(CertificateLevel.QUALIFIED, "QUALIFIED")
+            );
+        }
+    }
+
+    private static class CapabilitiesArgumentProvider implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of(Set.of("QUALIFIED", "ADVANCED"), Set.of("QUALIFIED", "ADVANCED")),
+                    Arguments.of(Set.of("QUALIFIED"), Set.of("QUALIFIED")),
+                    Arguments.of(Set.of(), Set.of())
+            );
+        }
+    }
+
+    private static class ValidNonceArgumentSourceProvider implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(null, "a", "a".repeat(30)).map(Arguments::of);
+        }
+    }
+
+    private static class UnsupportedInteractionArgumentsProvider implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of(Interaction.verificationCodeChoice("Please verify the code"),
+                            "AllowedInteractionsOrder contains not supported interaction VERIFICATION_CODE_CHOICE"),
+                    Arguments.of(Interaction.confirmationMessageAndVerificationCodeChoice("Please confirm and verify the code"),
+                            "AllowedInteractionsOrder contains not supported interaction CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE")
+            );
+        }
     }
 }

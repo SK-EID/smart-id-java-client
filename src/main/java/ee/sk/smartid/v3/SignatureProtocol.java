@@ -27,5 +27,6 @@ package ee.sk.smartid.v3;
  */
 
 public enum SignatureProtocol {
-    ACSP_V1
+    ACSP_V1,
+    RAW_DIGEST_SIGNATURE
 }

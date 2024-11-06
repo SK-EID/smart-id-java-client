@@ -28,13 +28,10 @@ package ee.sk.smartid.v3;
 
 import java.io.Serializable;
 
-import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
-
 public class AcspV1SignatureProtocolParameters implements Serializable {
 
     private String randomChallenge;
     private String signatureAlgorithm;
-    private SignatureAlgorithmParameters signatureAlgorithmParameters;
 
     public String getRandomChallenge() {
         return randomChallenge;
@@ -50,13 +47,5 @@ public class AcspV1SignatureProtocolParameters implements Serializable {
 
     public void setSignatureAlgorithm(String signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
-    }
-
-    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
-        return signatureAlgorithmParameters;
-    }
-
-    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
-        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
     }
 }

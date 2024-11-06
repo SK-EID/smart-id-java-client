@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
@@ -41,7 +42,6 @@ import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.InteractionFlow;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
 public class DynamicLinkSignatureSessionRequestBuilder {
 
@@ -186,10 +186,13 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     }
 
     /**
-     * Sets the signature protocol.
+     * Sets the data to be signed.
+     * <p>
+     * This method allows setting a {@link SignableData} object, which contains the data to be hashed and signed in the signing request.
+     * If both {@link SignableData} and {@link SignableHash} are provided, {@link SignableData} will take precedence.
      *
-     * @param signableData the signature protocol
-     * @return this builder
+     * @param signableData the data to be signed
+     * @return this builder instance
      */
     public DynamicLinkSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
         this.signableData = signableData;
@@ -197,9 +200,12 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     }
 
     /**
-     * Sets the signature protocol.
+     * Sets the hash to be signed in the signature protocol.
+     * <p>
+     * The provided {@link SignableHash} must contain a valid hash value and hash type,
+     * which will be used as the digest in the signing request.
      *
-     * @param signableHash the signature protocol
+     * @param signableHash the hash data to be signed
      * @return this builder
      */
     public DynamicLinkSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
@@ -208,16 +214,31 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     }
 
     /**
-     * Sets the signature protocol.
+     * Marks whether a certificate choice has been made.
+     * <p>
+     * This method allows specifying if a certificate selection was made prior to initiating this signing session.
+     * Once set to true, the signing request can proceed without further certificate selection.
      *
-     * @param certificateChoiceMade the signature protocol
-     * @return this builder
+     * @param certificateChoiceMade indicates if certificate choice has been made
+     * @return this builder instance
      */
     public DynamicLinkSignatureSessionRequestBuilder withCertificateChoiceMade(boolean certificateChoiceMade) {
         this.certificateChoiceMade = certificateChoiceMade;
         return this;
     }
 
+    /**
+     * Sends the signature request and initiates a dynamic link-based signature session.
+     * <p>
+     * There are two supported ways to start the signature session:
+     * <ul>
+     *     <li>with a document number by using {@link #withDocumentNumber(String)}</li>
+     *     <li>with a semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
+     * </ul>
+     *
+     * @return a {@link DynamicLinkSignatureSessionResponse} containing session details such as
+     * session ID, session token, and session secret.
+     */
     public DynamicLinkSignatureSessionResponse initSignatureSession() {
         validateParameters();
         DynamicLinkSignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
@@ -232,7 +253,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         } else if (semanticsIdentifier != null) {
             return connector.initDynamicLinkSignature(request, semanticsIdentifier);
         } else {
-            throw new IllegalArgumentException("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.");
+            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.");
         }
     }
 
@@ -252,10 +273,6 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         request.setNonce(nonce);
         request.setAllowedInteractionsOrder(allowedInteractionsOrder);
 
-        var algorithmParameters = new SignatureAlgorithmParameters();
-        signatureProtocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
-        algorithmParameters.setHashAlgorithm(getHashAlgorithm());
-
         var requestProperties = new RequestProperties();
         requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
         if (requestProperties.hasProperties()) {
@@ -269,6 +286,9 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         if (signableHash != null && signableHash.areFieldsFilled()) {
             return signableHash.getHashInBase64();
         } else if (signableData != null) {
+            if (signableData.getHashType() == null) {
+                throw new SmartIdClientException("HashType must be set for signableData.");
+            }
             return signableData.calculateHashInBase64();
         } else {
             throw new IllegalArgumentException("Either signableHash or signableData must be set.");
@@ -278,20 +298,13 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private String getSignatureAlgorithm() {
         if (signableHash != null && signableHash.getHashType() != null) {
             return getSignatureAlgorithmName(signableHash.getHashType());
-        } else if (signableData != null && signableData.getHashType() != null) {
+        } else if (signableData != null) {
+            if (signableData.getHashType() == null) {
+                throw new SmartIdClientException("HashType must be set for signableData.");
+            }
             return getSignatureAlgorithmName(signableData.getHashType());
         } else {
             return signatureAlgorithm.getAlgorithmName();
-        }
-    }
-
-    private String getHashAlgorithm() {
-        if (signableHash != null && signableHash.getHashType() != null) {
-            return signableHash.getHashType().getAlgorithmName();
-        } else if (signableData != null && signableData.getHashType() != null) {
-            return signableData.getHashType().getAlgorithmName();
-        } else {
-            return HashType.SHA512.getAlgorithmName();
         }
     }
 
@@ -327,9 +340,6 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
             throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
         }
-        if (allowedInteractionsOrder.size() > 4) {
-            throw new SmartIdClientException("Allowed interactions order cannot contain more than 4 interactions.");
-        }
         Optional<Interaction> notSupportedInteraction = allowedInteractionsOrder.stream()
                 .filter(interaction -> NOT_SUPPORTED_INTERACTION_FLOWS.contains(interaction.getType()))
                 .findFirst();
@@ -343,17 +353,17 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private void validateResponseParameters(DynamicLinkSignatureSessionResponse dynamicLinkSignatureSessionResponse) {
         if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
-            throw new SmartIdClientException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
         }
 
         if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionToken())) {
             logger.error("Session token is missing from the response");
-            throw new SmartIdClientException("Session token is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session token is missing from the response");
         }
 
         if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionSecret())) {
             logger.error("Session secret is missing from the response");
-            throw new SmartIdClientException("Session secret is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
         }
     }
 }

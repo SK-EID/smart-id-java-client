@@ -57,6 +57,7 @@ import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.SignableData;
 import ee.sk.smartid.v3.SignableHash;
+import ee.sk.smartid.v3.SignatureProtocol;
 import ee.sk.smartid.v3.SmartIdAuthenticationResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
@@ -64,7 +65,6 @@ import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.rest.dao.SignatureProtocol;
 
 public class SmartIdRequestBuilderService {
 

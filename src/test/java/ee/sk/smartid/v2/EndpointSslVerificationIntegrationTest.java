@@ -55,7 +55,7 @@ public class EndpointSslVerificationIntegrationTest {
     private static final String LIVE_HOST_URL = "https://rp-api.smart-id.com/v1";
     private static final String DEMO_RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
     private static final String DEMO_RELYING_PARTY_NAME = "DEMO";
-    private static final String DEMO_DOCUMENT_NUMBER = "PNOLT-50609019996-MOCK-Q";
+    private static final String DEMO_DOCUMENT_NUMBER = "PNOLT-40504040001-MOCK-Q";
 
     private static final String LIVE_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_live_sk_ee.pem");
     private static final String DEMO_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_demo_sk_ee.pem");
