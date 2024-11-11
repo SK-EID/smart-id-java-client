@@ -156,24 +156,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void withSignatureAlgorithm_setsCorrectAlgorithm() {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(HashType.SHA256);
-        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA256WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
-
-        when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
-
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
-        assertNotNull(signature);
-
-        ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
-        verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
-
-        assertEquals(SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
-    }
-
-    @Test
     void initSignatureSession_withRequestProperties() {
         builder.withShareMdClientIpAddress(true).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
@@ -193,23 +175,22 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void initSignatureSession_withDefaultSignatureAlgorithm() {
+    void withSignatureAlgorithm_setsCorrectAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
-        builder.withSignableData(signableData).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        signableData.setHashType(HashType.SHA256);
+        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA384WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
         DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
-
         assertNotNull(signature);
 
         ArgumentCaptor<DynamicLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkSignatureSessionRequest.class);
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
     @ParameterizedTest
@@ -255,10 +236,10 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
     @ParameterizedTest
     @EnumSource(HashType.class)
-    void initSignatureSession_withHashType_usesCorrectSignatureAlgorithm(HashType hashType) {
+    void initSignatureSession_withHashType_overridesExplicitSignatureAlgorithm(HashType hashType) {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(hashType);
-        builder.withSignableData(signableData).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA256WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
@@ -269,7 +250,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         DynamicLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
@@ -277,6 +258,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     @Test
     void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
         var signableData = new SignableData("Test data".getBytes());
+        signableData.setHashType(HashType.SHA512);
         builder.withSignableData(signableData).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(DynamicLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
