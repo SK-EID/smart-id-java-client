@@ -75,8 +75,7 @@ class NotificationSignatureSessionRequestBuilderTest {
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
                 .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
-                .withSignableData(new SignableData("Test data".getBytes()))
-                .withCertificateChoiceMade(false);
+                .withSignableData(new SignableData("Test data".getBytes()));
     }
 
     @Test
@@ -331,14 +330,6 @@ class NotificationSignatureSessionRequestBuilderTest {
 
             SmartIdClientException exception = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("HashType must be set for signableData.", exception.getMessage());
-        }
-
-        @Test
-        void initSignatureSession_whenCertificateChoiceMade() {
-            builder.withCertificateChoiceMade(true);
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Certificate choice was made before using this method. Cannot proceed with signature request.", ex.getMessage());
         }
 
         @Test

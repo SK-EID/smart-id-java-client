@@ -65,7 +65,6 @@ public class NotificationSignatureSessionRequestBuilder {
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
     private SignableData signableData;
     private SignableHash signableHash;
-    private boolean certificateChoiceMade;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -215,21 +214,7 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     /**
-     * Marks whether a certificate choice has been made.
-     * <p>
-     * This method allows specifying if a certificate selection was made prior to initiating this signing session.
-     * Once set to true, the signing request can proceed without further certificate selection.
-     *
-     * @param certificateChoiceMade indicates if certificate choice has been made
-     * @return this builder instance
-     */
-    public NotificationSignatureSessionRequestBuilder withCertificateChoiceMade(boolean certificateChoiceMade) {
-        this.certificateChoiceMade = certificateChoiceMade;
-        return this;
-    }
-
-    /**
-     * Sends the signature request and initiates a dynamic link-based signature session.
+     * Sends the signature request and initiates a notification-based signature session.
      * <p>
      * There are two supported ways to start the signature session:
      * <ul>
@@ -328,9 +313,6 @@ public class NotificationSignatureSessionRequestBuilder {
 
         if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
             throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
-        }
-        if (certificateChoiceMade) {
-            throw new SmartIdClientException("Certificate choice was made before using this method. Cannot proceed with signature request.");
         }
     }
 
