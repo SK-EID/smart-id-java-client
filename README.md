@@ -1261,7 +1261,7 @@ var signableData = new SignableData("Test data to sign".getBytes());
 signableData.setHashType(HashType.SHA256);
 
 // Specify the document number
-String documentNumber = "PNOEE-31111111111";
+String documentNumber = "PNOEE-31111111111-MOCK-Q";
 
 // Build the dynamic link signature request
 var builder = client.createDynamicLinkSignature()
@@ -1337,8 +1337,6 @@ System.out.println("Session Secret: " + sessionSecret);
 System.out.println("User account not found.");
 } catch (RelyingPartyAccountConfigurationException e) {
 System.out.println("Relying party account configuration issue.");
-} catch (SessionNotFoundException e) {
-System.out.println("Session not found.");
 } catch (RequiredInteractionNotSupportedByAppException e) {
 System.out.println("The required interaction is not supported by the user's app.");
 } catch (ServerMaintenanceException e) {
@@ -1361,7 +1359,7 @@ builder.withAllowedInteractionsOrder(List.of(
 * `Signature Protocol Parameters`: Specify the signature protocol parameters as required for `RAW_DIGEST_SIGNATURE`.
 
 ```java
-var parameters = new SignatureProtocolParameters();
+var parameters = new RawDigestSignatureProtocolParameters();
 parameters.setDigest(signableData.calculateHashInBase64());
 parameters.setSignatureAlgorithm("sha512WithRSAEncryption");
 parameters.setSignatureAlgorithmParameters(new SignatureAlgorithmParameters("SHA-512"));
@@ -1376,7 +1374,7 @@ requestProperties.setShareMdClientIpAddress(true);
 builder.withRequestProperties(requestProperties);
 ```
 
-* `Nonce`: A random string up to 30 characters to associate the request with a specific session or transaction.
+* `Nonce`: A unique identifier (up to 30 characters) used to manage idempotent behavior in session creation requests. If a request is repeated within a 15-second timeframe, the same session ID may be returned unless a different nonce is provided.
 
 ```java
 builder.withNonce("randomNonce123");
@@ -1385,7 +1383,7 @@ builder.withNonce("randomNonce123");
 * `Capabilities`: Specify capabilities if agreed with the Smart-ID provider. When omitted, capabilities are derived from the `certificateLevel`.
 
 ```java
-builder.withCapabilities(Set.of("SIGN", "AUTH"));
+builder.withCapabilities(Set.of("QUILIFIED", "ADVANCED"));
 ```
 
 * `Certificate Level`: Set the required certificate level (`ADVANCED` or `QUALIFIED`). Defaults to `QUALIFIED`.

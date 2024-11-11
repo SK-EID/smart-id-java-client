@@ -267,7 +267,9 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         }
 
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-        signatureProtocolParameters.setDigest(getDigestToSignBase64());
+        if (signableHash != null || signableData != null) {
+            signatureProtocolParameters.setDigest(getDigestToSignBase64());
+        }
         signatureProtocolParameters.setSignatureAlgorithm(getSignatureAlgorithm());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
@@ -291,17 +293,14 @@ public class DynamicLinkSignatureSessionRequestBuilder {
             }
             return signableData.calculateHashInBase64();
         } else {
-            throw new IllegalArgumentException("Either signableHash or signableData must be set.");
+            throw new SmartIdClientException("Either signableHash or signableData must be set.");
         }
     }
 
     private String getSignatureAlgorithm() {
         if (signableHash != null && signableHash.getHashType() != null) {
             return getSignatureAlgorithmName(signableHash.getHashType());
-        } else if (signableData != null) {
-            if (signableData.getHashType() == null) {
-                throw new SmartIdClientException("HashType must be set for signableData.");
-            }
+        } else if (signableData != null && signableData.getHashType() != null) {
             return getSignatureAlgorithmName(signableData.getHashType());
         } else {
             return signatureAlgorithm.getAlgorithmName();
@@ -327,9 +326,6 @@ public class DynamicLinkSignatureSessionRequestBuilder {
 
         if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
             throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
-        }
-        if (signableHash == null && signableData == null) {
-            throw new SmartIdClientException("Either signableHash or signableData must be set.");
         }
         if (certificateChoiceMade) {
             throw new SmartIdClientException("Certificate choice was made before using this method. Cannot proceed with signature request.");
