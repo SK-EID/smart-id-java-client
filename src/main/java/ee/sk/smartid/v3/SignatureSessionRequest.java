@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
-public class DynamicLinkSignatureSessionRequest implements Serializable {
+public class SignatureSessionRequest implements Serializable {
 
     private String relyingPartyUUID;
     private String relyingPartyName;
