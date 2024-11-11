@@ -1404,19 +1404,6 @@ The Smart-ID API v3.0 allows you to initiate a signature session using a notific
 * `Dynamic Link flow`
   * Generates a dynamic link that the user must access to initiate the signing process.
   * Useful when the user's identity or device is not known beforehand.
-  
-## Notification-Based Signature Endpoints
-To initiate a notification-based signature session, you can use one of the following endpoints:
-
-### Using Semantics Identifier:
-* Method: `POST`
-* Path: `BASE/v3/signature/notification/etsi/:id-etsi-qcs-SemanticsId-Natural`
-
-### Using Document Number:
-* Method: `POST`
-* Path: `BASE/v3/signature/notification/document/:documentNumber`
-
-Replace :id-etsi-qcs-SemanticsId-Natural with the user's Semantics Identifier and :documentNumber with the user's document number.
 
 ## Request Parameters
 The request parameters for the notification-based signature session are as follows:
@@ -1527,43 +1514,22 @@ In notification-based flows, the available interaction types differ from those i
 * `confirmationMessageAndVerificationCodeChoice` with `displayText200`
 
 ### Example 1: confirmationMessageAndVerificationCodeChoice with Fallback to verificationCodeChoice
-```json
-{
-  "allowedInteractionsOrder": [
-    {
-      "type": "confirmationMessageAndVerificationCodeChoice",
-      "displayText200": "Detailed description of the transaction"
-    },
-    {
-      "type": "verificationCodeChoice",
-      "displayText60": "Short description"
-    }
-  ]
-}
+```java
+NotificationSignatureSessionRequestBuilder builder = new NotificationSignatureSessionRequestBuilder(connector)
+    .withAllowedInteractionsOrder(List.of(
+        Interaction.confirmationMessageAndVerificationCodeChoice("Confirm transaction of 1024.50 EUR"),
+        Interaction.verificationCodeChoice("Confirm transaction")
+    ));
 ```
 
 ### Example 2: verificationCodeChoice Only
-```json
-{
-  "allowedInteractionsOrder": [
-    {
-      "type": "verificationCodeChoice",
-      "displayText60": "Short description"
-    }
-  ]
-}
-```
-
-
-### Example in Java
 ```java
-builder.withAllowedInteractionsOrder(List.of(
-    Interaction.confirmationMessageAndVerificationCodeChoice("Confirm transaction of 1024.50 EUR"),
-    Interaction.verificationCodeChoice("Confirm transaction")
-));
+NotificationSignatureSessionRequestBuilder builder = new NotificationSignatureSessionRequestBuilder(connector)
+    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Confirm transaction")
+    ));
 ```
 
-## Response on Successful Session Creation
+## Response on Successful Notification-based Signature Session Creation
 Upon successful initiation, the user will receive a notification on their Smart-ID app to complete the signing process. The response includes the `sessionID` and a `verificationCode` (Verification Code) object.
 
 ## Response Parameters
@@ -1571,17 +1537,6 @@ Upon successful initiation, the user will receive a notification on their Smart-
 * `verificationCode`: Required. Object describing the Verification Code to be displayed.
   * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
   * `value`: Required. Value of the VC code.
-
-### Example of a Successful Response
-```json
-{
-  "sessionID": "ce305d54-45b4-a31b-2db2-fb6b9e546015",
-  "verificationCode": {
-    "type": "alphaNumeric4",
-    "value": "4927"
-  }
-}
-```
 
 ## Error Handling
 Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as:
