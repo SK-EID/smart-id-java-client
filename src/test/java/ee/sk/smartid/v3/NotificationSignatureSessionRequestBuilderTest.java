@@ -55,6 +55,7 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.exception.UnauthorizedDeviceException;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
@@ -71,11 +72,14 @@ class NotificationSignatureSessionRequestBuilderTest {
     void setUp() {
         connector = mock(SmartIdConnector.class);
 
+        Set<String> authorizedDevices = Set.of("testDeviceId");
+
         builder = new NotificationSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
                 .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
-                .withSignableData(new SignableData("Test data".getBytes()));
+                .withSignableData(new SignableData("Test data".getBytes()))
+                .withAuthorizedDevices(authorizedDevices);;
     }
 
     @Test
@@ -85,7 +89,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), eq(semanticsIdentifier))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
 
         assertNotNull(signature);
         assertEquals("test-session-id", signature.getSessionID());
@@ -105,7 +109,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
 
         assertNotNull(signature);
         assertEquals("test-session-id", signature.getSessionID());
@@ -125,7 +129,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
 
         assertNotNull(signature);
 
@@ -144,7 +148,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
 
         assertNotNull(signature);
 
@@ -163,7 +167,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -180,7 +184,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
 
         assertNotNull(signature);
 
@@ -203,7 +207,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -223,7 +227,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
 
         assertNotNull(signature);
 
@@ -244,7 +248,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -264,7 +268,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -280,7 +284,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
-        NotificationSignatureSessionResponse signature = builder.initSignatureSession();
+        NotificationSignatureSessionResponse signature = builder.initSignatureSession("testDeviceId");
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -294,10 +298,19 @@ class NotificationSignatureSessionRequestBuilderTest {
     class ErrorCases {
 
         @Test
+        void initSignatureSession_withUnauthorizedDevice() {
+            builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111")).withAuthorizedDevices(Set.of("someOtherDeviceId"));
+
+            var ex = assertThrows(UnauthorizedDeviceException.class, () -> builder.initSignatureSession("unauthorizedDeviceId"));
+
+            assertEquals("Device must complete dynamic link flow before notification flow.", ex.getMessage());
+        }
+
+        @Test
         void initSignatureSession_missingDocumentNumberAndSemanticsIdentifier() {
             builder.withDocumentNumber(null).withSemanticsIdentifier(null);
 
-            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(IllegalArgumentException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Either documentNumber or semanticsIdentifier must be set.", ex.getMessage());
         }
 
@@ -307,7 +320,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             signableData.setHashType(null);
             builder.withSignableData(signableData).withSignableHash(null).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-            SmartIdClientException exception = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            SmartIdClientException exception = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("HashType must be set for signableData.", exception.getMessage());
         }
 
@@ -317,7 +330,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             signableData.setHashType(null);
             builder.withSignableData(signableData).withSignableHash(null).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("HashType must be set for signableData.", ex.getMessage());
         }
 
@@ -326,7 +339,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<Interaction> allowedInteractionsOrder) {
             builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
         }
 
@@ -335,7 +348,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         void validateParameters_missingRelyingPartyUUID(String relyingPartyUUID) {
             builder.withRelyingPartyUUID(relyingPartyUUID);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Relying Party UUID must be set.", ex.getMessage());
         }
 
@@ -344,21 +357,21 @@ class NotificationSignatureSessionRequestBuilderTest {
         void validateParameters_missingRelyingPartyName(String relyingPartyName) {
             builder.withRelyingPartyName(relyingPartyName);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Relying Party Name must be set.", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_invalidNonce() {
             builder.withNonce("1234567890123456789012345678901");
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_emptyNonce() {
             builder.withNonce("");
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
         }
 
@@ -367,7 +380,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         void validateAllowedInteractions_containsUnsupportedInteraction(Interaction interaction, String expectedMessage) {
             builder.withAllowedInteractionsOrder(List.of(interaction));
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals(expectedMessage, ex.getMessage());
         }
 
@@ -376,7 +389,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             var signableHash = new SignableHash();
             builder.withSignableData(null).withSignableHash(signableHash).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
         }
     }
@@ -395,7 +408,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
             when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Session ID is missing from the response", ex.getMessage());
         }
 
@@ -407,13 +420,13 @@ class NotificationSignatureSessionRequestBuilderTest {
             NotificationSignatureSessionResponse response = new NotificationSignatureSessionResponse();
             response.setSessionID("test-session-id");
 
-            VerificationCode verificationCode = new VerificationCode();
+            var verificationCode = new VerificationCode();
             verificationCode.setType(vcType);
             response.setVc(verificationCode);
 
             when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("VC type is missing from the response", ex.getMessage());
         }
 
@@ -430,7 +443,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
             when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("Unsupported VC type: unsupportedType", ex.getMessage());
         }
 
@@ -445,7 +458,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
             when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("VC object is missing from the response", ex.getMessage());
         }
 
@@ -461,7 +474,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
             when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("VC type is missing from the response", ex.getMessage());
         }
 
@@ -470,7 +483,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         void validateResponse_missingVerificationCodeValue(String vcValue) {
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-            NotificationSignatureSessionResponse response = new NotificationSignatureSessionResponse();
+            var response = new NotificationSignatureSessionResponse();
             response.setSessionID("test-session-id");
 
             VerificationCode vc = new VerificationCode();
@@ -480,7 +493,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
             when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession("testDeviceId"));
             assertEquals("VC value is missing from the response", ex.getMessage());
         }
     }
