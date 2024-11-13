@@ -29,7 +29,6 @@ package ee.sk.smartid.v3;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
-import java.util.Set;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
@@ -183,9 +182,8 @@ class SmartIdClientTest {
                 .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                 .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
                 .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
-                .withAuthorizedDevices(Set.of("testDeviceId"))
                 .withSignableHash(signableHash)
-                .initSignatureSession("testDeviceId");
+                .initSignatureSession();
 
         assertNotNull(response.getSessionID());
         assertNotNull(response.getVc());
@@ -207,9 +205,8 @@ class SmartIdClientTest {
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                 .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
                 .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
-                .withAuthorizedDevices(Set.of("testDeviceId"))
                 .withSignableHash(signableHash)
-                .initSignatureSession("testDeviceId");
+                .initSignatureSession();
 
         assertNotNull(response.getSessionID());
         assertNotNull(response.getVc());

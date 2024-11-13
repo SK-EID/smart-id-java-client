@@ -1405,9 +1405,6 @@ The Smart-ID API v3.0 allows you to initiate a signature session using a notific
   * Generates a dynamic link that the user must access to initiate the signing process.
   * Useful when the user's identity or device is not known beforehand.
 
-## Authorized Devices
-Before initiating a notification-based signature session, you must ensure that the user's device is authorized. Device authorization is typically achieved through a prior dynamic link authentication or signature session, where you capture and store the device's unique `deviceId`.
-
 ## Request Parameters
 The request parameters for the notification-based signature session are as follows:
 
@@ -1450,18 +1447,6 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
     "31111111111"
 );
 
-// Suppose you have stored authorized device IDs for this user during a dynamic link flow
-// For this example, we'll use a hardcoded set
-        Set<String> authorizedDevices = Set.of("testDeviceId1", "testDeviceId2");
-
-// Retrieve the device ID from the user's request
-        String deviceId = "testDeviceId1";
-
-// Check if the device is authorized
-if (!authorizedDevices.contains(deviceId)) {
-throw new UnauthorizedDeviceException("Device is not authorized. Please complete the dynamic link flow.");
-}
-
 // Build the notification signature request
 NotificationSignatureSessionRequestBuilder builder = client.createNotificationSignature()
     .withRelyingPartyUUID(client.getRelyingPartyUUID())
@@ -1471,11 +1456,10 @@ NotificationSignatureSessionRequestBuilder builder = client.createNotificationSi
     .withSemanticsIdentifier(semanticsIdentifier)
     .withAllowedInteractionsOrder(List.of(
         Interaction.verificationCodeChoice("Please sign the document")
-        ))
-        .withAuthorizedDevices(authorizedDevices);
+    ));
 
 // Initiate the notification signature session
-NotificationSignatureSessionResponse signatureResponse = builder.initSignatureSession(deviceId);
+NotificationSignatureSessionResponse signatureResponse = builder.initSignatureSession();
 
 // Process the signature response
 String sessionID = signatureResponse.getSessionID();
@@ -1500,19 +1484,6 @@ signableData.setHashType(HashType.SHA256);
 // Specify the document number
 String documentNumber = "PNOEE-31111111111-MOCK-Q";
 
-// Suppose you have stored authorized device IDs for this user during a dynamic link flow
-// For this example, we'll use a hardcoded set
-        Set<String> authorizedDevices = Set.of("testDeviceId1", "testDeviceId2");
-
-// Retrieve the device ID from the user's request
-// In your application, this might come from a cookie, session, or request header
-        String deviceId = "testDeviceId1";
-
-// Check if the device is authorized
-        if (!authorizedDevices.contains(deviceId)) {
-        throw new UnauthorizedDeviceException("Device is not authorized. Please complete the dynamic link flow.");
-        }
-
 // Build the notification signature request
 NotificationSignatureSessionRequestBuilder builder = client.createNotificationSignature()
     .withRelyingPartyUUID(client.getRelyingPartyUUID())
@@ -1522,11 +1493,10 @@ NotificationSignatureSessionRequestBuilder builder = client.createNotificationSi
     .withDocumentNumber(documentNumber)
     .withAllowedInteractionsOrder(List.of(
         Interaction.verificationCodeChoice("Please sign the document")
-    ))
-     .withAuthorizedDevices(authorizedDevices); // Set of authorized device IDs
+    ));
 
 // Initiate the notification signature session
-NotificationSignatureSessionResponse signatureResponse = builder.initSignatureSession(deviceId);
+NotificationSignatureSessionResponse signatureResponse = builder.initSignatureSession();
 
 // Process the signature response
 String sessionID = signatureResponse.getSessionID();
@@ -1576,7 +1546,6 @@ Handle exceptions appropriately. The Java client provides specific exceptions fo
 * `RequiredInteractionNotSupportedByAppException`
 * `ServerMaintenanceException`
 * `SmartIdClientException`
-* `UnauthorizedDeviceException`
 
 ### Example of Error Handling
 ```java
@@ -1592,8 +1561,6 @@ try {
     
 } catch (UserAccountNotFoundException e) {
     System.out.println("User account not found.");
-} catch (UnauthorizedDeviceException e) {
-    System.out.println("Unauthorized device. Please complete the dynamic link flow first.");
 } catch (RelyingPartyAccountConfigurationException e) {
     System.out.println("Relying party account configuration issue.");
 } catch (RequiredInteractionNotSupportedByAppException e) {
@@ -1689,6 +1656,10 @@ Vc verificationCode = response.getVc();
 System.out.println("Session ID: " + sessionID);
 System.out.println("Verification Code Type: " + verificationCode.getType());
 System.out.println("Verification Code Value: " + verificationCode.getValue());
+
+// Proceed with session status polling to obtain the signature
+SessionStatusPoller poller = client.getSessionStatusPoller();
+SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionID);
 
 // Extract the signature from the session status
 SmartIdSignature signature = SmartIdSignature.fromSessionStatus(sessionStatus);

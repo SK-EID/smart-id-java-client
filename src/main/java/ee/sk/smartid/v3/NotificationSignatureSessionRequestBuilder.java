@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.exception.UnauthorizedDeviceException;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
@@ -66,7 +65,6 @@ public class NotificationSignatureSessionRequestBuilder {
     private SignatureAlgorithm signatureAlgorithm;
     private SignableData signableData;
     private SignableHash signableHash;
-    private Set<String> authorizedDevices;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -216,19 +214,6 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     /**
-     * Sets the authorized devices.
-     * <p>
-     * Setting this value will make the signature session request use the authorized devices.
-     *
-     * @param authorizedDevices the authorized devices
-     * @return this builder
-     */
-    public NotificationSignatureSessionRequestBuilder withAuthorizedDevices(Set<String> authorizedDevices) {
-        this.authorizedDevices = authorizedDevices;
-        return this;
-    }
-
-    /**
      * Sends the signature request and initiates a notification-based signature session.
      * <p>
      * There are two supported ways to start the signature session:
@@ -240,19 +225,12 @@ public class NotificationSignatureSessionRequestBuilder {
      * @return a {@link NotificationSignatureSessionResponse} containing session details such as
      * session ID, session token, and session secret.
      */
-    public NotificationSignatureSessionResponse initSignatureSession(String deviceId) {
-        if (!isDeviceAuthorized(deviceId)) {
-            throw new UnauthorizedDeviceException("Device must complete dynamic link flow before notification flow.");
-        }
+    public NotificationSignatureSessionResponse initSignatureSession() {
         validateParameters();
         SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
         NotificationSignatureSessionResponse notificationSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
         validateResponseParameters(notificationSignatureSessionResponse);
         return notificationSignatureSessionResponse;
-    }
-
-    private boolean isDeviceAuthorized(String deviceId) {
-        return authorizedDevices != null && authorizedDevices.contains(deviceId);
     }
 
     private NotificationSignatureSessionResponse initSignatureSession(SignatureSessionRequest request) {
