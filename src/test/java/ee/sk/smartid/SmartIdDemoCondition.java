@@ -39,7 +39,7 @@ public class SmartIdDemoCondition implements ExecutionCondition {
      * Allows switching off tests going against smart-id demo env.
      * This is sometimes needed if the test data in smart-id is temporarily broken.
      */
-    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
+    private static final boolean TEST_AGAINST_SMART_ID_DEMO = false; // TODO - 13.11.24: set back to true, if new test data is available
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {

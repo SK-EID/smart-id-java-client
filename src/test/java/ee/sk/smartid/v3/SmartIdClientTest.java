@@ -31,9 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.bouncycastle.util.encoders.Base64;
@@ -49,6 +48,7 @@ import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 class SmartIdClientTest {
 
@@ -144,6 +144,21 @@ class SmartIdClientTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
+    class SessionsStatus {
+
+        @Test
+        void fetchFinalSessionStatus() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
+
+            SessionStatus status = smartIdClient.createSessionStatusPoller().fetchFinalSessionStatus("abcdef1234567890");
+
+            assertEquals("COMPLETE", status.getState());
+            assertEquals("OK", status.getResult().getEndResult());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
     class DynamicContent {
 
         @ParameterizedTest
@@ -157,14 +172,14 @@ class SmartIdClientTest {
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
                     .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
-
             Instant sessionResponseReceivedTime = Instant.now();
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, response.getSessionSecret(), ZonedDateTime.now(ZoneId.of("Europe/Tallinn")));
+
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, response.getSessionSecret(), 1);
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(response.getSessionToken())
-                    .withResponseReceivedTime(sessionResponseReceivedTime)
+                    .withElapsedSeconds(Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
                     .withUserLanguage("eng")
                     .withAuthCode(authCode)
                     .createUri();
@@ -185,14 +200,14 @@ class SmartIdClientTest {
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initiateCertificateChoice();
-
             Instant sessionResponseReceivedTime = Instant.now();
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), ZonedDateTime.now(ZoneId.of("Europe/Tallinn")));
+
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), 1);
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
-                    .withResponseReceivedTime(sessionResponseReceivedTime)
+                    .withElapsedSeconds(Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
                     .withUserLanguage("eng")
                     .withAuthCode(authCode)
                     .createUri();
@@ -211,19 +226,20 @@ class SmartIdClientTest {
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initiateCertificateChoice();
-
             Instant sessionResponseReceivedTime = Instant.now();
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), ZonedDateTime.now(ZoneId.of("Europe/Tallinn")));
+
+            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), 1);
             String qrCodeDataUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(DynamicLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
-                    .withResponseReceivedTime(sessionResponseReceivedTime)
+                    .withElapsedSeconds(Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
                     .withUserLanguage("eng")
                     .withAuthCode(authCode)
-                    .createQrCode();
+                    .createQrCodeDataUri();
 
-            URI uri = URI.create(QrCodeUtil.extractQrContent(qrCodeDataUri));
+            String[] qrCodeDataUriParts = qrCodeDataUri.split(",");
+            URI uri = URI.create(QrCodeUtil.extractQrContent(qrCodeDataUriParts[1]).getText());
             assertUri(uri, SessionType.CERTIFICATE_CHOICE, DynamicLinkType.QR_CODE, response.getSessionToken());
         }
 

@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,8 +27,6 @@ package ee.sk.smartid.v3;
  */
 
 import java.net.URI;
-import java.time.Duration;
-import java.time.Instant;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
@@ -48,12 +46,12 @@ public class DynamicContentBuilder {
     private DynamicLinkType dynamicLinkType;
     private SessionType sessionType;
     private String sessionToken;
-    private Instant sessionResponseReceivedTime;
+    private Long elapsedSeconds;
     private String userLanguage = DEFAULT_USER_LANGUAGE;
     private String authCode;
 
     /**
-     * Sets URL that will be used by application.
+     * Sets the URL
      * <p>
      * Defaults to https://smart-id.com/dynamic-link
      *
@@ -112,14 +110,13 @@ public class DynamicContentBuilder {
     }
 
     /**
-     * Sets the time when the response was received from the Smart-ID server.
-     * This is necessary for calculating the elapsed time since the response was received.
+     * Sets the time passed since the session response was received.
      *
-     * @param sessionResponseReceivedTime the time when the response was received from the Smart-ID server
+     * @param elapsedSeconds the time passed since the session response was received in seconds
      * @return this builder
      */
-    public DynamicContentBuilder withResponseReceivedTime(Instant sessionResponseReceivedTime) {
-        this.sessionResponseReceivedTime = sessionResponseReceivedTime;
+    public DynamicContentBuilder withElapsedSeconds(Long elapsedSeconds) {
+        this.elapsedSeconds = elapsedSeconds;
         return this;
     }
 
@@ -150,7 +147,7 @@ public class DynamicContentBuilder {
     /**
      * Creates a URI that can be used as dynamic link or content for QR-code.
      * <p>
-     * To get a QR code image, use {@link #createQrCode()} method.
+     * To get a QR code image, use {@link #createQrCodeDataUri()} method.
      *
      * @return URI that can be used as dynamic link or content for QR-code
      */
@@ -161,7 +158,7 @@ public class DynamicContentBuilder {
                 .queryParam("sessionToken", sessionToken)
                 .queryParam("dynamicLinkType", dynamicLinkType.getValue())
                 .queryParam("sessionType", sessionType.getValue())
-                .queryParam("elapsedSeconds", Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
+                .queryParam("elapsedSeconds", elapsedSeconds)
                 .queryParam("lang", userLanguage)
                 .queryParam("authCode", authCode)
                 .build();
@@ -174,11 +171,11 @@ public class DynamicContentBuilder {
      *
      * @return QR code image as a Base64 encoded string
      */
-    public String createQrCode() {
+    public String createQrCodeDataUri() {
         if (dynamicLinkType != DynamicLinkType.QR_CODE) {
             throw new SmartIdClientException("Dynamic link type must be QR_CODE");
         }
-        return QrCodeGenerator.generateBase64ImageData(createUri().toString());
+        return QrCodeGenerator.generateDataUri(createUri().toString());
     }
 
     private void validateInputParameters() {
@@ -197,8 +194,8 @@ public class DynamicContentBuilder {
         if (StringUtil.isEmpty(sessionToken)) {
             throw new SmartIdClientException("Parameter sessionToken must be set");
         }
-        if (sessionResponseReceivedTime == null) {
-            throw new SmartIdClientException("Parameter sessionResponseReceivedTime must be set");
+        if (elapsedSeconds == null) {
+            throw new SmartIdClientException("Parameter elapsedSeconds must be set");
         }
         if (StringUtil.isEmpty(userLanguage)) {
             throw new SmartIdClientException("Parameter userLanguage must be set");

@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,9 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.URI;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -57,35 +54,35 @@ class DynamicContentBuilderTest {
         @ParameterizedTest
         @EnumSource
         void createUri_forDifferentDynamicLinks(DynamicLinkType dynamicLinkType) {
-            Instant sessionResponseReceivedTime = Instant.now();
+            long elapsedSeconds = 1L;
             URI uri = new DynamicContentBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken("sessionToken")
-                    .withResponseReceivedTime(Instant.now())
-                    .withAuthCode(AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, "sessionSecret", ZonedDateTime.now()))
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withAuthCode(AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, "sessionSecret", elapsedSeconds))
                     .createUri();
 
-            assertUri(uri, dynamicLinkType, SessionType.AUTHENTICATION, sessionResponseReceivedTime);
+            assertUri(uri, dynamicLinkType, SessionType.AUTHENTICATION);
         }
 
         @ParameterizedTest
         @EnumSource
-        void createUri_forDifferentSessionsTypes(SessionType sessionType) {
-            Instant sessionResponseReceivedTime = Instant.now();
+        void createUri_withSessionType(SessionType sessionType) {
+            long elapsedSeconds = 1L;
             URI uri = new DynamicContentBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
                     .withDynamicLinkType(DynamicLinkType.QR_CODE)
                     .withSessionType(sessionType)
                     .withSessionToken("sessionToken")
-                    .withResponseReceivedTime(Instant.now())
-                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", ZonedDateTime.now()))
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", elapsedSeconds))
                     .createUri();
 
-            assertUri(uri, DynamicLinkType.QR_CODE, sessionType, sessionResponseReceivedTime);
+            assertUri(uri, DynamicLinkType.QR_CODE, sessionType);
         }
 
         @ParameterizedTest
@@ -140,15 +137,15 @@ class DynamicContentBuilderTest {
         }
 
         @Test
-        void createUri_instanceOfResponseReceivedTimeIsNotProvided_throwException() {
+        void createUri_elapsedSecondsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class,
                     () -> new DynamicContentBuilder()
                             .withDynamicLinkType(DynamicLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
-                            .withResponseReceivedTime(null)
+                            .withElapsedSeconds(null)
                             .createUri());
-            assertEquals("Parameter sessionResponseReceivedTime must be set", ex.getMessage());
+            assertEquals("Parameter elapsedSeconds must be set", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -159,7 +156,7 @@ class DynamicContentBuilderTest {
                             .withDynamicLinkType(DynamicLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
-                            .withResponseReceivedTime(Instant.now())
+                            .withElapsedSeconds(1L)
                             .withUserLanguage(userLanguage)
                             .createUri());
             assertEquals("Parameter userLanguage must be set", ex.getMessage());
@@ -173,7 +170,7 @@ class DynamicContentBuilderTest {
                             .withDynamicLinkType(DynamicLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
-                            .withResponseReceivedTime(Instant.now())
+                            .withElapsedSeconds(1L)
                             .withAuthCode(authCode)
                             .createUri());
             assertEquals("Parameter authCode must be set", ex.getMessage());
@@ -186,19 +183,19 @@ class DynamicContentBuilderTest {
         @ParameterizedTest
         @EnumSource
         void createQrCode_forDifferentSessionsTypes(SessionType sessionType) {
-            Instant sessionResponseReceivedTime = Instant.now();
             String qrDataUri = new DynamicContentBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
                     .withDynamicLinkType(DynamicLinkType.QR_CODE)
                     .withSessionType(sessionType)
                     .withSessionToken("sessionToken")
-                    .withResponseReceivedTime(Instant.now())
-                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", ZonedDateTime.now()))
-                    .createQrCode();
+                    .withElapsedSeconds(1L)
+                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", 1))
+                    .createQrCodeDataUri();
 
-            URI uri = URI.create(QrCodeUtil.extractQrContent(qrDataUri));
-            assertUri(uri, DynamicLinkType.QR_CODE, sessionType, sessionResponseReceivedTime);
+            String[] qrDataUriParts = qrDataUri.split(",");
+            URI uri = URI.create(QrCodeUtil.extractQrContent(qrDataUriParts[1]).getText());
+            assertUri(uri, DynamicLinkType.QR_CODE, sessionType);
         }
 
         @ParameterizedTest
@@ -209,14 +206,14 @@ class DynamicContentBuilderTest {
                             .withDynamicLinkType(notSupportedDynamicLinkType)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
-                            .withResponseReceivedTime(Instant.now())
+                            .withElapsedSeconds(1L)
                             .withAuthCode("authCode")
-                            .createQrCode());
+                            .createQrCodeDataUri());
             assertEquals("Dynamic link type must be QR_CODE", ex.getMessage());
         }
     }
 
-    private static void assertUri(URI uri, DynamicLinkType qrCode, SessionType sessionType, Instant sessionResponseReceivedTime) {
+    private static void assertUri(URI uri, DynamicLinkType qrCode, SessionType sessionType) {
         assertThat(uri.getScheme(), equalTo("https"));
         assertThat(uri.getHost(), equalTo("smart-id.com"));
         assertThat(uri.getPath(), equalTo("/dynamic-link/"));
@@ -226,7 +223,7 @@ class DynamicContentBuilderTest {
         assertThat(queryParams, hasEntry("dynamicLinkType", qrCode.getValue()));
         assertThat(queryParams, hasEntry("sessionType", sessionType.getValue()));
         assertThat(queryParams, hasEntry("sessionToken", "sessionToken"));
-        assertThat(queryParams, hasEntry("elapsedSeconds", String.valueOf(Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())));
+        assertThat(queryParams, hasEntry("elapsedSeconds", "1"));
         assertThat(queryParams, hasEntry(equalTo("authCode"), matchesPattern("^[A-Za-z0-9_-]+={0,2}$")));
     }
 

@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,7 +27,6 @@ package ee.sk.smartid.v3;
  */
 
 import java.nio.charset.StandardCharsets;
-import java.time.ZonedDateTime;
 import java.util.Base64;
 
 import org.bouncycastle.crypto.digests.SHA256Digest;
@@ -41,7 +40,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
  */
 public final class AuthCode {
 
-    private static final String PAYLOAD_FORMAT = "%s.%s.%s";
+    private static final String PAYLOAD_FORMAT = "%s.%s.%d";
 
     private AuthCode() {
     }
@@ -52,16 +51,16 @@ public final class AuthCode {
      * @param dynamicLinkType the type of the dynamic link @{@link DynamicLinkType}
      * @param sessionType     the type of the session @{@link SessionType}
      * @param sessionSecret   the session secret
-     * @param creationTime    the time when the authentication code is created
+     * @param elapsedSeconds  the time from session creation response was received
      * @return the authentication code in Base64 URL safe format
      */
-    public static String createHash(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret, ZonedDateTime creationTime) {
-        validateInputs(dynamicLinkType, sessionType, sessionSecret, creationTime);
-        String payload = createPayload(dynamicLinkType, sessionType, creationTime);
+    public static String createHash(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret, long elapsedSeconds) {
+        validateInputs(dynamicLinkType, sessionType, sessionSecret);
+        String payload = createPayload(dynamicLinkType, sessionType, elapsedSeconds);
         return hashThePayload(payload, sessionSecret);
     }
 
-    private static void validateInputs(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret, ZonedDateTime create) {
+    private static void validateInputs(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret) {
         if (dynamicLinkType == null) {
             throw new SmartIdClientException("Dynamic link type must be set");
         }
@@ -71,13 +70,10 @@ public final class AuthCode {
         if (sessionSecret == null) {
             throw new SmartIdClientException("Session secret must be set");
         }
-        if (create == null) {
-            throw new SmartIdClientException("Creation time must be set");
-        }
     }
 
-    private static String createPayload(DynamicLinkType dynamicLinkType, SessionType sessionType, ZonedDateTime creationTime) {
-        return String.format(PAYLOAD_FORMAT, dynamicLinkType.getValue(), sessionType.getValue(), creationTime.toEpochSecond());
+    private static String createPayload(DynamicLinkType dynamicLinkType, SessionType sessionType, long elapsedSeconds) {
+        return String.format(PAYLOAD_FORMAT, dynamicLinkType.getValue(), sessionType.getValue(), elapsedSeconds);
     }
 
     /**
