@@ -61,7 +61,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private Set<String> capabilities;
     private List<Interaction> allowedInteractionsOrder;
     private boolean shareMdClientIpAddress;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
+    private SignatureAlgorithm signatureAlgorithm;
     private SignableData signableData;
     private SignableHash signableHash;
     private boolean certificateChoiceMade;
@@ -298,12 +298,14 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     }
 
     private String getSignatureAlgorithm() {
-        if (signableHash != null && signableHash.getHashType() != null) {
+        if (signatureAlgorithm != null) {
+            return signatureAlgorithm.getAlgorithmName();
+        } else if (signableHash != null && signableHash.getHashType() != null) {
             return getSignatureAlgorithmName(signableHash.getHashType());
         } else if (signableData != null && signableData.getHashType() != null) {
             return getSignatureAlgorithmName(signableData.getHashType());
         } else {
-            return signatureAlgorithm.getAlgorithmName();
+            return SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
         }
     }
 

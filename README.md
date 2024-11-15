@@ -784,14 +784,6 @@ Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link)
 
 The Smart-ID v3.0 API includes new session status request paths for retrieving session results.
 
-## Session status endpoint
-* Method: `GET`
-* Path: `BASE/v3/session/:sessionId`
-* Query parameter: `timeoutMs` (optional, long poll timeout value, default is halfway between max(120000ms) and min(1000ms) values)
-
-Example of the endpoint:
-https://rp-api.smart-id.com/v3/session/de305d54-75b4-431b-adb2-eb6b9e546016?timeoutMs=10000
-
 ## Session status response
 
 The session status response includes various fields depending on whether the session has completed or is still running. Below are the key fields returned in the response:
@@ -806,63 +798,6 @@ The session status response includes various fields depending on whether the ses
 * `ignoredProperties`: Any unsupported or ignored properties from the request.
 * `interactionFlowUsed`: The interaction flow used for the session.
 * `deviceIpAddress`: IP address of the mobile device, if requested.
-
-### Successful response when still waiting for user’s response
-
-```json
-{
-  "state": "RUNNING"
-}
-```
-
-### ACSP_V1 is returned in the session status OK response for authentication sessions in both dynamic-link and notification-based flows.
-
-```json
-  {
-  "state": "COMPLETE",
-  "result": {
-    "endResult": "OK",
-    "documentNumber": "PNOEE-372...."
-  },
-  "signatureProtocol": "ACSP_V1",
-  "signature": {
-    "serverRandom": "B+C9XVjIAZnCHH9vfBSv...",
-    "value": "B+A9CfjIBZnDHHav3B4F...",
-    "signatureAlgorithm": "sha512WithRSAEncryption",
-    "signatureAlgorithmParameters": {
-      "hashAlgorithm": "SHA-512"
-    }
-  },
-  "cert": {
-    "value": "B+C9XVjIAZnCHH9vfBSv...",
-    "certificateLevel": "QUALIFIED"
-  }
-}
-``` 
-
-### RAW_DIGEST_SIGNATURE is returned in the session status OK response for signature sessions in both dynamic link and notification-based flows.
-
-```json
-{
-  "state": "COMPLETE",
-  "result": {
-    "endResult": "OK",
-    "documentNumber": "PNOEE-372...."
-  },
-  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
-  "signature": {
-    "value": "B+A9CfjIBZnDHHav3B4F...",
-    "signatureAlgorithm": "sha512WithRSAEncryption",
-    "signatureAlgorithmParameters": {
-      "hashAlgorithm": "SHA-512"
-    }
-  },
-  "cert": {
-    "value": "B+C9XVjIAZnCHH9vfBSv...",
-    "certificateLevel": "QUALIFIED"
-  }
-}
-```
 
 ## Example of fetching session status in v3.0
 
@@ -940,16 +875,6 @@ try {
 
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a certificate choice session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the authentication process.
 
-## Dynamic Link Certificate Choice Endpoint
-
-To initiate a dynamic link certificate choice session, send a POST request to the following endpoint:
-
-* Method: `POST`
-* Path: `BASE/v3/certificatechoice/dynamic-link/anonymous`
-
-Example of the endpoint:
-https://rp-api.smart-id.com/v3/certificatechoice/dynamic-link/anonymous
-
 ## Request Parameters
 
 The request parameters for the dynamic link certificate choice session are:
@@ -981,21 +906,12 @@ DynamicLinkCertificateChoiceSessionResponse response = client.createDynamicLinkC
 // Note: After a certificate choice request, a notification-based signature choice must follow.
 ```
 
-## Response on Successful Session Creation
+## Response on Successful Certificate Choice Session Creation
 The response from a successful dynamic link certificate choice session creation contains the following parameters:
 
 * `sessionID`: A string that can be used to request the operation result.
 * `sessionToken`: Unique random value that will be used to connect this certificate choice attempt between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
-
-### Example of a Successful Response
-```json
-{
-  "sessionID": "de305d54-75b4-431b-adb2-eb6b9e546014",
-  "sessionToken": "hyBdQYUeQtvXEPqWC7K8a97L",
-  "sessionSecret": "dztL7Ur49D/YYgUzYl4sMg=="
-}
-```
 
 ## Fetching Session Status
 After initiating the dynamic link certificate choice session and storing the session information, you can fetch the session status to check if the user has completed the authentication process.
@@ -1068,20 +984,6 @@ SmartIdClient client = new SmartIdClient();
 # Initiating a Dynamic Link Signature Session in API v3.0
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a signature session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the signing process using a dynamic link. The user can then access the link and complete the signing process.
 
-## Dynamic Link Signature Endpoints
-To initiate a dynamic link signature session, you can use one of the following endpoints:
-
-### Using Semantics Identifier:
-* Method: `POST`
-* Path: `BASE/v3/signature/dynamic-link/etsi/:id-etsi-qcs-SemanticsId-Natural`
-
-### Using Document Number:
-
-* Method: `POST`
-* Path: `BASE/v3/signature/dynamic-link/document/:documentNumber`
-
-Replace :id-etsi-qcs-SemanticsId-Natural with the user's Semantics Identifier and :documentNumber with the user's document number.
-
 ## Request Parameters
 The request parameters for the dynamic link signature session are as follows:
 
@@ -1103,114 +1005,51 @@ The request parameters for the dynamic link signature session are as follows:
   * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
 
-### Example: Initiating a Dynamic Link Signature Request
-Here's an example of how to initiate a dynamic link signature request using the Smart-ID Java client, using the Semantics Identifier endpoint.
-    
-```json
-    {
-  "relyingPartyUUID": "1f1bfa89-4f8b-420a-a98e-fb3a161a30bc",
-  "relyingPartyName": "DEMO",
-  "certificateLevel": "QUALIFIED",
-  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
-  "acspV1SignatureProtocolParameters": {
-    "digest": "ZHNmYmhkZmdoZGcgZmRmMTM0NTM...",
-    "signatureAlgorithm": "sha512WithRSAEncryption"
-  },
-  "allowedInteractionsOrder": [
-    {
-      "type": "confirmationMessage",
-      "displayText200": "Up to 200 characters of text here.."
-    },
-    {
-      "type": "displayTextAndPIN",
-      "displayText60": "Up to 60 characters of text here.."
-    }
-  ],
-  "requestProperties": {
-    "shareMdClientIpAddress": false
-  }
-}
-```
-
 ## Examples of Allowed Interactions Order
 An app can support different interaction types, and a Relying Party can specify the preferred interactions with or without fallback options. Different interactions can support different amounts of data to display information to the user.
 
 Below are examples of `allowedInteractionsOrder` elements in JSON format:
 Example 1: `confirmationMessage` with Fallback to `displayTextAndPIN`
 Description: The RP's first choice is `confirmationMessage`; if not available, then fall back to `displayTextAndPIN`.
-```json
-{
-  "allowedInteractionsOrder": [
-    {
-      "type": "confirmationMessage",
-      "displayText200": "Up to 200 characters of text here.."
-    },
-    {
-      "type": "displayTextAndPIN",
-      "displayText60": "Up to 60 characters of text here.."
-    }
-  ]
-}
+```java
+builder.withAllowedInteractionsOrder(List.of(
+        Interaction.confirmationMessage("Up to 200 characters of text here.."),
+        Interaction.displayTextAndPIN("Up to 60 characters of text here..")
+        ));
 ```
 
 Example 2: `confirmationMessage` with Fallback to `verificationCodeChoice`
 Description: The RP's first choice is `confirmationMessage`; if not available, then use `verificationCodeChoice`.
-```json
-{
-  "allowedInteractionsOrder": [
-    {
-      "type": "confirmationMessage",
-      "displayText200": "Up to 200 characters of text here.."
-    },
-    {
-      "type": "verificationCodeChoice",
-      "displayText60": "Up to 60 characters of text here.."
-    }
-  ]
-}
+```java
+builder.withAllowedInteractionsOrder(List.of(
+    Interaction.confirmationMessage("Up to 200 characters of text here.."),
+    Interaction.verificationCodeChoice("Up to 60 characters of text here..")
+));
 ```
 
 Example 3: `displayTextAndPIN` Only
 Description: Use `displayTextAndPIN` interaction only.
-```json
-{
-  "allowedInteractionsOrder": [
-    {
-      "type": "displayTextAndPIN",
-      "displayText60": "Up to 60 characters of text here.."
-    }
-  ]
-}
+```java
+builder.withAllowedInteractionsOrder(List.of(
+    Interaction.displayTextAndPIN("Up to 60 characters of text here..")
+));
 ```
 
 Example 4: `verificationCodeChoice` with Fallback to `displayTextAndPIN`
 Description: Use `verificationCodeChoice`; if not available, then `displayTextAndPIN` should be used.
-```json
-{
-  "allowedInteractionsOrder": [
-    {
-      "type": "verificationCodeChoice",
-      "displayText60": "Up to 60 characters of text here.."
-    },
-    {
-      "type": "displayTextAndPIN",
-      "displayText60": "Up to 60 characters of text here.."
-    }
-  ]
-}
+```java
+builder.withAllowedInteractionsOrder(List.of(
+        Interaction.verificationCodeChoice("Up to 60 characters of text here.."),
+        Interaction.displayTextAndPIN("Up to 60 characters of text here..")
+        ));
 ```
 
 Example 5: `confirmationMessage` Only (No Fallback)
 Description: Insist on `confirmationMessage`; if not available, then fail.
-```json
-{
-  "allowedInteractionsOrder": [
-    {
-      "type": "confirmationMessage",
-      "displayText200": "Up to 200 characters of text here.."
-    }
-  ]
-}
+```java
+builder.withAllowedInteractionsOrder(List.of(
+    Interaction.confirmationMessage("Up to 200 characters of text here..")
+));
 ```
 
 ## Using Semantics Identifier
@@ -1283,40 +1122,12 @@ String sessionSecret = signatureResponse.getSessionSecret();
 // Use the session information as needed
 ```
 
-## Response on Successful Session Creation
-Upon successful initiation, the session will proceed, and the user can complete the signing process using the dynamic link. The `sign()` method will handle polling the session status and return the `SmartIdSignature` once the user has signed.
-
 ## Response Parameters
 The response from a successful dynamic link signature session creation contains the following parameters:
 
 * `sessionID`: A string that can be used to request the operation result.
 * `sessionToken`: Unique random value that will be used to connect this signature attempt between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
-
-### Example of a Successful Response
-```json
-{
-  "sessionID": "de305d54-75b4-431b-adb2-eb6b9e546014",
-  "sessionToken": "hyBdQYUeQtvXEPqWC7K8a97L",
-  "sessionSecret": "dztL7Ur49D/YYgUzYl4sMg=="
-}
-```
-
-### Example of Signature in Session Status Response
-The session status response includes the signature details:
-```json
-{
-  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
-  "signature": {
-    "value": "B+A9CfjIBZnDHHav3B4F...",
-    "signatureAlgorithm": "sha512WithRSAEncryption",
-    "signatureAlgorithmParameters": {
-      "hashAlgorithm": "SHA-512"
-    }
-  }
-}
-
-```
 
 ## Error Handling
 Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `UserRefusedException`, `SessionTimeoutException`, and others.
