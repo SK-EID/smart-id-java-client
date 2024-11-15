@@ -29,6 +29,7 @@ package ee.sk.smartid.v3;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,6 +109,42 @@ class SmartIdClientTest {
     }
 
     @Test
+    void createNotificationAuthentication_withSemanticsIdentifier() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/etsi/PNOEE-1234567890", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+
+        NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                .initAuthenticationSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getVc());
+        assertNotNull(response.getVc().getType());
+        assertNotNull(response.getVc().getValue());
+    }
+
+    @Test
+    void createNotificationAuthentication_withDocumentNumber() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+
+        NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                .initAuthenticationSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getVc());
+        assertNotNull(response.getVc().getType());
+        assertNotNull(response.getVc().getValue());
+    }
+
+    @Test
     void createDynamicLinkAuthentication_withSemanticsIdentifier() {
         SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
         DynamicLinkAuthenticationSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
@@ -170,7 +207,7 @@ class SmartIdClientTest {
 
     @Test
     void createNotificationSignature_withDocumentNumber() {
-        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
         var signableHash = new SignableHash();
         signableHash.setHashInBase64(Base64.toBase64String("a".repeat(64).getBytes()));
@@ -193,7 +230,7 @@ class SmartIdClientTest {
 
     @Test
     void createNotificationSignature_withSemanticsIdentifier() {
-        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
         var signableHash = new SignableHash();
         signableHash.setHashInBase64(Base64.toBase64String("a".repeat(64).getBytes()));
