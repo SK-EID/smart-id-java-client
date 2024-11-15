@@ -175,7 +175,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void withSignatureAlgorithm_setsCorrectAlgorithm() {
+    void initSignatureSession_withSignatureAlgorithm_setsCorrectAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA256);
         builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA384WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));

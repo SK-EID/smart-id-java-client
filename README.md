@@ -1122,9 +1122,6 @@ String sessionSecret = signatureResponse.getSessionSecret();
 // Use the session information as needed
 ```
 
-## Response on Successful Dynamic-Link Signature Session Creation
-Upon successful initiation, the session will proceed, and the user can complete the signing process using the dynamic link. The `sign()` method will handle polling the session status and return the `SmartIdSignature` once the user has signed.
-
 ## Response Parameters
 The response from a successful dynamic link signature session creation contains the following parameters:
 
