@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3.service;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Set;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -42,11 +42,9 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
@@ -70,68 +68,74 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
 
     @Test
     void initiateCertificateChoice() {
-        when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
+        builderService.withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Enter your PIN")));
+        when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
+        DynamicLinkSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
         assertEquals("test-session-token", result.getSessionToken());
         assertEquals("test-session-secret", result.getSessionSecret());
 
-        verify(connector).getCertificate(any(CertificateRequest.class));
+        verify(connector).getCertificate(any(CertificateChoiceRequest.class));
     }
 
     @Test
     void initiateCertificateChoice_nullRequestProperties() {
-        builderService.withShareMdClientIpAddress(false);
-        when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
-        when(sessionStatusPoller.fetchFinalSessionStatus(any(String.class))).thenReturn(createSessionStatus());
+        builderService.withShareMdClientIpAddress(false).withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Enter PIN to confirm")));
 
-        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
+        when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        assertNotNull(result);
-        verify(connector).getCertificate(any(CertificateRequest.class));
-    }
-
-    @Test
-    void initiateCertificateChoice_missingCertificateLevel() {
-        builderService.withCertificateLevel(null);
-        when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
-        when(sessionStatusPoller.fetchFinalSessionStatus(any(String.class))).thenReturn(createSessionStatus());
-
-        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
-
-        assertNotNull(result);
-        verify(connector).getCertificate(any(CertificateRequest.class));
-    }
-
-    @Test
-    void initiateCertificateChoice_withValidCapabilities() {
-        Set<String> capabilities = Set.of("SIGN", "AUTH");
-        builderService.withCapabilities(capabilities);
-        when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
-
-        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
+        DynamicLinkSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
         assertEquals("test-session-token", result.getSessionToken());
         assertEquals("test-session-secret", result.getSessionSecret());
 
-        verify(connector).getCertificate(any(CertificateRequest.class));
+        verify(connector).getCertificate(any(CertificateChoiceRequest.class));
+    }
+
+    @Test
+    void initiateCertificateChoice_missingCertificateLevel() {
+        builderService.withCertificateLevel(null).withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sample text")));
+        when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenReturn(mockCertificateChoiceResponse());
+
+        var ex = assertThrows(SmartIdClientException.class, builderService::initiateCertificateChoice);
+        assertEquals("Parameter certificateLevel must be set", ex.getMessage());
+    }
+
+    @Test
+    void initiateCertificateChoice_withValidCapabilities() {
+        builderService.withCapabilities("ADVANCED", "QUALIFIED").withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Enter PIN to confirm")));
+
+        when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenReturn(mockCertificateChoiceResponse());
+
+        DynamicLinkSessionResponse result = builderService.initiateCertificateChoice();
+
+        assertNotNull(result);
+        assertEquals("test-session-id", result.getSessionID());
+        assertEquals("test-session-token", result.getSessionToken());
+        assertEquals("test-session-secret", result.getSessionSecret());
+
+        verify(connector).getCertificate(any(CertificateChoiceRequest.class));
     }
 
     @Test
     void initiateCertificateChoice_nullCapabilities() {
-        builderService.withCapabilities(null);
-        when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(mockCertificateChoiceResponse());
-        when(sessionStatusPoller.fetchFinalSessionStatus(any(String.class))).thenReturn(createSessionStatus());
+        builderService.withCapabilities().withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Enter PIN to confirm")));
 
-        DynamicLinkCertificateChoiceSessionResponse result = builderService.initiateCertificateChoice();
+        when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenReturn(mockCertificateChoiceResponse());
+
+        DynamicLinkSessionResponse result = builderService.initiateCertificateChoice();
 
         assertNotNull(result);
-        verify(connector).getCertificate(any(CertificateRequest.class));
+        assertEquals("test-session-id", result.getSessionID());
+        assertEquals("test-session-token", result.getSessionToken());
+        assertEquals("test-session-secret", result.getSessionSecret());
+
+        verify(connector).getCertificate(any(CertificateChoiceRequest.class));
     }
 
     @Nested
@@ -139,28 +143,30 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
 
         @Test
         void initiateCertificateChoice_whenResponseIsNull() {
-            when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(null);
+            when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenReturn(null);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initiateCertificateChoice());
-            assertEquals("Dynamic link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("Parameter allowedInteractionsOrder must be set", ex.getMessage());
         }
 
         @Test
         void initiateCertificateChoice_whenSessionIDIsNull() {
-            var responseWithNullSessionID = new DynamicLinkCertificateChoiceSessionResponse();
+            var responseWithNullSessionID = new DynamicLinkSessionResponse();
             responseWithNullSessionID.setSessionToken("test-session-token");
             responseWithNullSessionID.setSessionSecret("test-session-secret");
-            when(connector.getCertificate(any(CertificateRequest.class))).thenReturn(responseWithNullSessionID);
+            when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenReturn(responseWithNullSessionID);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initiateCertificateChoice());
-            assertEquals("Dynamic link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("Parameter allowedInteractionsOrder must be set", ex.getMessage());
         }
 
         @Test
         void initiateCertificateChoice_userAccountNotFound() {
-            when(connector.getCertificate(any(CertificateRequest.class))).thenThrow(new UserAccountNotFoundException());
+            builderService.withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Some text")));
+            when(connector.getCertificate(any(CertificateChoiceRequest.class))).thenThrow(new UserAccountNotFoundException());
 
-            assertThrows(UserAccountNotFoundException.class, () -> builderService.initiateCertificateChoice());
+            var ex = assertThrows(UserAccountNotFoundException.class, () -> builderService.initiateCertificateChoice());
+            assertEquals(UserAccountNotFoundException.class, ex.getClass());
         }
 
         @Test
@@ -184,7 +190,7 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
             builderService.withNonce("1234567890123456789012345678901");
 
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initiateCertificateChoice());
-            assertEquals("Nonce must be between 1 and 30 characters. You supplied: '1234567890123456789012345678901'", ex.getMessage());
+            assertEquals("Nonce cannot be longer than 30 chars", ex.getMessage());
         }
 
         @Test
@@ -192,12 +198,12 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
             builderService.withNonce("");
 
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initiateCertificateChoice());
-            assertEquals("Nonce must be between 1 and 30 characters. You supplied: ''", ex.getMessage());
+            assertEquals("Parameter nonce value has to be at least 1 character long", ex.getMessage());
         }
     }
 
-    private static DynamicLinkCertificateChoiceSessionResponse mockCertificateChoiceResponse() {
-        var response = new DynamicLinkCertificateChoiceSessionResponse();
+    private static DynamicLinkSessionResponse mockCertificateChoiceResponse() {
+        var response = new DynamicLinkSessionResponse();
         response.setSessionID("test-session-id");
         response.setSessionToken("test-session-token");
         response.setSessionSecret("test-session-secret");

@@ -26,33 +26,34 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
-public class DynamicLinkAuthenticationSessionResponse {
+import java.util.List;
 
-    private String sessionID;
-    private String sessionToken;
-    private String sessionSecret;
+import ee.sk.smartid.v3.rest.dao.Interaction;
 
-    public String getSessionID() {
-        return sessionID;
+public class AuthenticationSessionRequest extends CommonSessionRequest {
+
+    private final SignatureProtocol signatureProtocol = SignatureProtocol.ACSP_V1;
+    private AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters;
+
+    private List<Interaction> allowedInteractionsOrder;
+
+    public SignatureProtocol getSignatureProtocol() {
+        return signatureProtocol;
     }
 
-    public void setSessionID(String sessionID) {
-        this.sessionID = sessionID;
+    public AcspV1SignatureProtocolParameters getSignatureProtocolParameters() {
+        return acspV1SignatureProtocolParameters;
     }
 
-    public String getSessionToken() {
-        return sessionToken;
+    public void setSignatureProtocolParameters(AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters) {
+        this.acspV1SignatureProtocolParameters = acspV1SignatureProtocolParameters;
     }
 
-    public void setSessionToken(String sessionToken) {
-        this.sessionToken = sessionToken;
+    public List<Interaction> getAllowedInteractionsOrder() {
+        return allowedInteractionsOrder;
     }
 
-    public String getSessionSecret() {
-        return sessionSecret;
-    }
-
-    public void setSessionSecret(String sessionSecret) {
-        this.sessionSecret = sessionSecret;
+    public void setAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+        this.allowedInteractionsOrder = allowedInteractionsOrder;
     }
 }

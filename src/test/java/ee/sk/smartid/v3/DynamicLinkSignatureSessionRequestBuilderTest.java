@@ -84,7 +84,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), eq(semanticsIdentifier))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
         assertEquals("test-session-id", signature.getSessionID());
@@ -104,7 +104,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
         assertEquals("test-session-id", signature.getSessionID());
@@ -124,7 +124,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -143,7 +143,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -161,7 +161,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -182,7 +182,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -205,7 +205,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -219,12 +219,12 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
     @ParameterizedTest
     @ArgumentsSource(CapabilitiesArgumentProvider.class)
-    void initSignatureSession_withCapabilities(Set<String> capabilities, Set<String> expectedCapabilities) {
+    void initSignatureSession_withCapabilities(String[] capabilities, Set<String> expectedCapabilities) {
         builder.withCapabilities(capabilities).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -245,7 +245,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -266,7 +266,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class)))
                 .thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSignatureSessionResponse signature = builder.initSignatureSession();
+        DynamicLinkSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -312,7 +312,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenThrow(new SmartIdClientException("Either signableHash or signableData must be set."));
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
+            assertEquals("Either signableData or signableHash must be set.", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -321,7 +321,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
+            assertEquals("Parameter allowedInteractionsOrder must be set", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -330,7 +330,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withRelyingPartyUUID(relyingPartyUUID);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Relying Party UUID must be set.", ex.getMessage());
+            assertEquals("Parameter relyingPartyUUID must be set", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -339,21 +339,21 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withRelyingPartyName(relyingPartyName);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Relying Party Name must be set.", ex.getMessage());
+            assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_invalidNonce() {
             builder.withNonce("1234567890123456789012345678901");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
+            assertEquals("Nonce cannot be longer than 30 chars", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_emptyNonce() {
             builder.withNonce("");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
+            assertEquals("Parameter nonce value has to be at least 1 character long", ex.getMessage());
         }
 
         @Test
@@ -381,7 +381,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionID(String sessionID) {
-            var response = new DynamicLinkSignatureSessionResponse();
+            var response = new DynamicLinkSessionResponse();
             response.setSessionID(sessionID);
             response.setSessionToken("test-session-token");
             response.setSessionSecret("test-session-secret");
@@ -396,7 +396,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionToken(String sessionToken) {
-            var response = new DynamicLinkSignatureSessionResponse();
+            var response = new DynamicLinkSessionResponse();
             response.setSessionID("test-session-id");
             response.setSessionToken(sessionToken);
             response.setSessionSecret("test-session-secret");
@@ -411,7 +411,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionSecret(String sessionSecret) {
-            var response = new DynamicLinkSignatureSessionResponse();
+            var response = new DynamicLinkSessionResponse();
             response.setSessionID("test-session-id");
             response.setSessionToken("test-session-token");
             response.setSessionSecret(sessionSecret);
@@ -424,8 +424,8 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
     }
 
-    private DynamicLinkSignatureSessionResponse mockSignatureSessionResponse() {
-        var response = new DynamicLinkSignatureSessionResponse();
+    private DynamicLinkSessionResponse mockSignatureSessionResponse() {
+        var response = new DynamicLinkSessionResponse();
         response.setSessionID("test-session-id");
         response.setSessionToken("test-session-token");
         response.setSessionSecret("test-session-secret");
@@ -447,9 +447,9 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of(Set.of("QUALIFIED", "ADVANCED"), Set.of("QUALIFIED", "ADVANCED")),
-                    Arguments.of(Set.of("QUALIFIED"), Set.of("QUALIFIED")),
-                    Arguments.of(Set.of(), Set.of())
+                    Arguments.of(new String[]{"QUALIFIED", "ADVANCED"}, Set.of("QUALIFIED", "ADVANCED")),
+                    Arguments.of(new String[]{"QUALIFIED"}, Set.of("QUALIFIED")),
+                    Arguments.of(new String[]{}, Set.of())
             );
         }
     }
