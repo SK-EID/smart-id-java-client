@@ -70,6 +70,7 @@ import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
+import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
 class SmartIdRestConnectorTest {
 
@@ -427,7 +428,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class DynamicLinkSignatureTests {
 
-        private SmartIdConnector connector;
+        private SmartIdRestConnector connector;
 
         @BeforeEach
         public void setUp() {
