@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
@@ -65,6 +67,24 @@ public interface SmartIdConnector extends Serializable {
      * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
      */
     DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request);
+
+    /**
+     * Initiates a dynamic link based signature sessions.
+     *
+     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
+     * @param semanticsIdentifier The semantics identifier
+     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     */
+    DynamicLinkSignatureSessionResponse initDynamicLinkSignature(DynamicLinkSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+
+    /**
+     * Initiates a dynamic link based signature sessions.
+     *
+     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
+     * @param documentNumber The document number
+     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     */
+    DynamicLinkSignatureSessionResponse initDynamicLinkSignature(DynamicLinkSignatureSessionRequest request, String documentNumber);
 
     /**
      * Set the SSL context to use for secure communication

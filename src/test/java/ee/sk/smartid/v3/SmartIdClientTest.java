@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
@@ -117,6 +118,50 @@ class SmartIdClientTest {
                 .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
                 .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
                 .initAuthenticationSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getSessionToken());
+        assertNotNull(response.getSessionSecret());
+    }
+
+    @Test
+    void createDynamicLinkSignature_withDocumentNumber() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "v3/requests/dynamic-link-signature-request.json", "v3/responses/dynamic-link-signature-response.json");
+
+        var signableHash = new SignableHash();
+        signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
+        signableHash.setHashType(HashType.SHA512);
+
+        DynamicLinkSignatureSessionResponse response = smartIdClient.createDynamicLinkSignature()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign document?")))
+                .withSignableHash(signableHash)
+                .initSignatureSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getSessionToken());
+        assertNotNull(response.getSessionSecret());
+    }
+
+    @Test
+    void createDynamicLinkSignature_withSemanticsIdentifier() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-signature-request.json", "v3/responses/dynamic-link-signature-response.json");
+
+        var signableHash = new SignableHash();
+        signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
+        signableHash.setHashType(HashType.SHA512);
+
+        DynamicLinkSignatureSessionResponse response = smartIdClient.createDynamicLinkSignature()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign document?")))
+                .withSignableHash(signableHash)
+                .initSignatureSession();
 
         assertNotNull(response.getSessionID());
         assertNotNull(response.getSessionToken());
