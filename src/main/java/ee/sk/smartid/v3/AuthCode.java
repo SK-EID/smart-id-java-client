@@ -60,22 +60,6 @@ public final class AuthCode {
         return hashThePayload(payload, sessionSecret);
     }
 
-    private static void validateInputs(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret) {
-        if (dynamicLinkType == null) {
-            throw new SmartIdClientException("Dynamic link type must be set");
-        }
-        if (sessionType == null) {
-            throw new SmartIdClientException("Session type must be set");
-        }
-        if (sessionSecret == null) {
-            throw new SmartIdClientException("Session secret must be set");
-        }
-    }
-
-    private static String createPayload(DynamicLinkType dynamicLinkType, SessionType sessionType, long elapsedSeconds) {
-        return String.format(PAYLOAD_FORMAT, dynamicLinkType.getValue(), sessionType.getValue(), elapsedSeconds);
-    }
-
     /**
      * Hashes the payload with the session secret.
      *
@@ -94,5 +78,21 @@ public final class AuthCode {
         hmac.doFinal(result, 0);
 
         return Base64.getUrlEncoder().withoutPadding().encodeToString(result);
+    }
+
+    private static void validateInputs(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret) {
+        if (dynamicLinkType == null) {
+            throw new SmartIdClientException("Dynamic link type must be set");
+        }
+        if (sessionType == null) {
+            throw new SmartIdClientException("Session type must be set");
+        }
+        if (sessionSecret == null) {
+            throw new SmartIdClientException("Session secret must be set");
+        }
+    }
+
+    private static String createPayload(DynamicLinkType dynamicLinkType, SessionType sessionType, long elapsedSeconds) {
+        return String.format(PAYLOAD_FORMAT, dynamicLinkType.getValue(), sessionType.getValue(), elapsedSeconds);
     }
 }

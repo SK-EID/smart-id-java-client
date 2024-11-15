@@ -60,8 +60,8 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
  */
 public class QrCodeGenerator {
 
-    private final static int DEFAULT_QR_CODE_WIDTH_PX = 610;
-    private final static int DEFAULT_QR_CODE_HEIGHT = 610;
+    private static final int DEFAULT_QR_CODE_WIDTH_PX = 610;
+    private static final int DEFAULT_QR_CODE_HEIGHT = 610;
     private static final int DEFAULT_QUIET_AREA_SIZE_MODULES = 4;
     private static final String DEFAULT_FILE_FORMAT = "png";
 
