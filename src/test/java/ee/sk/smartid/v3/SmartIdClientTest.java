@@ -167,4 +167,50 @@ class SmartIdClientTest {
         assertNotNull(response.getSessionToken());
         assertNotNull(response.getSessionSecret());
     }
+
+    @Test
+    void createNotificationSignature_withDocumentNumber() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+
+        var signableHash = new SignableHash();
+        signableHash.setHashInBase64(Base64.toBase64String("a".repeat(64).getBytes()));
+        signableHash.setHashType(HashType.SHA512);
+
+        NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                .withSignableHash(signableHash)
+                .initSignatureSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getVc());
+        assertNotNull(response.getVc().getType());
+        assertNotNull(response.getVc().getValue());
+    }
+
+    @Test
+    void createNotificationSignature_withSemanticsIdentifier() {
+        SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+
+        var signableHash = new SignableHash();
+        signableHash.setHashInBase64(Base64.toBase64String("a".repeat(64).getBytes()));
+        signableHash.setHashType(HashType.SHA512);
+
+        NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                .withSignableHash(signableHash)
+                .initSignatureSession();
+
+        assertNotNull(response.getSessionID());
+        assertNotNull(response.getVc());
+        assertNotNull(response.getVc().getType());
+        assertNotNull(response.getVc().getValue());
+    }
 }

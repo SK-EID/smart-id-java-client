@@ -94,6 +94,15 @@ public class SmartIdClient {
     }
 
     /**
+     * Creates a new builder for creating a new notification signature session request
+     *
+     * @return builder for creating a new notification signature session request
+     */
+    public NotificationSignatureSessionRequestBuilder createNotificationSignature() {
+        return new NotificationSignatureSessionRequestBuilder(getSmartIdConnector());
+    }
+
+    /**
      * Sets the UUID of the relying party
      * <p>
      * Can be set also on the builder level,
