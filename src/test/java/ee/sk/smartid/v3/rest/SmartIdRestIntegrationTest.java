@@ -33,11 +33,11 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
-import ee.sk.smartid.v3.SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
@@ -86,7 +86,7 @@ public class SmartIdRestIntegrationTest {
         request.setCertificateLevel("QUALIFIED");
 
         String randomChallenge = RandomChallenge.generate();
-        var signatureParameters = new SignatureProtocolParameters();
+        var signatureParameters = new AcspV1SignatureProtocolParameters();
         signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
         signatureParameters.setRandomChallenge(randomChallenge);
         request.setSignatureProtocolParameters(signatureParameters);

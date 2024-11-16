@@ -3,8 +3,8 @@
   "relyingPartyName": "DEMO",
   "signatureProtocol": "ACSP_V1",
   "signatureProtocolParameters": {
-    "signatureAlgorithm": "sha512WithRSAEncryption",
-    "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE="
+    "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+    "signatureAlgorithm": "sha512WithRSAEncryption"
   },
   "allowedInteractionsOrder": [
     {"type": "displayTextAndPIN", "displayText60": "Log in?"}

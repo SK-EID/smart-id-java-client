@@ -26,7 +26,32 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-public enum SignatureProtocol {
-    ACSP_V1,
-    RAW_DIGEST_SIGNATURE;
+import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class VerificationCode implements Serializable {
+
+    public static final String ALPHA_NUMERIC_4 = "alphaNumeric4";
+
+    private String type;
+
+    private String value;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+    }
 }

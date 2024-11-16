@@ -1,0 +1,15 @@
+{
+  "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
+  "relyingPartyName": "DEMO",
+  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
+  "signatureProtocolParameters": {
+    "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
+    "signatureAlgorithm": "sha512WithRSAEncryption"
+  },
+  "allowedInteractionsOrder": [
+    {
+      "type": "verificationCodeChoice",
+      "displayText60": "Verify the code"
+    }
+  ]
+}

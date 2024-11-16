@@ -32,10 +32,13 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
+import ee.sk.smartid.v3.SignatureSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
+import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
+import ee.sk.smartid.v3.rest.dao.CertificateRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
@@ -65,6 +68,42 @@ public interface SmartIdConnector extends Serializable {
      * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
      */
     DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request);
+
+    /**
+     * Initiates a dynamic link based signature sessions.
+     *
+     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
+     * @param semanticsIdentifier The semantics identifier
+     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     */
+    DynamicLinkSignatureSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+
+    /**
+     * Initiates a dynamic link based signature sessions.
+     *
+     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
+     * @param documentNumber The document number
+     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     */
+    DynamicLinkSignatureSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber);
+
+    /**
+     * Initiates a notification-based signature session using a semantics identifier.
+     *
+     * @param request             The notification signature session request containing the required parameters.
+     * @param semanticsIdentifier The semantics identifier for the user initiating the session.
+     * @return NotificationSignatureSessionResponse containing the session ID and verification code (VC) information.
+     */
+    NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+
+    /**
+     * Initiates a notification-based signature session using a document number.
+     *
+     * @param request        The notification signature session request containing the required parameters.
+     * @param documentNumber The document number for the user initiating the session.
+     * @return NotificationSignatureSessionResponse containing the session ID and verification code (VC) information.
+     */
+    NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, String documentNumber);
 
     /**
      * Set the SSL context to use for secure communication

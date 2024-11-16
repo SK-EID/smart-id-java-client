@@ -4,7 +4,7 @@ package ee.sk.smartid.v3;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,24 +28,36 @@ package ee.sk.smartid.v3;
 
 import java.io.Serializable;
 
-public class SignatureProtocolParameters implements Serializable {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-    private String randomChallenge;
-    private String signatureAlgorithm;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class DynamicLinkSignatureSessionResponse implements Serializable {
 
-    public String getRandomChallenge() {
-        return randomChallenge;
+    private String sessionID;
+    private String sessionToken;
+    private String sessionSecret;
+
+    public String getSessionID() {
+        return sessionID;
     }
 
-    public void setRandomChallenge(String randomChallenge) {
-        this.randomChallenge = randomChallenge;
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
     }
 
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
+    public String getSessionToken() {
+        return sessionToken;
     }
 
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public String getSessionSecret() {
+        return sessionSecret;
+    }
+
+    public void setSessionSecret(String sessionSecret) {
+        this.sessionSecret = sessionSecret;
     }
 }

@@ -48,6 +48,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.SessionNotFoundException;
@@ -57,9 +58,13 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
-import ee.sk.smartid.v3.SignatureProtocolParameters;
+import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
+import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
+import ee.sk.smartid.v3.RawDigestSignatureProtocolParameters;
+import ee.sk.smartid.v3.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
@@ -200,6 +205,114 @@ class SmartIdRestConnectorTest {
     }
 
     @Nested
+    @WireMockTest(httpPort = 18082)
+    class SemanticsIdentifierDynamicLinkAuthentication {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18082");
+        }
+
+        @Test
+        void initDynamicLinkAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkAuthenticationSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            });
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            });
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18083)
+    class DocumentNumberDynamicLinkAuthentication {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18083");
+        }
+
+        @Test
+        void initDynamicLinkAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkAuthenticationSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+            });
+        }
+
+        @Test
+        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+            });
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18081)
+    class AnonymousDynamicLinkAuthentication {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18081");
+        }
+
+        @Test
+        void initAnonymousDynamicLinkAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkAuthenticationSessionResponse response = connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void initAnonymousDynamicLinkAuthentication_userAccountNotFound_throwException() {
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+            });
+        }
+
+        @Test
+        void initAnonymousDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json");
+                connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+            });
+        }
+    }
+
+    @Nested
     @WireMockTest(httpPort = 18089)
     class CertificateChoiceTests {
 
@@ -311,109 +424,335 @@ class SmartIdRestConnectorTest {
     }
 
     @Nested
-    @WireMockTest(httpPort = 18081)
-    class AnonymousDynamicLinkAuthentication {
+    @WireMockTest(httpPort = 18089)
+    class DynamicLinkSignatureTests {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        public void setUp() {
+            WireMock.configureFor("localhost", 18089);
+            connector = new SmartIdRestConnector("http://localhost:18089");
+        }
+
+        @Test
+        void initDynamicLinkSignature_withSemanticsIdentifier_successful() {
+            stubPostRequestWithResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", "v3/responses/dynamic-link-signature-response.json");
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            DynamicLinkSignatureSessionResponse response = connector.initDynamicLinkSignature(request, semanticsIdentifier);
+
+            assertNotNull(response);
+            assertEquals("test-session-id", response.getSessionID());
+            assertEquals("test-session-token", response.getSessionToken());
+            assertEquals("test-session-secret", response.getSessionSecret());
+        }
+
+        @Test
+        void initDynamicLinkSignature_withDocumentNumber_successful() {
+            stubPostRequestWithResponse("/signature/dynamic-link/document/PNOEE-31111111111", "v3/responses/dynamic-link-signature-response.json");
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            String documentNumber = "PNOEE-31111111111";
+
+            DynamicLinkSignatureSessionResponse response = connector.initDynamicLinkSignature(request, documentNumber);
+
+            assertNotNull(response);
+            assertEquals("test-session-id", response.getSessionID());
+            assertEquals("test-session-token", response.getSessionToken());
+            assertEquals("test-session-secret", response.getSessionSecret());
+        }
+
+        @Test
+        void initDynamicLinkSignature_userAccountNotFound() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 404);
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_relyingPartyNoPermission() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 403);
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_invalidRequest() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 400);
+
+            SignatureSessionRequest request = new SignatureSessionRequest();
+            request.setRelyingPartyUUID("");
+            request.setRelyingPartyName("");
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 401);
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+
+            assertEquals("Request is unauthorized for URI http://localhost:18089/signature/dynamic-link/etsi/PNOEE-31111111111", exception.getMessage());
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 471);
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsPersonShouldViewSmartIdPortalException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 472);
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsSmartIdClientException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 480);
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+
+            assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
+        }
+
+        @Test
+        void initDynamicLinkSignature_throwsServerMaintenanceException() {
+            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 580);
+
+            SignatureSessionRequest request = createSignatureSessionRequest();
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
+
+            assertThrows(ServerMaintenanceException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18084)
+    class SemanticsIdentifierNotificationSignature {
 
         private SmartIdRestConnector connector;
 
         @BeforeEach
         void setUp() {
-            connector = new SmartIdRestConnector("http://localhost:18081");
+            connector = new SmartIdRestConnector("http://localhost:18084");
         }
 
         @Test
-        void initAnonymousDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-            DynamicLinkAuthenticationSessionResponse response = connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+        void initNotificationSignature() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            var semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
+            NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, semanticsIdentifier);
 
             assertNotNull(response);
+            assertNotNull(response.getSessionID());
+            assertNotNull(response.getVc());
+            assertNotNull(response.getVc().getType());
+            assertNotNull(response.getVc().getValue());
         }
 
         @Test
-        void initAnonymousDynamicLinkAuthentication_userAccountNotFound_throwException() {
+        void initNotificationSignature_userAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json");
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json");
-                connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
+                connector.initNotificationSignature(request, semanticsIdentifier);
             });
         }
 
         @Test
-        void initAnonymousDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+        void initNotificationSignature_requestIsUnauthorized_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json");
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json");
-                connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
+                connector.initNotificationSignature(request, semanticsIdentifier);
+            });
+        }
+
+        @Test
+        void initNotificationSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/etsi/PNOEE-48010010101", 471);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> {
+                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
+                connector.initNotificationSignature(request, semanticsIdentifier);
+            });
+        }
+
+        @Test
+        void initNotificationSignature_throwsPersonShouldViewSmartIdPortalException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/etsi/PNOEE-48010010101", 472);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> {
+                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
+                connector.initNotificationSignature(request, semanticsIdentifier);
+            });
+        }
+
+        @Test
+        void initNotificationSignature_throwsSmartIdClientException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse(
+                    "/signature/notification/etsi/PNOEE-48010010101", 480);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            var ex = assertThrows(SmartIdClientException.class, () -> {
+                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
+                connector.initNotificationSignature(request, semanticsIdentifier);
+            });
+
+            assertEquals("Client-side API is too old and not supported anymore", ex.getMessage());
+        }
+
+        @Test
+        void initNotificationSignature_throwsServerMaintenanceException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/etsi/PNOEE-48010010101", 580);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            assertThrows(ServerMaintenanceException.class, () -> {
+                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
+                connector.initNotificationSignature(request, semanticsIdentifier);
             });
         }
     }
 
     @Nested
-    @WireMockTest(httpPort = 18082)
-    class SemanticsIdentifierDynamicLinkAuthentication {
+    @WireMockTest(httpPort = 18085)
+    class DocumentNumberNotificationSignature {
 
         private SmartIdRestConnector connector;
 
         @BeforeEach
         void setUp() {
-            connector = new SmartIdRestConnector("http://localhost:18082");
+            connector = new SmartIdRestConnector("http://localhost:18085");
         }
 
         @Test
-        void initDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-            DynamicLinkAuthenticationSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+        void initNotificationSignature() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            String documentNumber = "PNOEE-48010010101-MOCK-Q";
+            NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, documentNumber);
 
             assertNotNull(response);
+            assertNotNull(response.getSessionID());
+            assertNotNull(response.getVc());
+            assertNotNull(response.getVc().getType());
+            assertNotNull(response.getVc().getValue());
         }
 
         @Test
-        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
+        void initNotificationSignature_userAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json");
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+                String documentNumber = "PNOEE-48010010101-MOCK-Q";
+                connector.initNotificationSignature(request, documentNumber);
             });
         }
 
         @Test
-        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+        void initNotificationSignature_requestIsUnauthorized_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json");
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
-            });
-        }
-    }
-
-    @Nested
-    @WireMockTest(httpPort = 18083)
-    class DocumentNumberDynamicLinkAuthentication {
-
-        private SmartIdRestConnector connector;
-
-        @BeforeEach
-        void setUp() {
-            connector = new SmartIdRestConnector("http://localhost:18083");
-        }
-
-        @Test
-        void initDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-            DynamicLinkAuthenticationSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
-
-            assertNotNull(response);
-        }
-
-        @Test
-        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+                String documentNumber = "PNOEE-48010010101-MOCK-Q";
+                connector.initNotificationSignature(request, documentNumber);
             });
         }
 
         @Test
-        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+        void initNotificationSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 471);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> {
+                String documentNumber = "PNOEE-48010010101-MOCK-Q";
+                connector.initNotificationSignature(request, documentNumber);
+            });
+        }
+
+        @Test
+        void initNotificationSignature_throwsPersonShouldViewSmartIdPortalException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 472);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> {
+                String documentNumber = "PNOEE-48010010101-MOCK-Q";
+                connector.initNotificationSignature(request, documentNumber);
+            });
+        }
+
+        @Test
+        void initNotificationSignature_throwsSmartIdClientException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 480);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            var ex = assertThrows(SmartIdClientException.class, () -> {
+                String documentNumber = "PNOEE-48010010101-MOCK-Q";
+                connector.initNotificationSignature(request, documentNumber);
+            });
+
+            assertEquals("Client-side API is too old and not supported anymore", ex.getMessage());
+        }
+
+        @Test
+        void initNotificationSignature_throwsServerMaintenanceException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 580);
+
+            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+
+            assertThrows(ServerMaintenanceException.class, () -> {
+                String documentNumber = "PNOEE-48010010101-MOCK-Q";
+                connector.initNotificationSignature(request, documentNumber);
             });
         }
     }
@@ -423,7 +762,7 @@ class SmartIdRestConnectorTest {
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
 
-        var signatureProtocolParameters = new SignatureProtocolParameters();
+        var signatureProtocolParameters = new AcspV1SignatureProtocolParameters();
         signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
         signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
@@ -439,6 +778,37 @@ class SmartIdRestConnectorTest {
         request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
         request.setRelyingPartyName("BANK123");
         request.setCertificateLevel("ADVANCED");
+        return request;
+    }
+
+    private SignatureSessionRequest createSignatureSessionRequest() {
+        var request = new SignatureSessionRequest();
+        request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
+        request.setRelyingPartyName("BANK123");
+
+        var protocolParameters = new RawDigestSignatureProtocolParameters();
+        protocolParameters.setDigest("base64-encoded-digest");
+        protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+
+        request.setSignatureProtocolParameters(protocolParameters);
+
+        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign the document")));
+
+        return request;
+    }
+
+    private SignatureSessionRequest createNotificationSignatureSessionRequest() {
+        var request = new SignatureSessionRequest();
+        request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        request.setRelyingPartyName("DEMO");
+
+        var protocolParameters = new RawDigestSignatureProtocolParameters();
+        protocolParameters.setDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==");
+        protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+
+        request.setSignatureProtocolParameters(protocolParameters);
+        request.setAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")));
+
         return request;
     }
 }

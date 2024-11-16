@@ -61,8 +61,8 @@ public class SmartIdRestIntegrationTest {
 
     private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
     private static final String RELYING_PARTY_NAME = "DEMO";
-    private static final String DOCUMENT_NUMBER = "PNOEE-50609019996-MOCK-Q";
-    private static final String DOCUMENT_NUMBER_LT = "PNOLT-50609019996-MOCK-Q";
+    private static final String DOCUMENT_NUMBER = "PNOEE-30303039914-MOCK-Q";
+    private static final String DOCUMENT_NUMBER_LT = "PNOLT-30303039914-MOCK-Q";
     private static final String DATA_TO_SIGN = "Hello World!";
     private static final String CERTIFICATE_LEVEL_QUALIFIED = "QUALIFIED";
 
@@ -88,7 +88,7 @@ public class SmartIdRestIntegrationTest {
 
     @Test
     public void authenticate_withSemanticsIdentifier() throws Exception {
-        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "010906-29990");
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "030303-10012");
 
         AuthenticationSessionRequest request = createAuthenticationSessionRequest();
         AuthenticationSessionResponse authenticationSessionResponse = connector.authenticate(semanticsIdentifier, request);

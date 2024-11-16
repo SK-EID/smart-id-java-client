@@ -66,12 +66,40 @@ public class SmartIdClient {
     private SmartIdConnector connector;
     private SSLContext trustSslContext;
 
+    /**
+     * Creates a new builder for creating a dynamic link certificate choice session request.
+     *
+     *  @return a builder for creating a new dynamic link certificate choice session request
+     */
     public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
         return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector());
     }
 
+    /**
+     * Creates a new builder for creating a new dynamic link authentication session request
+     *
+     * @return builder for creating a new dynamic link authentication session request
+     */
     public DynamicLinkAuthenticationSessionRequestBuilder createDynamicLinkAuthentication() {
         return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector());
+    }
+
+    /**
+     * Creates a new builder for creating a new dynamic link signature session request
+     *
+     * @return builder for creating a new dynamic link signature session request
+     */
+    public DynamicLinkSignatureSessionRequestBuilder createDynamicLinkSignature() {
+        return new DynamicLinkSignatureSessionRequestBuilder(getSmartIdConnector());
+    }
+
+    /**
+     * Creates a new builder for creating a new notification signature session request
+     *
+     * @return builder for creating a new notification signature session request
+     */
+    public NotificationSignatureSessionRequestBuilder createNotificationSignature() {
+        return new NotificationSignatureSessionRequestBuilder(getSmartIdConnector());
     }
 
     /**
@@ -262,8 +290,6 @@ public class SmartIdClient {
     public void setSmartIdConnector(SmartIdConnector smartIdConnector) {
         this.connector = smartIdConnector;
     }
-
-
 
     private Client createClient() {
         ClientBuilder clientBuilder = ClientBuilder.newBuilder();

@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -26,27 +26,31 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.Optional;
+import java.io.Serializable;
 
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import ee.sk.smartid.v3.rest.dao.VerificationCode;
 
-public class SmartIdDemoCondition implements ExecutionCondition {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class NotificationSignatureSessionResponse implements Serializable {
 
-    /**
-     * Allows switching off tests going against smart-id demo env.
-     * This is sometimes needed if the test data in smart-id is temporarily broken.
-     */
-    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
+    private String sessionID;
 
-    @Override
-    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        Optional<AnnotatedElement> element = context.getElement();
-        if (element.isPresent() && element.get().isAnnotationPresent(SmartIdDemoIntegrationTest.class) && !TEST_AGAINST_SMART_ID_DEMO) {
-            return ConditionEvaluationResult.disabled("Running against Smart-ID demo is turned off");
-        }
-        return ConditionEvaluationResult.enabled("Running against Smart-ID demo is turned on");
+    private VerificationCode vc;
+
+    public String getSessionID() {
+        return sessionID;
+    }
+
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
+    }
+
+    public VerificationCode getVc() {
+        return vc;
+    }
+
+    public void setVc(VerificationCode verificationCode) {
+        this.vc = verificationCode;
     }
 }

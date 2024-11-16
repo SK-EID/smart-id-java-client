@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,27 +26,26 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.Optional;
+import java.io.Serializable;
 
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtensionContext;
+public class RawDigestSignatureProtocolParameters implements Serializable {
 
-public class SmartIdDemoCondition implements ExecutionCondition {
+    private String digest;
+    private String signatureAlgorithm;
 
-    /**
-     * Allows switching off tests going against smart-id demo env.
-     * This is sometimes needed if the test data in smart-id is temporarily broken.
-     */
-    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
+    public String getDigest() {
+        return digest;
+    }
 
-    @Override
-    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        Optional<AnnotatedElement> element = context.getElement();
-        if (element.isPresent() && element.get().isAnnotationPresent(SmartIdDemoIntegrationTest.class) && !TEST_AGAINST_SMART_ID_DEMO) {
-            return ConditionEvaluationResult.disabled("Running against Smart-ID demo is turned off");
-        }
-        return ConditionEvaluationResult.enabled("Running against Smart-ID demo is turned on");
+    public void setDigest(String digest) {
+        this.digest = digest;
+    }
+
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
+    }
+
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
     }
 }

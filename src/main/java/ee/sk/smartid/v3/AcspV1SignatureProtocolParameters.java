@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -26,27 +26,26 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.lang.reflect.AnnotatedElement;
-import java.util.Optional;
+import java.io.Serializable;
 
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtensionContext;
+public class AcspV1SignatureProtocolParameters implements Serializable {
 
-public class SmartIdDemoCondition implements ExecutionCondition {
+    private String randomChallenge;
+    private String signatureAlgorithm;
 
-    /**
-     * Allows switching off tests going against smart-id demo env.
-     * This is sometimes needed if the test data in smart-id is temporarily broken.
-     */
-    private static final boolean TEST_AGAINST_SMART_ID_DEMO = true;
+    public String getRandomChallenge() {
+        return randomChallenge;
+    }
 
-    @Override
-    public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        Optional<AnnotatedElement> element = context.getElement();
-        if (element.isPresent() && element.get().isAnnotationPresent(SmartIdDemoIntegrationTest.class) && !TEST_AGAINST_SMART_ID_DEMO) {
-            return ConditionEvaluationResult.disabled("Running against Smart-ID demo is turned off");
-        }
-        return ConditionEvaluationResult.enabled("Running against Smart-ID demo is turned on");
+    public void setRandomChallenge(String randomChallenge) {
+        this.randomChallenge = randomChallenge;
+    }
+
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
+    }
+
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
     }
 }

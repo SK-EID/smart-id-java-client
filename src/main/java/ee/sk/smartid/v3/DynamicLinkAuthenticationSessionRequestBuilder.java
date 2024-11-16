@@ -304,7 +304,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
             request.setCertificateLevel(certificateLevel.name());
         }
 
-        var signatureProtocolParameters = new SignatureProtocolParameters();
+        var signatureProtocolParameters = new AcspV1SignatureProtocolParameters();
         signatureProtocolParameters.setRandomChallenge(randomChallenge);
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
