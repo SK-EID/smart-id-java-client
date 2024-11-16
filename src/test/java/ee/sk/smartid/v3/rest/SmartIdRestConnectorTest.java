@@ -325,15 +325,15 @@ class SmartIdRestConnectorTest {
 
         @Test
         void getCertificate() {
-            stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v2/responses/dynamicLinkCertificateChoiceResponse.json");
+            stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/responses/dynamic-link-certificate-choice-response.json");
 
             CertificateRequest request = createCertificateRequest();
             DynamicLinkCertificateChoiceSessionResponse response = connector.getCertificate(request);
 
             assertNotNull(response);
-            assertEquals("de305d54-75b4-431b-adb2-eb6b9e546016", response.getSessionID());
-            assertEquals("session-token-value", response.getSessionToken());
-            assertEquals("session-secret-value", response.getSessionSecret());
+            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
+            assertEquals("sampleSessionToken", response.getSessionToken());
+            assertEquals("sampleSessionSecret", response.getSessionSecret());
         }
 
         @Test
