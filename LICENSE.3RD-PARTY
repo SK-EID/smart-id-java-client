@@ -1,7 +1,8 @@
-List of 108 third-party dependencies (auto-generated on 2024-09-27 with License Maven Plugin):
+List of 112 third-party dependencies (auto-generated on 2024-11-04 with License Maven Plugin):
 
 *  (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.5.8 - http://logback.qos.ch/logback-classic)
 *  (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.5.8 - http://logback.qos.ch/logback-core)
+*  (Apache License, Version 2.0) jcommander (com.beust:jcommander:1.82 - https://jcommander.org)
 *  (Apache License, Version 2.0) Internet Time Utility (com.ethlo.time:itu:1.10.2 - https://github.com/ethlo/itu)
 *  (The Apache Software License, Version 2.0) Jackson-annotations (com.fasterxml.jackson.core:jackson-annotations:2.17.2 - https://github.com/FasterXML/jackson)
 *  (The Apache Software License, Version 2.0) Jackson-core (com.fasterxml.jackson.core:jackson-core:2.17.2 - https://github.com/FasterXML/jackson-core)
@@ -11,6 +12,7 @@ List of 108 third-party dependencies (auto-generated on 2024-09-27 with License 
 *  (The Apache Software License, Version 2.0) Jackson Jakarta-RS: base (com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-base:2.15.4 - https://github.com/FasterXML/jackson-jakarta-rs-providers/jackson-jakarta-rs-base)
 *  (The Apache Software License, Version 2.0) Jackson Jakarta-RS: JSON (com.fasterxml.jackson.jakarta.rs:jackson-jakarta-rs-json-provider:2.15.4 - https://github.com/FasterXML/jackson-jakarta-rs-providers/jackson-jakarta-rs-json-provider)
 *  (The Apache Software License, Version 2.0) Jackson module: Jakarta XML Bind Annotations (jakarta.xml.bind) (com.fasterxml.jackson.module:jackson-module-jakarta-xmlbind-annotations:2.17.1 - https://github.com/FasterXML/jackson-modules-base)
+*  (BSD 3-clause License w/nuclear disclaimer) Java Advanced Imaging Image I/O Tools API core (standalone) (com.github.jai-imageio:jai-imageio-core:1.4.0 - https://github.com/jai-imageio/jai-imageio-core)
 *  (Apache Software License, version 2.0) (Lesser General Public License, version 3 or greater) btf (com.github.java-json-tools:btf:1.3 - https://github.com/java-json-tools/btf)
 *  (Apache Software License, version 2.0) (Lesser General Public License, version 3 or greater) jackson-coreutils (com.github.java-json-tools:jackson-coreutils:2.0 - https://github.com/java-json-tools/jackson-coreutils)
 *  (Apache Software License, version 2.0) (Lesser General Public License, version 3 or greater) json-patch (com.github.java-json-tools:json-patch:1.13 - https://github.com/java-json-tools/json-patch)
@@ -22,6 +24,8 @@ List of 108 third-party dependencies (auto-generated on 2024-09-27 with License 
 *  (Apache License, Version 2.0) Guava: Google Core Libraries for Java (com.google.guava:guava:33.2.1-jre - https://github.com/google/guava)
 *  (The Apache Software License, Version 2.0) Guava ListenableFuture only (com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava - https://github.com/google/guava/listenablefuture)
 *  (Apache License, Version 2.0) J2ObjC Annotations (com.google.j2objc:j2objc-annotations:3.0.0 - https://github.com/google/j2objc/)
+*  (The Apache Software License, Version 2.0) ZXing Core (com.google.zxing:core:3.5.3 - https://github.com/zxing/zxing/core)
+*  (The Apache Software License, Version 2.0) ZXing Java SE extensions (com.google.zxing:javase:3.5.3 - https://github.com/zxing/zxing/javase)
 *  (The Apache Software License, Version 2.0) asyncutil (com.ibm.async:asyncutil:0.1.0 - http://github.com/ibm/java-async-util)
 *  (The Apache Software License, Version 2.0) json-path (com.jayway.jsonpath:json-path:2.9.0 - https://github.com/jayway/JsonPath)
 *  (Apache License Version 2.0) JsonSchemaValidator (com.networknt:json-schema-validator:1.5.0 - https://github.com/networknt/json-schema-validator)

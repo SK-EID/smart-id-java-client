@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -26,30 +26,22 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+/**
+ * Enum for dynamic link types
+ */
+public enum DynamicLinkType {
 
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+    QR_CODE("QR"),
+    WEB_2_APP("Web2App"),
+    APP_2_APP("App2App");
 
-public final class FileUtil {
+    private final String value;
 
-    private FileUtil() {
+    DynamicLinkType(String value) {
+        this.value = value;
     }
 
-    public static String readFileToString(String fileName) {
-        return new String(readFileBytes(fileName), StandardCharsets.UTF_8);
-    }
-
-    public static byte[] readFileBytes(String fileName) {
-        try {
-            ClassLoader classLoader = FileUtil.class.getClassLoader();
-            URL resource = classLoader.getResource(fileName);
-            assertNotNull(resource, "File not found: " + fileName);
-            return Files.readAllBytes(Paths.get(resource.toURI()));
-        } catch (Exception e) {
-            throw new RuntimeException("Exception: " + e.getMessage(), e);
-        }
+    public String getValue() {
+        return value;
     }
 }
