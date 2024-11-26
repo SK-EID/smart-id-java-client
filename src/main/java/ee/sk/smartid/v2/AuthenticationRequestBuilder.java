@@ -40,7 +40,7 @@ import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.Capability;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.RequestProperties;
-import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.SessionCertificate;
 import ee.sk.smartid.v2.rest.dao.SessionResult;
 import ee.sk.smartid.v2.rest.dao.SessionSignature;

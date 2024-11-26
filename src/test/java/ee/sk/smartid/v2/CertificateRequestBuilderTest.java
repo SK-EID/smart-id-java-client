@@ -56,7 +56,7 @@ import ee.sk.smartid.v2.rest.SessionStatusPoller;
 import ee.sk.smartid.v2.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.v2.rest.dao.Capability;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.SessionCertificate;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 

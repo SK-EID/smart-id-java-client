@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2.rest.dao;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L

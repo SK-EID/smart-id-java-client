@@ -62,7 +62,7 @@ import ee.sk.smartid.v2.AuthenticationIdentity;
 import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.v2.SignableHash;
