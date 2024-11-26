@@ -75,6 +75,12 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
         this.connector = connector;
     }
 
+    /**
+     * Sets the relying party UUID
+     *
+     * @param relyingPartUUID the relying party UUID
+     * @return this builder
+     */
     public DynamicLinkAuthenticationSessionRequestBuilder withRelyingPartyUUID(String relyingPartUUID) {
         this.relyingPartyUUID = relyingPartUUID;
         return this;

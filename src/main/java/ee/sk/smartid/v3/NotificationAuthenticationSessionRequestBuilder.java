@@ -77,6 +77,12 @@ public class NotificationAuthenticationSessionRequestBuilder {
         this.connector = connector;
     }
 
+    /**
+     * Sets the relying party UUID
+     *
+     * @param relyingPartUUID the relying party UUID
+     * @return this builder
+     */
     public NotificationAuthenticationSessionRequestBuilder withRelyingPartyUUID(String relyingPartUUID) {
         this.relyingPartyUUID = relyingPartUUID;
         return this;
@@ -223,7 +229,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
         } else if (documentNumber != null) {
             return connector.initNotificationAuthentication(authenticationRequest, documentNumber);
         } else {
-            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.");
+            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set.");
         }
     }
 
@@ -323,20 +329,20 @@ public class NotificationAuthenticationSessionRequestBuilder {
 
     private void validateResponseParameters(NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse) {
         if (StringUtil.isEmpty(notificationAuthenticationSessionResponse.getSessionID())) {
-            logger.error("Session ID is missing from the notificationAuthenticationSessionResponse");
-            throw new UnprocessableSmartIdResponseException("Session ID is missing from the notificationAuthenticationSessionResponse");
+            logger.error("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
         }
 
         VerificationCode verificationCode = notificationAuthenticationSessionResponse.getVc();
         if (verificationCode == null) {
-            logger.error("VC object is missing from the notificationAuthenticationSessionResponse");
-            throw new UnprocessableSmartIdResponseException("VC object is missing from the notificationAuthenticationSessionResponse");
+            logger.error("VC object is missing from the response");
+            throw new UnprocessableSmartIdResponseException("VC object is missing from the response");
         }
 
         String vcType = verificationCode.getType();
         if (StringUtil.isEmpty(vcType)) {
-            logger.error("VC type is missing from the notificationAuthenticationSessionResponse");
-            throw new UnprocessableSmartIdResponseException("VC type is missing from the notificationAuthenticationSessionResponse");
+            logger.error("VC type is missing from the response");
+            throw new UnprocessableSmartIdResponseException("VC type is missing from the response");
         }
 
         if (!VerificationCode.ALPHA_NUMERIC_4.equals(vcType)) {
@@ -345,8 +351,8 @@ public class NotificationAuthenticationSessionRequestBuilder {
         }
 
         if (StringUtil.isEmpty(verificationCode.getValue())) {
-            logger.error("VC value is missing from the notificationAuthenticationSessionResponse");
-            throw new UnprocessableSmartIdResponseException("VC value is missing from the notificationAuthenticationSessionResponse");
+            logger.error("VC value is missing from the response");
+            throw new UnprocessableSmartIdResponseException("VC value is missing from the response");
         }
     }
 }

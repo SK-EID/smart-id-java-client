@@ -1494,10 +1494,10 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withAllowedInteractionsOrder(Collections.singletonList(
                 Interaction.verificationCodeChoice("Log in to self-service?")
         ))
-        .withSharedMdClientIpAddress(true)
         .initAuthenticationSession();
 
 String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
 
 String verificationCode = authenticationSessionResponse.getVc().getValue();
 // Display the verification code to the user for confirmation
@@ -1526,9 +1526,25 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .initAuthenticationSession();
 
 String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
 
 String verificationCode = authenticationSessionResponse.getVc().getValue();
 // Display the verification code to the user for confirmation
+```
+
+### Requesting the IP Address of the User's Device
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withSharedMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+```java
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.verificationCodeChoice("Log in to self-service?")
+        ))
+        .withSharedMdClientIpAddress(true) // Request the user's device IP address
+        .initAuthenticationSession();
 ```
 
 ### Generating QR-code or dynamic link

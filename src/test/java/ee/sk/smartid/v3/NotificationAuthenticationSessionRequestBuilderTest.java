@@ -350,7 +350,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
 
-            assertEquals("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.", exception.getMessage());
+            assertEquals("Either documentNumber or semanticsIdentifier must be set.", exception.getMessage());
         }
     }
 
@@ -360,36 +360,38 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var notificationAuthenticationSessionResponse = new NotificationAuthenticationSessionResponse();
                 notificationAuthenticationSessionResponse.setSessionID(sessionId);
                 when(connector.initNotificationAuthentication(any(AuthenticationSessionRequest.class), any(String.class))).thenReturn(notificationAuthenticationSessionResponse);
-                initAuthentication();
+                new NotificationAuthenticationSessionRequestBuilder(connector)
+                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                        .withRelyingPartyName("DEMO")
+                        .withRandomChallenge(generateBase64String("a".repeat(32)))
+                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                        .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                        .initAuthenticationSession();
             });
-            assertEquals("Session ID is missing from the notificationAuthenticationSessionResponse", exception.getMessage());
+            assertEquals("Session ID is missing from the response", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullSource
         void initAuthenticationSession_vcIsNotPresentInTheResponse_throwException(VerificationCode vc) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var notificationAuthenticationSessionResponse = new NotificationAuthenticationSessionResponse();
                 notificationAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 notificationAuthenticationSessionResponse.setVc(vc);
                 when(connector.initNotificationAuthentication(any(AuthenticationSessionRequest.class), any(String.class))).thenReturn(notificationAuthenticationSessionResponse);
-                initAuthentication();
+                new NotificationAuthenticationSessionRequestBuilder(connector)
+                        .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                        .withRelyingPartyName("DEMO")
+                        .withRandomChallenge(generateBase64String("a".repeat(32)))
+                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                        .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                        .initAuthenticationSession();
             });
-            assertEquals("VC object is missing from the notificationAuthenticationSessionResponse", exception.getMessage());
-        }
-
-        private void initAuthentication() {
-            new NotificationAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
-                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                    .initAuthenticationSession();
+            assertEquals("VC object is missing from the response", exception.getMessage());
         }
 
         @Test
@@ -407,7 +409,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                             .initAuthenticationSession());
 
-            assertEquals("VC type is missing from the notificationAuthenticationSessionResponse", exception.getMessage());
+            assertEquals("VC type is missing from the response", exception.getMessage());
         }
 
         @Test
@@ -443,7 +445,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                             .initAuthenticationSession());
 
-            assertEquals("VC value is missing from the notificationAuthenticationSessionResponse", exception.getMessage());
+            assertEquals("VC value is missing from the response", exception.getMessage());
         }
     }
 
