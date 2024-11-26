@@ -69,10 +69,12 @@ public class SmartIdClient {
     /**
      * Creates a new builder for creating a dynamic link certificate choice session request.
      *
-     *  @return a builder for creating a new dynamic link certificate choice session request
+     * @return a builder for creating a new dynamic link certificate choice session request
      */
     public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
-        return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector());
+        return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
@@ -81,7 +83,9 @@ public class SmartIdClient {
      * @return builder for creating a new dynamic link authentication session request
      */
     public DynamicLinkAuthenticationSessionRequestBuilder createDynamicLinkAuthentication() {
-        return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector());
+        return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
@@ -90,7 +94,9 @@ public class SmartIdClient {
      * @return builder for creating a new dynamic link signature session request
      */
     public DynamicLinkSignatureSessionRequestBuilder createDynamicLinkSignature() {
-        return new DynamicLinkSignatureSessionRequestBuilder(getSmartIdConnector());
+        return new DynamicLinkSignatureSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
@@ -99,7 +105,9 @@ public class SmartIdClient {
      * @return builder for creating a new notification signature session request
      */
     public NotificationSignatureSessionRequestBuilder createNotificationSignature() {
-        return new NotificationSignatureSessionRequestBuilder(getSmartIdConnector());
+        return new NotificationSignatureSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
