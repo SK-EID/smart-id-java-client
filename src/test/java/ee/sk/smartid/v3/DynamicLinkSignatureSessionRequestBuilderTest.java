@@ -58,7 +58,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
 
 class DynamicLinkSignatureSessionRequestBuilderTest {
 
@@ -72,7 +72,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         builder = new DynamicLinkSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Please sign the document")))
+                .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()))
                 .withCertificateChoiceMade(false);
     }
@@ -317,7 +317,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<Interaction> allowedInteractionsOrder) {
+        void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<DynamicLinkInteraction> allowedInteractionsOrder) {
             builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -363,15 +363,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
-        }
-
-        @ParameterizedTest
-        @ArgumentsSource(UnsupportedInteractionArgumentsProvider.class)
-        void initSignatureSession_withNotSupportedInteractionType(Interaction interaction, String expectedErrorMessage) {
-            builder.withAllowedInteractionsOrder(List.of(interaction));
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals(expectedErrorMessage, ex.getMessage());
         }
     }
 
@@ -458,18 +449,6 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(null, "a", "a".repeat(30)).map(Arguments::of);
-        }
-    }
-
-    private static class UnsupportedInteractionArgumentsProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(Interaction.verificationCodeChoice("Please verify the code"),
-                            "AllowedInteractionsOrder contains not supported interaction VERIFICATION_CODE_CHOICE"),
-                    Arguments.of(Interaction.confirmationMessageAndVerificationCodeChoice("Please confirm and verify the code"),
-                            "AllowedInteractionsOrder contains not supported interaction CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE")
-            );
         }
     }
 }

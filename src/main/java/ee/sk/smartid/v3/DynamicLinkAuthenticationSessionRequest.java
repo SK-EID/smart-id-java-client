@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class DynamicLinkAuthenticationSessionRequest implements Serializable {
@@ -50,7 +50,7 @@ public class DynamicLinkAuthenticationSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String nonce;
 
-    private List<Interaction> allowedInteractionsOrder;
+    private List<DynamicLinkInteraction> allowedInteractionsOrder;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
@@ -102,11 +102,11 @@ public class DynamicLinkAuthenticationSessionRequest implements Serializable {
         this.nonce = nonce;
     }
 
-    public List<Interaction> getAllowedInteractionsOrder() {
+    public List<DynamicLinkInteraction> getAllowedInteractionsOrder() {
         return allowedInteractionsOrder;
     }
 
-    public void setAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    public void setAllowedInteractionsOrder(List<DynamicLinkInteraction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
     }
 

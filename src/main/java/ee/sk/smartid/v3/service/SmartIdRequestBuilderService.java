@@ -80,7 +80,7 @@ public class SmartIdRequestBuilderService {
     protected String certificateLevel;
     protected String nonce;
     protected Set<String> capabilities;
-    protected List<Interaction> allowedInteractionsOrder;
+    protected List<? extends Interaction> allowedInteractionsOrder;
 
     /**
      * Create {@link SmartIdAuthenticationResponse} from {@link SessionStatus}

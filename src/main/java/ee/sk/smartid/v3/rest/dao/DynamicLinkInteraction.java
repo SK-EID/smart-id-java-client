@@ -26,9 +26,38 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-public interface InteractionFlow {
+import static ee.sk.smartid.v3.rest.dao.DynamicLinkInteractionFlow.CONFIRMATION_MESSAGE;
+import static ee.sk.smartid.v3.rest.dao.DynamicLinkInteractionFlow.DISPLAY_TEXT_AND_PIN;
 
-    String getCode();
+public class DynamicLinkInteraction extends Interaction {
 
-    boolean is(String typeCodeString);
+    private DynamicLinkInteraction(DynamicLinkInteractionFlow type) {
+        this.type = type;
+    }
+
+    public static DynamicLinkInteraction displayTextAndPIN(String displayText60) {
+        var interaction = new DynamicLinkInteraction(DISPLAY_TEXT_AND_PIN);
+        interaction.displayText60 = displayText60;
+        return interaction;
+    }
+
+    public static DynamicLinkInteraction confirmationMessage(String displayText200) {
+        var interaction = new DynamicLinkInteraction(CONFIRMATION_MESSAGE);
+        interaction.displayText200 = displayText200;
+        return interaction;
+    }
+
+    @Override
+    protected void validateInteractionsDisplayText60() {
+        if (getType() == DISPLAY_TEXT_AND_PIN) {
+            validateDisplayText60();
+        }
+    }
+
+    @Override
+    protected void validateInteractionsDisplayText200() {
+        if (getType() == CONFIRMATION_MESSAGE) {
+            validateDisplayText200();
+        }
+    }
 }

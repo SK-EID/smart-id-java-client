@@ -68,7 +68,8 @@ import ee.sk.smartid.v3.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.v3.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.CertificateRequest;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
-import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 class SmartIdRestConnectorTest {
@@ -767,7 +768,7 @@ class SmartIdRestConnectorTest {
         signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
-        Interaction interaction = Interaction.displayTextAndPIN("Log in?");
+        DynamicLinkInteraction interaction = DynamicLinkInteraction.displayTextAndPIN("Log in?");
         dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
 
         return dynamicLinkAuthenticationSessionRequest;
@@ -792,7 +793,7 @@ class SmartIdRestConnectorTest {
 
         request.setSignatureProtocolParameters(protocolParameters);
 
-        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign the document")));
+        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign the document")));
 
         return request;
     }
@@ -807,7 +808,7 @@ class SmartIdRestConnectorTest {
         protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
 
         request.setSignatureProtocolParameters(protocolParameters);
-        request.setAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")));
+        request.setAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")));
 
         return request;
     }

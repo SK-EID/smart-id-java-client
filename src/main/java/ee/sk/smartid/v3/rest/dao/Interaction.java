@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2022 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,57 +26,22 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-import static ee.sk.smartid.v3.rest.dao.InteractionFlow.CONFIRMATION_MESSAGE;
-import static ee.sk.smartid.v3.rest.dao.InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE;
-import static ee.sk.smartid.v3.rest.dao.InteractionFlow.DISPLAY_TEXT_AND_PIN;
-import static ee.sk.smartid.v3.rest.dao.InteractionFlow.VERIFICATION_CODE_CHOICE;
-
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Interaction implements Serializable {
+public abstract class Interaction {
 
-    private InteractionFlow type;
+    protected InteractionFlow type;
 
-    private String displayText60;
-    private String displayText200;
-
-    private Interaction(InteractionFlow type) {
-        this.type = type;
-    }
-
-    public static Interaction displayTextAndPIN(String displayText60) {
-        Interaction interaction = new Interaction(DISPLAY_TEXT_AND_PIN);
-        interaction.displayText60 = displayText60;
-        return interaction;
-    }
-
-    public static Interaction verificationCodeChoice(String displayText60) {
-        Interaction interaction = new Interaction(VERIFICATION_CODE_CHOICE);
-        interaction.displayText60 = displayText60;
-        return interaction;
-    }
-
-    public static Interaction confirmationMessage(String displayText200) {
-        Interaction interaction = new Interaction(InteractionFlow.CONFIRMATION_MESSAGE);
-        interaction.displayText200 = displayText200;
-        return interaction;
-    }
-
-    public static Interaction confirmationMessageAndVerificationCodeChoice(String displayText200) {
-        Interaction interaction = new Interaction(InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
-        interaction.displayText200 = displayText200;
-        return interaction;
-    }
+    protected String displayText60;
+    protected String displayText200;
 
     public InteractionFlow getType() {
         return type;
     }
 
-    public void setType(InteractionFlow type) {
+    public void setType(DynamicLinkInteractionFlow type) {
         this.type = type;
     }
 
@@ -97,36 +62,37 @@ public class Interaction implements Serializable {
     }
 
     public void validate() {
-        validateDisplayText60();
-        validateDisplayText200();
+        validateInteractionsDisplayText60();
+        validateInteractionsDisplayText200();
     }
 
-    private void validateDisplayText60() {
-        if (getType() == VERIFICATION_CODE_CHOICE || getType() == DISPLAY_TEXT_AND_PIN) {
-            if (getDisplayText60() == null) {
-                throw new SmartIdClientException("displayText60 cannot be null for AllowedInteractionOrder of type " + getType());
-            }
-            if (getDisplayText60().length() > 60) {
-                throw new SmartIdClientException("displayText60 must not be longer than 60 characters");
-            }
-            if (getDisplayText200() != null) {
-                throw new SmartIdClientException("displayText200 must be null for AllowedInteractionOrder of type " + getType());
-            }
+    protected abstract void validateInteractionsDisplayText60();
+
+    protected abstract void validateInteractionsDisplayText200();
+
+    protected void validateDisplayText60() {
+        if (getDisplayText60() == null) {
+            throw new SmartIdClientException("displayText60 cannot be null for AllowedInteractionOrder of type " + getType());
+        }
+        if (getDisplayText60().length() > 60) {
+            throw new SmartIdClientException("displayText60 must not be longer than 60 characters");
+        }
+        if (getDisplayText200() != null) {
+            throw new SmartIdClientException("displayText200 must be null for AllowedInteractionOrder of type " + getType());
         }
     }
 
-    private void validateDisplayText200() {
-        if (getType() == CONFIRMATION_MESSAGE || getType() == CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE) {
-            if (getDisplayText200() == null) {
-                throw new SmartIdClientException("displayText200 cannot be null for AllowedInteractionOrder of type " + getType());
-            }
-            if (getDisplayText200().length() > 200) {
-                throw new SmartIdClientException("displayText200 must not be longer than 200 characters");
-            }
-            if (getDisplayText60() != null) {
-                throw new SmartIdClientException("displayText60 must be null for AllowedInteractionOrder of type " + getType());
-            }
+    protected void validateDisplayText200() {
+        if (getDisplayText200() == null) {
+            throw new SmartIdClientException("displayText200 cannot be null for AllowedInteractionOrder of type " + getType());
+        }
+        if (getDisplayText200().length() > 200) {
+            throw new SmartIdClientException("displayText200 must not be longer than 200 characters");
+        }
+        if (getDisplayText60() != null) {
+            throw new SmartIdClientException("displayText60 must be null for AllowedInteractionOrder of type " + getType());
         }
     }
 
+    ;
 }

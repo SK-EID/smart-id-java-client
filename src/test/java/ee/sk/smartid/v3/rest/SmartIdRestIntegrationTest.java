@@ -39,7 +39,7 @@ import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
-import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
 
 @Disabled("Currently request to v3 path returns - No permission to issue the request")
 @SmartIdDemoIntegrationTest
@@ -56,7 +56,7 @@ public class SmartIdRestIntegrationTest {
     void authenticate_anonymous() {
         DynamicLinkAuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
-        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
+        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
         DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initAnonymousDynamicLinkAuthentication(request);
     }
@@ -65,7 +65,7 @@ public class SmartIdRestIntegrationTest {
     void authenticate_withDocumentNumber() {
         DynamicLinkAuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
-        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
+        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
         DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, "PNOEE-50609019996-MOCK-Q");
     }
@@ -74,7 +74,7 @@ public class SmartIdRestIntegrationTest {
     void authenticate_withSemanticsIdentifier() {
         DynamicLinkAuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
-        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
+        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
         DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-50609019996"));
     }

@@ -26,9 +26,25 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-public interface InteractionFlow {
+import com.fasterxml.jackson.annotation.JsonValue;
 
-    String getCode();
+public enum DynamicLinkInteractionFlow implements InteractionFlow {
 
-    boolean is(String typeCodeString);
+    DISPLAY_TEXT_AND_PIN("displayTextAndPIN"),
+    CONFIRMATION_MESSAGE("confirmationMessage");
+
+    private final String code;
+
+    DynamicLinkInteractionFlow(String code) {
+        this.code = code;
+    }
+
+    @JsonValue
+    public String getCode() {
+        return code;
+    }
+
+    public boolean is(String typeCodeString) {
+        return this.getCode().equals(typeCodeString);
+    }
 }

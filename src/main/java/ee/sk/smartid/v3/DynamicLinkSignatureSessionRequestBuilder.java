@@ -27,7 +27,6 @@ package ee.sk.smartid.v3;
  */
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -39,16 +38,13 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
 import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.InteractionFlow;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class DynamicLinkSignatureSessionRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicLinkSignatureSessionRequestBuilder.class);
-
-    private static final Set<InteractionFlow> NOT_SUPPORTED_INTERACTION_FLOWS =
-            Set.of(InteractionFlow.VERIFICATION_CODE_CHOICE, InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
 
     private final SmartIdConnector connector;
 
@@ -59,7 +55,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private List<Interaction> allowedInteractionsOrder;
+    private List<? extends Interaction> allowedInteractionsOrder;
     private boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm;
     private SignableData signableData;
@@ -158,7 +154,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param allowedInteractionsOrder the allowed interactions order
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    public DynamicLinkSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<DynamicLinkInteraction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
         return this;
     }
@@ -337,13 +333,6 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private void validateAllowedInteractions() {
         if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
             throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
-        }
-        Optional<Interaction> notSupportedInteraction = allowedInteractionsOrder.stream()
-                .filter(interaction -> NOT_SUPPORTED_INTERACTION_FLOWS.contains(interaction.getType()))
-                .findFirst();
-        if (notSupportedInteraction.isPresent()) {
-            logger.error("AllowedInteractionsOrder contains not supported interaction {}", notSupportedInteraction.get().getType());
-            throw new SmartIdClientException("AllowedInteractionsOrder contains not supported interaction " + notSupportedInteraction.get().getType());
         }
         allowedInteractionsOrder.forEach(Interaction::validate);
     }

@@ -48,7 +48,8 @@ import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
-import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 class SmartIdClientTest {
@@ -96,7 +97,7 @@ class SmartIdClientTest {
             DynamicLinkAuthenticationSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
@@ -111,7 +112,7 @@ class SmartIdClientTest {
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
@@ -126,7 +127,7 @@ class SmartIdClientTest {
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
@@ -150,7 +151,7 @@ class SmartIdClientTest {
             DynamicLinkSignatureSessionResponse response = smartIdClient.createDynamicLinkSignature()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign document?")))
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -170,7 +171,7 @@ class SmartIdClientTest {
             DynamicLinkSignatureSessionResponse response = smartIdClient.createDynamicLinkSignature()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign document?")))
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -195,7 +196,7 @@ class SmartIdClientTest {
             NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -218,7 +219,7 @@ class SmartIdClientTest {
                     .withRelyingPartyName("DEMO")
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -255,7 +256,7 @@ class SmartIdClientTest {
             DynamicLinkAuthenticationSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
             Instant sessionResponseReceivedTime = Instant.now();
 

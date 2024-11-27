@@ -59,7 +59,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.VerificationCode;
 
 class NotificationSignatureSessionRequestBuilderTest {
@@ -74,7 +74,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         builder = new NotificationSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                 .withSignableData(new SignableData("Test data".getBytes()));
     }
 
@@ -323,7 +323,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<Interaction> allowedInteractionsOrder) {
+        void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<NotificationInteraction> allowedInteractionsOrder) {
             builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -360,15 +360,6 @@ class NotificationSignatureSessionRequestBuilderTest {
             builder.withNonce("");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
-        }
-
-        @ParameterizedTest
-        @ArgumentsSource(InvalidInteractionProvider.class)
-        void validateAllowedInteractions_containsUnsupportedInteraction(Interaction interaction, String expectedMessage) {
-            builder.withAllowedInteractionsOrder(List.of(interaction));
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals(expectedMessage, ex.getMessage());
         }
 
         @Test
@@ -515,16 +506,6 @@ class NotificationSignatureSessionRequestBuilderTest {
                     Arguments.of(Set.of("QUALIFIED", "ADVANCED"), Set.of("QUALIFIED", "ADVANCED")),
                     Arguments.of(Set.of("QUALIFIED"), Set.of("QUALIFIED")),
                     Arguments.of(Set.of(), Set.of())
-            );
-        }
-    }
-
-    private static class InvalidInteractionProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(Interaction.displayTextAndPIN("Display text and PIN"), "AllowedInteractionsOrder contains not supported interaction DISPLAY_TEXT_AND_PIN"),
-                    Arguments.of(Interaction.confirmationMessage("Confirmation message"), "AllowedInteractionsOrder contains not supported interaction CONFIRMATION_MESSAGE")
             );
         }
     }
