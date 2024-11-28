@@ -28,6 +28,7 @@ package ee.sk.smartid.v3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -242,6 +243,16 @@ class SmartIdClientTest {
 
             assertEquals("COMPLETE", status.getState());
             assertEquals("OK", status.getResult().getEndResult());
+        }
+
+        @Test
+        void getSessionStatus() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-running.json");
+
+            SessionStatus status = smartIdClient.createSessionStatusPoller().getSessionsStatus("abcdef1234567890");
+
+            assertEquals("RUNNING", status.getState());
+            assertNull(status.getResult());
         }
     }
 
