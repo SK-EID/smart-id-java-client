@@ -102,6 +102,26 @@ public class SmartIdClient {
     }
 
     /**
+     * Create a new Smart-ID session status poller
+     *
+     * @return Sessions status poller
+     */
+    public SessionStatusPoller createSessionStatusPoller() {
+        var sessionStatusPoller = new SessionStatusPoller(getSmartIdConnector());
+        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+        return sessionStatusPoller;
+    }
+
+    /**
+     * Create builder for generating dynamic link or QR-code
+     *
+     * @return DynamicLinkRequestBuilder
+     */
+    public DynamicContentBuilder createDynamicContent() {
+        return new DynamicContentBuilder();
+    }
+
+    /**
      * Sets the UUID of the relying party
      * <p>
      * Can be set also on the builder level,
@@ -268,13 +288,6 @@ public class SmartIdClient {
 
     public void setSmartIdConnector(SmartIdConnector smartIdConnector) {
         this.connector = smartIdConnector;
-    }
-
-    private SessionStatusPoller createSessionStatusPoller(SmartIdConnector connector) {
-        connector.setSessionStatusResponseSocketOpenTime(sessionStatusResponseSocketOpenTimeUnit, sessionStatusResponseSocketOpenTimeValue);
-        var sessionStatusPoller = new SessionStatusPoller(connector);
-        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
-        return sessionStatusPoller;
     }
 
     private Client createClient() {

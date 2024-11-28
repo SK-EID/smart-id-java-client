@@ -43,12 +43,14 @@ import javax.net.ssl.TrustManagerFactory;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.FileUtil;
+import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
 import ee.sk.smartid.integration.SmartIdIntegrationTest;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 
+@SmartIdDemoIntegrationTest
 public class EndpointSslVerificationIntegrationTest {
 
     private static final String DEMO_HOST_URL = "https://sid.demo.sk.ee/smart-id-rp/v2/";
