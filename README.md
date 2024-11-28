@@ -895,7 +895,7 @@ SmartIdClient client=new SmartIdClient();
     client.setRelyingPartyName("DEMO");
     client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 
-DynamicLinkCertificateChoiceSessionResponse response = client.createDynamicLinkCertificateRequest()
+DynamicLinkSessionResponse response = client.createDynamicLinkCertificateRequest()
     .withRelyingPartyUUID(client.getRelyingPartyUUID())
     .withRelyingPartyName(client.getRelyingPartyName())
     .withCertificateLevel("QUALIFIED")
@@ -913,29 +913,6 @@ The response from a successful dynamic link certificate choice session creation 
 * `sessionToken`: Unique random value that will be used to connect this certificate choice attempt between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
 
-## Fetching Session Status
-After initiating the dynamic link certificate choice session and storing the session information, you can fetch the session status to check if the user has completed the authentication process.
-
-```java
-// Fetch the final session status
-SessionStatusPoller poller = client.getSessionStatusPoller();
-SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
-
-// Validate the session status
-var requestBuilder = new SmartIdRequestBuilderService();
-requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", null, null);
-
-// Create authentication response
-SmartIdAuthenticationResponse authenticationResponse = requestBuilder.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", null, null);
-
-// Extract user information
-AuthenticationIdentity identity = AuthenticationResponseValidator.constructAuthenticationIdentity(authenticationResponse.getCertificate());
-String givenName = identity.getGivenName();
-String surname = identity.getSurname();
-String identityCode = identity.getIdentityCode();
-String country = identity.getCountry();
-```
-
 ## Validating Parameters
 Ensure that you validate the parameters before initiating the request. For example, the `nonce` must be between 1 and 30 characters.
 
@@ -944,7 +921,7 @@ Handle exceptions appropriately. The Java client provides specific exceptions fo
 
 ```java
 try {
-    CertificateChoiceResponse response = builder.initiateCertificateChoice();
+    CertificateChoiceResponse response = builder.initCertificateChoice();
     // Proceed with session status fetching and validation
 } catch (UserAccountNotFoundException e) {
     System.out.println("User account not found.");
@@ -972,7 +949,7 @@ SmartIdClient client = new SmartIdClient();
         client.setRelyingPartyName("DEMO");
         client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 
-        DynamicLinkCertificateChoiceSessionResponse response = client.createDynamicLinkCertificateRequest()
+        DynamicLinkSessionResponse response = client.createDynamicLinkCertificateRequest()
         .withRelyingPartyUUID(client.getRelyingPartyUUID())
         .withRelyingPartyName(client.getRelyingPartyName())
         .withCertificateLevel(CertificateLevel.QUALIFIED)
@@ -1078,7 +1055,7 @@ var builder = client.createDynamicLinkSignature()
     .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Please sign the document")));
 
 // Initiate the dynamic link signature
-DynamicLinkSignatureSessionResponse signatureResponse = builder.initSignatureSession();
+DynamicLinkSessionResponse signatureResponse = builder.initSignatureSession();
 
 // Process the signature response
 String sessionID = signatureResponse.getSessionID();
@@ -1112,7 +1089,7 @@ var builder = client.createDynamicLinkSignature()
     .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Please sign the document")));
 
 // Initiate the dynamic link signature
-DynamicLinkSignatureSessionResponse signatureResponse = builder.initSignatureSession();
+DynamicLinkSessionResponse signatureResponse = builder.initSignatureSession();
 
 // Process the signature response
 String sessionID = signatureResponse.getSessionID();
@@ -1134,7 +1111,7 @@ Handle exceptions appropriately. The Java client provides specific exceptions fo
     
 ```java
 try {
-DynamicLinkSignatureSessionResponse response = builder.initSignatureSession();
+DynamicLinkSessionResponse response = builder.initSignatureSession();
 
 String sessionID = response.getSessionID();
 String sessionToken = response.getSessionToken();

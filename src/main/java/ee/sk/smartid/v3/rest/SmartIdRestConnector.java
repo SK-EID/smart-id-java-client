@@ -46,10 +46,10 @@ import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalExceptio
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.CertificateChoiceRequest;
 import ee.sk.smartid.v3.SignatureSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
-import ee.sk.smartid.v3.CertificateChoiceRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;

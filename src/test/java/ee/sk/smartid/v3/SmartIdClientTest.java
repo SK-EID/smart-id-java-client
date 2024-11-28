@@ -66,9 +66,8 @@ class SmartIdClientTest {
                 .withRelyingPartyName("DEMO")
                 .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                 .withCertificateLevel(CertificateLevel.ADVANCED)
-                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Enter PIN to confirm")))
                 .withShareMdClientIpAddress(false)
-                .initiateCertificateChoice();
+                .initCertificateChoice();
 
         assertNotNull(response.getSessionID());
         assertNotNull(response.getSessionToken());

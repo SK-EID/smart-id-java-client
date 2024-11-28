@@ -191,7 +191,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                    .withShareMdClientIpAddress(ipRequested)
+                    .withSharedMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
@@ -494,7 +494,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                     Arguments.of(Named.of("Empty string as value", ""), "Parameter nonce value has to be at least 1 character long"),
-                    Arguments.of(Named.of("Exceeded char length", "a".repeat(31)), "Nonce cannot be longer than 30 chars")
+                    Arguments.of(Named.of("Exceeded char length", "a".repeat(31)), "Nonce cannot be longer that 30 chars")
             );
         }
     }

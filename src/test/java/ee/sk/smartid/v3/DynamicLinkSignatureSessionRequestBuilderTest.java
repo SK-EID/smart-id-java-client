@@ -312,7 +312,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenThrow(new SmartIdClientException("Either signableHash or signableData must be set."));
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Either signableData or signableHash must be set.", ex.getMessage());
+            assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -321,7 +321,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Parameter allowedInteractionsOrder must be set", ex.getMessage());
+            assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -330,7 +330,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withRelyingPartyUUID(relyingPartyUUID);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Parameter relyingPartyUUID must be set", ex.getMessage());
+            assertEquals("Relying Party UUID must be set.", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -339,21 +339,21 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
             builder.withRelyingPartyName(relyingPartyName);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
+            assertEquals("Relying Party Name must be set.", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_invalidNonce() {
             builder.withNonce("1234567890123456789012345678901");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Nonce cannot be longer than 30 chars", ex.getMessage());
+            assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_emptyNonce() {
             builder.withNonce("");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Parameter nonce value has to be at least 1 character long", ex.getMessage());
+            assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
