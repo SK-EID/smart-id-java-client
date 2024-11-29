@@ -90,7 +90,9 @@ public class SmartIdClient {
      * @return builder for creating a new notification authentication session request
      */
     public NotificationAuthenticationSessionRequestBuilder createNotificationAuthentication() {
-        return new NotificationAuthenticationSessionRequestBuilder(getSmartIdConnector());
+        return new NotificationAuthenticationSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**

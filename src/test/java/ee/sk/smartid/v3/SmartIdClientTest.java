@@ -201,8 +201,6 @@ class SmartIdClientTest {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/etsi/PNOEE-1234567890", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
 
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
@@ -219,8 +217,6 @@ class SmartIdClientTest {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
 
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
