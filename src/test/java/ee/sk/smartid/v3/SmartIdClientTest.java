@@ -191,13 +191,49 @@ class SmartIdClientTest {
         }
     }
 
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class NotificationAuthenticationSession {
+
+        @Test
+        void createNotificationAuthentication_withSemanticsIdentifier() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/etsi/PNOEE-1234567890", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+
+            NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
+                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                    .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .initAuthenticationSession();
+
+            assertNotNull(response.getSessionID());
+            assertNotNull(response.getVc());
+            assertNotNull(response.getVc().getType());
+            assertNotNull(response.getVc().getValue());
+        }
+
+        @Test
+        void createNotificationAuthentication_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+
+            NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .initAuthenticationSession();
+
+            assertNotNull(response.getSessionID());
+            assertNotNull(response.getVc());
+            assertNotNull(response.getVc().getType());
+            assertNotNull(response.getVc().getValue());
+        }
+    }
 
     @Nested
     @WireMockTest(httpPort = 18089)
     class NotificationBasedSignatureSession {
         @Test
         void createNotificationSignature_withDocumentNumber() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
             var signableHash = new SignableHash();
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(64).getBytes()));
@@ -220,7 +256,7 @@ class SmartIdClientTest {
 
         @Test
         void createNotificationSignature_withSemanticsIdentifier() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
             var signableHash = new SignableHash();
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(64).getBytes()));

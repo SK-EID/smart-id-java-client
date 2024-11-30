@@ -33,6 +33,7 @@ import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.v3.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.SignatureSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
@@ -135,4 +136,22 @@ public interface SmartIdConnector extends Serializable {
      * @return The dynamic link authentication session response
      */
     DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
+
+    /**
+     * Create authentication session with notification using semantics identifier
+     *
+     * @param authenticationRequest The notification authentication session request
+     * @param semanticsIdentifier   The semantics identifier
+     * @return The notification authentication session response
+     */
+    NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
+
+    /**
+     * Create authentication session with notification using document number
+     *
+     * @param authenticationRequest The notification authentication session request
+     * @param documentNumber        The document number
+     * @return The notification authentication session response
+     */
+    NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
 }

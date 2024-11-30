@@ -47,9 +47,10 @@ import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
 import ee.sk.smartid.v3.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.CertificateChoiceRequest;
-import ee.sk.smartid.v3.SignatureSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
+import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
+import ee.sk.smartid.v3.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
@@ -85,6 +86,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final String ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH = "authentication/dynamic-link/anonymous";
     private static final String DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/dynamic-link/etsi";
     private static final String DYNAMIC_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/dynamic-link/document";
+
+    private static final String NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/notification/etsi";
+    private static final String NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/notification/document";
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -127,7 +131,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postAuthenticationRequest(uri, authenticationRequest);
+        return postDynamicLinkAuthenticationRequest(uri, authenticationRequest);
     }
 
     @Override
@@ -137,7 +141,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DYNAMIC_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postAuthenticationRequest(uri, authenticationRequest);
+        return postDynamicLinkAuthenticationRequest(uri, authenticationRequest);
     }
 
     @Override
@@ -146,7 +150,27 @@ public class SmartIdRestConnector implements SmartIdConnector {
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH)
                 .build();
-        return postAuthenticationRequest(uri, authenticationRequest);
+        return postDynamicLinkAuthenticationRequest(uri, authenticationRequest);
+    }
+
+    @Override
+    public NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
+                .path(semanticsIdentifier.getIdentifier())
+                .build();
+        return postNotificationAuthenticationRequest(uri, authenticationRequest);
+    }
+
+    @Override
+    public NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber) {
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
+                .path(documentNumber)
+                .build();
+        return postNotificationAuthenticationRequest(uri, authenticationRequest);
     }
 
     @Override
@@ -157,7 +181,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH)
                 .build();
 
-        return postCertificateRequest(uri, request);
+        return postCertificateChoiceRequest(uri, request);
     }
 
     @Override
@@ -167,7 +191,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postSignatureRequest(uri, request);
+        return postDynamicLinkSignatureRequest(uri, request);
     }
 
     @Override
@@ -177,7 +201,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postSignatureRequest(uri, request);
+        return postDynamicLinkSignatureRequest(uri, request);
     }
 
     public NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
@@ -249,7 +273,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSessionResponse postAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
+    private DynamicLinkSessionResponse postDynamicLinkAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
         try {
             return postRequest(uri, request, DynamicLinkSessionResponse.class);
         } catch (NotFoundException e) {
@@ -261,7 +285,19 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSessionResponse postCertificateRequest(URI uri, CertificateChoiceRequest request) {
+    private NotificationAuthenticationSessionResponse postNotificationAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
+        try {
+            return postRequest(uri, request, NotificationAuthenticationSessionResponse.class);
+        } catch (NotFoundException e) {
+            logger.warn("User account not found for URI " + uri, e);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException e) {
+            logger.warn("No permission to issue the request", e);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
+        }
+    }
+
+    private DynamicLinkSessionResponse postCertificateChoiceRequest(URI uri, CertificateChoiceRequest request) {
         try {
             return postRequest(uri, request, DynamicLinkSessionResponse.class);
         } catch (NotFoundException ex) {
@@ -273,7 +309,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSessionResponse postSignatureRequest(URI uri, SignatureSessionRequest request) {
+    private DynamicLinkSessionResponse postDynamicLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
         try {
             return postRequest(uri, request, DynamicLinkSessionResponse.class);
         } catch (NotFoundException ex) {
