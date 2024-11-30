@@ -59,9 +59,10 @@ import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFound
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
-import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
+import ee.sk.smartid.v3.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
+import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
 import ee.sk.smartid.v3.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.v3.SignatureSessionRequest;
@@ -308,6 +309,78 @@ class SmartIdRestConnectorTest {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
                 SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+            });
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18082)
+    class SemanticsIdentifierNotificationAuthentication {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18082");
+        }
+
+        @Test
+        void initNotificationAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/etsi/PNOEE-48010010101", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void initNotificationAuthentication_userAccountNotFound_throwException() {
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/notification/etsi/PNOEE-48010010101", "v3/requests/notification-authentication-session-request.json");
+                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            });
+        }
+
+        @Test
+        void initNotificationAuthentication_requestIsUnauthorized_throwException() {
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/notification/etsi/PNOEE-48010010101", "v3/requests/notification-authentication-session-request.json");
+                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            });
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18083)
+    class DocumentNumberNotificationAuthentication {
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18083");
+        }
+
+        @Test
+        void initNotificationAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void initNotificationAuthentication_userAccountNotFound_throwException() {
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-authentication-session-request.json");
+                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+            });
+        }
+
+        @Test
+        void initNotificationAuthentication_requestIsUnauthorized_throwException() {
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-authentication-session-request.json");
+                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
     }
@@ -565,7 +638,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -668,7 +741,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-signature-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -757,8 +830,8 @@ class SmartIdRestConnectorTest {
         }
     }
 
-    private DynamicLinkAuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
-        var dynamicLinkAuthenticationSessionRequest = new DynamicLinkAuthenticationSessionRequest();
+    private AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
+        var dynamicLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
 
@@ -768,6 +841,22 @@ class SmartIdRestConnectorTest {
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
         Interaction interaction = Interaction.displayTextAndPIN("Log in?");
+        dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
+
+        return dynamicLinkAuthenticationSessionRequest;
+    }
+
+    private AuthenticationSessionRequest toNotificationAuthenticationSessionRequest() {
+        var dynamicLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
+        dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
+
+        var signatureProtocolParameters = new AcspV1SignatureProtocolParameters();
+        signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
+        signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+        dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
+
+        Interaction interaction = Interaction.verificationCodeChoice("Verify the code");
         dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
 
         return dynamicLinkAuthenticationSessionRequest;
