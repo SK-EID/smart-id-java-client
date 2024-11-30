@@ -1,10 +1,10 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,36 +27,26 @@ package ee.sk.smartid.v3;
  */
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
-public class AuthenticationSessionRequest implements Serializable {
+public class CertificateChoiceSessionRequest implements Serializable {
 
     private String relyingPartyUUID;
-
     private String relyingPartyName;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String certificateLevel;
 
-    private final SignatureProtocol signatureProtocol = SignatureProtocol.ACSP_V1;
-
-    private AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters;
-
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String nonce;
 
-    private List<Interaction> allowedInteractionsOrder;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Set<String> capabilities;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Set<String> capabilities;
 
     public String getRelyingPartyUUID() {
         return relyingPartyUUID;
@@ -82,18 +72,6 @@ public class AuthenticationSessionRequest implements Serializable {
         this.certificateLevel = certificateLevel;
     }
 
-    public SignatureProtocol getSignatureProtocol() {
-        return signatureProtocol;
-    }
-
-    public AcspV1SignatureProtocolParameters getSignatureProtocolParameters() {
-        return acspV1SignatureProtocolParameters;
-    }
-
-    public void setSignatureProtocolParameters(AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters) {
-        this.acspV1SignatureProtocolParameters = acspV1SignatureProtocolParameters;
-    }
-
     public String getNonce() {
         return nonce;
     }
@@ -102,12 +80,12 @@ public class AuthenticationSessionRequest implements Serializable {
         this.nonce = nonce;
     }
 
-    public List<Interaction> getAllowedInteractionsOrder() {
-        return allowedInteractionsOrder;
+    public Set<String> getCapabilities() {
+        return capabilities;
     }
 
-    public void setAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
-        this.allowedInteractionsOrder = allowedInteractionsOrder;
+    public void setCapabilities(Set<String> capabilities) {
+        this.capabilities = capabilities;
     }
 
     public RequestProperties getRequestProperties() {
@@ -116,13 +94,5 @@ public class AuthenticationSessionRequest implements Serializable {
 
     public void setRequestProperties(RequestProperties requestProperties) {
         this.requestProperties = requestProperties;
-    }
-
-    public Set<String> getCapabilities() {
-        return capabilities;
-    }
-
-    public void setCapabilities(Set<String> capabilities) {
-        this.capabilities = capabilities;
     }
 }

@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class DynamicLinkCertificateChoiceSessionRequestBuilder {
@@ -134,7 +135,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      */
     public DynamicLinkSessionResponse initCertificateChoice() {
         validateParameters();
-        CertificateChoiceRequest request = createCertificateRequest();
+        CertificateChoiceSessionRequest request = createCertificateRequest();
         DynamicLinkSessionResponse response = connector.getCertificate(request);
 
         if (response == null || response.getSessionID() == null) {
@@ -157,8 +158,8 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
         }
     }
 
-    private CertificateChoiceRequest createCertificateRequest() {
-        var request = new CertificateChoiceRequest();
+    private CertificateChoiceSessionRequest createCertificateRequest() {
+        var request = new CertificateChoiceSessionRequest();
         request.setRelyingPartyUUID(relyingPartyUUID);
         request.setRelyingPartyName(relyingPartyName);
 

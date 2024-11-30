@@ -59,6 +59,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 
 class DynamicLinkSignatureSessionRequestBuilderTest {
 

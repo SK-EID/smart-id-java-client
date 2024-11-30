@@ -59,13 +59,13 @@ import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFound
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
-import ee.sk.smartid.v3.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
-import ee.sk.smartid.v3.SignatureSessionRequest;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
 import ee.sk.smartid.v3.RawDigestSignatureProtocolParameters;
-import ee.sk.smartid.v3.CertificateChoiceRequest;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
@@ -398,7 +398,7 @@ class SmartIdRestConnectorTest {
         void getCertificate() {
             stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/responses/dynamic-link-certificate-choice-response.json");
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
             DynamicLinkSessionResponse response = connector.getCertificate(request);
 
             assertNotNull(response);
@@ -409,7 +409,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void getCertificate_invalidCertificateLevel_throwsBadRequestException() {
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
             request.setCertificateLevel("INVALID_LEVEL");
 
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
@@ -421,7 +421,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_userAccountNotFound() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 404);
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
             assertThrows(UserAccountNotFoundException.class, () -> connector.getCertificate(request));
         }
 
@@ -429,7 +429,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_relyingPartyNoPermission() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 403);
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.getCertificate(request));
         }
 
@@ -437,7 +437,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_invalidRequest() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
 
-            CertificateChoiceRequest request = new CertificateChoiceRequest();
+            CertificateChoiceSessionRequest request = new CertificateChoiceSessionRequest();
             request.setRelyingPartyUUID("");
             request.setRelyingPartyName("");
 
@@ -448,7 +448,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 401);
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
 
             Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.getCertificate(request));
 
@@ -459,7 +459,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 471);
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
 
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.getCertificate(request));
         }
@@ -468,7 +468,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_throwsPersonShouldViewSmartIdPortalException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 472);
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
 
             assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.getCertificate(request));
         }
@@ -477,7 +477,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_throwsSmartIdClientException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 480);
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
 
             Exception exception = assertThrows(SmartIdClientException.class, () -> connector.getCertificate(request));
 
@@ -488,7 +488,7 @@ class SmartIdRestConnectorTest {
         void getCertificate_throwsServerMaintenanceException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 580);
 
-            CertificateChoiceRequest request = createCertificateRequest();
+            CertificateChoiceSessionRequest request = createCertificateRequest();
 
             assertThrows(ServerMaintenanceException.class, () -> connector.getCertificate(request));
         }
@@ -860,8 +860,8 @@ class SmartIdRestConnectorTest {
         return dynamicLinkAuthenticationSessionRequest;
     }
 
-    private CertificateChoiceRequest createCertificateRequest() {
-        var request = new CertificateChoiceRequest();
+    private CertificateChoiceSessionRequest createCertificateRequest() {
+        var request = new CertificateChoiceSessionRequest();
         request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
         request.setRelyingPartyName("BANK123");
         request.setCertificateLevel("ADVANCED");

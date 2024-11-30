@@ -32,12 +32,12 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.v3.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
-import ee.sk.smartid.v3.SignatureSessionRequest;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
-import ee.sk.smartid.v3.CertificateChoiceRequest;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
@@ -66,7 +66,7 @@ public interface SmartIdConnector extends Serializable {
      * @param request CertificateRequest containing necessary parameters
      * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSessionResponse getCertificate(CertificateChoiceRequest request);
+    DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request);
 
     /**
      * Initiates a dynamic link based signature sessions.

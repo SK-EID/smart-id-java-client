@@ -45,12 +45,12 @@ import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFound
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
-import ee.sk.smartid.v3.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.CertificateChoiceRequest;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
-import ee.sk.smartid.v3.SignatureSessionRequest;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
@@ -174,7 +174,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkSessionResponse getCertificate(CertificateChoiceRequest request) {
+    public DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request) {
         logger.debug("Initiating dynamic link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
@@ -297,7 +297,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSessionResponse postCertificateChoiceRequest(URI uri, CertificateChoiceRequest request) {
+    private DynamicLinkSessionResponse postCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
         try {
             return postRequest(uri, request, DynamicLinkSessionResponse.class);
         } catch (NotFoundException ex) {

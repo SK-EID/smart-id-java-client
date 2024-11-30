@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
-import ee.sk.smartid.v3.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
