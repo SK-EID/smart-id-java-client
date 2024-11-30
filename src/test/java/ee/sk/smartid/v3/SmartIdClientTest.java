@@ -71,7 +71,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicLinkCertificateChoice() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/dynamic-link-certificate-choice-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
         DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
@@ -84,6 +84,41 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class NotificationCertificateChoiceSession {
+
+        @Test
+        void createNotificationCertificateChoice_withSemanticsIdentifier() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/notification/etsi/PNOEE-1234567890", "v3/requests/certificate-choice-session-request.json", "v3/responses/notification-certificate-choice-session-response.json");
+
+            NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
+                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                    .withRelyingPartyName("DEMO")
+                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                    .initCertificateChoice();
+
+            assertNotNull(response.getSessionID());
+        }
+
+        @Test
+        void createNotificationCertificateChoice_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/certificate-choice-session-request.json", "v3/responses/notification-certificate-choice-session-response.json");
+
+            NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
+                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                    .withRelyingPartyName("DEMO")
+                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .initCertificateChoice();
+
+            assertNotNull(response.getSessionID());
         }
     }
 
@@ -327,7 +362,7 @@ class SmartIdClientTest {
         @ParameterizedTest
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DynamicLinkType dynamicLinkType) {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/dynamic-link-certificate-choice-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
@@ -353,7 +388,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicContent_createQrCode() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/dynamic-link-certificate-choice-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
