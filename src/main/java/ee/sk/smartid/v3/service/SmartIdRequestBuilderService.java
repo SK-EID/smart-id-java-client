@@ -44,18 +44,13 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
-import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
-import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.CertificateLevel;
+import ee.sk.smartid.v3.ErrorResultHandler;
 import ee.sk.smartid.v3.SignableData;
 import ee.sk.smartid.v3.SignableHash;
 import ee.sk.smartid.v3.SignatureProtocol;
@@ -66,6 +61,8 @@ import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
+// TODO - 03.12.24: Divide this class into separate classes for each request type
+// TODO - 03.12.24: AuthenticationIdentity should also be built and validation for that required access to trusted certificates.(v2)
 public class SmartIdRequestBuilderService {
 
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRequestBuilderService.class);
@@ -92,8 +89,11 @@ public class SmartIdRequestBuilderService {
      * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
      * @throws DocumentUnusableException                  when for some reason, this relying party request cannot be completed.
      */
-    public SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus, String requestedCertificateLevel,
-                                                                             String expectedDigest, String randomChallenge) throws UserRefusedException,
+    // TODO - 03.12.24: this should method should be refactod. It usage is out of scope.
+    public SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus,
+                                                                             String requestedCertificateLevel,
+                                                                             String expectedDigest, // TODO - 03.12.24: it is not used for authentication validation, used only for RAW_DIGEST_SIGNATURE validation
+                                                                             String randomChallenge) throws UserRefusedException,
             UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
         validateAuthenticationResponse(sessionStatus, requestedCertificateLevel, expectedDigest, randomChallenge);
 
@@ -149,7 +149,7 @@ public class SmartIdRequestBuilderService {
             validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
             validateSignature(sessionStatus, expectedDigest, randomChallenge);
         } else {
-            handleSessionEndResultErrors(endResult);
+            ErrorResultHandler.handle(endResult);
         }
     }
 
@@ -193,6 +193,7 @@ public class SmartIdRequestBuilderService {
         CertificateLevel requestedLevelEnum = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
         CertificateLevel returnedLevelEnum = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
 
+        // TODO - 03.12.24: does not validate if returned certificate level is same or higher as requested
         return requestedLevelEnum == CertificateLevel.QSCD ? returnedLevelEnum == CertificateLevel.QUALIFIED : requestedLevelEnum == returnedLevelEnum;
     }
 
@@ -208,8 +209,10 @@ public class SmartIdRequestBuilderService {
         }
     }
 
+    // TODO - 03.12.24: should be checked before AuhtenticationIdentity is created
     private void validateAcspV1Signature(SessionStatus sessionStatus, String randomChallenge) {
         String signatureValue = sessionStatus.getSignature().getValue();
+        // TODO - 03.12.24: does this work? serverRandom and randomChallenge should already be in Base64 format
         String dataToHash = sessionStatus.getSignatureProtocol() + ";" +
                 Base64.getEncoder().encodeToString(sessionStatus.getSignature().getServerRandom().getBytes(StandardCharsets.UTF_8)) + ";" +
                 Base64.getEncoder().encodeToString(randomChallenge.getBytes(StandardCharsets.UTF_8));
@@ -245,21 +248,5 @@ public class SmartIdRequestBuilderService {
         }
 
         logger.info("RAW_DIGEST_SIGNATURE successfully validated.");
-    }
-
-    private void handleSessionEndResultErrors(String endResult) {
-        switch (endResult.toUpperCase()) {
-            case "USER_REFUSED" -> throw new UserRefusedException();
-            case "TIMEOUT" -> throw new SessionTimeoutException();
-            case "DOCUMENT_UNUSABLE" -> throw new DocumentUnusableException();
-            case "WRONG_VC" -> throw new UserSelectedWrongVerificationCodeException();
-            case "REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP" -> throw new RequiredInteractionNotSupportedByAppException();
-            case "USER_REFUSED_CERT_CHOICE" -> throw new UserRefusedCertChoiceException();
-            case "USER_REFUSED_DISPLAYTEXTANDPIN" -> throw new UserRefusedDisplayTextAndPinException();
-            case "USER_REFUSED_VC_CHOICE" -> throw new UserRefusedVerificationChoiceException();
-            case "USER_REFUSED_CONFIRMATIONMESSAGE" -> throw new UserRefusedConfirmationMessageException();
-            case "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE" -> throw new UserRefusedConfirmationMessageWithVerificationChoiceException();
-            default -> throw new SmartIdClientException("Unexpected session result: " + endResult);
-        }
     }
 }
