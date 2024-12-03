@@ -271,7 +271,7 @@ class SmartIdClientTest {
                     .initAuthenticationSession();
             Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, response.getSessionSecret(), 1);
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, 1, response.getSessionSecret());
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
@@ -297,7 +297,7 @@ class SmartIdClientTest {
                     .initiateCertificateChoice();
             Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), 1);
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, 1, response.getSessionSecret());
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
@@ -321,7 +321,7 @@ class SmartIdClientTest {
                     .initiateCertificateChoice();
             Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), 1);
+            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, 1, response.getSessionSecret());
             String qrCodeDataUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(DynamicLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
