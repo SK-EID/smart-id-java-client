@@ -26,7 +26,7 @@ package ee.sk.smartid.v2.util;
  * #L%
  */
 
-import ee.sk.smartid.v2.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

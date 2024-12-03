@@ -43,7 +43,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.v2.AuthenticationHash;
-import ee.sk.smartid.v2.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.FileUtil;

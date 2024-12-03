@@ -58,7 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.v2.AuthenticationHash;
-import ee.sk.smartid.v2.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.HashType;

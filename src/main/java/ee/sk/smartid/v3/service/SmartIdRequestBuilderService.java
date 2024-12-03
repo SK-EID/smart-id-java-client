@@ -218,6 +218,7 @@ public class SmartIdRequestBuilderService {
                 Base64.getEncoder().encodeToString(randomChallenge.getBytes(StandardCharsets.UTF_8));
 
         try {
+            // fixme - 03.12.24: sessionStatus.getSignature().getSignatureAlgorithmParameters() cannot be used, because API does not return it
             MessageDigest digest = MessageDigest.getInstance(sessionStatus.getSignature().getSignatureAlgorithmParameters().getHashAlgorithm());
             byte[] hashedData = digest.digest(dataToHash.getBytes(StandardCharsets.UTF_8));
             String expectedSignature = Base64.getEncoder().encodeToString(hashedData);

@@ -54,6 +54,7 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
