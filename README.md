@@ -1014,7 +1014,7 @@ String sessionId = authenticationSessionResponse.getSessionID();
 ```
 
 ### Requesting the IP Address of the User's Device
-If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withSharedMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
 ```java
 NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
         .createNotificationCertificateChoice()
@@ -1023,7 +1023,7 @@ NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = 
 
         // we want to get the IP address of the device running Smart-ID app
         // for the IP to be returned the service provider (SK) must switch on this option
-        .withSharedMdClientIpAddress(true)
+        .withShareMdClientIpAddress(true)
         .initCertificateChoice();
 ```
 
@@ -1579,7 +1579,7 @@ String verificationCode = authenticationSessionResponse.getVc().getValue();
 ```
 
 ### Requesting the IP Address of the User's Device
-If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withSharedMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
 ```java
 NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .createNotificationAuthentication()
@@ -1589,7 +1589,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withAllowedInteractionsOrder(Collections.singletonList(
                 Interaction.verificationCodeChoice("Log in to self-service?")
         ))
-        .withSharedMdClientIpAddress(true) // Request the user's device IP address
+        .withShareMdClientIpAddress(true) // Request the user's device IP address
         .initAuthenticationSession();
 ```
 

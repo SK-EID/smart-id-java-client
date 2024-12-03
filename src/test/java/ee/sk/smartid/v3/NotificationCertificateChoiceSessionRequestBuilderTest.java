@@ -184,7 +184,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.QUALIFIED)
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                    .withSharedMdClientIpAddress(ipRequested)
+                    .withShareMdClientIpAddress(ipRequested)
                     .initCertificateChoice();
 
             ArgumentCaptor<CertificateChoiceSessionRequest> requestCaptor = ArgumentCaptor.forClass(CertificateChoiceSessionRequest.class);

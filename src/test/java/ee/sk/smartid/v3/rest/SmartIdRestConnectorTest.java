@@ -386,7 +386,7 @@ class SmartIdRestConnectorTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
-    class CertificateChoiceTests {
+    class DynamicLinkCertificateChoiceTests {
 
         private SmartIdConnector connector;
 

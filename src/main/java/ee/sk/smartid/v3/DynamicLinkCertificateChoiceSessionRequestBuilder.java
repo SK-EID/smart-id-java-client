@@ -115,10 +115,10 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
     }
 
     /**
-     * Ask to return the IP address of the mobile device where Smart-ID app was running.
+     * Sets whether to share the Mobile device IP address
      *
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
-     * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
      */
     public DynamicLinkCertificateChoiceSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;

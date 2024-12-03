@@ -118,12 +118,12 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     }
 
     /**
-     * Sets whether to share the Mobile-ID client IP address
+     * Sets whether to share the Mobile device IP address
      *
-     * @param shareMdClientIpAddress whether to share the Mobile-ID client IP address
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
      */
-    public NotificationCertificateChoiceSessionRequestBuilder withSharedMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public NotificationCertificateChoiceSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }

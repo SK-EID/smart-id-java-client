@@ -156,12 +156,12 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets whether to share the Mobile-ID client IP address
+     * Sets whether to share the Mobile device IP address
      *
-     * @param shareMdClientIpAddress whether to share the Mobile-ID client IP address
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withSharedMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public DynamicLinkAuthenticationSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }
