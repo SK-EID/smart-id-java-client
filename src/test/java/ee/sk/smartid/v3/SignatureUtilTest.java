@@ -121,6 +121,15 @@ class SignatureUtilTest {
     }
 
     @Test
+    void getSignatureAlgorithm_withSignableDataHashTypeNull() {
+        var signableData = new SignableData("Test data".getBytes());
+        signableData.setHashType(null);
+
+        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
+        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
+    }
+
+    @Test
     void getSignatureAlgorithm_withDefaultAlgorithm() {
         String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, null);
         assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
