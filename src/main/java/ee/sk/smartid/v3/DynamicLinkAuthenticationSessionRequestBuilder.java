@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.InteractionFlow;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
@@ -214,15 +215,15 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      *
      * @return init session response
      */
-    public DynamicLinkAuthenticationSessionResponse initAuthenticationSession() {
+    public DynamicLinkSessionResponse initAuthenticationSession() {
         validateRequestParameters();
         AuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
-        DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
+        DynamicLinkSessionResponse dynamicLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(dynamicLinkAuthenticationSessionResponse);
         return dynamicLinkAuthenticationSessionResponse;
     }
 
-    private DynamicLinkAuthenticationSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
+    private DynamicLinkSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
         if (semanticsIdentifier != null) {
             return connector.initDynamicLinkAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
@@ -326,7 +327,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
         return request;
     }
 
-    private void validateResponseParameters(DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse) {
+    private void validateResponseParameters(DynamicLinkSessionResponse dynamicLinkAuthenticationSessionResponse) {
         if (StringUtil.isEmpty(dynamicLinkAuthenticationSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
             throw new SmartIdClientException("Session ID is missing from the response");

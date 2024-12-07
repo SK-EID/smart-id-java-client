@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import ee.sk.smartid.v3.RawDigestSignatureProtocolParameters;
+import ee.sk.smartid.v3.SignatureProtocol;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 

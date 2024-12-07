@@ -32,14 +32,12 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.v3.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
-import ee.sk.smartid.v3.SignatureSessionRequest;
-import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
-import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
@@ -68,7 +66,7 @@ public interface SmartIdConnector extends Serializable {
      * @param request CertificateRequest containing necessary parameters
      * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request);
+    DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request);
 
     /**
      * Initiates a dynamic link based signature sessions.
@@ -77,7 +75,7 @@ public interface SmartIdConnector extends Serializable {
      * @param semanticsIdentifier The semantics identifier
      * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSignatureSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+    DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Initiates a dynamic link based signature sessions.
@@ -86,7 +84,7 @@ public interface SmartIdConnector extends Serializable {
      * @param documentNumber The document number
      * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSignatureSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber);
+    DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber);
 
     /**
      * Initiates a notification-based signature session using a semantics identifier.
@@ -119,7 +117,7 @@ public interface SmartIdConnector extends Serializable {
      * @param authenticationRequest The dynamic link authentication session request
      * @return The dynamic link authentication session response
      */
-    DynamicLinkAuthenticationSessionResponse initAnonymousDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest);
+    DynamicLinkSessionResponse initAnonymousDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest);
 
     /**
      * Create authentication session with dynamic link using semantics identifier
@@ -128,7 +126,7 @@ public interface SmartIdConnector extends Serializable {
      * @param semanticsIdentifier   The semantics identifier
      * @return The dynamic link authentication session response
      */
-    DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
+    DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Create authentication session with dynamic link using document number
@@ -137,7 +135,7 @@ public interface SmartIdConnector extends Serializable {
      * @param documentNumber        The document number
      * @return The dynamic link authentication session response
      */
-    DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
+    DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
 
     /**
      * Create authentication session with notification using semantics identifier

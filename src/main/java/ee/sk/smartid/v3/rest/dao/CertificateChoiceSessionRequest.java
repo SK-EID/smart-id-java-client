@@ -31,7 +31,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-public class CertificateRequest implements Serializable {
+public class CertificateChoiceSessionRequest implements Serializable {
 
     private String relyingPartyUUID;
     private String relyingPartyName;

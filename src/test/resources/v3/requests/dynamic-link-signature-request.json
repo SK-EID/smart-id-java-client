@@ -11,8 +11,5 @@
       "type": "displayTextAndPIN",
       "displayText60": "Sign document?"
     }
-  ],
-  "requestProperties": {
-    "shareMdClientIpAddress": false
-  }
+  ]
 }

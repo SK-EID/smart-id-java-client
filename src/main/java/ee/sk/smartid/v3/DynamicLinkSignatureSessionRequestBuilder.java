@@ -33,7 +33,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
@@ -42,6 +41,7 @@ import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.InteractionFlow;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 
 public class DynamicLinkSignatureSessionRequestBuilder {
 
@@ -60,7 +60,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private String nonce;
     private Set<String> capabilities;
     private List<Interaction> allowedInteractionsOrder;
-    private boolean shareMdClientIpAddress;
+    private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm;
     private SignableData signableData;
     private SignableHash signableHash;
@@ -147,8 +147,8 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param capabilities the capabilities
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withCapabilities(Set<String> capabilities) {
-        this.capabilities = capabilities;
+    public DynamicLinkSignatureSessionRequestBuilder withCapabilities(String... capabilities) {
+        this.capabilities = Set.of(capabilities);
         return this;
     }
 
@@ -236,18 +236,18 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      *     <li>with a semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
      * </ul>
      *
-     * @return a {@link DynamicLinkSignatureSessionResponse} containing session details such as
+     * @return a {@link DynamicLinkSessionResponse} containing session details such as
      * session ID, session token, and session secret.
      */
-    public DynamicLinkSignatureSessionResponse initSignatureSession() {
+    public DynamicLinkSessionResponse initSignatureSession() {
         validateParameters();
         SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
-        DynamicLinkSignatureSessionResponse dynamicLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
+        DynamicLinkSessionResponse dynamicLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
         validateResponseParameters(dynamicLinkSignatureSessionResponse);
         return dynamicLinkSignatureSessionResponse;
     }
 
-    private DynamicLinkSignatureSessionResponse initSignatureSession(SignatureSessionRequest request) {
+    private DynamicLinkSessionResponse initSignatureSession(SignatureSessionRequest request) {
         if (documentNumber != null) {
             return connector.initDynamicLinkSignature(request, documentNumber);
         } else if (semanticsIdentifier != null) {
@@ -268,53 +268,20 @@ public class DynamicLinkSignatureSessionRequestBuilder {
 
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
         if (signableHash != null || signableData != null) {
-            signatureProtocolParameters.setDigest(getDigestToSignBase64());
+            signatureProtocolParameters.setDigest(SignatureUtil.getDigestToSignBase64(signableHash, signableData));
         }
-        signatureProtocolParameters.setSignatureAlgorithm(getSignatureAlgorithm());
+        signatureProtocolParameters.setSignatureAlgorithm(SignatureUtil.getSignatureAlgorithm(signatureAlgorithm, signableHash, signableData));
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
         request.setAllowedInteractionsOrder(allowedInteractionsOrder);
 
-        var requestProperties = new RequestProperties();
-        requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
-        if (requestProperties.hasProperties()) {
+        if (this.shareMdClientIpAddress != null) {
+            var requestProperties = new RequestProperties();
+            requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
         }
         request.setCapabilities(capabilities);
         return request;
-    }
-
-    private String getDigestToSignBase64() {
-        if (signableHash != null && signableHash.areFieldsFilled()) {
-            return signableHash.getHashInBase64();
-        } else if (signableData != null) {
-            if (signableData.getHashType() == null) {
-                throw new SmartIdClientException("HashType must be set for signableData.");
-            }
-            return signableData.calculateHashInBase64();
-        } else {
-            throw new SmartIdClientException("Either signableHash or signableData must be set.");
-        }
-    }
-
-    private String getSignatureAlgorithm() {
-        if (signatureAlgorithm != null) {
-            return signatureAlgorithm.getAlgorithmName();
-        } else if (signableHash != null && signableHash.getHashType() != null) {
-            return getSignatureAlgorithmName(signableHash.getHashType());
-        } else if (signableData != null && signableData.getHashType() != null) {
-            return getSignatureAlgorithmName(signableData.getHashType());
-        } else {
-            return SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
-        }
-    }
-
-    private String getSignatureAlgorithmName(HashType hashType) {
-        return switch (hashType) {
-            case SHA256 -> SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName();
-            case SHA384 -> SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName();
-            case SHA512 -> SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
-        };
     }
 
     private void validateParameters() {
@@ -348,7 +315,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         allowedInteractionsOrder.forEach(Interaction::validate);
     }
 
-    private void validateResponseParameters(DynamicLinkSignatureSessionResponse dynamicLinkSignatureSessionResponse) {
+    private void validateResponseParameters(DynamicLinkSessionResponse dynamicLinkSignatureSessionResponse) {
         if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
             throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");

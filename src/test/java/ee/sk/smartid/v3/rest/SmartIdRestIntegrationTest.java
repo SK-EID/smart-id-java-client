@@ -34,8 +34,8 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
-import ee.sk.smartid.v3.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
 import ee.sk.smartid.v3.rest.dao.Interaction;
@@ -43,7 +43,7 @@ import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 @Disabled("Currently request to v3 path returns - No permission to issue the request")
 @SmartIdDemoIntegrationTest
-public class SmartIdRestIntegrationTest {
+class SmartIdRestIntegrationTest {
 
     private SmartIdConnector smartIdConnector;
 
@@ -58,7 +58,7 @@ public class SmartIdRestIntegrationTest {
 
         request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
 
-        DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initAnonymousDynamicLinkAuthentication(request);
+        DynamicLinkSessionResponse response = smartIdConnector.initAnonymousDynamicLinkAuthentication(request);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class SmartIdRestIntegrationTest {
 
         request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
 
-        DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, "PNOEE-50609019996-MOCK-Q");
+        DynamicLinkSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, "PNOEE-50609019996-MOCK-Q");
     }
 
     @Test
@@ -76,11 +76,11 @@ public class SmartIdRestIntegrationTest {
 
         request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
 
-        DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-50609019996"));
+        DynamicLinkSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-50609019996"));
     }
 
     private static AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
-        AuthenticationSessionRequest request = new AuthenticationSessionRequest();
+        var request = new AuthenticationSessionRequest();
         request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         request.setRelyingPartyName("DEMO");
         request.setCertificateLevel("QUALIFIED");

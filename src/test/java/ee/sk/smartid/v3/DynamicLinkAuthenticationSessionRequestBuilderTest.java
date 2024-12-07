@@ -58,10 +58,11 @@ import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
-public class DynamicLinkAuthenticationSessionRequestBuilderTest {
+class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
     private SmartIdConnector connector;
 
@@ -74,7 +75,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
     class ValidateRequiredRequestParameters {
 
         @Test
-        public void initAuthenticationSession_ok() {
+        void initAuthenticationSession_ok() {
             when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -100,7 +101,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(CertificateLevelArgumentProvider.class)
-        public void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
+        void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
             when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
@@ -121,7 +122,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(ValidNonceArgumentSourceProvider.class)
-        public void initAuthenticationSession_nonce_ok(String nonce) {
+        void initAuthenticationSession_nonce_ok(String nonce) {
             when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
@@ -142,7 +143,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @EnumSource
-        public void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
+        void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
             when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
@@ -162,7 +163,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @Test
-        public void initAuthenticationSession_ipQueryingNotUsed_doNotCreatedRequestProperties_ok() {
+        void initAuthenticationSession_ipQueryingNotUsed_doNotCreatedRequestProperties_ok() {
             when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
@@ -182,7 +183,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ValueSource(booleans = {true, false})
-        public void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
+        void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
             when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
@@ -204,7 +205,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(CapabilitiesArgumentProvider.class)
-        public void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
+        void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
             when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -224,7 +225,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void initAuthenticationSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
+        void initAuthenticationSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID(relyingPartyUUID)
@@ -236,7 +237,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void initAuthenticationSession_relyingPartyNameIsEmpty_throwException(String relyingPartyName) {
+        void initAuthenticationSession_relyingPartyNameIsEmpty_throwException(String relyingPartyName) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -248,7 +249,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void initAuthenticationSession_randomChallengeIsEmpty_throwException(String randomChallenge) {
+        void initAuthenticationSession_randomChallengeIsEmpty_throwException(String randomChallenge) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -261,7 +262,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(InvalidRandomChallengeArgumentProvider.class)
-        public void initAuthenticationSession_randomChallengeIsInvalid_throwException(String randomChallenge, String expectedException) {
+        void initAuthenticationSession_randomChallengeIsInvalid_throwException(String randomChallenge, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -273,7 +274,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @Test
-        public void initAuthenticationSession_signatureAlgorithmIsSetToNull_throwException() {
+        void initAuthenticationSession_signatureAlgorithmIsSetToNull_throwException() {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -287,7 +288,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(InvalidNonceProvider.class)
-        public void initAuthenticationSession_nonceOutOfBounds_throwException(String invalidNonce, String expectedException) {
+        void initAuthenticationSession_nonceOutOfBounds_throwException(String invalidNonce, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -301,7 +302,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<Interaction> interactions) {
+        void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<Interaction> interactions) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -314,7 +315,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(NotSupportedInteractionsProvider.class)
-        public void initAuthenticationSession_allowedInteractionsOrderContainsNotSupportedInteraction_throwException(Interaction interaction, String expectedException) {
+        void initAuthenticationSession_allowedInteractionsOrderContainsNotSupportedInteraction_throwException(Interaction interaction, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -327,7 +328,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(InvalidInteractionsProvider.class)
-        public void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(Interaction interaction, String expectedException) {
+        void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(Interaction interaction, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -344,9 +345,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
+        void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
+                var dynamicLinkAuthenticationSessionResponse = new DynamicLinkSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID(sessionId);
                 when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
@@ -357,9 +358,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void initAuthenticationSession_sessionTokenIsNotPresentInTheResponse_throwException(String sessionToken) {
+        void initAuthenticationSession_sessionTokenIsNotPresentInTheResponse_throwException(String sessionToken) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
+                var dynamicLinkAuthenticationSessionResponse = new DynamicLinkSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(sessionToken);
                 when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
@@ -371,9 +372,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        public void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
+        void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
             var exception = assertThrows(SmartIdClientException.class, () -> {
-                var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
+                var dynamicLinkAuthenticationSessionResponse = new DynamicLinkSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
                 dynamicLinkAuthenticationSessionResponse.setSessionSecret(sessionSecret);
@@ -434,8 +435,8 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         assertEquals("PNOEE-48010010101-MOCK-Q", capturedDocumentNumber);
     }
 
-    private DynamicLinkAuthenticationSessionResponse createDynamicLinkAuthenticationResponse() {
-        var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
+    private DynamicLinkSessionResponse createDynamicLinkAuthenticationResponse() {
+        var dynamicLinkAuthenticationSessionResponse = new DynamicLinkSessionResponse();
         dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
         dynamicLinkAuthenticationSessionResponse.setSessionSecret(generateBase64String("sessionSecret"));

@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3.service;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -66,9 +66,6 @@ import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.v3.SignableData;
-import ee.sk.smartid.v3.SmartIdAuthenticationResponse;
-import ee.sk.smartid.v3.SmartIdClient;
 import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.SessionCertificate;
@@ -94,7 +91,6 @@ class SmartIdRequestBuilderServiceTest {
                     .replace("-----BEGIN CERTIFICATE-----", "")
                     .replace("-----END CERTIFICATE-----", "")
                     .replaceAll("\\s+", "");
-
         }
     }
 

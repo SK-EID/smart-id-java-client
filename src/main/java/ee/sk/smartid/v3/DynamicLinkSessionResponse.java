@@ -31,7 +31,7 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DynamicLinkSignatureSessionResponse implements Serializable {
+public class DynamicLinkSessionResponse implements Serializable {
 
     private String sessionID;
     private String sessionToken;

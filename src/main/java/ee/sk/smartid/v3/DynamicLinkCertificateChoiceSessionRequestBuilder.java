@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3.service;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -34,10 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class DynamicLinkCertificateChoiceSessionRequestBuilder {
@@ -50,7 +48,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private boolean shareMdClientIpAddress;
+    private Boolean shareMdClientIpAddress;
 
     /**
      * Constructs a new DynamicLinkCertificateRequestBuilder with the given Smart-ID connector
@@ -111,8 +109,9 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @param capabilities the capabilities
      * @return this builder
      */
-    public void withCapabilities(Set<String> capabilities) {
-        this.capabilities = capabilities;
+    public DynamicLinkCertificateChoiceSessionRequestBuilder withCapabilities(String... capabilities) {
+        this.capabilities = Set.of(capabilities);
+        return this;
     }
 
     /**
@@ -134,10 +133,10 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @return DynamicLinkCertificateChoiceSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
      */
-    public DynamicLinkCertificateChoiceSessionResponse initiateCertificateChoice() {
+    public DynamicLinkSessionResponse initCertificateChoice() {
         validateParameters();
-        CertificateRequest request = createCertificateRequest();
-        DynamicLinkCertificateChoiceSessionResponse response = connector.getCertificate(request);
+        CertificateChoiceSessionRequest request = createCertificateRequest();
+        DynamicLinkSessionResponse response = connector.getCertificate(request);
 
         if (response == null || response.getSessionID() == null) {
             throw new SmartIdClientException("Dynamic link certificate choice session failed: invalid response received.");
@@ -155,12 +154,12 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
             throw new SmartIdClientException("Parameter relyingPartyName must be set");
         }
         if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
-            throw new SmartIdClientException("Nonce must be between 1 and 30 characters. You supplied: '" + nonce + "'");
+            throw new SmartIdClientException("Nonce must be between 1 and 30 characters");
         }
     }
 
-    private CertificateRequest createCertificateRequest() {
-        var request = new CertificateRequest();
+    private CertificateChoiceSessionRequest createCertificateRequest() {
+        var request = new CertificateChoiceSessionRequest();
         request.setRelyingPartyUUID(relyingPartyUUID);
         request.setRelyingPartyName(relyingPartyName);
 

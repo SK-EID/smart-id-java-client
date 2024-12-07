@@ -45,14 +45,12 @@ import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFound
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.LoggingFilter;
-import ee.sk.smartid.v3.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
-import ee.sk.smartid.v3.DynamicLinkSignatureSessionResponse;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
-import ee.sk.smartid.v3.SignatureSessionRequest;
-import ee.sk.smartid.v3.rest.dao.CertificateRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 import ee.sk.smartid.v3.rest.dao.SessionStatusRequest;
@@ -127,7 +125,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
+    public DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
         logger.debug("Starting dynamic link authentication session with semantics identifier");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
@@ -137,7 +135,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkAuthenticationSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber) {
+    public DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber) {
         logger.debug("Starting dynamic link authentication session with document number");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(DYNAMIC_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
@@ -147,7 +145,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkAuthenticationSessionResponse initAnonymousDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest) {
+    public DynamicLinkSessionResponse initAnonymousDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest) {
         logger.debug("Starting anonymous dynamic link authentication session");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH)
@@ -176,18 +174,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkCertificateChoiceSessionResponse getCertificate(CertificateRequest request) {
+    public DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request) {
         logger.debug("Initiating dynamic link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH)
                 .build();
 
-        return postCertificateRequest(uri, request);
+        return postCertificateChoiceRequest(uri, request);
     }
 
     @Override
-    public DynamicLinkSignatureSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
+    public DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
@@ -197,7 +195,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkSignatureSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber) {
+    public DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
@@ -275,9 +273,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkAuthenticationSessionResponse postDynamicLinkAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
+    private DynamicLinkSessionResponse postDynamicLinkAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
         try {
-            return postRequest(uri, request, DynamicLinkAuthenticationSessionResponse.class);
+            return postRequest(uri, request, DynamicLinkSessionResponse.class);
         } catch (NotFoundException e) {
             logger.warn("User account not found for URI " + uri, e);
             throw new UserAccountNotFoundException();
@@ -299,9 +297,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkCertificateChoiceSessionResponse postCertificateRequest(URI uri, CertificateRequest request) {
+    private DynamicLinkSessionResponse postCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
         try {
-            return postRequest(uri, request, DynamicLinkCertificateChoiceSessionResponse.class);
+            return postRequest(uri, request, DynamicLinkSessionResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI {}", uri, ex);
             throw new UserAccountNotFoundException();
@@ -311,9 +309,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSignatureSessionResponse postDynamicLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
+    private DynamicLinkSessionResponse postDynamicLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
         try {
-            return postRequest(uri, request, DynamicLinkSignatureSessionResponse.class);
+            return postRequest(uri, request, DynamicLinkSessionResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI " + uri, ex);
             throw new UserAccountNotFoundException();
