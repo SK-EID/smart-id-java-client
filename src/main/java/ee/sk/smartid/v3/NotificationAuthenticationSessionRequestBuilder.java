@@ -158,12 +158,12 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets whether to share the Mobile-ID client IP address
+     * Sets whether to share the Mobile device IP address
      *
-     * @param shareMdClientIpAddress whether to share the Mobile-ID client IP address
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withSharedMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public NotificationAuthenticationSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }

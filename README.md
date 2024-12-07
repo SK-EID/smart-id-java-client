@@ -966,6 +966,67 @@ client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
         .initiateCertificateChoice();
 ```
 
+## Initiating a Notification Certificate Choice in API v3.0
+
+### Request Parameters
+The request parameters for the dynamic link certificate choice session are:
+
+* `relyingPartyUUID`: UUID of the Relying Party.
+* `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
+* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character.
+* `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
+* `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
+
+### Using Semantics Identifier
+```java
+SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
+        // 3 character identity type
+        // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+        SemanticsIdentifier.IdentityType.PNO,
+        SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+        "30303039914"); // identifier (according to country and identity type reference)
+
+NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
+        .createNotificationCertificateChoice()
+        .withSemanticsIdentifier(semanticsIdentifier)
+        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+        .withNonce("1234567890")
+        .initCertificateChoice();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+```
+
+### Using Document Number
+```java
+String documentNumber = "PNOLT-30303039914-MOCK-Q"; // returned in authentication result and used for re-authentication
+
+        NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
+        .createNotificationCertificateChoice()
+        .withDocumentNumber(documentNumber)
+        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+        .withNonce("1234567890")
+        .initCertificateChoice();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+```
+
+### Requesting the IP Address of the User's Device
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+```java
+NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
+        .createNotificationCertificateChoice()
+        .withDocumentNumber(documentNumber)
+        .withCertificateLevel(CertificateLevel.QUALIFIED)
+
+        // we want to get the IP address of the device running Smart-ID app
+        // for the IP to be returned the service provider (SK) must switch on this option
+        .withShareMdClientIpAddress(true)
+        .initCertificateChoice();
+```
+
 # Initiating a Dynamic Link Signature Session in API v3.0
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a signature session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the signing process using a dynamic link. The user can then access the link and complete the signing process.
 
@@ -1518,7 +1579,7 @@ String verificationCode = authenticationSessionResponse.getVc().getValue();
 ```
 
 ### Requesting the IP Address of the User's Device
-If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withSharedMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
 ```java
 NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .createNotificationAuthentication()
@@ -1528,7 +1589,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withAllowedInteractionsOrder(Collections.singletonList(
                 Interaction.verificationCodeChoice("Log in to self-service?")
         ))
-        .withSharedMdClientIpAddress(true) // Request the user's device IP address
+        .withShareMdClientIpAddress(true) // Request the user's device IP address
         .initAuthenticationSession();
 ```
 

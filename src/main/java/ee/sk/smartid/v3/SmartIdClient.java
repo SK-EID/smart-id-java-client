@@ -75,6 +75,17 @@ public class SmartIdClient {
     }
 
     /**
+     * Creates a new builder for creating a notification certificate choice session request.
+     *
+     * @return a builder for creating a new notification certificate choice session request
+     */
+    public NotificationCertificateChoiceSessionRequestBuilder createNotificationCertificateChoice() {
+        return new NotificationCertificateChoiceSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
+    }
+
+    /**
      * Creates a new builder for creating a new dynamic link authentication session request
      *
      * @return builder for creating a new dynamic link authentication session request

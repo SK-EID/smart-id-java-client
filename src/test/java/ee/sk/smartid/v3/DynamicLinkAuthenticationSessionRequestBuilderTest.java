@@ -192,7 +192,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
-                    .withSharedMdClientIpAddress(ipRequested)
+                    .withShareMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);

@@ -32,10 +32,11 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.v3.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.v3.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
@@ -63,26 +64,44 @@ public interface SmartIdConnector extends Serializable {
     /**
      * Initiates a dynamic link based certificate choice request.
      *
-     * @param request CertificateRequest containing necessary parameters
-     * @return CertificateChoiceResponse containing sessionID, sessionToken, and sessionSecret
+     * @param request CertificateChoiceSessionRequest containing necessary parameters
+     * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
     DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request);
 
     /**
+     * Initiates a notification based certificate choice request.
+     *
+     * @param request             CertificateChoiceSessionRequest containing necessary parameters
+     * @param semanticsIdentifier The semantics identifier
+     * @return NotificationCertificateChoiceSessionResponse containing sessionID
+     */
+    NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+
+    /**
+     * Initiates a notification based certificate choice request.
+     *
+     * @param request        CertificateChoiceSessionRequest containing necessary parameters
+     * @param documentNumber The document number
+     * @return NotificationCertificateChoiceSessionResponse containing sessionID
+     */
+    NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, String documentNumber);
+
+    /**
      * Initiates a dynamic link based signature sessions.
      *
-     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
+     * @param request             SignatureSessionRequest containing necessary parameters for the signature session
      * @param semanticsIdentifier The semantics identifier
-     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
     DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Initiates a dynamic link based signature sessions.
      *
-     * @param request DynamicLinkSignatureSessionRequest containing necessary parameters for the signature session
+     * @param request        SignatureSessionRequest containing necessary parameters for the signature session
      * @param documentNumber The document number
-     * @return DynamicLinkSignatureSessionResponse containing sessionID, sessionToken, and sessionSecret
+     * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
     DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber);
 

@@ -172,7 +172,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
-                    .withSharedMdClientIpAddress(ipRequested)
+                    .withShareMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
