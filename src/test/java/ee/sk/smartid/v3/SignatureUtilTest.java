@@ -70,15 +70,34 @@ class SignatureUtilTest {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(null);
 
-        var exception = assertThrows(SmartIdClientException.class, () ->
-                SignatureUtil.getDigestToSignBase64(null, signableData));
+        var exception = assertThrows(SmartIdClientException.class, () -> SignatureUtil.getDigestToSignBase64(null, signableData));
         assertEquals("HashType must be set for signableData.", exception.getMessage());
+    }
+
+    @Test
+    void getDigestToSignBase64_withSignableHashFieldsNotFilled() {
+        var signableHash = new SignableHash();
+        signableHash.setHash(new byte[0]);
+        signableHash.setHashType(HashType.SHA256);
+
+        var exception = assertThrows(SmartIdClientException.class, () -> SignatureUtil.getDigestToSignBase64(signableHash, null));
+        assertEquals("Either signableHash or signableData must be set.", exception.getMessage());
     }
 
     @Test
     void getSignatureAlgorithm_withExplicitSignatureAlgorithm() {
         String algorithm = SignatureUtil.getSignatureAlgorithm(SignatureAlgorithm.SHA384WITHRSA, null, null);
         assertEquals(SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName(), algorithm);
+    }
+
+    @Test
+    void getSignatureAlgorithm_withSignableHashHashTypeNull() {
+        var signableHash = new SignableHash();
+        signableHash.setHash("Test hash".getBytes());
+        signableHash.setHashType(null);
+
+        String algorithm = SignatureUtil.getSignatureAlgorithm(null, signableHash, null);
+        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
     }
 
     @ParameterizedTest
@@ -102,8 +121,27 @@ class SignatureUtilTest {
     }
 
     @Test
+    void getSignatureAlgorithm_withSignableDataHashTypeNull() {
+        var signableData = new SignableData("Test data".getBytes());
+        signableData.setHashType(null);
+
+        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
+        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
+    }
+
+    @Test
     void getSignatureAlgorithm_withDefaultAlgorithm() {
         String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, null);
         assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
+    }
+
+    @Test
+    void setHashInBase64_shouldDecodeBase64String() {
+        var signableHash = new SignableHash();
+        String base64EncodedHash = Base64.getEncoder().encodeToString("Test hash".getBytes());
+
+        signableHash.setHashInBase64(base64EncodedHash);
+
+        assertEquals(base64EncodedHash, signableHash.getHashInBase64());
     }
 }

@@ -33,14 +33,14 @@ import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.v3.DynamicLinkSessionResponse;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.NotificationCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.NotificationSignatureSessionResponse;
-import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 
 public interface SmartIdConnector extends Serializable {
 
