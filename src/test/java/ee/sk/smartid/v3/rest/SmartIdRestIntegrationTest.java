@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
-import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionRequest;
+import ee.sk.smartid.v3.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
@@ -54,7 +54,7 @@ public class SmartIdRestIntegrationTest {
 
     @Test
     void authenticate_anonymous() {
-        DynamicLinkAuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
+        AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
         request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
@@ -63,7 +63,7 @@ public class SmartIdRestIntegrationTest {
 
     @Test
     void authenticate_withDocumentNumber() {
-        DynamicLinkAuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
+        AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
         request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
@@ -72,15 +72,15 @@ public class SmartIdRestIntegrationTest {
 
     @Test
     void authenticate_withSemanticsIdentifier() {
-        DynamicLinkAuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
+        AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
         request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
         DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-50609019996"));
     }
 
-    private static DynamicLinkAuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
-        DynamicLinkAuthenticationSessionRequest request = new DynamicLinkAuthenticationSessionRequest();
+    private static AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
+        AuthenticationSessionRequest request = new AuthenticationSessionRequest();
         request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         request.setRelyingPartyName("DEMO");
         request.setCertificateLevel("QUALIFIED");

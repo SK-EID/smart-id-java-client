@@ -26,47 +26,54 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
-import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.InteractionFlow;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
+import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.VerificationCode;
 
 /**
- * Class for building a dynamic link authentication session request
+ * Class for building a notification authentication session request
  */
-public class DynamicLinkAuthenticationSessionRequestBuilder {
+public class NotificationAuthenticationSessionRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicLinkAuthenticationSessionRequestBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(NotificationAuthenticationSessionRequestBuilder.class);
+
+    private static final Set<InteractionFlow> NOT_SUPPORTED_INTERACTION_FLOWS =
+            Set.of(InteractionFlow.DISPLAY_TEXT_AND_PIN, InteractionFlow.CONFIRMATION_MESSAGE);
 
     private final SmartIdConnector connector;
 
     private String relyingPartyUUID;
     private String relyingPartyName;
-    private AuthenticationCertificateLevel certificateLevel = AuthenticationCertificateLevel.QUALIFIED;
+    private AuthenticationCertificateLevel certificateLevel;
     private String randomChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
     private String nonce;
-    private List<DynamicLinkInteraction> allowedInteractionsOrder;
+    private List<Interaction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
     private SemanticsIdentifier semanticsIdentifier;
     private String documentNumber;
 
     /**
-     * Constructs a new DynamicLinkAuthenticationSessionRequestBuilder with the given Smart-ID connector
+     * Constructs a new NotificationAuthenticationSessionRequestBuilder with the given Smart-ID connector
      *
      * @param connector the Smart-ID connector
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder(SmartIdConnector connector) {
+    public NotificationAuthenticationSessionRequestBuilder(SmartIdConnector connector) {
         this.connector = connector;
     }
 
@@ -76,7 +83,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param relyingPartUUID the relying party UUID
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withRelyingPartyUUID(String relyingPartUUID) {
+    public NotificationAuthenticationSessionRequestBuilder withRelyingPartyUUID(String relyingPartUUID) {
         this.relyingPartyUUID = relyingPartUUID;
         return this;
     }
@@ -87,20 +94,18 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param relyingPartyName the relying party name
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
+    public NotificationAuthenticationSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
         this.relyingPartyName = relyingPartyName;
         return this;
     }
 
     /**
      * Sets the certificate level
-     * <p>
-     * Defaults to {@link AuthenticationCertificateLevel#QUALIFIED}
      *
      * @param certificateLevel the certificate level
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withCertificateLevel(AuthenticationCertificateLevel certificateLevel) {
+    public NotificationAuthenticationSessionRequestBuilder withCertificateLevel(AuthenticationCertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
         return this;
     }
@@ -113,7 +118,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param randomChallenge the signature protocol parameters
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withRandomChallenge(String randomChallenge) {
+    public NotificationAuthenticationSessionRequestBuilder withRandomChallenge(String randomChallenge) {
         this.randomChallenge = randomChallenge;
         return this;
     }
@@ -124,7 +129,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public NotificationAuthenticationSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
@@ -135,7 +140,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param nonce the nonce
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withNonce(String nonce) {
+    public NotificationAuthenticationSessionRequestBuilder withNonce(String nonce) {
         this.nonce = nonce;
         return this;
     }
@@ -146,7 +151,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param allowedInteractionsOrder the allowed interactions order
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<DynamicLinkInteraction> allowedInteractionsOrder) {
+    public NotificationAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
         return this;
     }
@@ -157,7 +162,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param shareMdClientIpAddress whether to share the Mobile-ID client IP address
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withSharedMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public NotificationAuthenticationSessionRequestBuilder withSharedMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }
@@ -168,7 +173,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param capabilities the capabilities
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withCapabilities(String... capabilities) {
+    public NotificationAuthenticationSessionRequestBuilder withCapabilities(String... capabilities) {
         this.capabilities = Set.of(capabilities);
         return this;
     }
@@ -181,7 +186,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param semanticsIdentifier the semantics identifier
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
+    public NotificationAuthenticationSessionRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
         this.semanticsIdentifier = semanticsIdentifier;
         return this;
     }
@@ -194,7 +199,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param documentNumber the document number
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withDocumentNumber(String documentNumber) {
+    public NotificationAuthenticationSessionRequestBuilder withDocumentNumber(String documentNumber) {
         this.documentNumber = documentNumber;
         return this;
     }
@@ -202,30 +207,29 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     /**
      * Sends the authentication request and get the init session response
      * <p>
-     * There are 3 supported ways to start authentication session:
+     * There are 2 supported ways to start authentication session:
      * <ul>
      *     <li>with semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
      *     <li>with document number by using {@link #withDocumentNumber(String)} </li>
-     *     <li>anonymously if semantics identifier and document number are not provided </li>
      * </ul>
      *
      * @return init session response
      */
-    public DynamicLinkAuthenticationSessionResponse initAuthenticationSession() {
+    public NotificationAuthenticationSessionResponse initAuthenticationSession() {
         validateRequestParameters();
         AuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
-        DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
-        validateResponseParameters(dynamicLinkAuthenticationSessionResponse);
-        return dynamicLinkAuthenticationSessionResponse;
+        NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
+        validateResponseParameters(notificationAuthenticationSessionResponse);
+        return notificationAuthenticationSessionResponse;
     }
 
-    private DynamicLinkAuthenticationSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
+    private NotificationAuthenticationSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
         if (semanticsIdentifier != null) {
-            return connector.initDynamicLinkAuthentication(authenticationRequest, semanticsIdentifier);
+            return connector.initNotificationAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
-            return connector.initDynamicLinkAuthentication(authenticationRequest, documentNumber);
+            return connector.initNotificationAuthentication(authenticationRequest, documentNumber);
         } else {
-            return connector.initAnonymousDynamicLinkAuthentication(authenticationRequest);
+            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set.");
         }
     }
 
@@ -288,7 +292,14 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
             logger.error("Parameter allowedInteractionsOrder must be set");
             throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
         }
-        allowedInteractionsOrder.forEach(DynamicLinkInteraction::validate);
+        Optional<Interaction> notSupportedInteraction = allowedInteractionsOrder.stream()
+                .filter(interaction -> NOT_SUPPORTED_INTERACTION_FLOWS.contains(interaction.getType()))
+                .findFirst();
+        if (notSupportedInteraction.isPresent()) {
+            logger.error("AllowedInteractionsOrder contains not supported interaction {}", notSupportedInteraction.get().getType());
+            throw new SmartIdClientException("AllowedInteractionsOrder contains not supported interaction " + notSupportedInteraction.get().getType());
+        }
+        allowedInteractionsOrder.forEach(Interaction::validate);
     }
 
     private AuthenticationSessionRequest createAuthenticationRequest() {
@@ -316,20 +327,32 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
         return request;
     }
 
-    private void validateResponseParameters(DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse) {
-        if (StringUtil.isEmpty(dynamicLinkAuthenticationSessionResponse.getSessionID())) {
+    private void validateResponseParameters(NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse) {
+        if (StringUtil.isEmpty(notificationAuthenticationSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
-            throw new SmartIdClientException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
         }
 
-        if (StringUtil.isEmpty(dynamicLinkAuthenticationSessionResponse.getSessionToken())) {
-            logger.error("Session token is missing from the response");
-            throw new SmartIdClientException("Session token is missing from the response");
+        VerificationCode verificationCode = notificationAuthenticationSessionResponse.getVc();
+        if (verificationCode == null) {
+            logger.error("VC object is missing from the response");
+            throw new UnprocessableSmartIdResponseException("VC object is missing from the response");
         }
 
-        if (StringUtil.isEmpty(dynamicLinkAuthenticationSessionResponse.getSessionSecret())) {
-            logger.error("Session secret is missing from the response");
-            throw new SmartIdClientException("Session secret is missing from the response");
+        String vcType = verificationCode.getType();
+        if (StringUtil.isEmpty(vcType)) {
+            logger.error("VC type is missing from the response");
+            throw new UnprocessableSmartIdResponseException("VC type is missing from the response");
+        }
+
+        if (!VerificationCode.ALPHA_NUMERIC_4.equals(vcType)) {
+            logger.error("Unsupported VC type: {}", vcType);
+            throw new UnprocessableSmartIdResponseException("Unsupported VC type: " + vcType);
+        }
+
+        if (StringUtil.isEmpty(verificationCode.getValue())) {
+            logger.error("VC value is missing from the response");
+            throw new UnprocessableSmartIdResponseException("VC value is missing from the response");
         }
     }
 }

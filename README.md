@@ -1559,6 +1559,75 @@ SmartIdSignature signature = SmartIdSignature.fromSessionStatus(sessionStatus);
 // Use the signature as needed
 ```
 
+## Examples of performing notification authentication
+
+### Initiating notification authentication session with document number
+```java
+String documentNumber = "PNOLT-30303039914-MOCK-Q";
+
+String randomChallenge = RandomChallenge.generate();
+
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.verificationCodeChoice("Log in to self-service?")
+        ))
+        .initAuthenticationSession();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+
+String verificationCode = authenticationSessionResponse.getVc().getValue();
+// Display the verification code to the user for confirmation
+```
+After initiating the session, display the verificationCode to the user. The user must confirm that the code displayed in their Smart-ID app matches the one you have provided.
+
+### Initiating notification authentication session with semantics identifier
+Alternatively, you can initiate a notification authentication session using a semantics identifier, which uniquely identifies the user across different countries and identity types.
+```java
+SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
+        SemanticsIdentifier.IdentityType.PNO,
+        SemanticsIdentifier.CountryCode.EE,
+        "30303039914"
+);
+
+String randomChallenge = RandomChallenge.generate();
+
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withSemanticsIdentifier(semanticsIdentifier)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.verificationCodeChoice("Log in to self-service?")
+        ))
+        .initAuthenticationSession();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+
+String verificationCode = authenticationSessionResponse.getVc().getValue();
+// Display the verification code to the user for confirmation
+```
+
+### Requesting the IP Address of the User's Device
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withSharedMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+```java
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.verificationCodeChoice("Log in to self-service?")
+        ))
+        .withSharedMdClientIpAddress(true) // Request the user's device IP address
+        .initAuthenticationSession();
+```
+
 ### Generating QR-code or dynamic link
 Todo: will be implemented in task SLIB-55
 ## Generating QR-code or dynamic link

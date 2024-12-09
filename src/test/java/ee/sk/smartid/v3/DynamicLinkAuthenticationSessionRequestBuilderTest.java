@@ -75,7 +75,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         public void initAuthenticationSession_ok() {
-            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -84,9 +84,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
-            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
-            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+            AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
             assertEquals("DEMO", request.getRelyingPartyName());
@@ -102,7 +102,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CertificateLevelArgumentProvider.class)
         public void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
-            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -113,9 +113,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
-            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
-            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+            AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedValue, request.getCertificateLevel());
         }
@@ -123,7 +123,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(ValidNonceArgumentSourceProvider.class)
         public void initAuthenticationSession_nonce_ok(String nonce) {
-            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -134,9 +134,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
-            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
-            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+            AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(nonce, request.getNonce());
         }
@@ -144,7 +144,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @EnumSource
         public void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
-            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -155,16 +155,16 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
-            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
-            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+            AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(signatureAlgorithm.getAlgorithmName(), request.getSignatureProtocolParameters().getSignatureAlgorithm());
         }
 
         @Test
         public void initAuthenticationSession_ipQueryingNotUsed_doNotCreatedRequestProperties_ok() {
-            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -174,9 +174,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
-            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
-            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+            AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertNull(request.getRequestProperties());
         }
@@ -184,7 +184,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ValueSource(booleans = {true, false})
         public void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
-            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -195,9 +195,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withSharedMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
 
-            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
-            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+            AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertNotNull(request.getRequestProperties());
             assertEquals(ipRequested, request.getRequestProperties().getShareMdClientIpAddress());
@@ -206,7 +206,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CapabilitiesArgumentProvider.class)
         public void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
-            when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
             new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -216,9 +216,9 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withCapabilities(capabilities)
                     .initAuthenticationSession();
 
-            ArgumentCaptor<DynamicLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DynamicLinkAuthenticationSessionRequest.class);
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDynamicLinkAuthentication(requestCaptor.capture());
-            DynamicLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+            AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedCapabilities, request.getCapabilities());
         }
@@ -336,7 +336,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
             var exception = assertThrows(SmartIdClientException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID(sessionId);
-                when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+                when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
             });
@@ -350,7 +350,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 var dynamicLinkAuthenticationSessionResponse = new DynamicLinkAuthenticationSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(sessionToken);
-                when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+                when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
             });
@@ -365,7 +365,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
                 dynamicLinkAuthenticationSessionResponse.setSessionSecret(sessionSecret);
-                when(connector.initAnonymousDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+                when(connector.initAnonymousDynamicLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
             });
@@ -384,7 +384,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
     @Test
     void initAuthenticationSession_withSemanticsIdentifier() {
-        when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
+        when(connector.initDynamicLinkAuthentication(any(AuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
                 .thenReturn(createDynamicLinkAuthenticationResponse());
 
         new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -396,7 +396,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 .initAuthenticationSession();
 
         ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
-        verify(connector).initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
+        verify(connector).initDynamicLinkAuthentication(any(AuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
         SemanticsIdentifier capturedSemanticsIdentifier = semanticsIdentifierCaptor.getValue();
 
         assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
@@ -404,7 +404,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
     @Test
     void initAuthenticationSession_withDocumentNumber() {
-        when(connector.initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), any(String.class)))
+        when(connector.initDynamicLinkAuthentication(any(AuthenticationSessionRequest.class), any(String.class)))
                 .thenReturn(createDynamicLinkAuthenticationResponse());
 
         new DynamicLinkAuthenticationSessionRequestBuilder(connector)
@@ -416,7 +416,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 .initAuthenticationSession();
 
         ArgumentCaptor<String> documentNumberCaptor = ArgumentCaptor.forClass(String.class);
-        verify(connector).initDynamicLinkAuthentication(any(DynamicLinkAuthenticationSessionRequest.class), documentNumberCaptor.capture());
+        verify(connector).initDynamicLinkAuthentication(any(AuthenticationSessionRequest.class), documentNumberCaptor.capture());
         String capturedDocumentNumber = documentNumberCaptor.getValue();
 
         assertEquals("PNOEE-48010010101-MOCK-Q", capturedDocumentNumber);
