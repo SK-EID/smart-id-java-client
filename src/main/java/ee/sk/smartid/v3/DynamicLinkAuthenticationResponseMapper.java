@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.CertificateParser;
-import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
@@ -41,13 +40,20 @@ import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
+/**
+ * Validates and maps the session status received as dynamic-link authentication response
+ */
 public class DynamicLinkAuthenticationResponseMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicLinkAuthenticationResponseMapper.class);
 
-    public DynamicLinkAuthenticationResponse from(SessionStatus sessionStatus,
-                                                  String randomChallenge,
-                                                  AuthenticationCertificateLevel requestedCertificateLevel) {
+    /**
+     * Maps session status to dynamic-link authentication response
+     *
+     * @param sessionStatus session status received from Smart-ID server
+     * @return dynamic-link authentication response
+     */
+    public static DynamicLinkAuthenticationResponse from(SessionStatus sessionStatus) {
         validateSessionStatus(sessionStatus);
 
         SessionResult sessionResult = sessionStatus.getResult();
@@ -56,16 +62,14 @@ public class DynamicLinkAuthenticationResponseMapper {
 
         var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
         dynamicLinkAuthenticationResponse.setEndResult(sessionResult.getEndResult());
-        dynamicLinkAuthenticationResponse.setRandomChallenge(randomChallenge);
-        dynamicLinkAuthenticationResponse.setHashType(getHashType(sessionSignature.getSignatureAlgorithm()));
         dynamicLinkAuthenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
         dynamicLinkAuthenticationResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
         dynamicLinkAuthenticationResponse.setCertificate(toCertificate(sessionCertificate));
-        dynamicLinkAuthenticationResponse.setRequestedCertificateLevel(requestedCertificateLevel);
         dynamicLinkAuthenticationResponse.setCertificateLevel(toAuthenticationCertificateLevel(sessionCertificate));
         dynamicLinkAuthenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
         dynamicLinkAuthenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
         dynamicLinkAuthenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
+        dynamicLinkAuthenticationResponse.setServerRandom(sessionSignature.getServerRandom());
         return dynamicLinkAuthenticationResponse;
     }
 
@@ -155,14 +159,5 @@ public class DynamicLinkAuthenticationResponseMapper {
 
     private static AuthenticationCertificateLevel toAuthenticationCertificateLevel(SessionCertificate sessionCertificate) {
         return AuthenticationCertificateLevel.valueOf(sessionCertificate.getCertificateLevel());
-    }
-
-    private HashType getHashType(String signatureAlgorithm) {
-        return switch (signatureAlgorithm) {
-            case "sha256WithRSAEncryption" -> HashType.SHA256;
-            case "sha384WithRSAEncryption" -> HashType.SHA384;
-            case "sha512WithRSAEncryption" -> HashType.SHA512;
-            default -> throw new UnprocessableSmartIdResponseException("Unexpected signature algorithm value: " + signatureAlgorithm);
-        };
     }
 }

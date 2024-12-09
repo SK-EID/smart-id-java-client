@@ -66,6 +66,8 @@ public class SmartIdClient {
     private SmartIdConnector connector;
     private SSLContext trustSslContext;
 
+    private SessionStatusPoller sessionStatusPoller;
+
     /**
      * Creates a new builder for creating a dynamic link certificate choice session request.
      *
@@ -111,13 +113,15 @@ public class SmartIdClient {
     }
 
     /**
-     * Create a new Smart-ID session status poller
+     * Returns the session status poller or creates a new one if it doesn't exist
      *
      * @return Sessions status poller
      */
-    public SessionStatusPoller createSessionStatusPoller() {
-        var sessionStatusPoller = new SessionStatusPoller(getSmartIdConnector());
-        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+    public SessionStatusPoller getSessionsStatusPoller() {
+        if (sessionStatusPoller == null) {
+            sessionStatusPoller = new SessionStatusPoller(getSmartIdConnector());
+            sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+        }
         return sessionStatusPoller;
     }
 
@@ -239,6 +243,11 @@ public class SmartIdClient {
         pollingSleepTimeout = timeout;
     }
 
+    /**
+     * Get smart-id connector. If connector is not set, then new will be created
+     *
+     * @return smart-id connector
+     */
     public SmartIdConnector getSmartIdConnector() {
         if (null == connector) {
             Client client = configuredClient != null ? configuredClient : createClient();

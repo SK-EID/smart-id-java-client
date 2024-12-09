@@ -90,6 +90,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
             assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
             assertEquals("DEMO", request.getRelyingPartyName());
+            assertEquals("QUALIFIED", request.getCertificateLevel());
             assertEquals(SignatureProtocol.ACSP_V1, request.getSignatureProtocol());
             assertNotNull(request.getSignatureProtocolParameters());
             assertNotNull(request.getSignatureProtocolParameters().getRandomChallenge());

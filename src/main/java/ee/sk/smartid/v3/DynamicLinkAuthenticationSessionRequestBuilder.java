@@ -51,7 +51,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
 
     private String relyingPartyUUID;
     private String relyingPartyName;
-    private AuthenticationCertificateLevel certificateLevel;
+    private AuthenticationCertificateLevel certificateLevel = AuthenticationCertificateLevel.QUALIFIED;
     private String randomChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
     private String nonce;
@@ -70,6 +70,12 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
         this.connector = connector;
     }
 
+    /**
+     * Sets the relying party UUID
+     *
+     * @param relyingPartUUID the relying party UUID
+     * @return this builder
+     */
     public DynamicLinkAuthenticationSessionRequestBuilder withRelyingPartyUUID(String relyingPartUUID) {
         this.relyingPartyUUID = relyingPartUUID;
         return this;
@@ -88,6 +94,8 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
 
     /**
      * Sets the certificate level
+     * <p>
+     * Defaults to {@link AuthenticationCertificateLevel#QUALIFIED}
      *
      * @param certificateLevel the certificate level
      * @return this builder

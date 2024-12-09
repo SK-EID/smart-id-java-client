@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,34 +26,30 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
+import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
+/**
+ * Represents the authentication response after a successful authentication sessions status response was received.
+ *
+ * <p>Use with {@link AuthenticationResponseValidator} to validate the certificate and the signature.
+ */
 public class DynamicLinkAuthenticationResponse {
 
     private String endResult;
-    private String randomChallenge;
+    private String serverRandom;
     private HashType hashType;
     private String signatureValueInBase64;
     private String algorithmName;
     private X509Certificate certificate;
-    private AuthenticationCertificateLevel requestedCertificateLevel;
     private AuthenticationCertificateLevel certificateLevel;
     private String documentNumber;
     private String interactionFlowUsed;
     private String deviceIpAddress;
-
-    public byte[] getSignatureValue() { // TODO - 03.12.24: validate use case
-        try {
-            return Base64.getDecoder().decode(signatureValueInBase64);
-        } catch (IllegalArgumentException e) {
-            throw new UnprocessableSmartIdResponseException(
-                    "Failed to parse signature value in base64. Incorrectly encoded base64 string: '" + signatureValueInBase64 + "'");
-        }
-    }
 
     public String getEndResult() {
         return endResult;
@@ -69,6 +65,20 @@ public class DynamicLinkAuthenticationResponse {
 
     public void setSignatureValueInBase64(String signatureValueInBase64) {
         this.signatureValueInBase64 = signatureValueInBase64;
+    }
+
+    /**
+     * Decodes Base64 encoded signature value and returns it as a byte array.
+     *
+     * @return signature value as a byte array
+     */
+    public byte[] getSignatureValue() {
+        try {
+            return Base64.getDecoder().decode(signatureValueInBase64.getBytes(StandardCharsets.UTF_8));
+        } catch (IllegalArgumentException e) {
+            throw new UnprocessableSmartIdResponseException(
+                    "Failed to parse signature value in base64. Incorrectly encoded base64 string: '" + signatureValueInBase64 + "'");
+        }
     }
 
     public String getAlgorithmName() {
@@ -95,28 +105,12 @@ public class DynamicLinkAuthenticationResponse {
         this.certificateLevel = certificateLevel;
     }
 
-    public String getRandomChallenge() {
-        return randomChallenge;
-    }
-
-    public void setRandomChallenge(String randomChallenge) {
-        this.randomChallenge = randomChallenge;
-    }
-
     public HashType getHashType() {
         return hashType;
     }
 
     public void setHashType(HashType hashType) {
         this.hashType = hashType;
-    }
-
-    public AuthenticationCertificateLevel getRequestedCertificateLevel() {
-        return requestedCertificateLevel;
-    }
-
-    public void setRequestedCertificateLevel(AuthenticationCertificateLevel requestedCertificateLevel) {
-        this.requestedCertificateLevel = requestedCertificateLevel;
     }
 
     public String getDocumentNumber() {
@@ -143,4 +137,11 @@ public class DynamicLinkAuthenticationResponse {
         this.deviceIpAddress = deviceIpAddress;
     }
 
+    public String getServerRandom() {
+        return serverRandom;
+    }
+
+    public void setServerRandom(String serverRandom) {
+        this.serverRandom = serverRandom;
+    }
 }

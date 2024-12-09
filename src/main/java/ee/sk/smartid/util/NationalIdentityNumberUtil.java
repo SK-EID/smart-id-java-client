@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2.util;
+package ee.sk.smartid.util;
 
 /*-
  * #%L

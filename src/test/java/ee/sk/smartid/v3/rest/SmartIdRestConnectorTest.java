@@ -762,6 +762,7 @@ class SmartIdRestConnectorTest {
         var dynamicLinkAuthenticationSessionRequest = new DynamicLinkAuthenticationSessionRequest();
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
+        dynamicLinkAuthenticationSessionRequest.setCertificateLevel("QUALIFIED");
 
         var signatureProtocolParameters = new AcspV1SignatureProtocolParameters();
         signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
