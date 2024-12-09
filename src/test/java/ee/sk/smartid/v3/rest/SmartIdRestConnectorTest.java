@@ -858,7 +858,7 @@ class SmartIdRestConnectorTest {
         signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
-        Interaction interaction = Interaction.verificationCodeChoice("Verify the code");
+        NotificationInteraction interaction = NotificationInteraction.verificationCodeChoice("Verify the code");
         dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
 
         return dynamicLinkAuthenticationSessionRequest;

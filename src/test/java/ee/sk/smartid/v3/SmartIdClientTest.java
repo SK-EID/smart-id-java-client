@@ -193,7 +193,7 @@ class SmartIdClientTest {
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
@@ -209,7 +209,7 @@ class SmartIdClientTest {
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());

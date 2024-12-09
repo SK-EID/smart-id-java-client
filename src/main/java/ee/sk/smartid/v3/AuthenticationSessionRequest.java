@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class AuthenticationSessionRequest implements Serializable {
@@ -50,7 +50,7 @@ public class AuthenticationSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String nonce;
 
-    private List<DynamicLinkInteraction> allowedInteractionsOrder;
+    private List<? extends Interaction> allowedInteractionsOrder;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
@@ -102,11 +102,11 @@ public class AuthenticationSessionRequest implements Serializable {
         this.nonce = nonce;
     }
 
-    public List<DynamicLinkInteraction> getAllowedInteractionsOrder() {
+    public List<? extends Interaction> getAllowedInteractionsOrder() {
         return allowedInteractionsOrder;
     }
 
-    public void setAllowedInteractionsOrder(List<DynamicLinkInteraction> allowedInteractionsOrder) {
+    public void setAllowedInteractionsOrder(List<? extends Interaction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
     }
 
