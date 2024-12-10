@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,16 +34,16 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
-import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
+import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 
 @Disabled("Currently request to v3 path returns - No permission to issue the request")
 @SmartIdDemoIntegrationTest
-public class SmartIdRestIntegrationTest {
+class SmartIdRestIntegrationTest {
 
     private SmartIdConnector smartIdConnector;
 
@@ -58,7 +58,7 @@ public class SmartIdRestIntegrationTest {
 
         request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
-        DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initAnonymousDynamicLinkAuthentication(request);
+        DynamicLinkSessionResponse response = smartIdConnector.initAnonymousDynamicLinkAuthentication(request);
     }
 
     @Test
@@ -67,7 +67,7 @@ public class SmartIdRestIntegrationTest {
 
         request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
-        DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, "PNOEE-50609019996-MOCK-Q");
+        DynamicLinkSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, "PNOEE-50609019996-MOCK-Q");
     }
 
     @Test
@@ -76,11 +76,11 @@ public class SmartIdRestIntegrationTest {
 
         request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
-        DynamicLinkAuthenticationSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-50609019996"));
+        DynamicLinkSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-50609019996"));
     }
 
     private static AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
-        AuthenticationSessionRequest request = new AuthenticationSessionRequest();
+        var request = new AuthenticationSessionRequest();
         request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         request.setRelyingPartyName("DEMO");
         request.setCertificateLevel("QUALIFIED");

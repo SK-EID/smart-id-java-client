@@ -32,7 +32,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -59,8 +58,8 @@ public class NotificationSignatureSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private List<? extends Interaction> allowedInteractionsOrder;
-    private boolean shareMdClientIpAddress;
+    private List<NotificationInteraction> allowedInteractionsOrder;
+    private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm;
     private SignableData signableData;
     private SignableHash signableHash;
@@ -163,10 +162,10 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     /**
-     * Ask to return the IP address of the mobile device where Smart-ID app was running.
+     * Sets whether to share the Mobile device IP address
      *
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
-     * @see <a href="https://github.com/SK-EID/smart-id-documentation#238-mobile-device-ip-sharing">Mobile Device IP sharing</a>
      */
     public NotificationSignatureSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
@@ -253,14 +252,14 @@ public class NotificationSignatureSessionRequestBuilder {
 
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
         if (signableHash != null || signableData != null) {
-            signatureProtocolParameters.setDigest(getDigestToSignBase64());
+            signatureProtocolParameters.setDigest(SignatureUtil.getDigestToSignBase64(signableHash, signableData));
         }
-        signatureProtocolParameters.setSignatureAlgorithm(getSignatureAlgorithm());
+        signatureProtocolParameters.setSignatureAlgorithm(SignatureUtil.getSignatureAlgorithm(signatureAlgorithm, signableHash, signableData));
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
         request.setAllowedInteractionsOrder(allowedInteractionsOrder);
 
-        if (this.shareMdClientIpAddress) {
+        if (this.shareMdClientIpAddress != null) {
             var requestProperties = new RequestProperties();
             requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
@@ -268,39 +267,6 @@ public class NotificationSignatureSessionRequestBuilder {
 
         request.setCapabilities(capabilities);
         return request;
-    }
-
-    private String getDigestToSignBase64() {
-        if (signableHash != null && signableHash.areFieldsFilled()) {
-            return signableHash.getHashInBase64();
-        } else if (signableData != null) {
-            if (signableData.getHashType() == null) {
-                throw new SmartIdClientException("HashType must be set for signableData.");
-            }
-            return signableData.calculateHashInBase64();
-        } else {
-            throw new SmartIdClientException("Either signableHash or signableData must be set.");
-        }
-    }
-
-    private String getSignatureAlgorithm() {
-        if (signatureAlgorithm != null) {
-            return signatureAlgorithm.getAlgorithmName();
-        } else if (signableHash != null && signableHash.getHashType() != null) {
-            return getSignatureAlgorithmName(signableHash.getHashType());
-        } else if (signableData != null && signableData.getHashType() != null) {
-            return getSignatureAlgorithmName(signableData.getHashType());
-        } else {
-            return SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
-        }
-    }
-
-    private String getSignatureAlgorithmName(HashType hashType) {
-        return switch (hashType) {
-            case SHA256 -> SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName();
-            case SHA384 -> SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName();
-            case SHA512 -> SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
-        };
     }
 
     private void validateParameters() {

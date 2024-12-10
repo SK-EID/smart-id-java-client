@@ -39,8 +39,8 @@ import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.rest.dao.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 /**
@@ -155,12 +155,12 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets whether to share the Mobile-ID client IP address
+     * Sets whether to share the Mobile device IP address
      *
-     * @param shareMdClientIpAddress whether to share the Mobile-ID client IP address
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withSharedMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public DynamicLinkAuthenticationSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }
@@ -214,15 +214,15 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      *
      * @return init session response
      */
-    public DynamicLinkAuthenticationSessionResponse initAuthenticationSession() {
+    public DynamicLinkSessionResponse initAuthenticationSession() {
         validateRequestParameters();
         AuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
-        DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
+        DynamicLinkSessionResponse dynamicLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(dynamicLinkAuthenticationSessionResponse);
         return dynamicLinkAuthenticationSessionResponse;
     }
 
-    private DynamicLinkAuthenticationSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
+    private DynamicLinkSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
         if (semanticsIdentifier != null) {
             return connector.initDynamicLinkAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
@@ -319,7 +319,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
         return request;
     }
 
-    private void validateResponseParameters(DynamicLinkAuthenticationSessionResponse dynamicLinkAuthenticationSessionResponse) {
+    private void validateResponseParameters(DynamicLinkSessionResponse dynamicLinkAuthenticationSessionResponse) {
         if (StringUtil.isEmpty(dynamicLinkAuthenticationSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
             throw new SmartIdClientException("Session ID is missing from the response");

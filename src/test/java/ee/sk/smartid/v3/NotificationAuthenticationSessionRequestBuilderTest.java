@@ -60,6 +60,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.VerificationCode;
@@ -173,7 +174,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
-                    .withSharedMdClientIpAddress(ipRequested)
+                    .withShareMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);

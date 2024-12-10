@@ -26,11 +26,11 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-public class DynamicLinkAuthenticationSessionResponse {
+import java.io.Serializable;
+
+public class NotificationCertificateChoiceSessionResponse implements Serializable {
 
     private String sessionID;
-    private String sessionToken;
-    private String sessionSecret;
 
     public String getSessionID() {
         return sessionID;
@@ -38,21 +38,5 @@ public class DynamicLinkAuthenticationSessionResponse {
 
     public void setSessionID(String sessionID) {
         this.sessionID = sessionID;
-    }
-
-    public String getSessionToken() {
-        return sessionToken;
-    }
-
-    public void setSessionToken(String sessionToken) {
-        this.sessionToken = sessionToken;
-    }
-
-    public String getSessionSecret() {
-        return sessionSecret;
-    }
-
-    public void setSessionSecret(String sessionSecret) {
-        this.sessionSecret = sessionSecret;
     }
 }

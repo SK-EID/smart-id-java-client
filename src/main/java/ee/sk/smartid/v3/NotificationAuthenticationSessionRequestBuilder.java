@@ -40,6 +40,7 @@ import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
@@ -156,12 +157,12 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets whether to share the Mobile-ID client IP address
+     * Sets whether to share the Mobile device IP address
      *
-     * @param shareMdClientIpAddress whether to share the Mobile-ID client IP address
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withSharedMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public NotificationAuthenticationSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }
