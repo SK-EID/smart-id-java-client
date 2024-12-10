@@ -26,20 +26,14 @@ package ee.sk.smartid.v3.service;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.CertificateParser;
-import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
@@ -47,84 +41,65 @@ import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.ErrorResultHandler;
-import ee.sk.smartid.v3.SignableData;
-import ee.sk.smartid.v3.SignableHash;
 import ee.sk.smartid.v3.SignatureProtocol;
-import ee.sk.smartid.v3.SmartIdAuthenticationResponse;
-import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.SingatureResponse;
 import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
-// TODO - 03.12.24: Divide this class into separate classes for each request type
-// TODO - 03.12.24: AuthenticationIdentity should also be built and validation for that required access to trusted certificates.(v2)
-public class SmartIdRequestBuilderService {
+public class SignatureResponseMapper {
 
-    private static final Logger logger = LoggerFactory.getLogger(SmartIdRequestBuilderService.class);
-
-    protected SignableHash hashToSign;
-    protected SignableData dataToSign;
-    protected String relyingPartyUUID;
-    protected String relyingPartyName;
-    protected SemanticsIdentifier semanticsIdentifier;
-
-    protected String documentNumber;
-    protected String certificateLevel;
-    protected String nonce;
-    protected Set<String> capabilities;
-    protected List<? extends Interaction> allowedInteractionsOrder;
+    private static final Logger logger = LoggerFactory.getLogger(SignatureResponseMapper.class);
 
     /**
-     * Create {@link SmartIdAuthenticationResponse} from {@link SessionStatus}
+     * Create {@link SingatureResponse} from {@link SessionStatus}
      *
-     * @param sessionStatus session status response
-     * @return the authentication response
+     * @param sessionStatus             session status response
+     * @param requestedCertificateLevel certificate level used to start the signature session
+     * @param digest                    data that was sent for signing, will be used to validate signature
+     * @return the signature response
      * @throws UserRefusedException                       when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
      * @throws SessionTimeoutException                    when there was a timeout, i.e. end user did not confirm or refuse the operation within given time frame
      * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
      * @throws DocumentUnusableException                  when for some reason, this relying party request cannot be completed.
      */
-    // TODO - 03.12.24: this should method should be refactod. It usage is out of scope.
-    public SmartIdAuthenticationResponse createSmartIdAuthenticationResponse(SessionStatus sessionStatus,
-                                                                             String requestedCertificateLevel,
-                                                                             String expectedDigest, // TODO - 03.12.24: it is not used for authentication validation, used only for RAW_DIGEST_SIGNATURE validation
-                                                                             String randomChallenge) throws UserRefusedException,
+    public static SingatureResponse from(SessionStatus sessionStatus,
+                                         String requestedCertificateLevel,
+                                         String digest
+    ) throws UserRefusedException,
             UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
-        validateAuthenticationResponse(sessionStatus, requestedCertificateLevel, expectedDigest, randomChallenge);
+        validateSessionsStatus(sessionStatus, requestedCertificateLevel, digest);
 
         SessionResult sessionResult = sessionStatus.getResult();
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate certificate = sessionStatus.getCert();
 
-        var authenticationResponse = new SmartIdAuthenticationResponse();
-        authenticationResponse.setEndResult(sessionResult.getEndResult());
-        authenticationResponse.setSignedHashInBase64(getHashInBase64());
-        authenticationResponse.setHashType(getHashType());
-        authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        authenticationResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
-        authenticationResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
-        authenticationResponse.setRequestedCertificateLevel(getCertificateLevel());
-        authenticationResponse.setCertificateLevel(certificate.getCertificateLevel());
-        authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-        authenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
-        authenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
+        var singatureResponse = new SingatureResponse();
+        singatureResponse.setEndResult(sessionResult.getEndResult());
+        singatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
+        singatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
+        singatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
+        singatureResponse.setRequestedCertificateLevel(requestedCertificateLevel);
+        singatureResponse.setCertificateLevel(certificate.getCertificateLevel());
+        singatureResponse.setDocumentNumber(sessionResult.getDocumentNumber());
+        singatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        singatureResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
 
-        return authenticationResponse;
+        return singatureResponse;
     }
 
-    private void validateAuthenticationResponse(SessionStatus sessionStatus, String requestedCertificateLevel, String expectedDigest, String randomChallenge) {
+    private static void validateSessionsStatus(SessionStatus sessionStatus, String requestedCertificateLevel, String expectedDigest) {
         if (sessionStatus == null) {
             throw new UnprocessableSmartIdResponseException("Session status is null");
         }
-        validateSessionResult(sessionStatus, requestedCertificateLevel, expectedDigest, randomChallenge);
+        validateSessionResult(sessionStatus, requestedCertificateLevel, expectedDigest);
     }
 
-    public void validateSessionResult(SessionStatus sessionStatus, String requestedCertificateLevel, String expectedDigest, String randomChallenge) {
+    private static void validateSessionResult(SessionStatus sessionStatus, String requestedCertificateLevel, String expectedDigest) {
         SessionResult sessionResult = sessionStatus.getResult();
 
         if (sessionResult == null) {
@@ -147,31 +122,13 @@ public class SmartIdRequestBuilderService {
             }
 
             validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
-            validateSignature(sessionStatus, expectedDigest, randomChallenge);
+            validateSignature(sessionStatus, expectedDigest);
         } else {
             ErrorResultHandler.handle(endResult);
         }
     }
 
-    protected HashType getHashType() {
-        if (hashToSign != null) {
-            return hashToSign.getHashType();
-        }
-        return dataToSign.getHashType();
-    }
-
-    protected String getHashInBase64() {
-        if (hashToSign != null) {
-            return hashToSign.getHashInBase64();
-        }
-        return dataToSign.calculateHashInBase64();
-    }
-
-    protected String getCertificateLevel() {
-        return certificateLevel;
-    }
-
-    private void validateCertificate(SessionCertificate sessionCertificate, String requestedCertificateLevel) {
+    private static void validateCertificate(SessionCertificate sessionCertificate, String requestedCertificateLevel) {
         if (sessionCertificate == null || sessionCertificate.getValue() == null) {
             throw new SmartIdClientException("Missing certificate in session response");
         }
@@ -189,7 +146,7 @@ public class SmartIdRequestBuilderService {
         }
     }
 
-    private boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
+    private static boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
         CertificateLevel requestedLevelEnum = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
         CertificateLevel returnedLevelEnum = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
 
@@ -197,48 +154,21 @@ public class SmartIdRequestBuilderService {
         return requestedLevelEnum == CertificateLevel.QSCD ? returnedLevelEnum == CertificateLevel.QUALIFIED : requestedLevelEnum == returnedLevelEnum;
     }
 
-    private void validateSignature(SessionStatus sessionStatus, String expectedDigest, String randomChallenge) {
+    private static void validateSignature(SessionStatus sessionStatus, String expectedDigest) {
         String signatureProtocol = sessionStatus.getSignatureProtocol();
 
-        if (SignatureProtocol.ACSP_V1.name().equalsIgnoreCase(signatureProtocol)) {
-            validateAcspV1Signature(sessionStatus, randomChallenge);
-        } else if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
+        if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
             validateRawDigestSignature(sessionStatus, expectedDigest);
         } else {
             throw new SmartIdClientException("Unknown signature protocol: " + signatureProtocol);
         }
     }
 
-    // TODO - 03.12.24: should be checked before AuhtenticationIdentity is created
-    private void validateAcspV1Signature(SessionStatus sessionStatus, String randomChallenge) {
-        String signatureValue = sessionStatus.getSignature().getValue();
-        // TODO - 03.12.24: does this work? serverRandom and randomChallenge should already be in Base64 format
-        String dataToHash = sessionStatus.getSignatureProtocol() + ";" +
-                Base64.getEncoder().encodeToString(sessionStatus.getSignature().getServerRandom().getBytes(StandardCharsets.UTF_8)) + ";" +
-                Base64.getEncoder().encodeToString(randomChallenge.getBytes(StandardCharsets.UTF_8));
-
-        try {
-            // fixme - 03.12.24: sessionStatus.getSignature().getSignatureAlgorithmParameters() cannot be used, because API does not return it
-            MessageDigest digest = MessageDigest.getInstance(sessionStatus.getSignature().getSignatureAlgorithmParameters().getHashAlgorithm());
-            byte[] hashedData = digest.digest(dataToHash.getBytes(StandardCharsets.UTF_8));
-            String expectedSignature = Base64.getEncoder().encodeToString(hashedData);
-
-            if (!expectedSignature.equals(signatureValue)) {
-                throw new SmartIdClientException("ACSP_V1 signature validation failed. Expected: " + expectedSignature
-                        + ", but got: " + signatureValue);
-            }
-        } catch (NoSuchAlgorithmException ex) {
-            throw new SmartIdClientException("Error while creating digest for ACSP_V1 signature validation", ex);
-        }
-
-        logger.info("ACSP_V1 signature successfully validated.");
-    }
-
-    private void validateRawDigestSignature(SessionStatus sessionStatus, String expectedDigest) {
+    private static void validateRawDigestSignature(SessionStatus sessionStatus, String expectedDigest) {
         String signatureValue = sessionStatus.getSignature().getValue();
         String signatureAlgorithm = sessionStatus.getSignature().getSignatureAlgorithm();
 
-        if (!expectedDigest.equals(signatureValue)) {
+        if (!expectedDigest.equals(signatureValue)) { // TODO - 10.12.24: fix this, validating signature should be like in AuthenticationResponseMapper.validateSignature
             throw new SmartIdClientException("RAW_DIGEST_SIGNATURE validation failed. Expected: " + expectedDigest
                     + ", but got: " + signatureValue);
         }

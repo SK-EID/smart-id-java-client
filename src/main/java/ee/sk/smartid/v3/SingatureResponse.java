@@ -33,7 +33,7 @@ import java.util.Base64;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
-public class SmartIdAuthenticationResponse implements Serializable {
+public class SingatureResponse implements Serializable {
 
     private String endResult;
     private String signedHashInBase64;
