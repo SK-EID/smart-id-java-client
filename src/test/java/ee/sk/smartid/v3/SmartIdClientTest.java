@@ -205,12 +205,12 @@ class SmartIdClientTest {
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
             signableHash.setHashType(HashType.SHA512);
 
-        DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
-                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign document?")))
-                .withSignableHash(signableHash)
-                .initSignatureSession();
+            DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
+                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                    .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .initSignatureSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
@@ -355,7 +355,6 @@ class SmartIdClientTest {
 
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, dynamicLinkType, response.getSessionToken());
         }
-
 
         @ParameterizedTest
         @EnumSource

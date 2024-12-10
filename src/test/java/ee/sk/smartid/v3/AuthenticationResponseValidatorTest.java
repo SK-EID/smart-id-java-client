@@ -166,7 +166,6 @@ class AuthenticationResponseValidatorTest {
         assertEquals("Random challenge is not provided", exception.getMessage());
     }
 
-
     @Test
     void toAuthenticationIdentity_certificateValueIsNotProvided_throwException() {
         var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
@@ -222,7 +221,6 @@ class AuthenticationResponseValidatorTest {
 
         assertEquals("Algorithm name is not provided", exception.getMessage());
     }
-
 
     @Test
     void toAuthenticationIdentity_signatureValueIsNotProvided_throwException() {

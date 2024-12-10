@@ -56,7 +56,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
 
     @Test
     void from() {
-    var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
         var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
@@ -159,7 +159,6 @@ class DynamicLinkAuthenticationResponseMapperTest {
         assertEquals("Signature parameter is missing in session status", exception.getMessage());
     }
 
-
     @ParameterizedTest
     @NullAndEmptySource
     void from_signatureValueIsNotProvided_throwException(String signatureValue) {
@@ -259,7 +258,6 @@ class DynamicLinkAuthenticationResponseMapperTest {
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Certificate level parameter is missing in certificate", exception.getMessage());
     }
-
 
     @ParameterizedTest
     @NullAndEmptySource

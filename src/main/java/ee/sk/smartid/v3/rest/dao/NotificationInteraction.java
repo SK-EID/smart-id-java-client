@@ -26,7 +26,6 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-
 import static ee.sk.smartid.v3.rest.dao.NotificationInteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE;
 import static ee.sk.smartid.v3.rest.dao.NotificationInteractionFlow.VERIFICATION_CODE_CHOICE;
 

@@ -123,13 +123,13 @@ public class AuthenticationResponseValidator {
     public AuthenticationIdentity toAuthenticationIdentity(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse,
                                                            AuthenticationCertificateLevel requestedCertificateLevel,
                                                            String randomChallenge) {
-        validateInputs(dynamicLinkAuthenticationResponse, requestedCertificateLevel, randomChallenge);
+        validateInputs(dynamicLinkAuthenticationResponse, randomChallenge);
         validateCertificate(dynamicLinkAuthenticationResponse, requestedCertificateLevel);
         validateSignature(dynamicLinkAuthenticationResponse, randomChallenge);
         return AuthenticationIdentityMapper.from(dynamicLinkAuthenticationResponse.getCertificate());
     }
 
-    private void validateInputs(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel, String randomChallenge) {
+    private void validateInputs(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, String randomChallenge) {
         if (dynamicLinkAuthenticationResponse == null) {
             throw new SmartIdClientException("Dynamic link authentication response is not provided");
         }

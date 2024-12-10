@@ -59,7 +59,6 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
-import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
@@ -224,7 +223,6 @@ class NotificationSignatureSessionRequestBuilderTest {
         builder.withCapabilities(capabilities).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
-
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
 
