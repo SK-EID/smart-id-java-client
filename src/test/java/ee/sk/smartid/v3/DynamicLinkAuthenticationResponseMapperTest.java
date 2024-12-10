@@ -56,7 +56,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
 
     @Test
     void from() {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+    var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
         var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
@@ -67,7 +67,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         assertEquals("signatureValue", dynamicLinkAuthenticationResponse.getSignatureValueInBase64());
         assertEquals(toX509Certificate(AUTH_CERT), dynamicLinkAuthenticationResponse.getCertificate());
         assertEquals(AuthenticationCertificateLevel.QUALIFIED, dynamicLinkAuthenticationResponse.getCertificateLevel());
-        assertEquals("PNOEE-12345678901", dynamicLinkAuthenticationResponse.getDocumentNumber());
+        assertEquals("PNOEE-12345678901-MOCK-Q", dynamicLinkAuthenticationResponse.getDocumentNumber());
         assertEquals("displayTextAndPIN", dynamicLinkAuthenticationResponse.getInteractionFlowUsed());
         assertEquals("0.0.0.0", dynamicLinkAuthenticationResponse.getDeviceIpAddress());
     }
@@ -124,7 +124,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     void from_signatureProtocolIsNotProvided_throwException(String signatureProtocol) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
@@ -137,7 +137,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @ValueSource(strings = {"INVALID", "RAW_DIGEST_SIGNATURE"})
     void from_invalidSignatureProtocolIsProvided_throwException(String invalidSignatureProtocol) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
@@ -149,7 +149,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
 
     @Test
     void from_signatureIsNotProvided_throwException() {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
@@ -163,7 +163,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     void from_signatureValueIsNotProvided_throwException(String signatureValue) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
 
         var sessionSignature = new SessionSignature();
         sessionSignature.setValue(signatureValue);
@@ -180,7 +180,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     void from_serverRandomIsNotProvided_throwException(String serverRandom) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
 
         var sessionSignature = new SessionSignature();
         sessionSignature.setValue("signatureValue");
@@ -198,7 +198,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     void from_signatureAlgorithmIsNotProvided_throwException(String signatureAlgorithm) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature(signatureAlgorithm);
 
         var sessionStatus = new SessionStatus();
@@ -212,7 +212,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
 
     @Test
     void from_sessionCertificateIsNotProvided_throwException() {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
 
         var sessionStatus = new SessionStatus();
@@ -227,7 +227,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     void from_certificateValueIsNotProvided_throwException(String certificateValue) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
 
         var sessionCertificate = new SessionCertificate();
@@ -246,7 +246,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     void from_certificateLevelIsNotProvided_throwException(String certificateLevel) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
         var sessionCertificate = toSessionCertificate("certificateValue", certificateLevel);
 
@@ -264,7 +264,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
     @ParameterizedTest
     @NullAndEmptySource
     void from_interactionFlowUsedNotProvided_throwException(String interactionFlowUsed) {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
         var sessionCertificate = toSessionCertificate("certificateValue", "QUALIFIED");
 
@@ -281,7 +281,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
 
     @Test
     void from_certificateIsInvalid_throwException() {
-        var sessionResult = toSessionResult("PNOEE-12345678901");
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
         var sessionCertificate = toSessionCertificate("invalidCertificateValue", "QUALIFIED");
 
