@@ -44,7 +44,6 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 
@@ -134,9 +133,6 @@ public class AuthenticationResponseValidator {
         if (dynamicLinkAuthenticationResponse == null) {
             throw new SmartIdClientException("Dynamic link authentication response is not provided");
         }
-        if (requestedCertificateLevel == null) {
-            throw new SmartIdClientException("Requested certificate level is not provided");
-        }
         if (StringUtil.isEmpty(randomChallenge)) {
             throw new SmartIdClientException("Random challenge is not provided");
         }
@@ -184,8 +180,13 @@ public class AuthenticationResponseValidator {
     }
 
     private void validateCertificateLevel(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        // TODO - 08.12.24: allow higher returned certificate level to pass
-        if (!Objects.equals(dynamicLinkAuthenticationResponse.getCertificateLevel(), requestedCertificateLevel)) {
+        if (requestedCertificateLevel == null) {
+            return;
+        }
+        if (dynamicLinkAuthenticationResponse.getCertificateLevel() == null) {
+            throw new SmartIdClientException("Certificate level is not provided");
+        }
+        if (!dynamicLinkAuthenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
             throw new CertificateLevelMismatchException();
         }
     }

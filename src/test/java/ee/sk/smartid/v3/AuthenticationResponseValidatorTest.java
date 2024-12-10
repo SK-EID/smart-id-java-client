@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,6 +36,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -87,7 +88,7 @@ class AuthenticationResponseValidatorTest {
         assertEquals("OK", authenticationIdentity.getGivenName());
         assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
         assertEquals("EE", authenticationIdentity.getCountry());
-        assertEquals(LocalDate.of(1905, 4, 4), authenticationIdentity.getDateOfBirth());
+        assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
     }
 
     @Disabled("Do not have necessary test data to make this work.")
@@ -108,13 +109,46 @@ class AuthenticationResponseValidatorTest {
         dynamicLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
         dynamicLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
 
-        AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel.ADVANCED, "randomChallengeFromTestUserAuthRequest");
+        AuthenticationIdentity authenticationIdentity =
+                authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse,
+                        AuthenticationCertificateLevel.ADVANCED,
+                        "randomChallengeFromTestUserAuthRequest");
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
         assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
         assertEquals("EE", authenticationIdentity.getCountry());
-        assertEquals(LocalDate.of(1905, 4, 4), authenticationIdentity.getDateOfBirth());
+        assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
+    }
+
+    @Disabled("Do not have necessary test data to make this work.")
+    @Test
+    void toAuthenticationIdentity_requestedCertificateLevelIsSetToNull_doNotValidateCertificateLevel_ok() {
+        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        dynamicLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
+        dynamicLinkAuthenticationResponse.setEndResult("OK");
+
+        dynamicLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        dynamicLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
+        dynamicLinkAuthenticationResponse.setHashType(HashType.SHA512);
+        dynamicLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
+
+        // TODO - 04.12.24: if dynamic-link authentication can be completed with test number then replace these values
+        dynamicLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
+        dynamicLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
+
+        AuthenticationIdentity authenticationIdentity =
+                authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse,
+                        null,
+                        "randomChallengeFromTestUserAuthRequest");
+
+        assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+        assertEquals("OK", authenticationIdentity.getGivenName());
+        assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+        assertEquals("EE", authenticationIdentity.getCountry());
+        assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
     }
 
     @Test
@@ -122,14 +156,6 @@ class AuthenticationResponseValidatorTest {
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(null, null));
 
         assertEquals("Dynamic link authentication response is not provided", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_requestedCertificateLevelIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, null, null));
-
-        assertEquals("Requested certificate level is not provided", exception.getMessage());
     }
 
     @Test
@@ -168,7 +194,17 @@ class AuthenticationResponseValidatorTest {
     }
 
     @Test
-    void toAuthenticationIdentity_certificateIsLowerThanRequested_throwException() {
+    void toAuthenticationIdentity_certificateLevelIsNotProvided_throwException() {
+        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        dynamicLinkAuthenticationResponse.setCertificateLevel(null);
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+
+        assertEquals("Certificate level is not provided", exception.getMessage());
+    }
+
+    @Test
+    void toAuthenticationIdentity_certificateLevelIsLowerThanRequested_throwException() {
         var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.ADVANCED);
@@ -187,6 +223,7 @@ class AuthenticationResponseValidatorTest {
         assertEquals("Algorithm name is not provided", exception.getMessage());
     }
 
+
     @Test
     void toAuthenticationIdentity_signatureValueIsNotProvided_throwException() {
         var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
@@ -196,6 +233,18 @@ class AuthenticationResponseValidatorTest {
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
 
         assertEquals("Signature value is not provided", exception.getMessage());
+    }
+
+    @Test
+    void toAuthenticationIdentity_invalidAlgorithmNameIsProvided_throwException() {
+        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        dynamicLinkAuthenticationResponse.setAlgorithmName("invalidAlgorithmName");
+        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureValue"));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+
+        assertEquals("Invalid signature algorithm was provided", exception.getMessage());
     }
 
     @Test
