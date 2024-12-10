@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3.service;
+package ee.sk.smartid.v3;
 
 /*-
  * #%L
@@ -42,10 +42,6 @@ import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.util.StringUtil;
-import ee.sk.smartid.v3.CertificateLevel;
-import ee.sk.smartid.v3.ErrorResultHandler;
-import ee.sk.smartid.v3.SignatureProtocol;
-import ee.sk.smartid.v3.SingatureResponse;
 import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;

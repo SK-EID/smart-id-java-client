@@ -48,9 +48,13 @@ import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSignatureSessionResponse;
+import ee.sk.smartid.v3.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
+import ee.sk.smartid.v3.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 class SmartIdClientTest {

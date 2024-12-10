@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
@@ -26,17 +26,11 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
-import java.io.Serializable;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import ee.sk.smartid.v3.rest.dao.VerificationCode;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class NotificationSignatureSessionResponse implements Serializable {
+public class DynamicLinkAuthenticationSessionResponse {
 
     private String sessionID;
-
-    private VerificationCode vc;
+    private String sessionToken;
+    private String sessionSecret;
 
     public String getSessionID() {
         return sessionID;
@@ -46,11 +40,19 @@ public class NotificationSignatureSessionResponse implements Serializable {
         this.sessionID = sessionID;
     }
 
-    public VerificationCode getVc() {
-        return vc;
+    public String getSessionToken() {
+        return sessionToken;
     }
 
-    public void setVc(VerificationCode verificationCode) {
-        this.vc = verificationCode;
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public String getSessionSecret() {
+        return sessionSecret;
+    }
+
+    public void setSessionSecret(String sessionSecret) {
+        this.sessionSecret = sessionSecret;
     }
 }

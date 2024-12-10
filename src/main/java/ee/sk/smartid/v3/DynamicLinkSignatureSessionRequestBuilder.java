@@ -39,8 +39,11 @@ import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSignatureSessionResponse;
 import ee.sk.smartid.v3.rest.dao.Interaction;
+import ee.sk.smartid.v3.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 
 public class DynamicLinkSignatureSessionRequestBuilder {
 

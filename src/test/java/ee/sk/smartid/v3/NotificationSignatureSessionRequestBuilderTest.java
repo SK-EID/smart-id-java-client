@@ -60,6 +60,8 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
+import ee.sk.smartid.v3.rest.dao.NotificationSignatureSessionResponse;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.VerificationCode;
 
 class NotificationSignatureSessionRequestBuilderTest {

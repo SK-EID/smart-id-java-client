@@ -40,7 +40,10 @@ import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.Interaction;
 import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
+import ee.sk.smartid.v3.rest.dao.NotificationSignatureSessionResponse;
+import ee.sk.smartid.v3.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
+import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v3.rest.dao.VerificationCode;
 
 public class NotificationSignatureSessionRequestBuilder {

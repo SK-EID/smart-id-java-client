@@ -1,10 +1,10 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,24 +28,36 @@ package ee.sk.smartid.v3;
 
 import java.io.Serializable;
 
-public class RawDigestSignatureProtocolParameters implements Serializable {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-    private String digest;
-    private String signatureAlgorithm;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class DynamicLinkSignatureSessionResponse implements Serializable {
 
-    public String getDigest() {
-        return digest;
+    private String sessionID;
+    private String sessionToken;
+    private String sessionSecret;
+
+    public String getSessionID() {
+        return sessionID;
     }
 
-    public void setDigest(String digest) {
-        this.digest = digest;
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
     }
 
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
+    public String getSessionToken() {
+        return sessionToken;
     }
 
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
+    public void setSessionToken(String sessionToken) {
+        this.sessionToken = sessionToken;
+    }
+
+    public String getSessionSecret() {
+        return sessionSecret;
+    }
+
+    public void setSessionSecret(String sessionSecret) {
+        this.sessionSecret = sessionSecret;
     }
 }

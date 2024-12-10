@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,29 +28,24 @@ package ee.sk.smartid.v3;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import ee.sk.smartid.v3.rest.dao.VerificationCode;
+public class AcspV1SignatureProtocolParameters implements Serializable {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class NotificationAuthenticationSessionResponse implements Serializable {
+    private String randomChallenge;
+    private String signatureAlgorithm;
 
-    private String sessionID;
-
-    private VerificationCode vc;
-
-    public String getSessionID() {
-        return sessionID;
+    public String getRandomChallenge() {
+        return randomChallenge;
     }
 
-    public void setSessionID(String sessionID) {
-        this.sessionID = sessionID;
+    public void setRandomChallenge(String randomChallenge) {
+        this.randomChallenge = randomChallenge;
     }
 
-    public VerificationCode getVc() {
-        return vc;
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
     }
 
-    public void setVc(VerificationCode verificationCode) {
-        this.vc = verificationCode;
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
     }
 }
