@@ -61,27 +61,6 @@ public class AuthenticationIdentity {
     this.surname = surname;
   }
 
-  /**
-   * Instead use:
-   *  {@link #getSurname()}
-   * @return surname of the person
-   */
-  @Deprecated
-  public String getSurName() {
-    return surname;
-  }
-
-  /**
-   * @param surName surname
-   * <p>
-   * Instead use:
-   *   {@link #setSurname(String)}
-   */
-  @Deprecated
-  public void setSurName(String surName) {
-    this.surname = surName;
-  }
-
   public String getIdentityNumber() {
     return identityNumber;
   }
