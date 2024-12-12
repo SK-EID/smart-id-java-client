@@ -5,16 +5,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [3.0] - 2023-10-14
 
 ### Added
-- Support for Smart-ID API v3.0 has been added under the ee.sk.smartid.v3 package.
-- Added handling for dynamic-link authentication session requests. View V3 section in README.md for more information.
-- Added support for handling session status requests. View V3 section in README.md for more information.
-- Added support for handling dynamic link certificate choice requests. View V3 section in README.md for more information.
+- Support for handling RP API v3.0 requests. View V3 section in README.md for more information. Related classes can be found in the ee.sk.smartid.v3
+  package.
+  - New builder classes to start dynamic-link sessions:
+    - DynamicLinkAuthenticationSessionRequestBuilder
+    - DynamicLinkCertificateChoiceSessionRequestBuilder
+    - DynamicLinkSignatureSessionRequestBuilder
+  - Helper class for generating authCode used in generating dynamic link - AuthCode#generateAuthCode()
+  - Helper class for generating Qr-code - QrCodeGenerator
+  - Helper class for building and generating dynamic-link and/or QR-code - DynamicContentBuilder
+  - Sessions status request handling for the v3 path.
+    - Helper class for validating completed auth session status response - DynamicLinkAuthenticationResponseMapper
+    - Constructing AuthenticationIdentity from DynamicLinkAuthenticationResponse - AuthenticationResponseValidator
 
 ### Changed
-- Existing code for Smart-ID API v2.0 has been moved into the ee.sk.smartid.v2 package for clarity.
+- Most of the existing code for RP API v2.0 has been moved into the ee.sk.smartid.v2 package for clarity.
 - Replaced deprecated `X509Certificate::getSubjectDN()` with `X509Certificate::getSubjectX500Principal()`
 - Typo fixes, code cleanup and improvements
 - Modified NationalIdentityNumberUtil to handle LV person codes with prefixes 33-39 without throwing an exception during parsing.
+
+### Removed
+- Removed deprecated methods from AuthenticationIdentity
 
 ### Java and dependency updates
 - Updated java to version 17
