@@ -34,6 +34,7 @@ import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.util.StringUtil;
 
 /**
  * This class is responsible for creating an authentication code hash for the dynamic link.
@@ -50,12 +51,12 @@ public final class AuthCode {
      *
      * @param dynamicLinkType the type of the dynamic link @{@link DynamicLinkType}
      * @param sessionType     the type of the session @{@link SessionType}
-     * @param sessionSecret   the session secret
      * @param elapsedSeconds  the time from session creation response was received
+     * @param sessionSecret   the session secret in Base64 format
      * @return the authentication code in Base64 URL safe format
      */
-    public static String createHash(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret, long elapsedSeconds) {
-        validateInputs(dynamicLinkType, sessionType, sessionSecret);
+    public static String createHash(DynamicLinkType dynamicLinkType, SessionType sessionType, long elapsedSeconds, String sessionSecret) {
+        validateHashingInputs(dynamicLinkType, sessionType);
         String payload = createPayload(dynamicLinkType, sessionType, elapsedSeconds);
         return hashThePayload(payload, sessionSecret);
     }
@@ -68,10 +69,12 @@ public final class AuthCode {
      * @return the hashed payload in Base64 URL safe format
      */
     public static String hashThePayload(String payload, String sessionSecret) {
+        validatePayloadInputs(payload, sessionSecret);
         HMac hmac = new HMac(new SHA256Digest());
-        hmac.init(new KeyParameter(sessionSecret.getBytes(StandardCharsets.UTF_8)));
+        byte[] secret = Base64.getDecoder().decode(sessionSecret.getBytes(StandardCharsets.UTF_8));
+        hmac.init(new KeyParameter(secret));
 
-        byte[] payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
+        byte[] payloadBytes = payload.getBytes(StandardCharsets.US_ASCII);
         hmac.update(payloadBytes, 0, payloadBytes.length);
 
         byte[] result = new byte[hmac.getMacSize()];
@@ -80,14 +83,20 @@ public final class AuthCode {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(result);
     }
 
-    private static void validateInputs(DynamicLinkType dynamicLinkType, SessionType sessionType, String sessionSecret) {
+    private static void validateHashingInputs(DynamicLinkType dynamicLinkType, SessionType sessionType) {
         if (dynamicLinkType == null) {
             throw new SmartIdClientException("Dynamic link type must be set");
         }
         if (sessionType == null) {
             throw new SmartIdClientException("Session type must be set");
         }
-        if (sessionSecret == null) {
+    }
+
+    private static void validatePayloadInputs(String payload, String sessionSecret) {
+        if (StringUtil.isEmpty(payload)) {
+            throw new SmartIdClientException("Payload must be set");
+        }
+        if (StringUtil.isEmpty(sessionSecret)) {
             throw new SmartIdClientException("Session secret must be set");
         }
     }

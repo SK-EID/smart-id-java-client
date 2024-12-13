@@ -26,23 +26,24 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
+import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
-import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
+import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.InteractionFlow;
+import ee.sk.smartid.v3.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.dao.VerificationCode;
 
 /**
@@ -52,9 +53,6 @@ public class NotificationAuthenticationSessionRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationAuthenticationSessionRequestBuilder.class);
 
-    private static final Set<InteractionFlow> NOT_SUPPORTED_INTERACTION_FLOWS =
-            Set.of(InteractionFlow.DISPLAY_TEXT_AND_PIN, InteractionFlow.CONFIRMATION_MESSAGE);
-
     private final SmartIdConnector connector;
 
     private String relyingPartyUUID;
@@ -63,7 +61,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private String randomChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
     private String nonce;
-    private List<Interaction> allowedInteractionsOrder;
+    private List<NotificationInteraction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
     private SemanticsIdentifier semanticsIdentifier;
@@ -152,7 +150,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @param allowedInteractionsOrder the allowed interactions order
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    public NotificationAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<NotificationInteraction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
         return this;
     }
@@ -292,13 +290,6 @@ public class NotificationAuthenticationSessionRequestBuilder {
         if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
             logger.error("Parameter allowedInteractionsOrder must be set");
             throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
-        }
-        Optional<Interaction> notSupportedInteraction = allowedInteractionsOrder.stream()
-                .filter(interaction -> NOT_SUPPORTED_INTERACTION_FLOWS.contains(interaction.getType()))
-                .findFirst();
-        if (notSupportedInteraction.isPresent()) {
-            logger.error("AllowedInteractionsOrder contains not supported interaction {}", notSupportedInteraction.get().getType());
-            throw new SmartIdClientException("AllowedInteractionsOrder contains not supported interaction " + notSupportedInteraction.get().getType());
         }
         allowedInteractionsOrder.forEach(Interaction::validate);
     }

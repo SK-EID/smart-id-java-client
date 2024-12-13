@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
+/**
+ * Provides methods for querying sessions status and polling session status
+ */
 public class SessionStatusPoller {
 
     private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
@@ -45,6 +48,12 @@ public class SessionStatusPoller {
         this.connector = connector;
     }
 
+    /**
+     * Loops session status query until state is COMPLETE
+     *
+     * @param sessionId session id from init session response
+     * @return Sessions status
+     */
     public SessionStatus fetchFinalSessionStatus(String sessionId) {
         logger.debug("Starting to poll session status for session {}", sessionId);
         try {
@@ -58,7 +67,7 @@ public class SessionStatusPoller {
     private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
         SessionStatus sessionStatus = null;
         while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
-            sessionStatus = pollSessionStatus(sessionId);
+            sessionStatus = getSessionsStatus(sessionId);
             if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
                 break;
             }
@@ -69,11 +78,23 @@ public class SessionStatusPoller {
         return sessionStatus;
     }
 
-    private SessionStatus pollSessionStatus(String sessionId) {
-        logger.debug("Polling session status");
+    /**
+     * Query session status
+     *
+     * @param sessionId session id from init session response
+     * @return Sessions status
+     */
+    public SessionStatus getSessionsStatus(String sessionId) {
+        logger.debug("Querying session status");
         return connector.getSessionStatus(sessionId);
     }
 
+    /**
+     * Set polling sleep time
+     *
+     * @param unit    time unit {@link TimeUnit}
+     * @param timeout time
+     */
     public void setPollingSleepTime(TimeUnit unit, long timeout) {
         logger.debug("Setting polling sleep time to {} {}", timeout, unit);
         this.pollingSleepTimeUnit = unit;

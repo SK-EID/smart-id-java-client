@@ -6,7 +6,11 @@
     "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "sha512WithRSAEncryption"
   },
+  "certificateLevel": "QUALIFIED",
   "allowedInteractionsOrder": [
-    {"type": "displayTextAndPIN", "displayText60": "Log in?"}
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Log in?"
+    }
   ]
 }

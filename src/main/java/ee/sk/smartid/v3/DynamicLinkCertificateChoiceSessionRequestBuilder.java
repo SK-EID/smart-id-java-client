@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class DynamicLinkCertificateChoiceSessionRequestBuilder {

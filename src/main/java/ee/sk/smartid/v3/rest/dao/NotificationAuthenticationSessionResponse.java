@@ -1,10 +1,10 @@
-package ee.sk.smartid.v2.rest.dao;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,43 +28,28 @@ package ee.sk.smartid.v2.rest.dao;
 
 import java.io.Serializable;
 
-public class SemanticsIdentifier implements Serializable {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-  private final String identifier;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class NotificationAuthenticationSessionResponse implements Serializable {
 
-  public SemanticsIdentifier(IdentityType identityType, CountryCode countryCode, String identityNumber) {
-    this.identifier = "" + identityType + countryCode + "-" + identityNumber;
-  }
+    private String sessionID;
 
-  public SemanticsIdentifier(IdentityType identityType, String countryCodeString, String identityNumber) {
-    this.identifier = "" + identityType + countryCodeString + "-" + identityNumber;
-  }
+    private VerificationCode vc;
 
-  public SemanticsIdentifier(String identityTypeString, String countryCodeString, String identityNumber) {
-    this.identifier = "" + identityTypeString + countryCodeString + "-" + identityNumber;
-  }
+    public String getSessionID() {
+        return sessionID;
+    }
 
-  public SemanticsIdentifier(String identifier) {
-    this.identifier = identifier;
-  }
+    public void setSessionID(String sessionID) {
+        this.sessionID = sessionID;
+    }
 
-  public String getIdentifier() {
-    return identifier;
-  }
+    public VerificationCode getVc() {
+        return vc;
+    }
 
-  public enum IdentityType {
-    PAS, IDC, PNO
-  }
-
-  public enum CountryCode {
-    EE, LT, LV
-  }
-
-  @Override
-  public String toString() {
-    return "SemanticsIdentifier{" +
-        "identifier='" + identifier + '\'' +
-        '}';
-  }
-
+    public void setVc(VerificationCode verificationCode) {
+        this.vc = verificationCode;
+    }
 }

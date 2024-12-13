@@ -34,7 +34,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -62,7 +64,7 @@ class DynamicContentBuilderTest {
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken("sessionToken")
                     .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, "sessionSecret", elapsedSeconds))
+                    .withAuthCode(AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, elapsedSeconds, toBase64("sessionSecret")))
                     .createUri();
 
             assertUri(uri, dynamicLinkType, SessionType.AUTHENTICATION);
@@ -79,7 +81,7 @@ class DynamicContentBuilderTest {
                     .withSessionType(sessionType)
                     .withSessionToken("sessionToken")
                     .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", elapsedSeconds))
+                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, elapsedSeconds, toBase64("sessionSecret")))
                     .createUri();
 
             assertUri(uri, DynamicLinkType.QR_CODE, sessionType);
@@ -190,7 +192,7 @@ class DynamicContentBuilderTest {
                     .withSessionType(sessionType)
                     .withSessionToken("sessionToken")
                     .withElapsedSeconds(1L)
-                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, "sessionSecret", 1))
+                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, 1, toBase64("sessionSecret")))
                     .createQrCodeDataUri();
 
             String[] qrDataUriParts = qrDataUri.split(",");
@@ -225,6 +227,10 @@ class DynamicContentBuilderTest {
         assertThat(queryParams, hasEntry("sessionToken", "sessionToken"));
         assertThat(queryParams, hasEntry("elapsedSeconds", "1"));
         assertThat(queryParams, hasEntry(equalTo("authCode"), matchesPattern("^[A-Za-z0-9_-]+={0,2}$")));
+    }
+
+    private static String toBase64(String data) {
+        return Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
     }
 
     private static Map<String, String> toQueryParamsMap(URI uri) {

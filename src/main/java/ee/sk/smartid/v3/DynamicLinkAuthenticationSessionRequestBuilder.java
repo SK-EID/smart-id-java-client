@@ -26,22 +26,22 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
+import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
-import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
+import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.InteractionFlow;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 /**
  * Class for building a dynamic link authentication session request
@@ -50,18 +50,15 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicLinkAuthenticationSessionRequestBuilder.class);
 
-    private static final Set<InteractionFlow> NOT_SUPPORTED_INTERACTION_FLOWS =
-            Set.of(InteractionFlow.VERIFICATION_CODE_CHOICE, InteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
-
     private final SmartIdConnector connector;
 
     private String relyingPartyUUID;
     private String relyingPartyName;
-    private AuthenticationCertificateLevel certificateLevel;
+    private AuthenticationCertificateLevel certificateLevel = AuthenticationCertificateLevel.QUALIFIED;
     private String randomChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
     private String nonce;
-    private List<Interaction> allowedInteractionsOrder;
+    private List<DynamicLinkInteraction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
     private SemanticsIdentifier semanticsIdentifier;
@@ -100,6 +97,8 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
 
     /**
      * Sets the certificate level
+     * <p>
+     * Defaults to {@link AuthenticationCertificateLevel#QUALIFIED}
      *
      * @param certificateLevel the certificate level
      * @return this builder
@@ -150,7 +149,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
      * @param allowedInteractionsOrder the allowed interactions order
      * @return this builder
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    public DynamicLinkAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<DynamicLinkInteraction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
         return this;
     }
@@ -292,14 +291,7 @@ public class DynamicLinkAuthenticationSessionRequestBuilder {
             logger.error("Parameter allowedInteractionsOrder must be set");
             throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
         }
-        Optional<Interaction> notSupportedInteraction = allowedInteractionsOrder.stream()
-                .filter(interaction -> NOT_SUPPORTED_INTERACTION_FLOWS.contains(interaction.getType()))
-                .findFirst();
-        if (notSupportedInteraction.isPresent()) {
-            logger.error("AllowedInteractionsOrder contains not supported interaction {}", notSupportedInteraction.get().getType());
-            throw new SmartIdClientException("AllowedInteractionsOrder contains not supported interaction " + notSupportedInteraction.get().getType());
-        }
-        allowedInteractionsOrder.forEach(Interaction::validate);
+        allowedInteractionsOrder.forEach(DynamicLinkInteraction::validate);
     }
 
     private AuthenticationSessionRequest createAuthenticationRequest() {

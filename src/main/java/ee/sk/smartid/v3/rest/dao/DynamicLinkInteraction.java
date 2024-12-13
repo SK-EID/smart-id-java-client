@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
@@ -26,26 +26,38 @@ package ee.sk.smartid.v3;
  * #L%
  */
 
-import java.io.Serializable;
+import static ee.sk.smartid.v3.rest.dao.DynamicLinkInteractionFlow.CONFIRMATION_MESSAGE;
+import static ee.sk.smartid.v3.rest.dao.DynamicLinkInteractionFlow.DISPLAY_TEXT_AND_PIN;
 
-public class RawDigestSignatureProtocolParameters implements Serializable {
+public class DynamicLinkInteraction extends Interaction {
 
-    private String digest;
-    private String signatureAlgorithm;
-
-    public String getDigest() {
-        return digest;
+    private DynamicLinkInteraction(DynamicLinkInteractionFlow type) {
+        this.type = type;
     }
 
-    public void setDigest(String digest) {
-        this.digest = digest;
+    public static DynamicLinkInteraction displayTextAndPIN(String displayText60) {
+        var interaction = new DynamicLinkInteraction(DISPLAY_TEXT_AND_PIN);
+        interaction.displayText60 = displayText60;
+        return interaction;
     }
 
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
+    public static DynamicLinkInteraction confirmationMessage(String displayText200) {
+        var interaction = new DynamicLinkInteraction(CONFIRMATION_MESSAGE);
+        interaction.displayText200 = displayText200;
+        return interaction;
     }
 
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
+    @Override
+    protected void validateInteractionsDisplayText60() {
+        if (getType() == DISPLAY_TEXT_AND_PIN) {
+            validateDisplayText60();
+        }
+    }
+
+    @Override
+    protected void validateInteractionsDisplayText200() {
+        if (getType() == CONFIRMATION_MESSAGE) {
+            validateDisplayText200();
+        }
     }
 }

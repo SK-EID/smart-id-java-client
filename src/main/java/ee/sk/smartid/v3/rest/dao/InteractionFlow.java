@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2022 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,28 +26,9 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonValue;
+public interface InteractionFlow {
 
-public enum InteractionFlow {
+    String getCode();
 
-    DISPLAY_TEXT_AND_PIN("displayTextAndPIN"),
-    CONFIRMATION_MESSAGE("confirmationMessage"),
-    VERIFICATION_CODE_CHOICE("verificationCodeChoice"),
-    CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE("confirmationMessageAndVerificationCodeChoice");
-
-    private final String code;
-
-    InteractionFlow(String code) {
-        this.code = code;
-    }
-
-    @JsonValue
-    public String getCode() {
-        return code;
-    }
-
-    public boolean is(String typeCodeString) {
-        return this.getCode().equals(typeCodeString);
-    }
-
+    boolean is(String typeCodeString);
 }

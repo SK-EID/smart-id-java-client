@@ -42,23 +42,20 @@ import java.security.Signature;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Optional;
 
-import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationIdentityMapper;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
-import ee.sk.smartid.v2.util.CertificateAttributeUtil;
-import ee.sk.smartid.v2.util.NationalIdentityNumberUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -198,15 +195,7 @@ public class AuthenticationResponseValidator {
     }
 
     public static AuthenticationIdentity constructAuthenticationIdentity(X509Certificate certificate) {
-        AuthenticationIdentity identity = new AuthenticationIdentity(certificate);
-        String distinguishedName = certificate.getSubjectX500Principal().getName();
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.GIVENNAME).ifPresent(identity::setGivenName);
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SURNAME).ifPresent(identity::setSurname);
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SERIALNUMBER)
-                .ifPresent(serialNumber -> identity.setIdentityNumber(serialNumber.split("-", 2)[1]));
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.C).ifPresent(identity::setCountry);
-        identity.setDateOfBirth(getDateOfBirth(identity));
-        return identity;
+        return AuthenticationIdentityMapper.from(certificate);
     }
 
     private void initializeTrustedCACertificatesFromKeyStore() {
@@ -288,10 +277,5 @@ public class AuthenticationResponseValidator {
         System.arraycopy(digestInfoPrefix, 0, digestWithPrefix, 0, digestInfoPrefix.length);
         System.arraycopy(digest, 0, digestWithPrefix, digestInfoPrefix.length, digest.length);
         return digestWithPrefix;
-    }
-
-    private static LocalDate getDateOfBirth(AuthenticationIdentity identity) {
-        return Optional.ofNullable(CertificateAttributeUtil.getDateOfBirth(identity.getAuthCertificate()))
-                .orElse(NationalIdentityNumberUtil.getDateOfBirth(identity));
     }
 }

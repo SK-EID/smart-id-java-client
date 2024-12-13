@@ -31,11 +31,12 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.v3.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.RequestProperties;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
 
 import java.util.Set;
 

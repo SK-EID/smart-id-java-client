@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,13 +33,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
-import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
-import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
+import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 
 @Disabled("Currently request to v3 path returns - No permission to issue the request")
 @SmartIdDemoIntegrationTest
@@ -56,7 +56,7 @@ class SmartIdRestIntegrationTest {
     void authenticate_anonymous() {
         AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
-        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
+        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
         DynamicLinkSessionResponse response = smartIdConnector.initAnonymousDynamicLinkAuthentication(request);
     }
@@ -65,7 +65,7 @@ class SmartIdRestIntegrationTest {
     void authenticate_withDocumentNumber() {
         AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
-        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
+        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
         DynamicLinkSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, "PNOEE-50609019996-MOCK-Q");
     }
@@ -74,7 +74,7 @@ class SmartIdRestIntegrationTest {
     void authenticate_withSemanticsIdentifier() {
         AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
 
-        request.setAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")));
+        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
 
         DynamicLinkSessionResponse response = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-50609019996"));
     }

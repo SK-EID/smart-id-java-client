@@ -80,7 +80,7 @@ import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.v2.rest.dao.Interaction;
-import ee.sk.smartid.v2.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.SmartIdConnector;
 import ee.sk.smartid.v2.rest.SmartIdRestConnector;

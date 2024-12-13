@@ -28,6 +28,7 @@ package ee.sk.smartid.v3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -46,8 +47,13 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdRestServiceStubs;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.v3.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.NotificationCertificateChoiceSessionResponse;
+import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
+import ee.sk.smartid.v3.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 class SmartIdClientTest {
@@ -74,12 +80,12 @@ class SmartIdClientTest {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
-        DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                .withCertificateLevel(CertificateLevel.ADVANCED)
-                .initCertificateChoice();
+            DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
+                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                    .withRelyingPartyName("DEMO")
+                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .initCertificateChoice();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
@@ -96,8 +102,6 @@ class SmartIdClientTest {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/notification/etsi/PNOEE-1234567890", "v3/requests/certificate-choice-session-request.json", "v3/responses/notification-certificate-choice-session-response.json");
 
             NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
@@ -111,8 +115,6 @@ class SmartIdClientTest {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/notification/document/PNOEE-1234567890-MOCK-Q", "v3/requests/certificate-choice-session-request.json", "v3/responses/notification-certificate-choice-session-response.json");
 
             NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
@@ -126,50 +128,44 @@ class SmartIdClientTest {
     @WireMockTest(httpPort = 18089)
     class DynamicLinkAuthenticationSession {
 
-    @Test
-    void createDynamicLinkAuthentication_anonymous() {
-        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-        DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
-                .initAuthenticationSession();
+        @Test
+        void createDynamicLinkAuthentication_anonymous() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
+                    .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
+                    .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
         }
 
-    @Test
-    void createDynamicLinkAuthentication_withDocumentNumber() {
-        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-        DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
-                .initAuthenticationSession();
+        @Test
+        void createDynamicLinkAuthentication_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
+                    .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
         }
 
-    @Test
-    void createDynamicLinkAuthentication_withSemanticsIdentifier() {
-        SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-        DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
-                .initAuthenticationSession();
+        @Test
+        void createDynamicLinkAuthentication_withSemanticsIdentifier() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
+                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                    .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
+                    .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
@@ -189,14 +185,12 @@ class SmartIdClientTest {
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
             signableHash.setHashType(HashType.SHA512);
 
-        DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign document?")))
-                .withSignableHash(signableHash)
-                .initSignatureSession();
+            DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .initSignatureSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
@@ -211,14 +205,12 @@ class SmartIdClientTest {
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
             signableHash.setHashType(HashType.SHA512);
 
-        DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Sign document?")))
-                .withSignableHash(signableHash)
-                .initSignatureSession();
+            DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
+                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+                    .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .initSignatureSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
@@ -237,7 +229,7 @@ class SmartIdClientTest {
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
@@ -253,7 +245,7 @@ class SmartIdClientTest {
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .initAuthenticationSession();
 
             assertNotNull(response.getSessionID());
@@ -275,11 +267,9 @@ class SmartIdClientTest {
             signableHash.setHashType(HashType.SHA512);
 
             NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -302,7 +292,7 @@ class SmartIdClientTest {
                     .withRelyingPartyName("DEMO")
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -321,10 +311,20 @@ class SmartIdClientTest {
         void fetchFinalSessionStatus() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
-            SessionStatus status = smartIdClient.createSessionStatusPoller().fetchFinalSessionStatus("abcdef1234567890");
+            SessionStatus status = smartIdClient.getSessionsStatusPoller().fetchFinalSessionStatus("abcdef1234567890");
 
             assertEquals("COMPLETE", status.getState());
             assertEquals("OK", status.getResult().getEndResult());
+        }
+
+        @Test
+        void getSessionStatus() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-running.json");
+
+            SessionStatus status = smartIdClient.getSessionsStatusPoller().getSessionsStatus("abcdef1234567890");
+
+            assertEquals("RUNNING", status.getState());
+            assertNull(status.getResult());
         }
     }
 
@@ -337,15 +337,13 @@ class SmartIdClientTest {
         void createDynamicContent_authenticationWithDifferentDynamicLinkTypes(DynamicLinkType dynamicLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
-                    .withAllowedInteractionsOrder(List.of(Interaction.displayTextAndPIN("Log in?")))
+                    .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
             Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, response.getSessionSecret(), 1);
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, 1, response.getSessionSecret());
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
@@ -358,7 +356,6 @@ class SmartIdClientTest {
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, dynamicLinkType, response.getSessionToken());
         }
 
-
         @ParameterizedTest
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DynamicLinkType dynamicLinkType) {
@@ -366,14 +363,12 @@ class SmartIdClientTest {
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initCertificateChoice();
             Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), 1);
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, 1, response.getSessionSecret());
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
@@ -392,14 +387,12 @@ class SmartIdClientTest {
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initCertificateChoice();
             Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, response.getSessionSecret(), 1);
+            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, 1, response.getSessionSecret());
             String qrCodeDataUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(DynamicLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)

@@ -40,11 +40,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import ee.sk.smartid.v2.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.util.NationalIdentityNumberUtil;
 import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.v2.CertificateUtil;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.v2.util.NationalIdentityNumberUtil;
 
 public class NationalIdentityNumberUtilTest {
 

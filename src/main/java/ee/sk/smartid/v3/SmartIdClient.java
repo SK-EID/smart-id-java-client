@@ -65,13 +65,17 @@ public class SmartIdClient {
     private SmartIdConnector connector;
     private SSLContext trustSslContext;
 
+    private SessionStatusPoller sessionStatusPoller;
+
     /**
      * Creates a new builder for creating a dynamic link certificate choice session request.
      *
-     *  @return a builder for creating a new dynamic link certificate choice session request
+     * @return a builder for creating a new dynamic link certificate choice session request
      */
     public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
-        return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector());
+        return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
@@ -91,7 +95,9 @@ public class SmartIdClient {
      * @return builder for creating a new dynamic link authentication session request
      */
     public DynamicLinkAuthenticationSessionRequestBuilder createDynamicLinkAuthentication() {
-        return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector());
+        return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
@@ -111,7 +117,9 @@ public class SmartIdClient {
      * @return builder for creating a new dynamic link signature session request
      */
     public DynamicLinkSignatureSessionRequestBuilder createDynamicLinkSignature() {
-        return new DynamicLinkSignatureSessionRequestBuilder(getSmartIdConnector());
+        return new DynamicLinkSignatureSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
@@ -120,17 +128,21 @@ public class SmartIdClient {
      * @return builder for creating a new notification signature session request
      */
     public NotificationSignatureSessionRequestBuilder createNotificationSignature() {
-        return new NotificationSignatureSessionRequestBuilder(getSmartIdConnector());
+        return new NotificationSignatureSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
-     * Create a new Smart-ID session status poller
+     * Returns the session status poller or creates a new one if it doesn't exist
      *
      * @return Sessions status poller
      */
-    public SessionStatusPoller createSessionStatusPoller() {
-        var sessionStatusPoller = new SessionStatusPoller(getSmartIdConnector());
-        sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+    public SessionStatusPoller getSessionsStatusPoller() {
+        if (sessionStatusPoller == null) {
+            sessionStatusPoller = new SessionStatusPoller(getSmartIdConnector());
+            sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);
+        }
         return sessionStatusPoller;
     }
 
@@ -252,6 +264,11 @@ public class SmartIdClient {
         pollingSleepTimeout = timeout;
     }
 
+    /**
+     * Get smart-id connector. If connector is not set, then new will be created
+     *
+     * @return smart-id connector
+     */
     public SmartIdConnector getSmartIdConnector() {
         if (null == connector) {
             Client client = configuredClient != null ? configuredClient : createClient();

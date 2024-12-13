@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,10 +57,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 
 class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
@@ -82,7 +83,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
@@ -91,6 +92,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
 
             assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
             assertEquals("DEMO", request.getRelyingPartyName());
+            assertEquals("QUALIFIED", request.getCertificateLevel());
             assertEquals(SignatureProtocol.ACSP_V1, request.getSignatureProtocol());
             assertNotNull(request.getSignatureProtocolParameters());
             assertNotNull(request.getSignatureProtocolParameters().getRandomChallenge());
@@ -110,7 +112,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withCertificateLevel(certificateLevel)
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
@@ -131,7 +133,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withNonce(nonce)
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
@@ -152,7 +154,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withSignatureAlgorithm(signatureAlgorithm)
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
@@ -171,7 +173,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
@@ -191,7 +193,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .withShareMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
 
@@ -212,7 +214,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .withCapabilities(capabilities)
                     .initAuthenticationSession();
 
@@ -230,7 +232,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID(relyingPartyUUID)
                             .withRelyingPartyName("DEMO")
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals("Parameter relyingPartyUUID must be set", exception.getMessage());
         }
@@ -242,7 +244,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName(relyingPartyName)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals("Parameter relyingPartyName must be set", exception.getMessage());
         }
@@ -255,7 +257,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(randomChallenge)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals("Parameter randomChallenge must be set", exception.getMessage());
         }
@@ -268,7 +270,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(randomChallenge)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
@@ -281,7 +283,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
                             .withSignatureAlgorithm(null)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals("Parameter signatureAlgorithm must be set", exception.getMessage());
         }
@@ -295,14 +297,14 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
                             .withNonce(invalidNonce)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<Interaction> interactions) {
+        void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<DynamicLinkInteraction> interactions) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -314,21 +316,8 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @ArgumentsSource(NotSupportedInteractionsProvider.class)
-        void initAuthenticationSession_allowedInteractionsOrderContainsNotSupportedInteraction_throwException(Interaction interaction, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
-                    new DynamicLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRandomChallenge(generateBase64String("a".repeat(32)))
-                            .withAllowedInteractionsOrder(List.of(interaction))
-                            .initAuthenticationSession());
-            assertEquals(expectedException, exception.getMessage());
-        }
-
-        @ParameterizedTest
         @ArgumentsSource(InvalidInteractionsProvider.class)
-        void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(Interaction interaction, String expectedException) {
+        public void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(DynamicLinkInteraction interaction, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DynamicLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -390,7 +379,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
         }
     }
@@ -404,7 +393,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withRandomChallenge(generateBase64String("a".repeat(32)))
-                .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                 .initAuthenticationSession();
 
@@ -424,7 +413,7 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withRandomChallenge(generateBase64String("a".repeat(32)))
-                .withAllowedInteractionsOrder(Collections.singletonList(Interaction.displayTextAndPIN("Log into internet banking system")))
+                .withAllowedInteractionsOrder(Collections.singletonList(DynamicLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                 .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
                 .initAuthenticationSession();
 
@@ -500,29 +489,17 @@ class DynamicLinkAuthenticationSessionRequestBuilderTest {
         }
     }
 
-    private static class NotSupportedInteractionsProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(Named.of("VERIFICATION_CODE_CHOICE interaction used", Interaction.verificationCodeChoice("Log into internet banking system")),
-                            "AllowedInteractionsOrder contains not supported interaction VERIFICATION_CODE_CHOICE"),
-                    Arguments.of(Named.of("CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE interaction used", Interaction.confirmationMessageAndVerificationCodeChoice("Log into internet banking system")),
-                            "AllowedInteractionsOrder contains not supported interaction CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE")
-            );
-        }
-    }
-
     private static class InvalidInteractionsProvider implements ArgumentsProvider {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of(Named.of("provided text is null", Interaction.displayTextAndPIN(null)),
+                    Arguments.of(Named.of("provided text is null", DynamicLinkInteraction.displayTextAndPIN(null)),
                             "displayText60 cannot be null for AllowedInteractionOrder of type DISPLAY_TEXT_AND_PIN"),
-                    Arguments.of(Named.of("provided text is longer than allowed 60", Interaction.displayTextAndPIN("a".repeat(61))),
+                    Arguments.of(Named.of("provided text is longer than allowed 60", DynamicLinkInteraction.displayTextAndPIN("a".repeat(61))),
                             "displayText60 must not be longer than 60 characters"),
-                    Arguments.of(Named.of("provided text is null", Interaction.confirmationMessage(null)),
+                    Arguments.of(Named.of("provided text is null", DynamicLinkInteraction.confirmationMessage(null)),
                             "displayText200 cannot be null for AllowedInteractionOrder of type CONFIRMATION_MESSAGE"),
-                    Arguments.of(Named.of("provided text is longer than allowed 200", Interaction.confirmationMessage("a".repeat(201))),
+                    Arguments.of(Named.of("provided text is longer than allowed 200", DynamicLinkInteraction.confirmationMessage("a".repeat(201))),
                             "displayText200 must not be longer than 200 characters")
             );
         }

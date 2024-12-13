@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -57,10 +57,11 @@ import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v3.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.VerificationCode;
 
 class NotificationAuthenticationSessionRequestBuilderTest {
@@ -83,7 +84,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .initAuthenticationSession();
 
@@ -109,7 +110,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withCertificateLevel(certificateLevel)
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .initAuthenticationSession();
 
@@ -130,7 +131,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withSignatureAlgorithm(signatureAlgorithm)
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .initAuthenticationSession();
 
@@ -151,7 +152,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withNonce("uniqueNonce")
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
@@ -171,7 +172,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withShareMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
 
@@ -192,7 +193,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withCapabilities(capabilities)
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .initAuthenticationSession();
@@ -212,7 +213,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                     .initAuthenticationSession();
 
@@ -230,7 +231,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     new NotificationAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID(relyingPartyUUID)
                             .withRelyingPartyName("DEMO")
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
             assertEquals("Parameter relyingPartyUUID must be set", exception.getMessage());
         }
@@ -242,7 +243,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     new NotificationAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName(relyingPartyName)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
             assertEquals("Parameter relyingPartyName must be set", exception.getMessage());
         }
@@ -255,7 +256,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(randomChallenge)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
             assertEquals("Parameter randomChallenge must be set", exception.getMessage());
         }
@@ -268,7 +269,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(randomChallenge)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
@@ -281,7 +282,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
                             .withSignatureAlgorithm(null)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
             assertEquals("Parameter signatureAlgorithm must be set", exception.getMessage());
         }
@@ -295,14 +296,14 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
                             .withNonce(invalidNonce)
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<Interaction> interactions) {
+        void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<NotificationInteraction> interactions) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new NotificationAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -314,22 +315,8 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @ArgumentsSource(NotSupportedInteractionsProvider.class)
-        void initAuthenticationSession_allowedInteractionsOrderContainsNotSupportedInteraction_throwException(Interaction interaction, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
-                    new NotificationAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                            .withRandomChallenge(generateBase64String("a".repeat(32)))
-                            .withAllowedInteractionsOrder(Collections.singletonList(interaction))
-                            .initAuthenticationSession());
-            assertEquals(expectedException, exception.getMessage());
-        }
-
-        @ParameterizedTest
         @ArgumentsSource(InvalidInteractionsProvider.class)
-        void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(Interaction interaction, String expectedException) {
+        void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(NotificationInteraction interaction, String expectedException) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new NotificationAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -348,7 +335,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .initAuthenticationSession());
 
             assertEquals("Either documentNumber or semanticsIdentifier must be set.", exception.getMessage());
@@ -369,7 +356,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
                         .withRandomChallenge(generateBase64String("a".repeat(32)))
-                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                        .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                         .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                         .initAuthenticationSession();
             });
@@ -388,7 +375,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                         .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                         .withRelyingPartyName("DEMO")
                         .withRandomChallenge(generateBase64String("a".repeat(32)))
-                        .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                        .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                         .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                         .initAuthenticationSession();
             });
@@ -406,7 +393,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                             .initAuthenticationSession());
 
@@ -424,7 +411,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                             .initAuthenticationSession());
 
@@ -442,7 +429,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRandomChallenge(generateBase64String("a".repeat(32)))
-                            .withAllowedInteractionsOrder(Collections.singletonList(Interaction.verificationCodeChoice("Verify the code")))
+                            .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
                             .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                             .initAuthenticationSession());
 
@@ -512,27 +499,17 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         }
     }
 
-    private static class NotSupportedInteractionsProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(Interaction.displayTextAndPIN("PIN code display"), "AllowedInteractionsOrder contains not supported interaction DISPLAY_TEXT_AND_PIN"),
-                    Arguments.of(Interaction.confirmationMessage("Confirmation message"), "AllowedInteractionsOrder contains not supported interaction CONFIRMATION_MESSAGE")
-            );
-        }
-    }
-
     private static class InvalidInteractionsProvider implements ArgumentsProvider {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of(Named.of("provided text is null", Interaction.verificationCodeChoice(null)),
+                    Arguments.of(Named.of("provided text is null", NotificationInteraction.verificationCodeChoice(null)),
                             "displayText60 cannot be null for AllowedInteractionOrder of type VERIFICATION_CODE_CHOICE"),
-                    Arguments.of(Named.of("provided text is longer than allowed 60", Interaction.verificationCodeChoice("a".repeat(61))),
+                    Arguments.of(Named.of("provided text is longer than allowed 60", NotificationInteraction.verificationCodeChoice("a".repeat(61))),
                             "displayText60 must not be longer than 60 characters"),
-                    Arguments.of(Named.of("provided text is null", Interaction.confirmationMessageAndVerificationCodeChoice(null)),
+                    Arguments.of(Named.of("provided text is null", NotificationInteraction.confirmationMessageAndVerificationCodeChoice(null)),
                             "displayText200 cannot be null for AllowedInteractionOrder of type CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE"),
-                    Arguments.of(Named.of("provided text is longer than allowed 200", Interaction.confirmationMessageAndVerificationCodeChoice("a".repeat(201))),
+                    Arguments.of(Named.of("provided text is longer than allowed 200", NotificationInteraction.confirmationMessageAndVerificationCodeChoice("a".repeat(201))),
                             "displayText200 must not be longer than 200 characters")
             );
         }

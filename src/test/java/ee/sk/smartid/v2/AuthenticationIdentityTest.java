@@ -32,27 +32,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationIdentity;
 
 public class AuthenticationIdentityTest {
-
-    @SuppressWarnings("deprecation")
-    @Test
-    public void setSurName() {
-        AuthenticationIdentity authenticationIdentity = new AuthenticationIdentity();
-        authenticationIdentity.setSurName("surname1");
-
-        assertThat(authenticationIdentity.getSurname(), is("surname1"));
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test
-    public void getSurName() {
-        AuthenticationIdentity authenticationIdentity = new AuthenticationIdentity();
-        authenticationIdentity.setSurname("surname");
-
-        assertThat(authenticationIdentity.getSurName(), is("surname"));
-    }
 
     @Test
     public void getIdentityCode() {

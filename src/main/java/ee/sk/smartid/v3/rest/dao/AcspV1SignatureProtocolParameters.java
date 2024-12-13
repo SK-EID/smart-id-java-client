@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3;
+package ee.sk.smartid.v3.rest.dao;
 
 /*-
  * #%L
@@ -28,29 +28,24 @@ package ee.sk.smartid.v3;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import ee.sk.smartid.v3.rest.dao.VerificationCode;
+public class AcspV1SignatureProtocolParameters implements Serializable {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class NotificationSignatureSessionResponse implements Serializable {
+    private String randomChallenge;
+    private String signatureAlgorithm;
 
-    private String sessionID;
-
-    private VerificationCode vc;
-
-    public String getSessionID() {
-        return sessionID;
+    public String getRandomChallenge() {
+        return randomChallenge;
     }
 
-    public void setSessionID(String sessionID) {
-        this.sessionID = sessionID;
+    public void setRandomChallenge(String randomChallenge) {
+        this.randomChallenge = randomChallenge;
     }
 
-    public VerificationCode getVc() {
-        return vc;
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
     }
 
-    public void setVc(VerificationCode verificationCode) {
-        this.vc = verificationCode;
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
     }
 }

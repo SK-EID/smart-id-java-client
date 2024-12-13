@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,5 +27,22 @@ package ee.sk.smartid.v3;
  */
 
 public enum AuthenticationCertificateLevel {
-    ADVANCED, QUALIFIED
+    ADVANCED(1),
+    QUALIFIED(2);
+
+    private final int level;
+
+    AuthenticationCertificateLevel(int level) {
+        this.level = level;
+    }
+
+    /**
+     * Check if current certificate level is same or higher than the given certificate level
+     *
+     * @param certificateLevel the level of the certificate
+     * @return the level of the certificate
+     */
+    public boolean isSameLevelOrHigher(AuthenticationCertificateLevel certificateLevel) {
+        return this == certificateLevel || this.level > certificateLevel.level;
+    }
 }

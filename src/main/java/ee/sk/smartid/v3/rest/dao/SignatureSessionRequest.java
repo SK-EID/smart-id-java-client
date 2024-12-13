@@ -31,10 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.v3.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.v3.SignatureProtocol;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class SignatureSessionRequest implements Serializable {
 
@@ -55,7 +52,7 @@ public class SignatureSessionRequest implements Serializable {
     private Set<String> capabilities;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<Interaction> allowedInteractionsOrder;
+    private List<? extends Interaction> allowedInteractionsOrder;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
@@ -112,11 +109,11 @@ public class SignatureSessionRequest implements Serializable {
         this.capabilities = capabilities;
     }
 
-    public List<Interaction> getAllowedInteractionsOrder() {
+    public List<? extends Interaction> getAllowedInteractionsOrder() {
         return allowedInteractionsOrder;
     }
 
-    public void setAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    public void setAllowedInteractionsOrder(List<? extends Interaction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
     }
 

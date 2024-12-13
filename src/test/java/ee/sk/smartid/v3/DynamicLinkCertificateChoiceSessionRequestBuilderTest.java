@@ -42,6 +42,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 
 class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
 

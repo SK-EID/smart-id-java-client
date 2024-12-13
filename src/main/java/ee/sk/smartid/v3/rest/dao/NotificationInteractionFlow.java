@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2024 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.v3.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,45 +26,25 @@ package ee.sk.smartid.v3.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-public class SemanticsIdentifier implements Serializable {
+public enum NotificationInteractionFlow implements InteractionFlow {
 
-  private final String identifier;
+    VERIFICATION_CODE_CHOICE("verificationCodeChoice"),
+    CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE("confirmationMessageAndVerificationCodeChoice");
 
-  public SemanticsIdentifier(IdentityType identityType, CountryCode countryCode, String identityNumber) {
-    this.identifier = "" + identityType + countryCode + "-" + identityNumber;
-  }
+    private final String code;
 
-  public SemanticsIdentifier(IdentityType identityType, String countryCodeString, String identityNumber) {
-    this.identifier = "" + identityType + countryCodeString + "-" + identityNumber;
-  }
+    NotificationInteractionFlow(String code) {
+        this.code = code;
+    }
 
-  public SemanticsIdentifier(String identityTypeString, String countryCodeString, String identityNumber) {
-    this.identifier = "" + identityTypeString + countryCodeString + "-" + identityNumber;
-  }
+    @JsonValue
+    public String getCode() {
+        return code;
+    }
 
-  public SemanticsIdentifier(String identifier) {
-    this.identifier = identifier;
-  }
-
-  public String getIdentifier() {
-    return identifier;
-  }
-
-  public enum IdentityType {
-    PAS, IDC, PNO
-  }
-
-  public enum CountryCode {
-    EE, LT, LV
-  }
-
-  @Override
-  public String toString() {
-    return "SemanticsIdentifier{" +
-        "identifier='" + identifier + '\'' +
-        '}';
-  }
-
+    public boolean is(String typeCodeString) {
+        return this.getCode().equals(typeCodeString);
+    }
 }

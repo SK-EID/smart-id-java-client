@@ -31,10 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.v3.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.SignatureProtocol;
-import ee.sk.smartid.v3.rest.dao.Interaction;
-import ee.sk.smartid.v3.rest.dao.RequestProperties;
 
 public class AuthenticationSessionRequest implements Serializable {
 
@@ -52,7 +49,7 @@ public class AuthenticationSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String nonce;
 
-    private List<Interaction> allowedInteractionsOrder;
+    private List<? extends Interaction> allowedInteractionsOrder;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
@@ -104,11 +101,11 @@ public class AuthenticationSessionRequest implements Serializable {
         this.nonce = nonce;
     }
 
-    public List<Interaction> getAllowedInteractionsOrder() {
+    public List<? extends Interaction> getAllowedInteractionsOrder() {
         return allowedInteractionsOrder;
     }
 
-    public void setAllowedInteractionsOrder(List<Interaction> allowedInteractionsOrder) {
+    public void setAllowedInteractionsOrder(List<? extends Interaction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
     }
 

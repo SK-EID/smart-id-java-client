@@ -1,4 +1,4 @@
-package ee.sk.smartid.v2.util;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
@@ -52,7 +52,7 @@ import org.bouncycastle.asn1.x509.Extension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.v2.AuthenticationIdentity;
+import ee.sk.smartid.AuthenticationIdentity;
 
 public class CertificateAttributeUtil {
     private static final Logger logger = LoggerFactory.getLogger(CertificateAttributeUtil.class);
