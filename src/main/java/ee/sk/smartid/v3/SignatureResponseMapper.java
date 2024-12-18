@@ -46,6 +46,7 @@ import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
+import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
 public class SignatureResponseMapper {
 
@@ -56,7 +57,6 @@ public class SignatureResponseMapper {
      *
      * @param sessionStatus             session status response
      * @param requestedCertificateLevel certificate level used to start the signature session
-     * @param digest                    data that was sent for signing, will be used to validate signature
      * @return the signature response
      * @throws UserRefusedException                       when the user has refused the session. NB! This exception has subclasses to determine the screen where user pressed cancel.
      * @throws SessionTimeoutException                    when there was a timeout, i.e. end user did not confirm or refuse the operation within given time frame
@@ -64,11 +64,10 @@ public class SignatureResponseMapper {
      * @throws DocumentUnusableException                  when for some reason, this relying party request cannot be completed.
      */
     public static SingatureResponse from(SessionStatus sessionStatus,
-                                         String requestedCertificateLevel,
-                                         String digest
+                                         String requestedCertificateLevel
     ) throws UserRefusedException,
             UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
-        validateSessionsStatus(sessionStatus, requestedCertificateLevel, digest);
+        validateSessionsStatus(sessionStatus, requestedCertificateLevel);
 
         SessionResult sessionResult = sessionStatus.getResult();
         SessionSignature sessionSignature = sessionStatus.getSignature();
@@ -88,14 +87,23 @@ public class SignatureResponseMapper {
         return singatureResponse;
     }
 
-    private static void validateSessionsStatus(SessionStatus sessionStatus, String requestedCertificateLevel, String expectedDigest) {
+    private static void validateSessionsStatus(SessionStatus sessionStatus, String requestedCertificateLevel) {
         if (sessionStatus == null) {
             throw new UnprocessableSmartIdResponseException("Session status is null");
         }
-        validateSessionResult(sessionStatus, requestedCertificateLevel, expectedDigest);
+
+        if (StringUtil.isEmpty(sessionStatus.getState())) {
+            throw new UnprocessableSmartIdResponseException("State parameter is missing in session status");
+        }
+
+        if (!"COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
+            throw new SmartIdClientException("Session is not complete. State: " + sessionStatus.getState());
+        }
+
+        validateSessionResult(sessionStatus, requestedCertificateLevel);
     }
 
-    private static void validateSessionResult(SessionStatus sessionStatus, String requestedCertificateLevel, String expectedDigest) {
+    private static void validateSessionResult(SessionStatus sessionStatus, String requestedCertificateLevel) {
         SessionResult sessionResult = sessionStatus.getResult();
 
         if (sessionResult == null) {
@@ -104,6 +112,10 @@ public class SignatureResponseMapper {
         }
 
         String endResult = sessionResult.getEndResult();
+        if (StringUtil.isEmpty(endResult)) {
+            throw new UnprocessableSmartIdResponseException("End result parameter is missing in the session result");
+        }
+
         if ("OK".equalsIgnoreCase(endResult)) {
             logger.info("Session completed successfully");
 
@@ -117,16 +129,24 @@ public class SignatureResponseMapper {
                 throw new SmartIdClientException("InteractionFlowUsed is missing in the session status");
             }
 
+            if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
+                throw new UnprocessableSmartIdResponseException("Signature protocol is missing in session status");
+            }
+
             validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
-            validateSignature(sessionStatus, expectedDigest);
+            validateSignature(sessionStatus);
         } else {
             ErrorResultHandler.handle(endResult);
         }
     }
 
     private static void validateCertificate(SessionCertificate sessionCertificate, String requestedCertificateLevel) {
-        if (sessionCertificate == null || sessionCertificate.getValue() == null) {
+        if (sessionCertificate == null || StringUtil.isEmpty(sessionCertificate.getValue())) {
             throw new SmartIdClientException("Missing certificate in session response");
+        }
+
+        if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
+            throw new UnprocessableSmartIdResponseException("Certificate level is missing in certificate");
         }
 
         try {
@@ -146,34 +166,43 @@ public class SignatureResponseMapper {
         CertificateLevel requestedLevelEnum = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
         CertificateLevel returnedLevelEnum = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
 
-        // TODO - 03.12.24: does not validate if returned certificate level is same or higher as requested
-        return requestedLevelEnum == CertificateLevel.QSCD ? returnedLevelEnum == CertificateLevel.QUALIFIED : requestedLevelEnum == returnedLevelEnum;
+        return returnedLevelEnum.isSameLevelOrHigher(requestedLevelEnum);
     }
 
-    private static void validateSignature(SessionStatus sessionStatus, String expectedDigest) {
+    private static void validateSignature(SessionStatus sessionStatus) {
         String signatureProtocol = sessionStatus.getSignatureProtocol();
 
         if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
-            validateRawDigestSignature(sessionStatus, expectedDigest);
+            validateRawDigestSignature(sessionStatus);
         } else {
             throw new SmartIdClientException("Unknown signature protocol: " + signatureProtocol);
         }
     }
 
-    private static void validateRawDigestSignature(SessionStatus sessionStatus, String expectedDigest) {
-        String signatureValue = sessionStatus.getSignature().getValue();
-        String signatureAlgorithm = sessionStatus.getSignature().getSignatureAlgorithm();
+    private static void validateRawDigestSignature(SessionStatus sessionStatus) {
+        SessionSignature signature = sessionStatus.getSignature();
+        if (signature == null) {
+            throw new UnprocessableSmartIdResponseException("Signature object is missing");
+        }
 
-        if (!expectedDigest.equals(signatureValue)) { // TODO - 10.12.24: fix this, validating signature should be like in AuthenticationResponseMapper.validateSignature
-            throw new SmartIdClientException("RAW_DIGEST_SIGNATURE validation failed. Expected: " + expectedDigest
-                    + ", but got: " + signatureValue);
+        if (StringUtil.isEmpty(signature.getValue())) {
+            throw new UnprocessableSmartIdResponseException("Signature value is missing");
+        }
+
+        if (StringUtil.isEmpty(signature.getSignatureAlgorithm())) {
+            throw new UnprocessableSmartIdResponseException("Signature algorithm is missing");
+        }
+
+        SignatureAlgorithmParameters signatureAlgorithmParameters = signature.getSignatureAlgorithmParameters();
+        if (signatureAlgorithmParameters == null || StringUtil.isEmpty(signatureAlgorithmParameters.getHashAlgorithm())) {
+            throw new UnprocessableSmartIdResponseException("hashAlgorithm is missing in signature result");
         }
 
         List<String> allowedSignatureAlgorithms = Arrays.asList("sha256WithRSAEncryption", "sha384WithRSAEncryption", "sha512WithRSAEncryption");
-        if (!allowedSignatureAlgorithms.contains(signatureAlgorithm)) {
-            throw new SmartIdClientException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signatureAlgorithm);
+        if (!allowedSignatureAlgorithms.contains(signature.getSignatureAlgorithm())) {
+            throw new SmartIdClientException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signature.getSignatureAlgorithm());
         }
 
-        logger.info("RAW_DIGEST_SIGNATURE successfully validated.");
+        logger.info("RAW_DIGEST_SIGNATURE fields successfully validated.");
     }
 }

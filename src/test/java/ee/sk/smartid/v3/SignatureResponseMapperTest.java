@@ -58,6 +58,7 @@ import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
+import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
 class SignatureResponseMapperTest {
 
@@ -67,31 +68,68 @@ class SignatureResponseMapperTest {
     @Test
     void from_sessionResultNull() {
         SessionStatus sessionStatus = new SessionStatus();
+        sessionStatus.setState("COMPLETE");
         sessionStatus.setResult(null);
 
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
         assertEquals("Result is missing in the session status response", ex.getMessage());
     }
 
     @Test
+    void from_stateParameterMissing() {
+        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+        sessionStatus.setState(null);
+
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        assertEquals("State parameter is missing in session status", ex.getMessage());
+    }
+
+    @Test
+    void from_sessionNotComplete() {
+        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+        sessionStatus.setState("RUNNING");
+
+        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        assertTrue(ex.getMessage().contains("Session is not complete"));
+    }
+
+    @Test
+    void from_endResultParameterMissing() {
+        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+        sessionStatus.getResult().setEndResult(null);
+
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        assertEquals("End result parameter is missing in the session result", ex.getMessage());
+    }
+
+    @Test
     void from_missingInteractionFlowUsed() {
-        SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
         sessionStatus.setInteractionFlowUsed(null);
 
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
         assertEquals("InteractionFlowUsed is missing in the session status", ex.getMessage());
     }
 
     @Test
     void from_missingDocumentNumber() {
-        SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
         sessionStatus.getResult().setDocumentNumber(null);
 
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
         assertEquals("Document number is missing in the session result", ex.getMessage());
+    }
+
+    @Test
+    void from_signatureProtocolMissing() {
+        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+        sessionStatus.setSignatureProtocol(null);
+
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        assertEquals("Signature protocol is missing in session status", ex.getMessage());
     }
 
     @Nested
@@ -99,41 +137,50 @@ class SignatureResponseMapperTest {
 
         @Test
         void from_missingCertificate() {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.setCert(null);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertEquals("Missing certificate in session response", ex.getMessage());
         }
 
         @Test
         void from_missingCertificateValue() {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.getCert().setValue(null);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertEquals("Missing certificate in session response", ex.getMessage());
         }
 
         @Test
+        void from_certificateLevelMissing() {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            sessionStatus.getCert().setCertificateLevel(null);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            assertEquals("Certificate level is missing in certificate", ex.getMessage());
+        }
+
+        @Test
         void from_certificateLevelMismatch() {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.getCert().setCertificateLevel("ADVANCED");
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertTrue(ex.getCause() instanceof CertificateLevelMismatchException);
         }
 
         @Test
         void from_withQscdRequestedAndQualifiedReturned() {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.getCert().setCertificateLevel("QUALIFIED");
 
-            SingatureResponse response = SignatureResponseMapper.from(sessionStatus, "QSCD", "expectedDigest");
-            assertEquals("QUALIFIED", response.getCertificateLevel());
+            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QSCD"));
+            assertTrue(ex.getCause() instanceof CertificateLevelMismatchException);
         }
     }
 
@@ -142,40 +189,30 @@ class SignatureResponseMapperTest {
 
         @Test
         void from_validRawDigestSignature() {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
 
-            SingatureResponse response = SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest");
+            SingatureResponse response = SignatureResponseMapper.from(sessionStatus, "QUALIFIED");
             assertEquals("OK", response.getEndResult());
         }
 
         @Test
-        void from_rawDigestSignatureMismatch() {
-            SessionStatus sessionStatus = createMockSessionStatus("wrongDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
-            sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
-
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
-
-            assertTrue(ex.getMessage().contains("RAW_DIGEST_SIGNATURE validation failed"));
-        }
-
-        @Test
         void from_rawDigestUnexpectedAlgorithm() {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "unexpectedAlgorithm");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "unexpectedAlgorithm");
             sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
             sessionStatus.getSignature().setSignatureAlgorithm("unexpectedAlgorithm");
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertTrue(ex.getMessage().contains("Unexpected signature algorithm"));
         }
 
         @Test
         void from_unknownSignatureProtocol() {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "UNKNOWN_PROTOCOL", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("UNKNOWN_PROTOCOL", "sha512WithRSAEncryption");
             sessionStatus.setSignatureProtocol("UNKNOWN_PROTOCOL");
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertEquals("Unknown signature protocol: UNKNOWN_PROTOCOL", ex.getMessage());
         }
@@ -183,22 +220,58 @@ class SignatureResponseMapperTest {
         @ParameterizedTest
         @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
         void from_handleSessionEndResultErrors(String endResult, Class<? extends Exception> expectedException) {
-            SessionStatus sessionStatus = createMockSessionStatus("expectedDigest", "RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.getResult().setEndResult(endResult);
 
-            assertThrows(expectedException, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED", "expectedDigest"));
+            assertThrows(expectedException, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
         }
 
         @Test
         void from_sessionStatusNull() {
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(null, "QUALIFIED", "expectedDigest"));
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(null, "QUALIFIED"));
 
             assertEquals("Session status is null", ex.getMessage());
         }
+
+        @Test
+        void from_signatureMissing() {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            sessionStatus.setSignature(null);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            assertEquals("Signature object is missing", ex.getMessage());
+        }
+
+        @Test
+        void from_signatureValueMissing() {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            sessionStatus.getSignature().setValue(null);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            assertEquals("Signature value is missing", ex.getMessage());
+        }
+
+        @Test
+        void from_signatureAlgorithmMissing() {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            sessionStatus.getSignature().setSignatureAlgorithm(null);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            assertEquals("Signature algorithm is missing", ex.getMessage());
+        }
+
+        @Test
+        void from_hashAlgorithmMissing() {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            sessionStatus.getSignature().getSignatureAlgorithmParameters().setHashAlgorithm(null);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            assertEquals("hashAlgorithm is missing in signature result", ex.getMessage());
+        }
     }
 
-    private static SessionStatus createMockSessionStatus(String signatureValue, String signatureProtocol, String signatureAlgorithm) {
+    private static SessionStatus createMockSessionStatus(String signatureProtocol, String signatureAlgorithm) {
 
         var sessionResult = new SessionResult();
         sessionResult.setEndResult("OK");
@@ -206,12 +279,16 @@ class SignatureResponseMapperTest {
 
         var sessionCertificate = new SessionCertificate();
         sessionCertificate.setCertificateLevel("QUALIFIED");
-        sessionCertificate.setValue(getEncodedCertificateData(AUTH_CERT));
+        sessionCertificate.setValue(getEncodedCertificateData());
 
         var sessionSignature = new SessionSignature();
-        sessionSignature.setValue(signatureValue);
+        sessionSignature.setValue("expectedDigest");
         sessionSignature.setSignatureAlgorithm(signatureAlgorithm);
         sessionSignature.setServerRandom("serverRandomValue");
+
+        var sigParams = new SignatureAlgorithmParameters();
+        sigParams.setHashAlgorithm("sha512");
+        sessionSignature.setSignatureAlgorithmParameters(sigParams);
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setState("COMPLETE");
@@ -224,8 +301,8 @@ class SignatureResponseMapperTest {
         return sessionStatus;
     }
 
-    private static String getEncodedCertificateData(String certificate) {
-        return certificate.replace("-----BEGIN CERTIFICATE-----", "")
+    private static String getEncodedCertificateData() {
+        return SignatureResponseMapperTest.AUTH_CERT.replace("-----BEGIN CERTIFICATE-----", "")
                 .replace("-----END CERTIFICATE-----", "")
                 .replace("\n", "");
     }
