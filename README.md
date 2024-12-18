@@ -810,6 +810,7 @@ The session status response includes various fields depending on whether the ses
 
 * `state`: RUNNING or COMPLETE
 * `result.endResult`: Outcome of the session (e.g., OK, USER_REFUSED, TIMEOUT)
+* `result.documentNumber`: Document number returned when `endResult` is `OK`. Can be used in further signature and authentication requests to target the same device.
 * `signatureProtocol`: Either ACSP_V1 (for authentication) or RAW_DIGEST_SIGNATURE (for signature sessions)
 * `signature`: Contains the following fields based on the signatureProtocol used:
    * For `ACSP_V1`: value, serverRandom, signatureAlgorithm, hashAlgorithm
