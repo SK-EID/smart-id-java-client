@@ -29,7 +29,7 @@ package ee.sk.smartid.v3;
 public enum CertificateLevel {
     ADVANCED(1),
     QUALIFIED(2),
-    QSCD(3);
+    QSCD(2);
 
     private final int level;
 

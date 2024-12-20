@@ -46,7 +46,6 @@ import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
 public class SignatureResponseMapper {
 
@@ -89,7 +88,7 @@ public class SignatureResponseMapper {
 
     private static void validateSessionsStatus(SessionStatus sessionStatus, String requestedCertificateLevel) {
         if (sessionStatus == null) {
-            throw new UnprocessableSmartIdResponseException("Session status is null");
+            throw new SmartIdClientException("Session status was not provided");
         }
 
         if (StringUtil.isEmpty(sessionStatus.getState())) {
@@ -193,12 +192,9 @@ public class SignatureResponseMapper {
             throw new UnprocessableSmartIdResponseException("Signature algorithm is missing");
         }
 
-        SignatureAlgorithmParameters signatureAlgorithmParameters = signature.getSignatureAlgorithmParameters();
-        if (signatureAlgorithmParameters == null || StringUtil.isEmpty(signatureAlgorithmParameters.getHashAlgorithm())) {
-            throw new UnprocessableSmartIdResponseException("hashAlgorithm is missing in signature result");
-        }
-
-        List<String> allowedSignatureAlgorithms = Arrays.asList("sha256WithRSAEncryption", "sha384WithRSAEncryption", "sha512WithRSAEncryption");
+        List<String> allowedSignatureAlgorithms = Arrays.stream(SignatureAlgorithm.values())
+                .map(SignatureAlgorithm::getAlgorithmName)
+                .toList();
         if (!allowedSignatureAlgorithms.contains(signature.getSignatureAlgorithm())) {
             throw new SmartIdClientException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signature.getSignatureAlgorithm());
         }

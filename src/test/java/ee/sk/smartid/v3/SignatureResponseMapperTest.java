@@ -66,17 +66,6 @@ class SignatureResponseMapperTest {
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
 
     @Test
-    void from_sessionResultNull() {
-        SessionStatus sessionStatus = new SessionStatus();
-        sessionStatus.setState("COMPLETE");
-        sessionStatus.setResult(null);
-
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
-
-        assertEquals("Result is missing in the session status response", ex.getMessage());
-    }
-
-    @Test
     void from_stateParameterMissing() {
         SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
         sessionStatus.setState(null);
@@ -95,22 +84,23 @@ class SignatureResponseMapperTest {
     }
 
     @Test
+    void from_sessionResultNull() {
+        SessionStatus sessionStatus = new SessionStatus();
+        sessionStatus.setState("COMPLETE");
+        sessionStatus.setResult(null);
+
+        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+
+        assertEquals("Result is missing in the session status response", ex.getMessage());
+    }
+
+    @Test
     void from_endResultParameterMissing() {
         SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
         sessionStatus.getResult().setEndResult(null);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
         assertEquals("End result parameter is missing in the session result", ex.getMessage());
-    }
-
-    @Test
-    void from_missingInteractionFlowUsed() {
-        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
-        sessionStatus.setInteractionFlowUsed(null);
-
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
-
-        assertEquals("InteractionFlowUsed is missing in the session status", ex.getMessage());
     }
 
     @Test
@@ -121,6 +111,16 @@ class SignatureResponseMapperTest {
         var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
         assertEquals("Document number is missing in the session result", ex.getMessage());
+    }
+
+    @Test
+    void from_missingInteractionFlowUsed() {
+        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+        sessionStatus.setInteractionFlowUsed(null);
+
+        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+
+        assertEquals("InteractionFlowUsed is missing in the session status", ex.getMessage());
     }
 
     @Test
@@ -229,9 +229,9 @@ class SignatureResponseMapperTest {
         @Test
         void from_sessionStatusNull() {
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(null, "QUALIFIED"));
+            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(null, "QUALIFIED"));
 
-            assertEquals("Session status is null", ex.getMessage());
+            assertEquals("Session status was not provided", ex.getMessage());
         }
 
         @Test
@@ -259,15 +259,6 @@ class SignatureResponseMapperTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
             assertEquals("Signature algorithm is missing", ex.getMessage());
-        }
-
-        @Test
-        void from_hashAlgorithmMissing() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setHashAlgorithm(null);
-
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
-            assertEquals("hashAlgorithm is missing in signature result", ex.getMessage());
         }
     }
 
