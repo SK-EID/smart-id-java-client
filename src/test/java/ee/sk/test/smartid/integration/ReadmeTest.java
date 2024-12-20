@@ -78,44 +78,45 @@ public class ReadmeTest {
 
     SignableHash hashToSign;
 
-    public static final String DEMO_HOST_SSL_CERTIFICATE = "-----BEGIN CERTIFICATE-----\n"
-    + "MIIGoDCCBYigAwIBAgIQBOJYR4uzB/mihrGnWl+QIjANBgkqhkiG9w0BAQsFADBP\n"
-    + "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMSkwJwYDVQQDEyBE\n"
-    + "aWdpQ2VydCBUTFMgUlNBIFNIQTI1NiAyMDIwIENBMTAeFw0yMjA5MTYwMDAwMDBa\n"
-    + "Fw0yMzEwMTcyMzU5NTlaMFUxCzAJBgNVBAYTAkVFMRAwDgYDVQQHEwdUYWxsaW5u\n"
-    + "MRswGQYDVQQKExJTSyBJRCBTb2x1dGlvbnMgQVMxFzAVBgNVBAMTDnNpZC5kZW1v\n"
-    + "LnNrLmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoDLLTK+NEKsB\n"
-    + "POdOEjAK7/A8JTmZXlRkjM1aX0pfH6BCIGn3ZJd9M6iSR+KKQEfT0cj7JWvfMjZT\n"
-    + "oVHxOPbUaIUTdu22akLDy0kuZN78/RdqHUPq9WTKZsG3r03bi6tGqFb2KfzhZ2Q9\n"
-    + "zfS8Yn5N0iPeMh48BsreEdumb4F97JSEzjzFdGBb5wED//pHUL2VRoX1hzKV/6D8\n"
-    + "/sWmbMdGTYcXds/JbOIFU6EgAO2ozJUQmTbR2XRJYawKYAm4CEyY49zzvOldjOUC\n"
-    + "VjbheCxPJB0OeqYmfxm6QNqEi33Jsof9Y8uRl/DrEGexApd0bQkcGoGyBB08MWyu\n"
-    + "xjjmjh6TSQIDAQABo4IDcDCCA2wwHwYDVR0jBBgwFoAUt2ui6qiqhIx56rTaD5iy\n"
-    + "xZV2ufQwHQYDVR0OBBYEFIrtybLjSa2jrMVWly+c7KCBvpifMBkGA1UdEQQSMBCC\n"
-    + "DnNpZC5kZW1vLnNrLmVlMA4GA1UdDwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEF\n"
-    + "BQcDAQYIKwYBBQUHAwIwgY8GA1UdHwSBhzCBhDBAoD6gPIY6aHR0cDovL2NybDMu\n"
-    + "ZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VExTUlNBU0hBMjU2MjAyMENBMS00LmNybDBA\n"
-    + "oD6gPIY6aHR0cDovL2NybDQuZGlnaWNlcnQuY29tL0RpZ2lDZXJ0VExTUlNBU0hB\n"
-    + "MjU2MjAyMENBMS00LmNybDA+BgNVHSAENzA1MDMGBmeBDAECAjApMCcGCCsGAQUF\n"
-    + "BwIBFhtodHRwOi8vd3d3LmRpZ2ljZXJ0LmNvbS9DUFMwfwYIKwYBBQUHAQEEczBx\n"
-    + "MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2VydC5jb20wSQYIKwYBBQUH\n"
-    + "MAKGPWh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFRMU1JTQVNI\n"
-    + "QTI1NjIwMjBDQTEtMS5jcnQwCQYDVR0TBAIwADCCAYAGCisGAQQB1nkCBAIEggFw\n"
-    + "BIIBbAFqAHcA6D7Q2j71BjUy51covIlryQPTy9ERa+zraeF3fW0GvW4AAAGDRaWg\n"
-    + "0AAABAMASDBGAiEA0YjYuhVcbwncKefVPz4d8IrAQQ6ahcw5mOFufHTwbV8CIQCk\n"
-    + "oYVmHeYe9C9WeHYT4sKozs3ubeNqxPDRjKKaCPhtzQB2ADXPGRu/sWxXvw+tTG1C\n"
-    + "y7u2JyAmUeo/4SrvqAPDO9ZMAAABg0WloQQAAAQDAEcwRQIhALhRwut2GdVSxBnG\n"
-    + "KJOvCyaCySEhF7CXkhJRYsaZhBADAiB2X85UxwB5030w+1pX0QxJ4Z3A2sLwrwYR\n"
-    + "9/+yt4NGLwB3ALc++yTfnE26dfI5xbpY9Gxd/ELPep81xJ4dCYEl7bSZAAABg0Wl\n"
-    + "oRUAAAQDAEgwRgIhAPFc0KtyRqpNV3muD5aCzgE0RuQxsz6KPYKX4I49hfZeAiEA\n"
-    + "yuqiqCAtBkt/G7Wq4SA+/4xDyRKwXo5Zu8QuGGx9taYwDQYJKoZIhvcNAQELBQAD\n"
-    + "ggEBADTzrIM6pAvIClyXTGtyceDKckkGENmFmDvwL6I0Tab/s8uLlREpDhRPQpFQ\n"
-    + "hsAjaxWrfUv25EdYelBvaiOrCUwI3W3zlLy4gcgagEyTJ71lz7cH0VwFWjTsfXXc\n"
-    + "osD5sXMfipvkgmX+XgYJjsDY/HDFQyZp7aoTVqAlOfqkfsHi1EGdd6AGKP0yHokU\n"
-    + "3sUH1X6kDQdSfu1iwRPCn1CGS6xU1VJ6mJDU8SioBQKBAQkCs5UVdjdH+o99xsND\n"
-    + "8kfVHlchc+SxsI5cYhc4gUjjtX/U3FDZcW1IfZDil9tQf9l6rU/ZXMIPHeQWTPAa\n"
-    + "nUMrQKgVkBFH6CVchyHXPejDNGA=\n"
-    + "-----END CERTIFICATE-----";
+    public static final String DEMO_HOST_SSL_CERTIFICATE = "-----BEGIN CERTIFICATE-----\n" + //
+                "MIIGxTCCBa2gAwIBAgIQB//0m9ljohCn8LB5KDcE1jANBgkqhkiG9w0BAQsFADBZ\n" + //
+                "MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMTMwMQYDVQQDEypE\n" + //
+                "aWdpQ2VydCBHbG9iYWwgRzIgVExTIFJTQSBTSEEyNTYgMjAyMCBDQTEwHhcNMjQx\n" + //
+                "MDAzMDAwMDAwWhcNMjUxMDE0MjM1OTU5WjBVMQswCQYDVQQGEwJFRTEQMA4GA1UE\n" + //
+                "BxMHVGFsbGlubjEbMBkGA1UEChMSU0sgSUQgU29sdXRpb25zIEFTMRcwFQYDVQQD\n" + //
+                "Ew5zaWQuZGVtby5zay5lZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB\n" + //
+                "AKAyy0yvjRCrATznThIwCu/wPCU5mV5UZIzNWl9KXx+gQiBp92SXfTOokkfiikBH\n" + //
+                "09HI+yVr3zI2U6FR8Tj21GiFE3bttmpCw8tJLmTe/P0Xah1D6vVkymbBt69N24ur\n" + //
+                "RqhW9in84WdkPc30vGJ+TdIj3jIePAbK3hHbpm+BfeyUhM48xXRgW+cBA//6R1C9\n" + //
+                "lUaF9Ycylf+g/P7FpmzHRk2HF3bPyWziBVOhIADtqMyVEJk20dl0SWGsCmAJuAhM\n" + //
+                "mOPc87zpXYzlAlY24XgsTyQdDnqmJn8ZukDahIt9ybKH/WPLkZfw6xBnsQKXdG0J\n" + //
+                "HBqBsgQdPDFsrsY45o4ek0kCAwEAAaOCA4swggOHMB8GA1UdIwQYMBaAFHSFgMBm\n" + //
+                "x9833s+9KTeqAx2+7c0XMB0GA1UdDgQWBBSK7cmy40mto6zFVpcvnOyggb6YnzAZ\n" + //
+                "BgNVHREEEjAQgg5zaWQuZGVtby5zay5lZTA+BgNVHSAENzA1MDMGBmeBDAECAjAp\n" + //
+                "MCcGCCsGAQUFBwIBFhtodHRwOi8vd3d3LmRpZ2ljZXJ0LmNvbS9DUFMwDgYDVR0P\n" + //
+                "AQH/BAQDAgWgMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjCBnwYDVR0f\n" + //
+                "BIGXMIGUMEigRqBEhkJodHRwOi8vY3JsMy5kaWdpY2VydC5jb20vRGlnaUNlcnRH\n" + //
+                "bG9iYWxHMlRMU1JTQVNIQTI1NjIwMjBDQTEtMS5jcmwwSKBGoESGQmh0dHA6Ly9j\n" + //
+                "cmw0LmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydEdsb2JhbEcyVExTUlNBU0hBMjU2MjAy\n" + //
+                "MENBMS0xLmNybDCBhwYIKwYBBQUHAQEEezB5MCQGCCsGAQUFBzABhhhodHRwOi8v\n" + //
+                "b2NzcC5kaWdpY2VydC5jb20wUQYIKwYBBQUHMAKGRWh0dHA6Ly9jYWNlcnRzLmRp\n" + //
+                "Z2ljZXJ0LmNvbS9EaWdpQ2VydEdsb2JhbEcyVExTUlNBU0hBMjU2MjAyMENBMS0x\n" + //
+                "LmNydDAMBgNVHRMBAf8EAjAAMIIBfwYKKwYBBAHWeQIEAgSCAW8EggFrAWkAdwAS\n" + //
+                "8U40vVNyTIQGGcOPP3oT+Oe1YoeInG0wBYTr5YYmOgAAAZJR+i+zAAAEAwBIMEYC\n" + //
+                "IQC7tPwb72Mur1ljtCP8g1/BkS6nJV0QeueW3eSa2L+PkwIhAPCJOyx++Vg5mE5D\n" + //
+                "6S0ctqbVRQsM5XGKYrBzAyzh0QHaAHYAfVkeEuF4KnscYWd8Xv340IdcFKBOlZ65\n" + //
+                "Ay/ZDowuebgAAAGSUfovdQAABAMARzBFAiEA6ifcmc/Si0vOqT4JTAMqervuE7Uz\n" + //
+                "iYGZIIZI09BYINICICeJuQZrqP7aHqn9+0iyvl5ptJl2cZ5YyqF3Km9f6vu4AHYA\n" + //
+                "5tIxY0B3jMEQQQbXcbnOwdJA9paEhvu6hzId/R43jlAAAAGSUfovjAAABAMARzBF\n" + //
+                "AiEAkdK3dAY6ABFtaE1bTjIlYAF5cFT8N2pvxL0mA79LlDwCIFGZJ3EYJfxVbj9m\n" + //
+                "S/8FynieG/02iMF6xzmmrU58La0pMA0GCSqGSIb3DQEBCwUAA4IBAQCnq3OnD4uw\n" + //
+                "uvt75qYIBgFNN+nIMslacl8iQYSOswr+K90QzL/yf+lLafDX0QMtDL5b2t1a834R\n" + //
+                "8efjlEuISfp+YjTdtnNV1jZ7nnkHcFMP1MGbv/JQigPO8AgL+oxGHiRCp6FNJTwt\n" + //
+                "FtvHkqd5rDJUU988LdND4aYtmKYmGKj06sSqhpl9xmbIxdXPvaJGoHC/gEpM8AKw\n" + //
+                "oL4afke2q3FpjQ1eDT+37pjsEjQi6nT0/cSNoyxy4QbqWBgGclmb9ZAfOFkaO5U3\n" + //
+                "bhRopdPzRSrQROUF0ovPk4aC+b74KAV/oxtQjPTdpdxTVBwjfn2tpes5q+TZUGSZ\n" + //
+                "AyP23gCAvmuj\n" + //
+                "-----END CERTIFICATE-----";
 
     @Before
     public void setUp() {
