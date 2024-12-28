@@ -263,7 +263,7 @@ public class AuthenticationResponseValidator {
         try {
             ldapName = new LdapName(principal.getName());
         } catch (InvalidNameException e) {
-            String errorMessage = "Error getting certificate common name details";
+            String errorMessage = "Error getting certificate distinguished name";
             logger.error(errorMessage, e);
             throw new SmartIdClientException(errorMessage, e);
         }
