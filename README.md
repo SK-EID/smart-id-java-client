@@ -46,7 +46,9 @@ This library now supports both Smart-ID API v2.0 and v3.0.
         * [Configuring a proxy using JBoss Resteasy library](#configuring-a-proxy-using-jboss-resteasy-library)
         * [Configuring a proxy using Jersey](#configuring-a-proxy-using-jersey)
 * [How to use it with RP API v3.0](#how-to-use-api-v30)
-    * [Initating authentication session](#examples-of-performing-dynamic-link-authentication)
+    * [Setting up SmartIdClient for v3.0](#setting-up-smartidclient-for-v30)
+    * [Dynamic Link flows](#dynamic-link-flows)
+    * [Initiating authentication session](#examples-of-performing-dynamic-link-authentication)
         * [Initiating anonymous authentication session](#initiating-anonymous-authentication-session)
         * [Initiating authentication session with semantics identifier](#initiating-authentication-session-with-semantics-identifier)
         * [Initiating authentication session with document number](#initiating-authentication-session-with-document-number)
@@ -57,6 +59,29 @@ This library now supports both Smart-ID API v2.0 and v3.0.
         * [Example of querying sessions status](#example-of-querying-sessions-status)
       * [Validating sessions status response](#validating-session-status-response)
         * [Example of validating authentication session response](#example-of-validating-the-authentication-sessions-response)
+        * [Example of validating the signature](#example-of-validating-the-signature)
+        * [Error handling for session status](#error-handling-for-session-status)
+    * [Initiating a Dynamic Link Certificate Choice Session](#initiating-a-dynamic-link-certificate-choice-session)
+      * [Example of Initiating a Dynamic Link Certificate Choice Request](#example-initiating-a-dynamic-link-certificate-choice-request)
+        * [Response on Successful Certificate Choice Session Creation](#response-on-successful-certificate-choice-session-creation)
+    * [Initiating a Dynamic Link Signature Session](#initiating-a-dynamic-link-signature-session)
+      * [Examples of Allowed Interactions Order](#examples-of-allowed-interactions-order)
+      * [Initiating a Dynamic Link Signature Session Using Semantics Identifier](#initiating-a-dynamic-link-signature-session-using-semantics-identifier)
+      * [Initiating a Dynamic Link Signature Session Using Document Number](#initiating-a-dynamic-link-signature-session-using-document-number)
+    * [Notification-based flows](#notification-based-flows)
+    * [Examples of performing notification authentication](#examples-of-performing-notification-authentication)
+      * [Initiating notification authentication session with document number](#initiating-notification-authentication-session-with-document-number)
+      * [Initiating notification authentication session with semantics identifier](#initiating-notification-authentication-session-with-semantics-identifier)
+      * [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device)
+    * [Initiating a Notification Certificate Choice Session](#initiating-a-notification-certificate-choice-session)
+      * [Initiating a Notification Certificate Choice Using Semantics Identifier](#initiating-a-notification-certificate-choice-using-semantics-identifier)
+      * [Initiating a Notification Certificate Choice Using Document Number](#initiating-a-notification-certificate-choice-using-document-number)
+      * [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device)
+    * [Initiating a Notification-Based Signature Session](#initiating-a-notification-based-signature-session)
+        * [Differences Between Notification-Based and Dynamic Link Flows](#differences-between-notification-based-and-dynamic-link-flows)
+        * [Initiating a Notification-Based Signature Session Using Semantics Identifier](#initiating-a-notification-based-signature-session-using-semantics-identifier)
+        * [Initiating a Notification-Based Signature Session Using Document Number](#initiating-a-notification-based-signature-session-using-document-number)
+        * [Response on Successful Notification-based Signature Session Creation](#response-on-successful-notification-based-signature-session-creation)
     * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
         * [Generating dynamic link ](#generating-dynamic-link)
             * [Dynamic link parameters](#dynamic-link-parameters)
@@ -698,7 +723,7 @@ String randomChallenge = RandomChallenge.generate();
 // Store generated randomChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
+DynamicLinkSessionResponse authenticationSessionResponse = client
     .createAuthentication()
     // to use anonymous authentication, do not set semantics identifier or document number
     .withRandomChallenge(randomChallenge)
@@ -737,7 +762,7 @@ String randomChallenge = RandomChallenge.generate();
 // Store generated randomChallenge only backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
+DynamicLinkSessionResponse authenticationSessionResponse = client
         .createDynamicLinkAuthentication()
         .withSemanticsIdentifier(semanticsIdentifier)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
@@ -775,7 +800,7 @@ String randomChallenge = RandomChallenge.generate();
 // Store generated randomChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-DynamicLinkAuthenticationSessionResponse authenticationSessionResponse = client
+DynamicLinkSessionResponse authenticationSessionResponse = client
         .createDynamicLinkAuthentication()
         .withDocumentNumber(documentNumber)
         .withRandomChallenge(randomChallenge)
@@ -925,7 +950,7 @@ SmartIdAuthenticationResponse response = requestBuilder.createSmartIdAuthenticat
 System.out.println("Authentication result: " + response.getEndResult());
 ```
 
-## Error handling for session status
+### Error handling for session status
 
 The session status response may return various error codes indicating the outcome of the session. Below are the possible end result values for a completed session:
 
@@ -941,7 +966,7 @@ The session status response may return various error codes indicating the outcom
 * `USER_REFUSED_CONFIRMATIONMESSAGE`: User cancelled on confirmationMessage screen.
 * `USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE`: User cancelled on confirmationMessageAndVerificationCodeChoice screen.
 
-### The error codes can be validated using the SmartIdRequestBuilderService
+### The error codes can be validated using the ErrorResultHandler
     
 ```java
 try {
@@ -953,7 +978,7 @@ try {
 }
 ```
 
-# Initiating a Dynamic Link Certificate Choice Session in API v3.0
+# Initiating a Dynamic Link Certificate Choice Session
 
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a certificate choice session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the authentication process.
 
@@ -988,17 +1013,17 @@ DynamicLinkSessionResponse response = client.createDynamicLinkCertificateRequest
 // Note: After a certificate choice request, a notification-based signature choice must follow.
 ```
 
-## Response on Successful Certificate Choice Session Creation
+### Response on Successful Certificate Choice Session Creation
 The response from a successful dynamic link certificate choice session creation contains the following parameters:
 
 * `sessionID`: A string that can be used to request the operation result.
 * `sessionToken`: Unique random value that will be used to connect this certificate choice attempt between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
 
-## Validating Parameters
+### Validating Parameters
 Ensure that you validate the parameters before initiating the request. For example, the `nonce` must be between 1 and 30 characters.
 
-## Error Handling
+### Error Handling
 Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `SmartIdClientException`, and others.
 
 ```java
@@ -1040,68 +1065,7 @@ client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
         .initiateCertificateChoice();
 ```
 
-## Initiating a Notification Certificate Choice in API v3.0
-
-### Request Parameters
-The request parameters for the dynamic link certificate choice session are:
-
-* `relyingPartyUUID`: UUID of the Relying Party.
-* `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
-* `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
-* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character.
-* `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
-* `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
-
-### Using Semantics Identifier
-```java
-SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
-        // 3 character identity type
-        // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
-        SemanticsIdentifier.IdentityType.PNO,
-        SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-        "30303039914"); // identifier (according to country and identity type reference)
-
-NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
-        .createNotificationCertificateChoice()
-        .withSemanticsIdentifier(semanticsIdentifier)
-        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-        .withNonce("1234567890")
-        .initCertificateChoice();
-
-String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
-```
-
-### Using Document Number
-```java
-String documentNumber = "PNOLT-30303039914-MOCK-Q"; // returned in authentication result and used for re-authentication
-
-        NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
-        .createNotificationCertificateChoice()
-        .withDocumentNumber(documentNumber)
-        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-        .withNonce("1234567890")
-        .initCertificateChoice();
-
-String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
-```
-
-### Requesting the IP Address of the User's Device
-If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
-```java
-NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
-        .createNotificationCertificateChoice()
-        .withDocumentNumber(documentNumber)
-        .withCertificateLevel(CertificateLevel.QUALIFIED)
-
-        // we want to get the IP address of the device running Smart-ID app
-        // for the IP to be returned the service provider (SK) must switch on this option
-        .withShareMdClientIpAddress(true)
-        .initCertificateChoice();
-```
-
-# Initiating a Dynamic Link Signature Session in API v3.0
+# Initiating a Dynamic Link Signature Session
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a signature session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the signing process using a dynamic link. The user can then access the link and complete the signing process.
 
 ## Request Parameters
@@ -1172,7 +1136,7 @@ builder.withAllowedInteractionsOrder(List.of(
 ));
 ```
 
-## Using Semantics Identifier
+## Initiating a Dynamic Link Signature Session Using Semantics Identifier
 ```java
 var client = new SmartIdClient();
     client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
@@ -1208,7 +1172,7 @@ String sessionSecret = signatureResponse.getSessionSecret();
 // Use the session information as needed
 ```
 
-## Using Document Number
+## Initiating a Dynamic Link Signature Session Using Document Number
 ```java
 SmartIdClient client = new SmartIdClient();
     client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
@@ -1323,18 +1287,150 @@ builder.withCapabilities(Set.of("QUILIFIED", "ADVANCED"));
 builder.withCertificateLevel(CertificateLevel.QUALIFIED);
 ```
 
-# Initiating a Notification-Based Signature Session in API v3.0
+## Notification-based flows
+
+## Examples of performing notification authentication
+
+### Initiating notification authentication session with document number
+```java
+String documentNumber = "PNOLT-30303039914-MOCK-Q";
+
+String randomChallenge = RandomChallenge.generate();
+
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.verificationCodeChoice("Log in to self-service?")
+        ))
+        .initAuthenticationSession();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+
+String verificationCode = authenticationSessionResponse.getVc().getValue();
+// Display the verification code to the user for confirmation
+```
+After initiating the session, display the verificationCode to the user. The user must confirm that the code displayed in their Smart-ID app matches the one you have provided.
+
+### Initiating notification authentication session with semantics identifier
+Alternatively, you can initiate a notification authentication session using a semantics identifier, which uniquely identifies the user across different countries and identity types.
+```java
+SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
+        SemanticsIdentifier.IdentityType.PNO,
+        SemanticsIdentifier.CountryCode.EE,
+        "30303039914"
+);
+
+String randomChallenge = RandomChallenge.generate();
+
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withSemanticsIdentifier(semanticsIdentifier)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.verificationCodeChoice("Log in to self-service?")
+        ))
+        .initAuthenticationSession();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+
+String verificationCode = authenticationSessionResponse.getVc().getValue();
+// Display the verification code to the user for confirmation
+```
+
+### Requesting the IP Address of the User's Device
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+```java
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                Interaction.verificationCodeChoice("Log in to self-service?")
+        ))
+        .withShareMdClientIpAddress(true) // Request the user's device IP address
+        .initAuthenticationSession();
+```
+
+## Initiating a Notification Certificate Choice Session
+
+### Request Parameters
+The request parameters for the dynamic link certificate choice session are:
+
+* `relyingPartyUUID`: UUID of the Relying Party.
+* `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
+* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character.
+* `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
+* `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
+
+### Initiating a Notification Certificate Choice Using Semantics Identifier
+```java
+SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
+        // 3 character identity type
+        // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+        SemanticsIdentifier.IdentityType.PNO,
+        SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+        "30303039914"); // identifier (according to country and identity type reference)
+
+NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
+        .createNotificationCertificateChoice()
+        .withSemanticsIdentifier(semanticsIdentifier)
+        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+        .withNonce("1234567890")
+        .initCertificateChoice();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+```
+
+### Initiating a Notification Certificate Choice Using Document Number
+```java
+String documentNumber = "PNOLT-30303039914-MOCK-Q"; // returned in authentication result and used for re-authentication
+
+        NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
+        .createNotificationCertificateChoice()
+        .withDocumentNumber(documentNumber)
+        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+        .withNonce("1234567890")
+        .initCertificateChoice();
+
+String sessionId = authenticationSessionResponse.getSessionID();
+// SessionID is used to query sessions status later
+```
+
+### Requesting the IP Address of the User's Device
+If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
+```java
+NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
+        .createNotificationCertificateChoice()
+        .withDocumentNumber(documentNumber)
+        .withCertificateLevel(CertificateLevel.QUALIFIED)
+
+        // we want to get the IP address of the device running Smart-ID app
+        // for the IP to be returned the service provider (SK) must switch on this option
+        .withShareMdClientIpAddress(true)
+        .initCertificateChoice();
+```
+
+# Initiating a Notification-Based Signature Session
 
 The Smart-ID API v3.0 allows you to initiate a signature session using a notification-based flow. This method is useful when the user is already known or authenticated, and you want to initiate the signing process directly through a notification to the user's device, without the need for a dynamic link.
 
 ## Differences Between Notification-Based and Dynamic Link Flows
 * `Notification-Based flow`
-  * The user receives a notification on their Smart-ID app to complete the signing process.
-  * Suitable for scenarios where the user's identity or device is already known.
-  * Uses different interactionDeprecated types compared to dynamic link flows.
+    * The user receives a notification on their Smart-ID app to complete the signing process.
+    * Suitable for scenarios where the user's identity or device is already known.
+    * Uses different interactionDeprecated types compared to dynamic link flows.
 * `Dynamic Link flow`
-  * Generates a dynamic link that the user must access to initiate the signing process.
-  * Useful when the user's identity or device is not known beforehand.
+    * Generates a dynamic link that the user must access to initiate the signing process.
+    * Useful when the user's identity or device is not known beforehand.
 
 ## Request Parameters
 The request parameters for the notification-based signature session are as follows:
@@ -1360,7 +1456,7 @@ The request parameters for the notification-based signature session are as follo
 ## Example: Initiating a Notification-Based Signature Request
 Below is an example of how to initiate a notification-based signature request using the Smart-ID Java client, using both the Semantics Identifier and Document Number endpoints.
 
-## Using Semantics Identifier
+## Initiating a Notification-Based Signature Session Using Semantics Identifier
 ```java
 SmartIdClient client = new SmartIdClient();
 client.setRelyingPartyUUID("your-relying-party-uuid");
@@ -1401,7 +1497,7 @@ System.out.println("Verification Code Type: " + verificationCode.getType());
 System.out.println("Verification Code Value: " + verificationCode.getValue());
 ```
 
-## Using Document Number
+## Initiating a Notification-Based Signature Session Using Document Number
 ```java
 SmartIdClient client = new SmartIdClient();
 client.setRelyingPartyUUID("your-relying-party-uuid");
@@ -1466,8 +1562,8 @@ Upon successful initiation, the user will receive a notification on their Smart-
 ## Response Parameters
 * `sessionID`: Required. String used to request the operation result.
 * `verificationCode`: Required. Object describing the Verification Code to be displayed.
-  * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
-  * `value`: Required. Value of the VC code.
+    * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
+    * `value`: Required. Value of the VC code.
 
 ## Error Handling
 Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as:
@@ -1598,85 +1694,14 @@ SmartIdSignature signature = SmartIdSignature.fromSessionStatus(sessionStatus);
 // Use the signature as needed
 ```
 
-## Examples of performing notification authentication
-
-### Initiating notification authentication session with document number
-```java
-String documentNumber = "PNOLT-30303039914-MOCK-Q";
-
-String randomChallenge = RandomChallenge.generate();
-
-NotificationAuthenticationSessionResponse authenticationSessionResponse = client
-        .createNotificationAuthentication()
-        .withDocumentNumber(documentNumber)
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-        .withAllowedInteractionsOrder(Collections.singletonList(
-                Interaction.verificationCodeChoice("Log in to self-service?")
-        ))
-        .initAuthenticationSession();
-
-String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
-
-String verificationCode = authenticationSessionResponse.getVc().getValue();
-// Display the verification code to the user for confirmation
-```
-After initiating the session, display the verificationCode to the user. The user must confirm that the code displayed in their Smart-ID app matches the one you have provided.
-
-### Initiating notification authentication session with semantics identifier
-Alternatively, you can initiate a notification authentication session using a semantics identifier, which uniquely identifies the user across different countries and identity types.
-```java
-SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
-        SemanticsIdentifier.IdentityType.PNO,
-        SemanticsIdentifier.CountryCode.EE,
-        "30303039914"
-);
-
-String randomChallenge = RandomChallenge.generate();
-
-NotificationAuthenticationSessionResponse authenticationSessionResponse = client
-        .createNotificationAuthentication()
-        .withSemanticsIdentifier(semanticsIdentifier)
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-        .withAllowedInteractionsOrder(Collections.singletonList(
-                Interaction.verificationCodeChoice("Log in to self-service?")
-        ))
-        .initAuthenticationSession();
-
-String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
-
-String verificationCode = authenticationSessionResponse.getVc().getValue();
-// Display the verification code to the user for confirmation
-```
-
-### Requesting the IP Address of the User's Device
-If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
-```java
-NotificationAuthenticationSessionResponse authenticationSessionResponse = client
-        .createNotificationAuthentication()
-        .withDocumentNumber(documentNumber)
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-        .withAllowedInteractionsOrder(Collections.singletonList(
-                Interaction.verificationCodeChoice("Log in to self-service?")
-        ))
-        .withShareMdClientIpAddress(true) // Request the user's device IP address
-        .initAuthenticationSession();
-```
-
-### Generating QR-code or dynamic link
-Todo: will be implemented in task SLIB-55
 ## Generating QR-code or dynamic link
 
-#### Generating dynamic link
+### Generating dynamic link
 
 Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app. 
 Providing QR-code as a dynamic link type will allow generating QR-code at frontend side.
 
-##### Dynamic link parameters
+#### Dynamic link parameters
 
 * `baseUrl`: Base URL for the dynamic link. Default value is `https://smart-id.com/dynamic-link`.
 * `version`: Version of the dynamic link. Default value is `0.1`.
@@ -1688,7 +1713,7 @@ Providing QR-code as a dynamic link type will allow generating QR-code at fronte
 * `authCode`: Auth code is HMAC256 hash value generated from dynamicLinkType, sessionType and current time and session secret. Session secret can be found in the session response.
 
 ```java
-DynamicLinkAuthenticationSessionResponse response; // response from the session initiation query.
+DynamicLinkSessionResponse response; // response from the session initiation query.
 // Capture and store when initiating sessions response arrived
 Instant responseReceivedTime = Instant.now();
 // Generate auth code
@@ -1703,10 +1728,10 @@ URI dynamicLink = client.createDynamicContent()
         .createUri();
 ```
 
-##### Overriding default values
+#### Overriding default values
 
 ```java
-DynamicLinkAuthenticationSessionResponse response; // response from the session initiation query.
+DynamicLinkSessionResponse response; // response from the session initiation query.
 // Capture and store when initiating sessions response arrived
 Instant responseReceivedTime = Instant.now();
 // Generate auth code
@@ -1723,7 +1748,7 @@ URI dynamicLink = client.createDynamicContent()
         .createUri();
 ```
 
-#### Generating QR-code
+### Generating QR-code
 
 Creating a QR code uses the Zxing library to generate a QR code image with dynamic link as content. 
 According to link size the QR-code of version 9 (53x53 modules) is used. 
@@ -1731,10 +1756,10 @@ For the QR-code to be scannable by most devices the QR code module size should b
 It is achieved by setting the height and width of the QR code to 610px (calculated as (53+2x4)*10px)).
 Generated QR code will have error correction level low.
 
-##### Generate QR-code Data URI
+#### Generate QR-code Data URI
 
 ```java
-DynamicLinkAuthenticationSessionResponse response; // init auth sessions response
+DynamicLinkSessionResponse response; // init auth sessions response
 // Capture and store when initiating sessions response arrived
 Instant responseReceivedTime = Instant.now();
 // Generate auth code
@@ -1749,7 +1774,7 @@ String qrCodeDataUri = client.createDynamicContent()
         .createQrCode();
 ```
 
-##### Generate QR-code with custom height, width, quiet area and image format
+#### Generate QR-code with custom height, width, quiet area and image format
 
 Notably, the module size in pixels should be more than 5px and less than 20px. The recommended module size is 10px.
 QR code version 9 (53x53 modules) is automatically selected by content size
@@ -1758,7 +1783,7 @@ Other image size in range 366px to 1159px is also possible. Width and height of 
 The width and height of 1159px produce a QR code with a module size of 19px.
 
 ```java
-DynamicLinkAuthenticationSessionResponse response; //  init auth sessions response
+DynamicLinkSessionResponse response; //  init auth sessions response
 // Capture and store when initiating session response arrived
 Instant responseReceivedTime = Instant.now();
 // Generate auth code
