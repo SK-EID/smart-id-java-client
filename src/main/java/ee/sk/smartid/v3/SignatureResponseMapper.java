@@ -107,7 +107,7 @@ public class SignatureResponseMapper {
 
         if (sessionResult == null) {
             logger.error("Result is missing in the session status response");
-            throw new SmartIdClientException("Result is missing in the session status response");
+            throw new UnprocessableSmartIdResponseException("Result is missing in the session status response");
         }
 
         String endResult = sessionResult.getEndResult();
@@ -120,7 +120,7 @@ public class SignatureResponseMapper {
 
             if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
                 logger.error("Document number is missing in the session result");
-                throw new SmartIdClientException("Document number is missing in the session result");
+                throw new UnprocessableSmartIdResponseException("Document number is missing in the session result");
             }
 
             if (StringUtil.isEmpty(sessionStatus.getInteractionFlowUsed())) {

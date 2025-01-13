@@ -1114,8 +1114,6 @@ The request parameters for the dynamic link signature session are as follows:
 * `rawDigestSignatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
   * `digest`: Required. Base64 encoded digest to be signed.
   * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-  * `signatureAlgorithmParameters`: Optional. Additional parameters if required by the signature algorithm.
-    * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`.
 * `allowedInteractionsOrder`: Required. An array of interactionDeprecated objects defining the allowed interactions in order of preference.
   * Each interactionDeprecated object includes:
     * `type`: Required. Type of interactionDeprecated. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
@@ -1293,7 +1291,6 @@ builder.withAllowedInteractionsOrder(List.of(
 var parameters = new RawDigestSignatureProtocolParameters();
 parameters.setDigest(signableData.calculateHashInBase64());
 parameters.setSignatureAlgorithm("sha512WithRSAEncryption");
-parameters.setSignatureAlgorithmParameters(new SignatureAlgorithmParameters("SHA-512"));
 builder.withSignatureProtocolParameters(parameters);
 ```
 
@@ -1346,8 +1343,6 @@ The request parameters for the notification-based signature session are as follo
 * `rawDigestSignatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
     * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-    * `signatureAlgorithmParameters`: Optional. Additional parameters if required by the signature algorithm.
-        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`.
 * `allowedInteractionsOrder`: Required. An array of interactionDeprecated objects defining the allowed interactions in order of preference.
     * Each interactionDeprecated object includes:
         * `type`: Required. Type of interactionDeprecated. Allowed types are `verificationCodeChoice`, `confirmationMessageAndVerificationCodeChoice`.
