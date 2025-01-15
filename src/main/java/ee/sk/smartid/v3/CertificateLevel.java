@@ -27,5 +27,23 @@ package ee.sk.smartid.v3;
  */
 
 public enum CertificateLevel {
-    ADVANCED, QUALIFIED, QSCD
+    ADVANCED(1),
+    QUALIFIED(2),
+    QSCD(2);
+
+    private final int level;
+
+    CertificateLevel(int level) {
+        this.level = level;
+    }
+
+    /**
+     * Check if current certificate level is same or higher than the given certificate level
+     *
+     * @param certificateLevel the level of the certificate
+     * @return the level of the certificate
+     */
+    public boolean isSameLevelOrHigher(CertificateLevel certificateLevel) {
+        return this == certificateLevel || this.level > certificateLevel.level;
+    }
 }
