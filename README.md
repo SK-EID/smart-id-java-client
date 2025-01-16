@@ -360,6 +360,7 @@ smartIdSignature.getInteractionFlowUsed(); // which interaction was used
 
 The app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
 Different interaction flows can support different amount of data to display information to user.
+By now all devices (app versions) are supporting a larger amount of data (displayText200) to be displayed to the user.
 
 Available interactions:
 * `displayTextAndPIN` with `displayText60`. The simplest interaction with max 60 chars of text and PIN entry on a single screen. Every app has this interaction available.
