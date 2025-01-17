@@ -64,32 +64,32 @@ This library now supports both Smart-ID API v2.0 and v3.0.
         * [Example of fetching session status in v3.0](#example-of-fetching-session-status-in-v30)
             * [Example of using session status poller to query final sessions status](#example-of-using-session-status-poller-to-query-final-sessions-status)
             * [Example of querying sessions status](#example-of-querying-sessions-status)
-       * [Validating sessions status response](#validating-session-status-response)
+        * [Validating sessions status response](#validating-session-status-response)
             * [Example of validating authentication session response](#example-of-validating-the-authentication-sessions-response)
             * [Example of validating the signature](#example-of-validating-the-signature)
             * [Error handling for session status](#error-handling-for-session-status)
+        * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
+            * [Generating dynamic link ](#generating-dynamic-link)
+            * [Dynamic link parameters](#dynamic-link-parameters)
+            * [Overriding default values](#overriding-default-values)
+        * [Generating QR-code](#generating-qr-code)
+            * [Generate QR-code with custom height, width, quiet area and image format](#generate-qr-code-with-custom-height-width-quiet-area-and-image-format)
     * [Notification-based flows](#notification-based-flows)
-       * [Examples of performing notification authentication](#examples-of-performing-notification-authentication)
+        * [Examples of performing notification authentication](#examples-of-performing-notification-authentication)
             * [Initiating notification authentication session with document number](#initiating-notification-authentication-session-with-document-number)
             * [Initiating notification authentication session with semantics identifier](#initiating-notification-authentication-session-with-semantics-identifier)
-       * [Initiating a Notification Certificate Choice Session](#initiating-a-notification-certificate-choice-session)
+        * [Initiating a Notification Certificate Choice Session](#initiating-a-notification-certificate-choice-session)
             * [Initiating a Notification Certificate Choice Using Semantics Identifier](#initiating-a-notification-certificate-choice-using-semantics-identifier)
             * [Initiating a Notification Certificate Choice Using Document Number](#initiating-a-notification-certificate-choice-using-document-number)
-       * [Initiating a Notification-Based Signature Session](#initiating-a-notification-based-signature-session)
+        * [Initiating a Notification-Based Signature Session](#initiating-a-notification-based-signature-session)
             * [Differences Between Notification-Based and Dynamic Link Flows](#differences-between-notification-based-and-dynamic-link-flows)
             * [Initiating a Notification-Based Signature Session Using Semantics Identifier](#initiating-a-notification-based-signature-session-using-semantics-identifier)
             * [Initiating a Notification-Based Signature Session Using Document Number](#initiating-a-notification-based-signature-session-using-document-number)
             * [Response on Successful Notification-based Signature Session Creation](#response-on-successful-notification-based-signature-session-creation)
-       * [Examples of Allowed Notification-based Interactions Order](#examples-of-allowed-notification-based-interactions-order)
+        * [Examples of Allowed Notification-based Interactions Order](#examples-of-allowed-notification-based-interactions-order)
     * [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device)
     * [Exception Handling](#exception-handling)
-       * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
-            * [Generating dynamic link ](#generating-dynamic-link)
-            * [Dynamic link parameters](#dynamic-link-parameters)
-            * [Overriding default values](#overriding-default-values)
-       * [Generating QR-code](#generating-qr-code)
-            * [Generate QR-code with custom height, width, quiet area and image format](#generate-qr-code-with-custom-height-width-quiet-area-and-image-format)
-
+     
 ## Introduction
 
 The Smart-ID Java client can be used for easy integration of the [Smart-ID](https://www.smart-id.com) solution to information systems or e-services.
@@ -832,7 +832,7 @@ Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link)
 
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a certificate choice session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the authentication process.
 
-### Request Parameters
+#### Request Parameters
 
 The request parameters for the dynamic link certificate choice session are:
 
@@ -863,43 +863,7 @@ DynamicLinkSessionResponse response = client.createDynamicLinkCertificateRequest
 // Note: After a certificate choice request, a notification-based signature choice must follow.
 ```
 
-##### Response on Successful Certificate Choice Session Creation
-The response from a successful dynamic link certificate choice session creation contains the following parameters:
-
-* `sessionID`: A string that can be used to request the operation result.
-* `sessionToken`: Unique random value that will be used to connect this certificate choice attempt between the relevant parties (RP, RP-API, mobile app).
-* `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
-
-### Validating Parameters
-Ensure that you validate the parameters before initiating the request. For example, the `nonce` must be between 1 and 30 characters.
-
-### Error Handling
-Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `SmartIdClientException`, and others.
-
-```java
-try {
-    CertificateChoiceResponse response = builder.initCertificateChoice();
-    // Proceed with session status fetching and validation
-} catch (UserAccountNotFoundException e) {
-    System.out.println("User account not found.");
-} catch (SmartIdClientException e) {
-    System.out.println("Client exception occurred: " + e.getMessage());
-}
-```
-
-## Additional Information
-
-### `Request Properties`:  If you need the IP address of the user's device, set only shareMdClientIpAddress to true. There is no need to create a full RequestProperties object for this.
-```java
-client.createDynamicLinkCertificateRequest().withShareMdClientIpAddress(true);
-```
-
-### `Capabilities`: The capabilities parameter is an optional field used only when an agreement is established with the Smart-ID provider. If this parameter is omitted, the requested capabilities are automatically derived from the `certificateLevel`. Supported certificate levels include:
-* `ADVANCED`: A certificate for advanced electronic signatures.
-* `QUALIFIED`: A qualified certificate under the eIDAS regulation.
-* `QSCD`: A qualified certificate that is also QSCD-capable, marking a higher level of security for qualified signatures.
-
-### Example of Initiating a dynamic link certificate choice request with `QUALIFIED` certificate level and IP sharing enabled.
+#### Example of Initiating a dynamic link certificate choice request with `QUALIFIED` certificate level and IP sharing enabled.
 ```java
 SmartIdClient client = new SmartIdClient();
 client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
@@ -915,10 +879,44 @@ client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
         .initiateCertificateChoice();
 ```
 
+#### Response on Successful Certificate Choice Session Creation
+The response from a successful dynamic link certificate choice session creation contains the following parameters:
+
+* `sessionID`: A string that can be used to request the operation result.
+* `sessionToken`: Unique random value that will be used to connect this certificate choice attempt between the relevant parties (RP, RP-API, mobile app).
+* `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+
+#### Validating Parameters
+Ensure that you validate the parameters before initiating the request. For example, the `nonce` must be between 1 and 30 characters.
+
+#### Error Handling
+Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `SmartIdClientException`, and others.
+
+```java
+try {
+    CertificateChoiceResponse response = builder.initCertificateChoice();
+    // Proceed with session status fetching and validation
+} catch (UserAccountNotFoundException e) {
+    System.out.println("User account not found.");
+} catch (SmartIdClientException e) {
+    System.out.println("Client exception occurred: " + e.getMessage());
+}
+```
+
+#### `Request Properties`:  If you need the IP address of the user's device, set only shareMdClientIpAddress to true. There is no need to create a full RequestProperties object for this.
+```java
+client.createDynamicLinkCertificateRequest().withShareMdClientIpAddress(true);
+```
+
+* `Capabilities`: The capabilities parameter is an optional field used only when an agreement is established with the Smart-ID provider. If this parameter is omitted, the requested capabilities are automatically derived from the `certificateLevel`. Supported certificate levels include:
+* `ADVANCED`: A certificate for advanced electronic signatures.
+* `QUALIFIED`: A qualified certificate under the eIDAS regulation.
+* `QSCD`: A qualified certificate that is also QSCD-capable, marking a higher level of security for qualified signatures.
+
 ### Initiating a Dynamic Link Signature Session
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a signature session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the signing process using a dynamic link. The user can then access the link and complete the signing process.
 
-### Request Parameters
+#### Request Parameters
 The request parameters for the dynamic link signature session are as follows:
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
@@ -928,8 +926,7 @@ The request parameters for the dynamic link signature session are as follows:
 * `rawDigestSignatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
     * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-    * `signatureAlgorithmParameters`: Optional. Additional parameters if required by the signature algorithm.
-        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`.
+  * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
 * `allowedInteractionsOrder`: Required. An array of interactionDeprecated objects defining the allowed interactions in order of preference.
     * Each interactionDeprecated object includes:
         * `type`: Required. Type of interactionDeprecated. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
@@ -1011,14 +1008,14 @@ String sessionSecret = signatureResponse.getSessionSecret();
 Jump to [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device) to see how to request the IP address of the user's device.
 Jump to [Examples of Allowed Dynamic-link Interactions Order](#examples-of-allowed-dynamic-link-interactions-order) to see how to set the order of preferred interactions for displaying text and asking PIN.
 
-## Response Parameters
+### Response Parameters
 The response from a successful dynamic link signature session creation contains the following parameters:
 
 * `sessionID`: A string that can be used to request the operation result.
 * `sessionToken`: Unique random value that will be used to connect this signature attempt between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
 
-## Error Handling
+### Error Handling
 Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `UserRefusedException`, `SessionTimeoutException`, and others.
 
 ```java
@@ -1046,7 +1043,7 @@ System.out.println("An error occurred: " + e.getMessage());
 }
 ```
 
-## Additional Information
+### Additional Information
 * `Allowed Interactions Order`: Define the preferred interactions for displaying text and asking for PIN. The app will pick the first interactionDeprecated it supports from the list. Examples include `displayTextAndPIN`, `confirmationMessage`.
 
 ```java
@@ -1062,7 +1059,6 @@ builder.withAllowedInteractionsOrder(List.of(
 var parameters = new RawDigestSignatureProtocolParameters();
 parameters.setDigest(signableData.calculateHashInBase64());
 parameters.setSignatureAlgorithm("sha512WithRSAEncryption");
-parameters.setSignatureAlgorithmParameters(new SignatureAlgorithmParameters("SHA-512"));
 builder.withSignatureProtocolParameters(parameters);
 ```
 
@@ -1092,7 +1088,7 @@ builder.withCapabilities(Set.of("QUILIFIED", "ADVANCED"));
 builder.withCertificateLevel(CertificateLevel.QUALIFIED);
 ```
 
-#### Examples of Allowed Dynamic-link Interactions Order
+### Examples of Allowed Dynamic-link Interactions Order
 An app can support different interactionDeprecated types, and a Relying Party can specify the preferred interactions with or without fallback options.
 For dynamic link flows, the available interaction types are limited to displayTextAndPIN and confirmationMessage. 
 Each interaction is defined by an object that includes a type and either displayText60 (for shorter texts) or displayText200 (for longer texts).
@@ -1249,7 +1245,7 @@ SmartIdAuthenticationResponse response = requestBuilder.createSmartIdAuthenticat
 System.out.println("Authentication result: " + response.getEndResult());
 ```
 
-#### Error handling for session status
+### Error handling for session status
 
 The session status response may return various error codes indicating the outcome of the session. Below are the possible end result values for a completed session:
 
@@ -1275,6 +1271,116 @@ try {
 } catch (SessionTimeoutException e) {
     System.out.println("Session timed out");
 }
+```
+
+### Generating QR-code or dynamic link
+
+#### Generating dynamic link
+
+Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app.
+Providing QR-code as a dynamic link type will allow generating QR-code at frontend side.
+
+#### Dynamic link parameters
+
+* `baseUrl`: Base URL for the dynamic link. Default value is `https://smart-id.com/dynamic-link`.
+* `version`: Version of the dynamic link. Default value is `0.1`.
+* `dynamicLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
+* `sessionType`: Type of the sessions the dynamic link is for. Possible values are `auth`, `sign`, `cert`.
+* `sessionToken`: Token from the session response.
+* `elapsedTime`: Elapsed time from when the session response was received.
+* `userLanguage`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
+* `authCode`: Auth code is HMAC256 hash value generated from dynamicLinkType, sessionType and current time and session secret. Session secret can be found in the session response.
+
+```java
+DynamicLinkSessionResponse response; // response from the session initiation query.
+// Capture and store when initiating sessions response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link
+URI dynamicLink = client.createDynamicContent()
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // specify the type of dynamic link
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the session the dynamic link is for
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
+        .withAuthCode(authCode)
+        .createUri();
+```
+
+#### Overriding default values
+
+```java
+DynamicLinkSessionResponse response; // response from the session initiation query.
+// Capture and store when initiating sessions response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link
+URI dynamicLink = client.createDynamicContent()
+        .withBaseUrl("https://example.com") // override default base URL (https://smart-id.com/dynamic-link)
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // specify the type of dynamic link
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
+        .withUserLanguage("est") // override default user language (eng)
+        .withAuthCode(authCode)
+        .createUri();
+```
+
+### Generating QR-code
+
+Creating a QR code uses the Zxing library to generate a QR code image with dynamic link as content.
+According to link size the QR-code of version 9 (53x53 modules) is used.
+For the QR-code to be scannable by most devices the QR code module size should be 10px.
+It is achieved by setting the height and width of the QR code to 610px (calculated as (53+2x4)*10px)).
+Generated QR code will have error correction level low.
+
+#### Generate QR-code Data URI
+
+```java
+DynamicLinkSessionResponse response; // init auth sessions response
+// Capture and store when initiating sessions response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
+String qrCodeDataUri = client.createDynamicContent()
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
+        .withAuthCode(authCode)
+        .createQrCode();
+```
+
+#### Generate QR-code with custom height, width, quiet area and image format
+
+Notably, the module size in pixels should be more than 5px and less than 20px. The recommended module size is 10px.
+QR code version 9 (53x53 modules) is automatically selected by content size
+
+Other image size in range 366px to 1159px is also possible. Width and height of 366px produce a QR code with a module size of 6px.
+The width and height of 1159px produce a QR code with a module size of 19px.
+
+```java
+DynamicLinkSessionResponse response; //  init auth sessions response
+// Capture and store when initiating session response arrived
+Instant responseReceivedTime = Instant.now();
+// Generate auth code
+String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
+// Generate dynamic link
+URI qrDataUri = client.createDynamicContent()
+        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for, possible values (auth, sign, cert)
+        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
+        .withAuthCode(authCode)
+        .createUri();
+
+// Generate QR-code with height and width of 570px and quiet area of 2 modules.
+BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(qrDataUri, 570, 570, 2);
+
+// Convert BufferedImage to Data URI
+String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
 ```
 
 ## Notification-based flows
@@ -1337,7 +1443,7 @@ Jump to [Examples of Allowed Notification-based Interactions Order](#examples-of
 
 ### Initiating a Notification Certificate Choice Session
 
-### Request Parameters
+#### Request Parameters
 The request parameters for the dynamic link certificate choice session are:
 
 * `relyingPartyUUID`: UUID of the Relying Party.
@@ -1405,8 +1511,6 @@ The request parameters for the notification-based signature session are as follo
 * `rawDigestSignatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
     * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-    * `signatureAlgorithmParameters`: Optional. Additional parameters if required by the signature algorithm.
-        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`.
 * `allowedInteractionsOrder`: Required. An array of interactionDeprecated objects defining the allowed interactions in order of preference.
     * Each interactionDeprecated object includes:
         * `type`: Required. Type of interactionDeprecated. Allowed types are `verificationCodeChoice`, `confirmationMessageAndVerificationCodeChoice`.
@@ -1416,7 +1520,7 @@ The request parameters for the notification-based signature session are as follo
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
 
-### Example: Initiating a Notification-Based Signature Request
+#### Example: Initiating a Notification-Based Signature Request
 Below is an example of how to initiate a notification-based signature request using the Smart-ID Java client, using both the Semantics Identifier and Document Number endpoints.
 
 #### Initiating a Notification-Based Signature Session Using Semantics Identifier
@@ -1502,13 +1606,13 @@ Jump to [Examples of Allowed Notification-based Interactions Order](#examples-of
 #### Response on Successful Notification-based Signature Session Creation
 Upon successful initiation, the user will receive a notification on their Smart-ID app to complete the signing process. The response includes the `sessionID` and a `verificationCode` (Verification Code) object.
 
-#### Response Parameters
+### Response Parameters
 * `sessionID`: Required. String used to request the operation result.
 * `verificationCode`: Required. Object describing the Verification Code to be displayed.
     * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
     * `value`: Required. Value of the VC code.
 
-#### Error Handling
+### Error Handling
 Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as:
 * `UserAccountNotFoundException`
 * `RelyingPartyAccountConfigurationException`
@@ -1711,113 +1815,3 @@ Exception Categories
   These exceptions arise during validation or parsing operations within the library.
   * `CertificateParsingException` Thrown when the X.509 certificate cannot be parsed.
   * `SignatureValidationException` Thrown when signature validation fails due to mismatched algorithms or corrupted data.
-
-### Generating QR-code or dynamic link
-
-#### Generating dynamic link
-
-Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app. 
-Providing QR-code as a dynamic link type will allow generating QR-code at frontend side.
-
-#### Dynamic link parameters
-
-* `baseUrl`: Base URL for the dynamic link. Default value is `https://smart-id.com/dynamic-link`.
-* `version`: Version of the dynamic link. Default value is `0.1`.
-* `dynamicLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
-* `sessionType`: Type of the sessions the dynamic link is for. Possible values are `auth`, `sign`, `cert`.
-* `sessionToken`: Token from the session response.
-* `elapsedTime`: Elapsed time from when the session response was received.
-* `userLanguage`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
-* `authCode`: Auth code is HMAC256 hash value generated from dynamicLinkType, sessionType and current time and session secret. Session secret can be found in the session response.
-
-```java
-DynamicLinkSessionResponse response; // response from the session initiation query.
-// Capture and store when initiating sessions response arrived
-Instant responseReceivedTime = Instant.now();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
-// Generate dynamic link
-URI dynamicLink = client.createDynamicContent()
-        .withDynamicLinkType(DynamicLinkType.QR_CODE) // specify the type of dynamic link
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the session the dynamic link is for
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
-        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
-        .withAuthCode(authCode)
-        .createUri();
-```
-
-#### Overriding default values
-
-```java
-DynamicLinkSessionResponse response; // response from the session initiation query.
-// Capture and store when initiating sessions response arrived
-Instant responseReceivedTime = Instant.now();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
-// Generate dynamic link
-URI dynamicLink = client.createDynamicContent()
-        .withBaseUrl("https://example.com") // override default base URL (https://smart-id.com/dynamic-link)
-        .withDynamicLinkType(DynamicLinkType.QR_CODE) // specify the type of dynamic link
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
-        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
-        .withUserLanguage("est") // override default user language (eng)
-        .withAuthCode(authCode)
-        .createUri();
-```
-
-### Generating QR-code
-
-Creating a QR code uses the Zxing library to generate a QR code image with dynamic link as content. 
-According to link size the QR-code of version 9 (53x53 modules) is used. 
-For the QR-code to be scannable by most devices the QR code module size should be 10px. 
-It is achieved by setting the height and width of the QR code to 610px (calculated as (53+2x4)*10px)).
-Generated QR code will have error correction level low.
-
-#### Generate QR-code Data URI
-
-```java
-DynamicLinkSessionResponse response; // init auth sessions response
-// Capture and store when initiating sessions response arrived
-Instant responseReceivedTime = Instant.now();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
-// Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
-String qrCodeDataUri = client.createDynamicContent()
-        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
-        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
-        .withAuthCode(authCode)
-        .createQrCode();
-```
-
-#### Generate QR-code with custom height, width, quiet area and image format
-
-Notably, the module size in pixels should be more than 5px and less than 20px. The recommended module size is 10px.
-QR code version 9 (53x53 modules) is automatically selected by content size
-
-Other image size in range 366px to 1159px is also possible. Width and height of 366px produce a QR code with a module size of 6px.
-The width and height of 1159px produce a QR code with a module size of 19px.
-
-```java
-DynamicLinkSessionResponse response; //  init auth sessions response
-// Capture and store when initiating session response arrived
-Instant responseReceivedTime = Instant.now();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, response.getSessionSecret());
-// Generate dynamic link
-URI qrDataUri = client.createDynamicContent()
-        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for, possible values (auth, sign, cert)
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
-        .withElapsedSeconds(Duration.between(responseReceivedTime, Instant.now())) // calculate elapsed seconds from response received time
-        .withAuthCode(authCode)
-        .createUri();
-
-// Generate QR-code with height and width of 570px and quiet area of 2 modules.
-BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(qrDataUri, 570, 570, 2);
-
-// Convert BufferedImage to Data URI
-String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
-```

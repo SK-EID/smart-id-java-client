@@ -58,7 +58,6 @@ import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
-import ee.sk.smartid.v3.rest.dao.SignatureAlgorithmParameters;
 
 class SignatureResponseMapperTest {
 
@@ -89,7 +88,7 @@ class SignatureResponseMapperTest {
         sessionStatus.setState("COMPLETE");
         sessionStatus.setResult(null);
 
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
         assertEquals("Result is missing in the session status response", ex.getMessage());
     }
@@ -108,7 +107,7 @@ class SignatureResponseMapperTest {
         SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
         sessionStatus.getResult().setDocumentNumber(null);
 
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
         assertEquals("Document number is missing in the session result", ex.getMessage());
     }
@@ -118,7 +117,7 @@ class SignatureResponseMapperTest {
         SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
         sessionStatus.setInteractionFlowUsed(null);
 
-        var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
         assertEquals("InteractionFlowUsed is missing in the session status", ex.getMessage());
     }
@@ -140,7 +139,7 @@ class SignatureResponseMapperTest {
             SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.setCert(null);
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertEquals("Missing certificate in session response", ex.getMessage());
         }
@@ -202,7 +201,7 @@ class SignatureResponseMapperTest {
             sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
             sessionStatus.getSignature().setSignatureAlgorithm("unexpectedAlgorithm");
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertTrue(ex.getMessage().contains("Unexpected signature algorithm"));
         }
@@ -212,7 +211,7 @@ class SignatureResponseMapperTest {
             SessionStatus sessionStatus = createMockSessionStatus("UNKNOWN_PROTOCOL", "sha512WithRSAEncryption");
             sessionStatus.setSignatureProtocol("UNKNOWN_PROTOCOL");
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
             assertEquals("Unknown signature protocol: UNKNOWN_PROTOCOL", ex.getMessage());
         }
@@ -276,10 +275,6 @@ class SignatureResponseMapperTest {
         sessionSignature.setValue("expectedDigest");
         sessionSignature.setSignatureAlgorithm(signatureAlgorithm);
         sessionSignature.setServerRandom("serverRandomValue");
-
-        var sigParams = new SignatureAlgorithmParameters();
-        sigParams.setHashAlgorithm("sha512");
-        sessionSignature.setSignatureAlgorithmParameters(sigParams);
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setState("COMPLETE");

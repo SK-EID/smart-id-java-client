@@ -36,7 +36,6 @@ public class SessionSignature implements Serializable {
     private String value;
     private String serverRandom;
     private String signatureAlgorithm;
-    private SignatureAlgorithmParameters signatureAlgorithmParameters;
 
     public String getValue() {
         return value;
@@ -62,11 +61,4 @@ public class SessionSignature implements Serializable {
         this.signatureAlgorithm = signatureAlgorithm;
     }
 
-    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
-        return signatureAlgorithmParameters;
-    }
-
-    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
-        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
-    }
 }

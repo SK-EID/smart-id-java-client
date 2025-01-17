@@ -107,7 +107,7 @@ public class SignatureResponseMapper {
 
         if (sessionResult == null) {
             logger.error("Result is missing in the session status response");
-            throw new SmartIdClientException("Result is missing in the session status response");
+            throw new UnprocessableSmartIdResponseException("Result is missing in the session status response");
         }
 
         String endResult = sessionResult.getEndResult();
@@ -120,12 +120,16 @@ public class SignatureResponseMapper {
 
             if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
                 logger.error("Document number is missing in the session result");
-                throw new SmartIdClientException("Document number is missing in the session result");
+                throw new UnprocessableSmartIdResponseException("Document number is missing in the session result");
             }
 
             if (StringUtil.isEmpty(sessionStatus.getInteractionFlowUsed())) {
                 logger.error("InteractionFlowUsed is missing in the session status");
-                throw new SmartIdClientException("InteractionFlowUsed is missing in the session status");
+                throw new UnprocessableSmartIdResponseException("InteractionFlowUsed is missing in the session status");
+            }
+
+            if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
+                throw new UnprocessableSmartIdResponseException("Signature protocol is missing in session status");
             }
 
             if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
@@ -141,7 +145,7 @@ public class SignatureResponseMapper {
 
     private static void validateCertificate(SessionCertificate sessionCertificate, String requestedCertificateLevel) {
         if (sessionCertificate == null || StringUtil.isEmpty(sessionCertificate.getValue())) {
-            throw new SmartIdClientException("Missing certificate in session response");
+            throw new UnprocessableSmartIdResponseException("Missing certificate in session response");
         }
 
         if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
@@ -162,10 +166,10 @@ public class SignatureResponseMapper {
     }
 
     private static boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
-        CertificateLevel requestedLevelEnum = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
-        CertificateLevel returnedLevelEnum = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
+        CertificateLevel requestedLevel = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
+        CertificateLevel returnedLevel = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
 
-        return returnedLevelEnum.isSameLevelOrHigher(requestedLevelEnum);
+        return returnedLevel.isSameLevelOrHigher(requestedLevel);
     }
 
     private static void validateSignature(SessionStatus sessionStatus) {
@@ -174,7 +178,7 @@ public class SignatureResponseMapper {
         if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
             validateRawDigestSignature(sessionStatus);
         } else {
-            throw new SmartIdClientException("Unknown signature protocol: " + signatureProtocol);
+            throw new UnprocessableSmartIdResponseException("Unknown signature protocol: " + signatureProtocol);
         }
     }
 
@@ -196,7 +200,7 @@ public class SignatureResponseMapper {
                 .map(SignatureAlgorithm::getAlgorithmName)
                 .toList();
         if (!allowedSignatureAlgorithms.contains(signature.getSignatureAlgorithm())) {
-            throw new SmartIdClientException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signature.getSignatureAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + signature.getSignatureAlgorithm());
         }
 
         logger.info("RAW_DIGEST_SIGNATURE fields successfully validated.");
