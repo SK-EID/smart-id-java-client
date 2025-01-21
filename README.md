@@ -68,13 +68,14 @@ This library now supports both Smart-ID API v2.0 and v3.0.
             * [Example of validating authentication session response](#example-of-validating-the-authentication-sessions-response)
             * [Example of validating the signature](#example-of-validating-the-signature)
             * [Error handling for session status](#error-handling-for-session-status)
-        * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
-            * [Generating dynamic link ](#generating-dynamic-link)
-            * [Dynamic link parameters](#dynamic-link-parameters)
-            * [Overriding default values](#overriding-default-values)
-        * [Generating QR-code](#generating-qr-code)
-            * [Generate QR-code with custom height, width, quiet area and image format](#generate-qr-code-with-custom-height-width-quiet-area-and-image-format)
+    * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
+        * [Generating dynamic link ](#generating-dynamic-link)
+        * [Dynamic link parameters](#dynamic-link-parameters)
+        * [Overriding default values](#overriding-default-values)
+    * [Generating QR-code](#generating-qr-code)
+        * [Generate QR-code with custom height, width, quiet area and image format](#generate-qr-code-with-custom-height-width-quiet-area-and-image-format)
     * [Notification-based flows](#notification-based-flows)
+        * [Differences Between Notification-Based and Dynamic Link Flows](#differences-between-notification-based-and-dynamic-link-flows)
         * [Examples of performing notification authentication](#examples-of-performing-notification-authentication)
             * [Initiating notification authentication session with document number](#initiating-notification-authentication-session-with-document-number)
             * [Initiating notification authentication session with semantics identifier](#initiating-notification-authentication-session-with-semantics-identifier)
@@ -82,7 +83,6 @@ This library now supports both Smart-ID API v2.0 and v3.0.
             * [Initiating a Notification Certificate Choice Using Semantics Identifier](#initiating-a-notification-certificate-choice-using-semantics-identifier)
             * [Initiating a Notification Certificate Choice Using Document Number](#initiating-a-notification-certificate-choice-using-document-number)
         * [Initiating a Notification-Based Signature Session](#initiating-a-notification-based-signature-session)
-            * [Differences Between Notification-Based and Dynamic Link Flows](#differences-between-notification-based-and-dynamic-link-flows)
             * [Initiating a Notification-Based Signature Session Using Semantics Identifier](#initiating-a-notification-based-signature-session-using-semantics-identifier)
             * [Initiating a Notification-Based Signature Session Using Document Number](#initiating-a-notification-based-signature-session-using-document-number)
             * [Response on Successful Notification-based Signature Session Creation](#response-on-successful-notification-based-signature-session-creation)
@@ -1237,12 +1237,22 @@ if ("COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
 #### Example of validating the signature:
     
 ```java
-SmartIdRequestBuilderService requestBuilder = new SmartIdRequestBuilderService();
-requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
+try {
+    // Map and validate the session status
+    SignatureResponse signatureResponse = SignatureResponseMapper.from(sessionStatus, "QUALIFIED");
 
-SmartIdAuthenticationResponse response = requestBuilder.createSmartIdAuthenticationResponse(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
-
-System.out.println("Authentication result: " + response.getEndResult());
+    // Process the response (e.g., save to database or pass to another system)
+       handleSignatureResponse(signatureResponse);
+        
+} catch (UserRefusedException e) {
+    System.out.println("User refused the session.");
+} catch (SessionTimeoutException e) {
+    System.out.println("Session timed out.");
+} catch (DocumentUnusableException e) {
+    System.out.println("Document is unusable for the session.");
+} catch (SmartIdClientException e) {
+    System.out.println("An unexpected error occurred: " + e.getMessage());
+}
 ```
 
 ### Error handling for session status
@@ -1261,26 +1271,14 @@ The session status response may return various error codes indicating the outcom
 * `USER_REFUSED_CONFIRMATIONMESSAGE`: User cancelled on confirmationMessage screen.
 * `USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE`: User cancelled on confirmationMessageAndVerificationCodeChoice screen.
 
-### The error codes can be validated using the ErrorResultHandler
-    
-```java
-try {
-    requestBuilder.validateSessionResult(sessionStatus, "QUALIFIED", "expectedDigest", "randomChallenge");
-} catch (UserRefusedException e) {
-    System.out.println("User refused the session");
-} catch (SessionTimeoutException e) {
-    System.out.println("Session timed out");
-}
-```
+## Generating QR-code or dynamic link
 
-### Generating QR-code or dynamic link
-
-#### Generating dynamic link
+### Generating dynamic link
 
 Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app.
 Providing QR-code as a dynamic link type will allow generating QR-code at frontend side.
 
-#### Dynamic link parameters
+### Dynamic link parameters
 
 * `baseUrl`: Base URL for the dynamic link. Default value is `https://smart-id.com/dynamic-link`.
 * `version`: Version of the dynamic link. Default value is `0.1`.
@@ -1307,7 +1305,7 @@ URI dynamicLink = client.createDynamicContent()
         .createUri();
 ```
 
-#### Overriding default values
+### Overriding default values
 
 ```java
 DynamicLinkSessionResponse response; // response from the session initiation query.
@@ -1327,7 +1325,7 @@ URI dynamicLink = client.createDynamicContent()
         .createUri();
 ```
 
-### Generating QR-code
+## Generating QR-code
 
 Creating a QR code uses the Zxing library to generate a QR code image with dynamic link as content.
 According to link size the QR-code of version 9 (53x53 modules) is used.
@@ -1335,7 +1333,7 @@ For the QR-code to be scannable by most devices the QR code module size should b
 It is achieved by setting the height and width of the QR code to 610px (calculated as (53+2x4)*10px)).
 Generated QR code will have error correction level low.
 
-#### Generate QR-code Data URI
+### Generate QR-code Data URI
 
 ```java
 DynamicLinkSessionResponse response; // init auth sessions response
@@ -1353,7 +1351,7 @@ String qrCodeDataUri = client.createDynamicContent()
         .createQrCode();
 ```
 
-#### Generate QR-code with custom height, width, quiet area and image format
+### Generate QR-code with custom height, width, quiet area and image format
 
 Notably, the module size in pixels should be more than 5px and less than 20px. The recommended module size is 10px.
 QR code version 9 (53x53 modules) is automatically selected by content size
@@ -1384,6 +1382,16 @@ String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "pn
 ```
 
 ## Notification-based flows
+
+### Differences Between Notification-Based and Dynamic Link Flows
+* `Notification-Based flow`
+    * Push notifications: The user gets a notification directly on their Smart-ID app to proceed with the signing or authentication process.
+    * Known users or devices: Suitable when the RP already knows the user's identity or device.
+    * No dynamic updates: The process is straightforward, with no need to update links or use QR codes.
+* `Dynamic Link flow`
+    * Dynamic links: Generates links like QR codes or Web2App/App2App links that the user interacts with to start the process.
+    * Supports unknown users or devices: Useful when the user's identity or device is not known in advance.
+    * Real-time updates: Dynamic links need to be refreshed every second to ensure validity, especially for QR codes.
 
 ### Examples of performing notification authentication
 
@@ -1491,15 +1499,6 @@ String sessionId = authenticationSessionResponse.getSessionID();
 ### Initiating a Notification-Based Signature Session
 
 The Smart-ID API v3.0 allows you to initiate a signature session using a notification-based flow. This method is useful when the user is already known or authenticated, and you want to initiate the signing process directly through a notification to the user's device, without the need for a dynamic link.
-
-#### Differences Between Notification-Based and Dynamic Link Flows
-* `Notification-Based flow`
-    * The user receives a notification on their Smart-ID app to complete the signing process.
-    * Suitable for scenarios where the user's identity or device is already known.
-    * Uses different interactionDeprecated types compared to dynamic link flows.
-* `Dynamic Link flow`
-    * Generates a dynamic link that the user must access to initiate the signing process.
-    * Useful when the user's identity or device is not known beforehand.
 
 #### Request Parameters
 The request parameters for the notification-based signature session are as follows:
@@ -1747,16 +1746,7 @@ Different interactions can support different amounts of data to display informat
 
 Below are examples of `allowedInteractionsOrder` elements in JSON format:
 
-Example 1: `confirmationMessageAndVerificationCodeChoice` with Fallback to `verificationCodeChoice`
-Description: The RP's first choice is `confirmationMessageAndVerificationCodeChoice`; if not available, then use `verificationCodeChoice`.
-```java
-builder.withAllowedInteractionsOrder(List.of(
-        NotificationInteraction.confirmationMessage("Up to 200 characters of text here.."),
-        NotificationInteraction.verificationCodeChoice("Up to 60 characters of text here..")
-));
-```
-
-Example 2: `verificationCodeChoice` only
+Example 1: `verificationCodeChoice` only
 Description: Use `verificationCodeChoice`  interaction exclusively.
 ```java
 builder.withAllowedInteractionsOrder(List.of(
@@ -1764,7 +1754,7 @@ builder.withAllowedInteractionsOrder(List.of(
         ));
 ```
 
-Example 3: `confirmationMessageAndVerificationCodeChoice` only
+Example 2: `confirmationMessageAndVerificationCodeChoice` only
 Description: Insist on `confirmationMessageAndVerificationCodeChoice`; if not available, then fail.
 ```java
 builder.withAllowedInteractionsOrder(List.of(
