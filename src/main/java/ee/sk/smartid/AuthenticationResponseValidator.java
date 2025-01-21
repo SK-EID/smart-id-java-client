@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
+import javax.security.auth.x500.X500Principal;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +60,7 @@ public class AuthenticationResponseValidator {
 
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseValidator.class);
 
-  private List<X509Certificate> trustedCACertificates = new ArrayList<>();
+  private final List<X509Certificate> trustedCACertificates = new ArrayList<>();
   /**
    * Constructs a new {@code AuthenticationResponseValidator}.
    * <p>
@@ -243,8 +244,68 @@ public class AuthenticationResponseValidator {
     return !certificate.getNotAfter().before(new Date());
   }
 
+  private static final class CertDnDetails {
+    private final String country;
+    private final String organization;
+    private final String commonName;
+
+    private CertDnDetails(String country, String organization, String commonName) {
+      this.country = country;
+      this.organization = organization;
+      this.commonName = commonName;
+    }
+
+    private static CertDnDetails from(X500Principal principal) {
+        String country = null;
+        String organization = null;
+        String commonName = null;
+        LdapName ldapName;
+        try {
+            ldapName = new LdapName(principal.getName());
+        } catch (InvalidNameException e) {
+            String errorMessage = "Error getting certificate distinguished name";
+            logger.error(errorMessage, e);
+            throw new SmartIdClientException(errorMessage, e);
+        }
+        for (Rdn rdn : ldapName.getRdns()) {
+            if (rdn.getType().equalsIgnoreCase("C")) {
+                country = rdn.getValue().toString();
+            } else if (rdn.getType().equalsIgnoreCase("O")) {
+                organization = rdn.getValue().toString();
+            } else if (rdn.getType().equalsIgnoreCase("CN")) {
+                commonName = rdn.getValue().toString();
+            }
+        }
+        return new CertDnDetails(country, organization, commonName);
+    }
+
+    private static boolean equal(CertDnDetails first, CertDnDetails second) {
+      return Objects.equals(first.country, second.country)
+          && Objects.equals(first.organization, second.organization)
+          && Objects.equals(first.commonName, second.commonName);
+    }
+  }
+
   private boolean isCertificateTrusted(X509Certificate certificate) {
+    CertDnDetails issuerDN = CertDnDetails.from(certificate.getIssuerX500Principal());
+
     for (X509Certificate trustedCACertificate : trustedCACertificates) {
+      logger.debug(
+        "Verifying signer's certificate '{}' against CA certificate '{}'",
+        certificate.getSubjectDN(),
+        trustedCACertificate.getSubjectDN()
+      );
+
+      CertDnDetails caCertDN = CertDnDetails.from(trustedCACertificate.getSubjectX500Principal());
+      if (!CertDnDetails.equal(issuerDN, caCertDN)) {
+        logger.debug(
+          "Skipped trusted CA certificate '{}', no match with signer's certificate issuer '{}'",
+          trustedCACertificate.getSubjectDN(),
+          certificate.getIssuerX500Principal().toString()
+        );
+        continue;
+      }
+
       try {
         certificate.verify(trustedCACertificate.getPublicKey());
         logger.info("Certificate verification passed for '{}' against CA certificate '{}' ", certificate.getSubjectDN() ,trustedCACertificate.getSubjectDN() );
@@ -254,6 +315,13 @@ public class AuthenticationResponseValidator {
         logger.debug("Error verifying signer's certificate: " + certificate.getSubjectDN() + " against CA certificate: " + trustedCACertificate.getSubjectDN(), e);
       }
     }
+
+    logger.error(
+      "No suitable trusted CA certificate found: '{}'."
+        + " Ensure that this CA certificate is present in the trusted CA certificate list",
+      certificate.getIssuerX500Principal().toString()
+    );
+
     return false;
   }
 
