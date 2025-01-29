@@ -132,6 +132,10 @@ public class SignatureResponseMapper {
                 throw new UnprocessableSmartIdResponseException("Signature protocol is missing in session status");
             }
 
+            if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
+                throw new UnprocessableSmartIdResponseException("Signature protocol is missing in session status");
+            }
+
             validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
             validateSignature(sessionStatus);
         } else {
