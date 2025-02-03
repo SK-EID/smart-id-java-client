@@ -33,5 +33,6 @@ jobs:
 
     - name: Run tests
       # Fail on first error
-      run: set -e
-      run: mvn test
+      run: |
+        set -e
+        mvn test
