@@ -27,15 +27,24 @@ package ee.sk.smartid.v3.rest.dao;
  */
 
 import java.io.Serializable;
+import java.time.Instant;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicLinkSessionResponse implements Serializable {
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private final Instant receivedAt;
+
     private String sessionID;
     private String sessionToken;
     private String sessionSecret;
+
+    public DynamicLinkSessionResponse(){
+        receivedAt = Instant.now();
+    }
 
     public String getSessionID() {
         return sessionID;
@@ -59,5 +68,9 @@ public class DynamicLinkSessionResponse implements Serializable {
 
     public void setSessionSecret(String sessionSecret) {
         this.sessionSecret = sessionSecret;
+    }
+
+    public Instant getReceivedAt() {
+        return receivedAt;
     }
 }

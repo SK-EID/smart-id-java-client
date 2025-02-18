@@ -78,7 +78,6 @@ class SmartIdClientTest {
         @Test
         void createDynamicLinkCertificateChoice() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
-            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -90,6 +89,7 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getReceivedAt());
         }
     }
 
@@ -131,6 +131,7 @@ class SmartIdClientTest {
         @Test
         void createDynamicLinkAuthentication_anonymous() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
@@ -140,11 +141,13 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getReceivedAt());
         }
 
         @Test
         void createDynamicLinkAuthentication_withDocumentNumber() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
@@ -155,11 +158,13 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getReceivedAt());
         }
 
         @Test
         void createDynamicLinkAuthentication_withSemanticsIdentifier() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
@@ -170,6 +175,7 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getReceivedAt());
         }
     }
 
@@ -195,6 +201,7 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getReceivedAt());
         }
 
         @Test
@@ -215,6 +222,7 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getReceivedAt());
         }
     }
 
@@ -336,19 +344,20 @@ class SmartIdClientTest {
         @EnumSource
         void createDynamicContent_authenticationWithDifferentDynamicLinkTypes(DynamicLinkType dynamicLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkAuthentication()
                     .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA)
                     .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
-            Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, 1, response.getSessionSecret());
+            long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, elapsedSeconds, response.getSessionSecret());
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(response.getSessionToken())
-                    .withElapsedSeconds(Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
+                    .withElapsedSeconds(elapsedSeconds)
                     .withUserLanguage("eng")
                     .withAuthCode(authCode)
                     .createUri();
@@ -360,20 +369,19 @@ class SmartIdClientTest {
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DynamicLinkType dynamicLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
-            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initCertificateChoice();
-            Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, 1, response.getSessionSecret());
+            long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
+            String authCode = AuthCode.createHash(dynamicLinkType, SessionType.CERTIFICATE_CHOICE, elapsedSeconds, response.getSessionSecret());
             URI qrCodeUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(dynamicLinkType)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
-                    .withElapsedSeconds(Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
+                    .withElapsedSeconds(elapsedSeconds)
                     .withUserLanguage("eng")
                     .withAuthCode(authCode)
                     .createUri();
@@ -384,20 +392,19 @@ class SmartIdClientTest {
         @Test
         void createDynamicContent_createQrCode() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
-            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initCertificateChoice();
-            Instant sessionResponseReceivedTime = Instant.now();
 
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, 1, response.getSessionSecret());
+            long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
+            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, elapsedSeconds, response.getSessionSecret());
             String qrCodeDataUri = smartIdClient.createDynamicContent()
                     .withDynamicLinkType(DynamicLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
-                    .withElapsedSeconds(Duration.between(sessionResponseReceivedTime, Instant.now()).getSeconds())
+                    .withElapsedSeconds(elapsedSeconds)
                     .withUserLanguage("eng")
                     .withAuthCode(authCode)
                     .createQrCodeDataUri();
