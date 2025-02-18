@@ -28,6 +28,9 @@ package ee.sk.smartid.v3.rest.dao;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NotificationCertificateChoiceSessionResponse implements Serializable {
 
     private String sessionID;
