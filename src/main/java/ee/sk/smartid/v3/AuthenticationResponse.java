@@ -38,7 +38,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
  *
  * <p>Use with {@link AuthenticationResponseValidator} to validate the certificate and the signature.
  */
-public class DynamicLinkAuthenticationResponse {
+public class AuthenticationResponse {
 
     private String endResult;
     private String serverRandom;

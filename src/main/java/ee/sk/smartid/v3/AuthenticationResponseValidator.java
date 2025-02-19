@@ -101,36 +101,36 @@ public class AuthenticationResponseValidator {
     }
 
     /**
-     * Maps the Smart-ID authentication response {@link DynamicLinkAuthenticationResponse} to {@link AuthenticationIdentity}
+     * Maps the Smart-ID authentication response {@link AuthenticationResponse} to {@link AuthenticationIdentity}
      * <p>
      * Uses {@link AuthenticationCertificateLevel#QUALIFIED} as the request certificate level
      *
-     * @param dynamicLinkAuthenticationResponse Smart-ID authentication response
+     * @param authenticationResponse Smart-ID authentication response
      * @return authentication identity
      */
-    public AuthenticationIdentity toAuthenticationIdentity(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, String randomChallenge) {
-        return toAuthenticationIdentity(dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel.QUALIFIED, randomChallenge);
+    public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse, String randomChallenge) {
+        return toAuthenticationIdentity(authenticationResponse, AuthenticationCertificateLevel.QUALIFIED, randomChallenge);
     }
 
     /**
-     * Maps the Smart-ID authentication response {@link DynamicLinkAuthenticationResponse} to {@link AuthenticationIdentity}
+     * Maps the Smart-ID authentication response {@link AuthenticationResponse} to {@link AuthenticationIdentity}
      *
-     * @param dynamicLinkAuthenticationResponse Smart-ID authentication response
+     * @param authenticationResponse Smart-ID authentication response
      * @param requestedCertificateLevel         Certificate level used in the authentication session request
      * @param randomChallenge                   Generate string used in the authentication session request
      * @return authentication identity
      */
-    public AuthenticationIdentity toAuthenticationIdentity(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse,
+    public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse,
                                                            AuthenticationCertificateLevel requestedCertificateLevel,
                                                            String randomChallenge) {
-        validateInputs(dynamicLinkAuthenticationResponse, randomChallenge);
-        validateCertificate(dynamicLinkAuthenticationResponse, requestedCertificateLevel);
-        validateSignature(dynamicLinkAuthenticationResponse, randomChallenge);
-        return AuthenticationIdentityMapper.from(dynamicLinkAuthenticationResponse.getCertificate());
+        validateInputs(authenticationResponse, randomChallenge);
+        validateCertificate(authenticationResponse, requestedCertificateLevel);
+        validateSignature(authenticationResponse, randomChallenge);
+        return AuthenticationIdentityMapper.from(authenticationResponse.getCertificate());
     }
 
-    private void validateInputs(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, String randomChallenge) {
-        if (dynamicLinkAuthenticationResponse == null) {
+    private void validateInputs(AuthenticationResponse authenticationResponse, String randomChallenge) {
+        if (authenticationResponse == null) {
             throw new SmartIdClientException("Dynamic link authentication response is not provided");
         }
         if (StringUtil.isEmpty(randomChallenge)) {
@@ -138,28 +138,28 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private void validateCertificate(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        if (dynamicLinkAuthenticationResponse.getCertificate() == null) {
+    private void validateCertificate(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
+        if (authenticationResponse.getCertificate() == null) {
             throw new SmartIdClientException("Certificate is not provided");
         }
-        validateCertificateNotExpired(dynamicLinkAuthenticationResponse.getCertificate());
-        validateCertificateIsTrusted(dynamicLinkAuthenticationResponse.getCertificate());
-        validateCertificateLevel(dynamicLinkAuthenticationResponse, requestedCertificateLevel);
+        validateCertificateNotExpired(authenticationResponse.getCertificate());
+        validateCertificateIsTrusted(authenticationResponse.getCertificate());
+        validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
     }
 
-    private void validateSignature(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, String randomChallenge) {
-        if (StringUtil.isEmpty(dynamicLinkAuthenticationResponse.getAlgorithmName())) {
+    private void validateSignature(AuthenticationResponse authenticationResponse, String randomChallenge) {
+        if (StringUtil.isEmpty(authenticationResponse.getAlgorithmName())) {
             throw new SmartIdClientException("Algorithm name is not provided");
         }
-        if (StringUtil.isEmpty(dynamicLinkAuthenticationResponse.getSignatureValueInBase64())) {
+        if (StringUtil.isEmpty(authenticationResponse.getSignatureValueInBase64())) {
             throw new SmartIdClientException("Signature value is not provided");
         }
         try {
-            Signature signature = getSignature(dynamicLinkAuthenticationResponse);
-            signature.initVerify(dynamicLinkAuthenticationResponse.getCertificate().getPublicKey());
-            String data = createSignatureData(dynamicLinkAuthenticationResponse, randomChallenge);
+            Signature signature = getSignature(authenticationResponse);
+            signature.initVerify(authenticationResponse.getCertificate().getPublicKey());
+            String data = createSignatureData(authenticationResponse, randomChallenge);
             signature.update(data.getBytes(StandardCharsets.UTF_8));
-            byte[] signedHash = dynamicLinkAuthenticationResponse.getSignatureValue();
+            byte[] signedHash = authenticationResponse.getSignatureValue();
             if (!signature.verify(signedHash)) {
                 throw new UnprocessableSmartIdResponseException("Failed to verify validity of signature returned by Smart-ID");
             }
@@ -169,8 +169,8 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private static Signature getSignature(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse) throws NoSuchAlgorithmException {
-        String algorithm = dynamicLinkAuthenticationResponse.getAlgorithmName().replace("Encryption", "");
+    private static Signature getSignature(AuthenticationResponse authenticationResponse) throws NoSuchAlgorithmException {
+        String algorithm = authenticationResponse.getAlgorithmName().replace("Encryption", "");
         try {
             return Signature.getInstance(algorithm);
         } catch (NoSuchAlgorithmException ex) {
@@ -179,14 +179,14 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private void validateCertificateLevel(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
+    private void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
         if (requestedCertificateLevel == null) {
             return;
         }
-        if (dynamicLinkAuthenticationResponse.getCertificateLevel() == null) {
+        if (authenticationResponse.getCertificateLevel() == null) {
             throw new SmartIdClientException("Certificate level is not provided");
         }
-        if (!dynamicLinkAuthenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
+        if (!authenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
             throw new CertificateLevelMismatchException();
         }
     }
@@ -232,9 +232,9 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private static String createSignatureData(DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse, String randomChallenge) {
+    private static String createSignatureData(AuthenticationResponse authenticationResponse, String randomChallenge) {
         return String.format("%s;%s;%s", SignatureProtocol.ACSP_V1.name(),
-                dynamicLinkAuthenticationResponse.getServerRandom(),
+                authenticationResponse.getServerRandom(),
                 randomChallenge);
     }
 }
