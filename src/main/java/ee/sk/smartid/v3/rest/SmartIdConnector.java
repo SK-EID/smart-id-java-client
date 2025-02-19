@@ -67,7 +67,7 @@ public interface SmartIdConnector extends Serializable {
      * @param request CertificateChoiceSessionRequest containing necessary parameters
      * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request);
+    DynamicLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request);
 
     /**
      * Initiates a notification based certificate choice request.

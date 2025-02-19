@@ -178,7 +178,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request) {
+    public DynamicLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request) {
         logger.debug("Initiating dynamic link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
