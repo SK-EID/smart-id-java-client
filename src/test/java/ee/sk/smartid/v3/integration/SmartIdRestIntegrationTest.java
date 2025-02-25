@@ -1,4 +1,4 @@
-package ee.sk.smartid.v3.rest;
+package ee.sk.smartid.v3.integration;
 
 /*-
  * #%L
@@ -45,6 +45,8 @@ import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SignatureAlgorithm;
+import ee.sk.smartid.v3.rest.SmartIdConnector;
+import ee.sk.smartid.v3.rest.SmartIdRestConnector;
 import ee.sk.smartid.v3.rest.dao.AcspV1SignatureProtocolParameters;
 import ee.sk.smartid.v3.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;

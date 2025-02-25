@@ -69,7 +69,7 @@ public class AuthenticationResponseValidator {
      * Uses default values to initialize the keystore.
      */
     public AuthenticationResponseValidator() {
-        initializeTrustedCACertificatesFromKeyStore("trusted_certificates.jks", "changeIt");
+        initializeTrustedCACertificatesFromKeyStore("/trusted_certificates.jks", "changeit");
     }
 
     /**

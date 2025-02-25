@@ -319,7 +319,7 @@ class SmartIdClientTest {
         void fetchFinalSessionStatus() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
 
-            SessionStatus status = smartIdClient.getSessionsStatusPoller().fetchFinalSessionStatus("abcdef1234567890");
+            SessionStatus status = smartIdClient.getSessionStatusPoller().fetchFinalSessionStatus("abcdef1234567890");
 
             assertEquals("COMPLETE", status.getState());
             assertEquals("OK", status.getResult().getEndResult());
@@ -329,7 +329,7 @@ class SmartIdClientTest {
         void getSessionStatus() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-running.json");
 
-            SessionStatus status = smartIdClient.getSessionsStatusPoller().getSessionsStatus("abcdef1234567890");
+            SessionStatus status = smartIdClient.getSessionStatusPoller().getSessionStatus("abcdef1234567890");
 
             assertEquals("RUNNING", status.getState());
             assertNull(status.getResult());

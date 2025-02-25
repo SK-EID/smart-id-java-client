@@ -68,12 +68,12 @@ class SessionStatusPollerTest {
     }
 
     @Test
-    void getSessionsStatus() {
+    void getSessionStatus() {
         SessionStatus sessionStatus = new SessionStatus();
         sessionStatus.setState("RUNNING");
         when(smartIdConnector.getSessionStatus("00000000-0000-0000-0000-000000000000")).thenReturn(sessionStatus);
 
-        SessionStatus sessionsStatus = poller.getSessionsStatus("00000000-0000-0000-0000-000000000000");
+        SessionStatus sessionsStatus = poller.getSessionStatus("00000000-0000-0000-0000-000000000000");
 
         assertEquals("RUNNING", sessionsStatus.getState());
         assertNull(sessionsStatus.getResult());
