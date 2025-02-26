@@ -61,8 +61,7 @@ import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 class SignatureResponseMapperTest {
 
-    // TODO - 10.12.24: replace this with signing certificate
-    private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
+    private static final String SIGN_CERT = FileUtil.readFileToString("test-certs/sign-cert-40504040001.pem.crt");
 
     @Test
     void from_stateParameterMissing() {
@@ -288,7 +287,7 @@ class SignatureResponseMapperTest {
     }
 
     private static String getEncodedCertificateData() {
-        return SignatureResponseMapperTest.AUTH_CERT.replace("-----BEGIN CERTIFICATE-----", "")
+        return SignatureResponseMapperTest.SIGN_CERT.replace("-----BEGIN CERTIFICATE-----", "")
                 .replace("-----END CERTIFICATE-----", "")
                 .replace("\n", "");
     }
