@@ -36,15 +36,15 @@ public class NotificationInteraction extends Interaction {
     }
 
     public static NotificationInteraction verificationCodeChoice(String displayText60) {
-        var interactionDeprecated = new NotificationInteraction(VERIFICATION_CODE_CHOICE);
-        interactionDeprecated.displayText60 = displayText60;
-        return interactionDeprecated;
+        var interaction = new NotificationInteraction(VERIFICATION_CODE_CHOICE);
+        interaction.displayText60 = displayText60;
+        return interaction;
     }
 
     public static NotificationInteraction confirmationMessageAndVerificationCodeChoice(String displayText200) {
-        var interactionDeprecated = new NotificationInteraction(CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
-        interactionDeprecated.displayText200 = displayText200;
-        return interactionDeprecated;
+        var interaction = new NotificationInteraction(CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE);
+        interaction.displayText200 = displayText200;
+        return interaction;
     }
 
     @Override

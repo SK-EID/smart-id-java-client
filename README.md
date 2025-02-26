@@ -47,18 +47,20 @@ This library now supports both Smart-ID API v2.0 and v3.0.
         * [Configuring a proxy using Jersey](#configuring-a-proxy-using-jersey)
 * [How to use it with RP API v3.0](#how-to-use-api-v30)
     * [Setting up SmartIdClient for v3.0](#setting-up-smartidclient-for-v30)
-    * [Dynamic Link flows](#dynamic-link-flows)
-        * [Initiating authentication session](#examples-of-initiating-dynamic-link-authentication-session)
+    * [Dynamic link flows](#dynamic-link-flows)
+        * [Dynamic link authentication session](#dynamic-link-authentication-session)
+          * [Examples of authentication session](#examples-of-initiating-dynamic-link-authentication-session)
             * [Initiating anonymous authentication session](#initiating-anonymous-authentication-session)
             * [Initiating authentication session with semantics identifier](#initiating-authentication-session-with-semantics-identifier)
             * [Initiating authentication session with document number](#initiating-authentication-session-with-document-number)
-        * [Initiating a Dynamic Link Certificate Choice Session](#initiating-a-dynamic-link-certificate-choice-session)
-            * [Example of Initiating a Dynamic Link Certificate Choice Request](#example-initiating-a-dynamic-link-certificate-choice-request)
-            * [Response on Successful Certificate Choice Session Creation](#response-on-successful-certificate-choice-session-creation)
+        * [Dynamic link certificate choice session](#dynamic-link-certificate-choice-session)
+            * [Examples of initiating a dynamic link certificate choice session](#examples-of-initiating-dynamic-link-certificate-choice-session)
+              * [Initiating dynamic link certificate choice](#initiating-anonymous-certificate-choice-session)
         * [Initiating a Dynamic Link Signature Session](#dynamic-link-signature-session)
             * [Initiating a Dynamic Link Signature Session Using Semantics Identifier](#initiating-a-dynamic-link-signature-session-using-semantics-identifier)
             * [Initiating a Dynamic Link Signature Session Using Document Number](#initiating-a-dynamic-link-signature-session-using-document-number)
         * [Examples of Allowed Dynamic-link Interactions Order](#examples-of-allowed-dynamic-link-interactions-order)
+        * [Additional request properties](#additional-dynamic-link-sessions-request-properties)
         * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
             * [Generating dynamic link ](#generating-dynamic-link)
             * [Dynamic link parameters](#dynamic-link-parameters)
@@ -77,18 +79,18 @@ This library now supports both Smart-ID API v2.0 and v3.0.
             * [Error handling for session status](#error-handling-for-session-status)
     * [Notification-based flows](#notification-based-flows)
         * [Differences Between Notification-Based and Dynamic Link Flows](#differences-between-notification-based-and-dynamic-link-flows)
-        * [Examples of performing notification authentication](#examples-of-initiating-notification-based-authentication-session)
-            * [Initiating notification authentication session with document number](#initiating-notification-based-authentication-session-with-document-number)
-            * [Initiating notification authentication session with semantics identifier](#initiating-notification-based-authentication-session-with-semantics-identifier)
-        * [Initiating a Notification Certificate Choice Session](#initiating-a-notification-certificate-choice-session)
-            * [Initiating a Notification Certificate Choice Using Semantics Identifier](#initiating-a-notification-certificate-choice-using-semantics-identifier)
-            * [Initiating a Notification Certificate Choice Using Document Number](#initiating-a-notification-certificate-choice-using-document-number)
+        * [Notification-based authentication session](#notification-based-authentication-session)
+          * [Examples of initiating notification authentication session](#examples-of-initiating-notification-based-authentication-session)
+              * [Initiating notification authentication session with document number](#initiating-notification-based-authentication-session-with-document-number)
+              * [Initiating notification authentication session with semantics identifier](#initiating-notification-based-authentication-session-with-semantics-identifier)
+        * [Notification-based certificate choice session](#notification-based-certificate-choice-session)
+          * [Examples of initiating notification certificate choice session](#examples-of-initiating-notification-based-certificate-choice-session)
+              * [Initiating notification-based certificate choice with smantics identifier](#initiating-notification-based-certificate-choice-session-using-semantics-identifier)
+              * [Initiating notification certificate choice with document number](#initiating-notification-based-authentication-session-with-document-number)
         * [Initiating a Notification-Based Signature Session](#initiating-a-notification-based-signature-session)
             * [Initiating a Notification-Based Signature Session Using Semantics Identifier](#initiating-a-notification-based-signature-session-using-semantics-identifier)
             * [Initiating a Notification-Based Signature Session Using Document Number](#initiating-a-notification-based-signature-session-using-document-number)
-            * [Response on Successful Notification-based Signature Session Creation](#response-on-successful-notification-based-signature-session-creation)
         * [Examples of Allowed Notification-based Interactions Order](#examples-of-allowed-notification-based-interactions-order)
-    * [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device)
     * [Exception Handling](#exception-handling)
      
 ## Introduction
@@ -125,12 +127,6 @@ You can use the library as a Maven dependency from the [Maven Central](https://s
 ## Changelog
 
 Changes introduced with new library versions are described in [CHANGELOG.md](CHANGELOG.md)
-
-In this version, the existing code has been moved into the ee.sk.smartid.v2 package for clarity. This is a breaking change for current users of the library. 
-To update your application:
-Change your import statements from ee.sk.smartid.* to ee.sk.smartid.v2.*
-Update any references to classes, methods, or packages accordingly.
-Support for Smart-ID API v3.0 has been added in the ee.sk.smartid.v3 package. Documentation for v3.0 is currently limited as it is in the early stages of development.
 
 # How to use API v2.0
 
@@ -370,7 +366,7 @@ This may trigger a notification to all the user's devices if user has more than 
 
 All Smart-ID devices support displaying text that is up to 60 characters long.
 Some devices also support displaying text (on a separate screen) that is up to 200 characters long
-as well as other interactionDeprecated flows like user needs to choose the correct code from 3 different verification codes.
+as well as other interaction flows like user needs to choose the correct code from 3 different verification codes.
 
 You can send different interactions to user's device and it picks the first one that the app can handle.
 
@@ -403,35 +399,35 @@ SmartIdSignature smartIdSignature = client
 
 byte[] signature = smartIdSignature.getValue();
 
-smartIdSignature.getInteractionFlowUsed(); // which interactionDeprecated was used
+smartIdSignature.getInteractionFlowUsed(); // which interaction was used
 ```
 
-# Setting the order of preferred interactions for displaying text and asking PIN
+## Setting the order of preferred interactions for displaying text and asking PIN
 
-The app can support different interactionDeprecated flows and a Relying Party can demand a particular flow with or without a fallback possibility.
-Different interactionDeprecated flows can support different amount of data to display information to user.
+The app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
+Different interaction flows can support different amount of data to display information to user.
 
 Available interactions:
-* `displayTextAndPIN` with `displayText60`. The simplest interactionDeprecated with max 60 chars of text and PIN entry on a single screen. Every app has this interactionDeprecated available.
+* `displayTextAndPIN` with `displayText60`. The simplest interaction with max 60 chars of text and PIN entry on a single screen. Every app has this interaction available.
 * `verificationCodeChoice` with `displayText60`. On first screen user must choose the correct verification code that was displayed to him from 3 verification codes. Then second screen is displayed with max 60 chars text and PIN input.
 * `confirmationMessage` with `displayText200`. The first screen is for text only (max 200 chars) and has the Confirm and Cancel buttons. The second screen is for a PIN.
 * `confirmationMessageAndVerificationCodeChoice` with `displayText200`. First screen combines text and Verification Code choice. Second screen is for PIN.
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
-The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interactionDeprecated supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
-The interactionDeprecated that was actually used is reported back to RP with interactionUsed response parameter to the session request.
-If the app cannot support any interactionDeprecated requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
+The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
+The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
+If the app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
 `displayText60`, `displayText200` - Text to display for authentication consent dialog on the mobile device. Limited to 60 and 200 characters respectively.
 
-## Parameter allowedInteractionsOrder most common examples
+### Parameter allowedInteractionsOrder most common examples
 
 Following allowedInteractionsOrder combinations are most likely to be used.
 
-### Short confirmation message with PIN
+#### Short confirmation message with PIN
 
 If confirmation message fits to 60 characters then this is the most common choice.
-Every Smart-ID app supports this interactionDeprecated flow and there is no need to provide any fallbacks to this interactionDeprecated.
+Every Smart-ID app supports this interaction flow and there is no need to provide any fallbacks to this interaction.
 
 ```java
 SmartIdSignature smartIdSignature = client
@@ -445,7 +441,7 @@ SmartIdSignature smartIdSignature = client
     .sign();
 ```
 
-### Verification code choice
+#### Verification code choice
 
 This is more secure than previous example as the app forces user to look up the verification code displayed to him and
 pick the same verification code from 3 different codes displayed in Smart-ID app and thus tries to assure that user is not interacting with some other service.
@@ -472,10 +468,10 @@ catch (UserSelectedWrongVerificationCodeException wrongVerificationCodeException
 }
 ```
 
-### Long confirmation message with fallback to PIN
+#### Long confirmation message with fallback to PIN
 
 Relying Party first choice is confirmationMessage that can be up to 200 characters long.
-If the Smart-ID app in user's smart device doesn't support this feature then the app falls back to displayTextAndPIN interactionDeprecated.
+If the Smart-ID app in user's smart device doesn't support this feature then the app falls back to displayTextAndPIN interaction.
 
 
 ```java
@@ -498,7 +494,7 @@ else if (InteractionFlow.DISPLAY_TEXT_AND_PIN.is(smartIdSignature.getInteraction
 }
 ```
 
-### Long confirmation message together with verification code choice with fallback to verification code choice
+#### Long confirmation message together with verification code choice with fallback to verification code choice
 
 Relying Party first choice is confirmationMessage followed by verification code choice.
 If this is not available then only verification code choice with shorter text is displayed.
@@ -549,7 +545,7 @@ try {
         .sign();
 }
 catch (RequiredInteractionNotSupportedByAppException e) {
-    System.out.println("User's Smart-ID app is not capable of displaying required interactionDeprecated");
+    System.out.println("User's Smart-ID app is not capable of displaying required interaction");
 }
 
 ```
@@ -730,14 +726,14 @@ More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V1.
-* `signatureProtocolParameters`: Required. Parameters for the ACSP_V1 signature protocol .
+* `signatureProtocolParameters`: Required. Parameters for the ACSP_V1 signature protocol.
     * `randomChallenge`: Required. Random value with size in range of 32-64 bytes. Must be base64 encoded.
     * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
 * `allowedInteractionsOrder`: Required. An array of objects defining the allowed interactions in order of preference.
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
-* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
+* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
@@ -780,8 +776,10 @@ String sessionSecret = authenticationSessionResponse.getSessionSecret();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// Start querying sessions status
 ```
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ##### Initiating authentication session with semantics identifier
 
@@ -808,9 +806,6 @@ DynamicLinkSessionResponse authenticationSessionResponse = client
         .withAllowedInteractionsOrder(Collections.singletonList(
             DynamicLinkInteraction.displayTextAndPIN("Log in?")
         ))
-        // we want to get the IP address of the device running Smart-ID app
-        // for the IP to be returned the service provider (SK) must switch on this option
-        .withShareMdClientIpAddress(true)
         .initAuthenticationSession();
 
 String sessionId = authenticationSessionResponse.getSessionID();
@@ -822,8 +817,10 @@ String sessionSecret = authenticationSessionResponse.getSessionSecret();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+// Start querying sessions status
 ```
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ##### Initiating authentication session with document number
 
@@ -840,13 +837,9 @@ DynamicLinkSessionResponse authenticationSessionResponse = client
         .withDocumentNumber(documentNumber)
         .withRandomChallenge(randomChallenge)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        // Smart-ID app will display verification code to the user and user must insert PIN1
         .withAllowedInteractionsOrder(Collections.singletonList(
             DynamicLinkInteraction.displayTextAndPIN("Log in?")
         ))
-        // we want to get the IP address of the device running Smart-ID app
-        // for the IP to be returned the service provider (SK) must switch on this option
-        .withShareMdClientIpAddress(true)
         .initAuthenticationSession();
 
 String sessionId = authenticationSessionResponse.getSessionID();
@@ -858,103 +851,59 @@ String sessionSecret = authenticationSessionResponse.getSessionSecret();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+// Start querying sessions status
 ```
-Jump to [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device) to see how to request the IP address of the user's device.
-Jump to [Examples of Allowed Dynamic-link Interactions Order](#examples-of-allowed-dynamic-link-interactions-order) to see how to set the order of preferred interactions for displaying text and asking PIN.
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-### Initiating a Dynamic Link Certificate Choice Session
+### Dynamic link certificate choice session
 !!!Dynamic-link Certificate Choice session Cannot be used at the moment!!!
 
 The Smart-ID API v3.0 introduces dynamic link certificate choice session. This allows more secure way of initiating signing. 
-Scanning QR-code or clicking on dynamic link will prove that the certificates of the device being used for signing is in the proximity where the signing was initiated. 
-
+Scanning QR-code or clicking on dynamic link will prove that the certificates of the device being used for signing is in the proximity where the signing was initiated.
 
 #### Request Parameters
-
-The request parameters for the dynamic link certificate choice session are:
 
 * `relyingPartyUUID`: UUID of the Relying Party.
 * `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
-* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character.
+* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency. 
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
 * `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
 
-#### Example: Initiating a Dynamic Link Certificate Choice Request
-Here's an example of how to initiate a dynamic link certificate choice request using the Smart-ID Java client.
+#### Response parameters
 
-```java
-SmartIdClient client=new SmartIdClient();
-    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-    client.setRelyingPartyName("DEMO");
-    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
-
-DynamicLinkSessionResponse response = client.createDynamicLinkCertificateRequest()
-    .withRelyingPartyUUID(client.getRelyingPartyUUID())
-    .withRelyingPartyName(client.getRelyingPartyName())
-    .withCertificateLevel("QUALIFIED")
-    .withNonce("1234567890")
-    .withShareMdClientIpAddress(true)
-    .initiateCertificateChoice();
-
-// Note: After a certificate choice request, a notification-based signature choice must follow.
-```
-
-#### Example of Initiating a dynamic link certificate choice request with `QUALIFIED` certificate level and IP sharing enabled.
-```java
-SmartIdClient client = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-client.setRelyingPartyName("DEMO");
-client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
-
-        DynamicLinkSessionResponse response = client.createDynamicLinkCertificateRequest()
-        .withRelyingPartyUUID(client.getRelyingPartyUUID())
-        .withRelyingPartyName(client.getRelyingPartyName())
-        .withCertificateLevel(CertificateLevel.QUALIFIED)
-        .withNonce("1234567890")
-        .withShareMdClientIpAddress(true)
-        .initiateCertificateChoice();
-```
-
-#### Response on Successful Certificate Choice Session Creation
-The response from a successful dynamic link certificate choice session creation contains the following parameters:
-
-* `sessionID`: A string that can be used to request the operation result.
-* `sessionToken`: Unique random value that will be used to connect this certificate choice attempt between the relevant parties (RP, RP-API, mobile app).
+* `sessionID`: A string that can be used to request the session status result.
+* `sessionToken`: Unique random value that will be used to connect created session between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
 
-#### Validating Parameters
-Ensure that you validate the parameters before initiating the request. For example, the `nonce` must be between 1 and 30 characters.
+#### Examples of initiating dynamic link certificate choice session
 
-#### Error Handling
-Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `SmartIdClientException`, and others.
-
+##### Initiating anonymous certificate choice session
 ```java
-try {
-    CertificateChoiceResponse response = builder.initCertificateChoice();
-    // Proceed with session status fetching and validation
-} catch (UserAccountNotFoundException e) {
-    System.out.println("User account not found.");
-} catch (SmartIdClientException e) {
-    System.out.println("Client exception occurred: " + e.getMessage());
-}
+DynamicLinkSessionResponse certificateChoice = client.createDynamicLinkCertificateRequest()
+    .withRelyingPartyUUID(client.getRelyingPartyUUID())
+    .withRelyingPartyName(client.getRelyingPartyName())
+    .withCertificateLevel(CertificateLevel.QUALIFIED)
+    .initiateCertificateChoice();
+
+String sessionId = certificateChoice.getSessionID();
+// SessionID is used to query sessions status later
+
+String sessionToken = certificateChoice.getSessionToken();
+String sessionSecret = certificateChoice.getSessionSecret();
+// Store sessionSecret only on backend side. Do not expose it to the client side.
+Instant responseReceivedAt = certificateChoice.getReceivedAt();
 ```
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-#### `Request Properties`:  If you need the IP address of the user's device, set only shareMdClientIpAddress to true. There is no need to create a full RequestProperties object for this.
-```java
-client.createDynamicLinkCertificateRequest().withShareMdClientIpAddress(true);
-```
+### Dynamic link signature session
 
-* `Capabilities`: The capabilities parameter is an optional field used only when an agreement is established with the Smart-ID provider. If this parameter is omitted, the requested capabilities are automatically derived from the `certificateLevel`. Supported certificate levels include:
-* `ADVANCED`: A certificate for advanced electronic signatures.
-* `QUALIFIED`: A qualified certificate under the eIDAS regulation.
-* `QSCD`: A qualified certificate that is also QSCD-capable, marking a higher level of security for qualified signatures.
-
-### Dynamic link signature Session
 The Smart-ID API v3.0 introduces dynamic link flows, allowing you to initiate a signature session without prior knowledge of the user's identity or device. This is useful for scenarios where the user is not identified yet, and you want to initiate the signing process using a dynamic link. The user can then access the link and complete the signing process.
 
 #### Request Parameters
+
 The request parameters for the dynamic link signature session are as follows:
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
@@ -973,21 +922,27 @@ The request parameters for the dynamic link signature session are as follows:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
 
-#### Initiating a Dynamic Link Signature Session Using Semantics Identifier
-```java
-var client = new SmartIdClient();
-    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-    client.setRelyingPartyName("DEMO");
-    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+#### Response Parameters
 
+The response from a successful dynamic link signature session creation contains the following parameters:
+
+* `sessionID`: A string that can be used to request the session status result.
+* `sessionToken`: Unique random value that will be used to connect this signature attempt between the relevant parties (RP, RP-API, mobile app).
+* `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+
+#### Initiating a Dynamic Link Signature Session Using Semantics Identifier
+
+```java
 // Create the signable data
 var signableData = new SignableData("Test data to sign".getBytes());
 signableData.setHashType(HashType.SHA256);
 
 // Create the Semantics Identifier
 var semanticsIdentifier = new SemanticsIdentifier(
-SemanticsIdentifier.IdentityType.PNO,
-SemanticsIdentifier.CountryCode.EE,"31111111111");
+    SemanticsIdentifier.IdentityType.PNO,
+    SemanticsIdentifier.CountryCode.EE,
+    "40504040001"
+);
 
 // Build the dynamic link signature request
 var builder = client.createDynamicLinkSignature()
@@ -1004,24 +959,23 @@ DynamicLinkSessionResponse signatureResponse = builder.initSignatureSession();
 // Process the signature response
 String sessionID = signatureResponse.getSessionID();
 String sessionToken = signatureResponse.getSessionToken();
+
 String sessionSecret = signatureResponse.getSessionSecret();
+// Store sessionSecret only on backend side. Do not expose it to the client side.
 
 // Use the session information as needed
 ```
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 #### Initiating a Dynamic Link Signature Session Using Document Number
 ```java
-SmartIdClient client = new SmartIdClient();
-    client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-    client.setRelyingPartyName("DEMO");
-    client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
-
 // Create the signable data
 var signableData = new SignableData("Test data to sign".getBytes());
 signableData.setHashType(HashType.SHA256);
 
 // Specify the document number
-String documentNumber = "PNOEE-31111111111-MOCK-Q";
+String documentNumber = "PNOEE-40504040001-MOCK-Q";
 
 // Build the dynamic link signature request
 var builder = client.createDynamicLinkSignature()
@@ -1038,97 +992,76 @@ DynamicLinkSessionResponse signatureResponse = builder.initSignatureSession();
 // Process the signature response
 String sessionID = signatureResponse.getSessionID();
 String sessionToken = signatureResponse.getSessionToken();
+
 String sessionSecret = signatureResponse.getSessionSecret();
+// Store sessionSecret only on backend side. Do not expose it to the client side.
 
 // Use the session information as needed
 ```
-Jump to [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device) to see how to request the IP address of the user's device.
-Jump to [Examples of Allowed Dynamic-link Interactions Order](#examples-of-allowed-dynamic-link-interactions-order) to see how to set the order of preferred interactions for displaying text and asking PIN.
-
-### Response Parameters
-The response from a successful dynamic link signature session creation contains the following parameters:
-
-* `sessionID`: A string that can be used to request the operation result.
-* `sessionToken`: Unique random value that will be used to connect this signature attempt between the relevant parties (RP, RP-API, mobile app).
-* `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Error Handling
-Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `UserRefusedException`, `SessionTimeoutException`, and others.
+Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as `UserAccountNotFoundException`, `UserRefusedException` and others.
 
 ```java
 try {
-DynamicLinkSessionResponse response = builder.initSignatureSession();
-
-String sessionID = response.getSessionID();
-String sessionToken = response.getSessionToken();
-String sessionSecret = response.getSessionSecret();
-
-System.out.println("Session ID: " + sessionID);
-System.out.println("Session Token: " + sessionToken);
-System.out.println("Session Secret: " + sessionSecret);
-
+    DynamicLinkSessionResponse response = builder.init*Session();
 } catch (UserAccountNotFoundException e) {
-System.out.println("User account not found.");
+    System.out.println("User account not found.");
 } catch (RelyingPartyAccountConfigurationException e) {
-System.out.println("Relying party account configuration issue.");
+    System.out.println("Relying party account configuration issue.");
 } catch (RequiredInteractionNotSupportedByAppException e) {
-System.out.println("The required interactionDeprecated is not supported by the user's app.");
+    System.out.println("The required interaction is not supported by the user's app.");
 } catch (ServerMaintenanceException e) {
-System.out.println("Server maintenance in progress, please try again later.");
+    System.out.println("Server maintenance in progress, please try again later.");
 } catch (SmartIdClientException e) {
-System.out.println("An error occurred: " + e.getMessage());
+    System.out.println("An error occurred: " + e.getMessage());
 }
 ```
 
-### Additional Information
-* `Allowed Interactions Order`: Define the preferred interactions for displaying text and asking for PIN. The app will pick the first interactionDeprecated it supports from the list. Examples include `displayTextAndPIN`, `confirmationMessage`.
+### Additional dynamic link sessions request properties
 
+##### Using nonce to override idempotent behaviour
+Authentication is used as an example, nonce can also be used with certificate choice and signature sessions requests by using method `withNonce("randomValue")`.
 ```java
-builder.withAllowedInteractionsOrder(List.of(
-    Interaction.confirmationMessage("Please confirm the transaction of 1024.50 EUR"),
-    Interaction.displayTextAndPIN("Confirm transaction")
-));
+DynamicLinkSessionResponse authenticationSessionResponse = client
+        .createDynamicLinkAuthentication(
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
+        .withAllowedInteractionsOrder(Collections.singletonList(
+            DynamicLinkInteraction.displayTextAndPIN("Log in?")
+        ))
+        // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
+        // set nonce to override idempontent behaviour
+        .withNonce("randomValue")
+        .initAuthenticationSession();
 ```
+##### Using request properties to request the IP address of the user's device
 
-* `Signature Protocol Parameters`: Specify the signature protocol parameters as required for `RAW_DIGEST_SIGNATURE`.
+For the IP to be returned the service provider (SK) must switch on this option.
+More info available at https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/request_properties.html#ip_sharing
 
-```java
-var parameters = new RawDigestSignatureProtocolParameters();
-parameters.setDigest(signableData.calculateHashInBase64());
-parameters.setSignatureAlgorithm("sha512WithRSAEncryption");
-builder.withSignatureProtocolParameters(parameters);
-```
-
-* `Request Properties`: Include additional properties in the request, such as requesting the IP address of the user's device.
+Authentication is used for an example, shareMdClientIpAddress can also be used with certificate choice and signature sessions request by using method `withShareMdClientIpAddress(true)`.
 
 ```java
-var requestProperties = new RequestProperties();
-requestProperties.setShareMdClientIpAddress(true);
-builder.withRequestProperties(requestProperties);
-```
-
-* `Nonce`: A unique identifier (up to 30 characters) used to manage idempotent behavior in session creation requests. If a request is repeated within a 15-second timeframe, the same session ID may be returned unless a different nonce is provided.
-
-```java
-builder.withNonce("randomNonce123");
-```
-
-* `Capabilities`: Specify capabilities if agreed with the Smart-ID provider. When omitted, capabilities are derived from the `certificateLevel`.
-
-```java
-builder.withCapabilities(Set.of("QUILIFIED", "ADVANCED"));
-```
-
-* `Certificate Level`: Set the required certificate level (`ADVANCED` or `QUALIFIED`). Defaults to `QUALIFIED`.
-
-```java
-builder.withCertificateLevel(CertificateLevel.QUALIFIED);
+DynamicLinkSessionResponse authenticationSessionResponse = client
+        .createDynamicLinkAuthentication()
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
+        .withAllowedInteractionsOrder(Collections.singletonList(
+            DynamicLinkInteraction.displayTextAndPIN("Log in?")
+        ))
+        // setting property to request the IP-address of the user's device
+        .withShareMdClientIpAddress(true)
+        .initAuthenticationSession();
 ```
 
 ### Examples of Allowed Dynamic-link Interactions Order
-An app can support different interactionDeprecated types, and a Relying Party can specify the preferred interactions with or without fallback options.
+An app can support different interaction types, and a Relying Party can specify the preferred interactions with or without fallback options.
 For dynamic link flows, the available interaction types are limited to displayTextAndPIN and confirmationMessage. 
-Each interaction is defined by an object that includes a type and either displayText60 (for shorter texts) or displayText200 (for longer texts).
+DisplayTextAndPIN is used for short text with PIN-code input, while confirmationMessage is used for longer text with Confirm and Cancel buttons 
+and a second screen to enter the PIN-code.
 
 Below are examples of allowedInteractionsOrder elements specifically for dynamic link flows:
 
@@ -1136,13 +1069,13 @@ Example 1: `confirmationMessage` with Fallback to `displayTextAndPIN`
 Description: The RP's first choice is `confirmationMessage`; if not available, then fall back to `displayTextAndPIN`.
 ```java
 builder.withAllowedInteractionsOrder(List.of(
-        DynamicLinkInteraction.confirmationMessage("Up to 200 characters of text here.."),
-        DynamicLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
-        ));
+    DynamicLinkInteraction.confirmationMessage("Up to 200 characters of text here.."),
+    DynamicLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
+))
 ```
 
 Example 2: `displayTextAndPIN` Only
-Description: Use `displayTextAndPIN` interactionDeprecated only.
+Description: Use `displayTextAndPIN` interaction only.
 ```java
 builder.withAllowedInteractionsOrder(List.of(
         DynamicLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
@@ -1290,7 +1223,7 @@ The session status response includes various fields depending on whether the ses
    * For `RAW_DIGEST_SIGNATURE`: value, signatureAlgorithm, hashAlgorithm
 * `cert`: Includes certificate information with value (Base64-encoded certificate) and certificateLevel (ADVANCED or QUALIFIED).
 * `ignoredProperties`: Any unsupported or ignored properties from the request.
-* `interactionFlowUsed`: The interactionDeprecated flow used for the session.
+* `interactionFlowUsed`: The interaction flow used for the session.
 * `deviceIpAddress`: IP address of the mobile device, if requested.
 
 ### Example of fetching session status in v3.0
@@ -1299,14 +1232,16 @@ The session status response includes various fields depending on whether the ses
 The following example shows how to use the SessionStatusPoller to fetch the session status until it's complete.
 
 ```java
+*SessionResponse sessionResponse;
 // Get the session status poller
-SessionsStatusPoller poller = client.getSessionsStatusPoller();
+SessionsStatusPoller poller=client.getSessionsStatusPoller();
+
 // Get sessionID from current session response
-SessionStatus sessionStatus = poller.fetchFinalSessionStatus(authenticationSessionResponse.getSessionID());
+SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.getSessionID());
 
 // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
-if ("COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
-    System.out.println("Session completed with result: " + sessionStatus.getResult().getEndResult());
+if("COMPLETE".equalsIgnoreCase(sessionStatus.getState())){
+    System.out.println("Session completed with result: "+sessionStatus.getResult().getEndResult());
 }
 ```
 
@@ -1315,10 +1250,10 @@ The following example shows how to use the SessionStatusPoller to only query the
 
 ```java
 // Get the session status poller
-SessionStatusPoller poller = client.getSessionsStatusPoller();
+SessionStatusPoller poller = client.getSessionStatusPoller();
 
 // Querying the sessions status
-SessionStatus sessionStatus = poller.getSessionsStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+SessionStatus sessionStatus = poller.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
 // Checking sessions state
 if ("RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
     // Session is still running and querying can be continued
@@ -1400,7 +1335,7 @@ The session status response may return various error codes indicating the outcom
 * `TIMEOUT`: User did not respond in time.
 * `DOCUMENT_UNUSABLE`: Session could not be completed due to an issue with the document.
 * `WRONG_VC`: User selected the wrong verification code.
-* `REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP`: The requested interactionDeprecated is not supported by the user's app.
+* `REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP`: The requested interaction is not supported by the user's app.
 * `USER_REFUSED_CERT_CHOICE`: User has multiple accounts and pressed Cancel on device choice screen.
 * `USER_REFUSED_DISPLAYTEXTANDPIN`: User pressed Cancel on PIN screen (either during displayTextAndPIN or verificationCodeChoice flow).
 * `USER_REFUSED_VC_CHOICE`: User cancelled verificationCodeChoice screen.
@@ -1412,17 +1347,43 @@ The session status response may return various error codes indicating the outcom
 ### Differences Between Notification-Based and Dynamic Link Flows
 * `Notification-Based flow`
     * Push notifications: The user gets a notification directly on their Smart-ID app to proceed with the signing or authentication process.
-    * Known users or devices: Notification-based flows are more vulnerable to phishing attacks.
-      * It is recommended to use notification-based flows after the user has been identified by using dynamic-link flows.
+    * Known users or devices: 
+      * Notification-based flows are more vulnerable to phishing attacks. It is recommended to use notification-based flows after the user has been identified by using dynamic-link flows.
     * No dynamic updates: The process is straightforward, with no need to update links or use QR codes.
 * `Dynamic Link flow`
     * Dynamic links: Generates links like QR codes or Web2App/App2App links that the user interacts with to start the process.
     * Supports unknown users or devices: Useful when the user's identity or device is not known in advance.
     * Real-time updates: Dynamic links and QR-code need to be refreshed every second to ensure validity.
 
-### Examples of initiating notification-based authentication session
+### Notification-based authentication session
 
-#### Initiating notification-based authentication session with document number
+#### Request parameters
+
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
+* `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V1.
+* `signatureProtocolParameters`: Required. Parameters for the ACSP_V1 signature protocol.
+    * `randomChallenge`: Required. Random value with size in range of 32-64 bytes. Must be base64 encoded.
+    * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
+* `allowedInteractionsOrder`: Required. An array of interaction objects defining the allowed interactions in order of preference.
+    * Each interaction object includes:
+        * `type`: Required. Type of interaction. Allowed types are `verificationCodeChoice`, `confirmationMessageAndVerificationCodeChoice`.
+        * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
+* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
+* `requestProperties`: requestProperties:
+    * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
+* `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
+
+#### Response parameters
+* `sessionID`: Required. String used to request the operation result.
+* `verificationCode`: Required. Object describing the Verification Code to be displayed.
+    * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
+    * `value`: Required. Value of the VC code.
+
+#### Examples of initiating notification-based authentication session
+
+##### Initiating notification-based authentication session with document number
 ```java
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
@@ -1448,8 +1409,9 @@ String verificationCode = authenticationSessionResponse.getVc().getValue();
 // Display the verification code to the user for confirmation
 ```
 After initiating the session, display the verificationCode to the user. The user must confirm that the code displayed in their Smart-ID app matches the one you have provided.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-#### Initiating notification-based authentication session with semantics identifier
+##### Initiating notification-based authentication session with semantics identifier
 
 ```java
 SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
@@ -1479,13 +1441,11 @@ String sessionId = authenticationSessionResponse.getSessionID();
 String verificationCode = authenticationSessionResponse.getVc().getValue();
 // Display the verification code to the user for confirmation
 ```
-Jump to [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device) to see how to request the IP address of the user's device.
-Jump to [Examples of Allowed Notification-based Interactions Order](#examples-of-allowed-notification-based-interactions-order) to see how to set the order of preferred interactions for displaying text and asking PIN.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-### Initiating a Notification Certificate Choice Session
+### Notification-based certificate choice session
 
-#### Request Parameters
-The request parameters for the dynamic link certificate choice session are:
+#### Request parameters
 
 * `relyingPartyUUID`: UUID of the Relying Party.
 * `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
@@ -1494,7 +1454,13 @@ The request parameters for the dynamic link certificate choice session are:
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
 * `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
 
-#### Initiating a Notification Certificate Choice Using Semantics Identifier
+#### Response parameters
+
+* `sessionID`: A string that can be used to request the session status result.
+
+#### Examples of initiating notification-based certificate choice session
+
+##### Initiating notification-based certificate choice session using semantics identifier
 ```java
 SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
         // 3 character identity type
@@ -1506,28 +1472,28 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
 NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
         .createNotificationCertificateChoice()
         .withSemanticsIdentifier(semanticsIdentifier)
-        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-        .withNonce("1234567890")
+        .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
         .initCertificateChoice();
 
-String sessionId = authenticationSessionResponse.getSessionID();
+String sessionId = certificateChoiceSessionResponse.getSessionID();
 // SessionID is used to query sessions status later
 ```
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-#### Initiating a Notification Certificate Choice Using Document Number
+##### Initiating a notification-based certificate choice session using document number
 ```java
-String documentNumber = "PNOLT-30303039914-MOCK-Q"; // returned in authentication result and used for re-authentication
+String documentNumber = "PNOLT-30303039914-MOCK-Q";
 
-        NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
-        .createNotificationCertificateChoice()
-        .withDocumentNumber(documentNumber)
-        .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-        .withNonce("1234567890")
-        .initCertificateChoice();
+NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
+    .createNotificationCertificateChoice()
+    .withDocumentNumber(documentNumber)
+    .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+    .initCertificateChoice();
 
-String sessionId = authenticationSessionResponse.getSessionID();
+String sessionId = certificateChoiceSessionResponse.getSessionID();
 // SessionID is used to query sessions status later
 ```
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Initiating a Notification-Based Signature Session
 
@@ -1543,14 +1509,20 @@ The request parameters for the notification-based signature session are as follo
 * `rawDigestSignatureProtocolParameters`: Required for RAW_DIGEST_SIGNATURE. Parameters for the signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
     * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-* `allowedInteractionsOrder`: Required. An array of interactionDeprecated objects defining the allowed interactions in order of preference.
-    * Each interactionDeprecated object includes:
-        * `type`: Required. Type of interactionDeprecated. Allowed types are `verificationCodeChoice`, `confirmationMessageAndVerificationCodeChoice`.
+* `allowedInteractionsOrder`: Required. An array of interaction objects defining the allowed interactions in order of preference.
+    * Each interaction object includes:
+        * `type`: Required. Type of interaction. Allowed types are `verificationCodeChoice`, `confirmationMessageAndVerificationCodeChoice`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
 * `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
+
+#### Response Parameters
+* `sessionID`: Required. String used to request the operation result.
+* `verificationCode`: Required. Object describing the Verification Code to be displayed.
+    * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
+    * `value`: Required. Value of the VC code.
 
 #### Example: Initiating a Notification-Based Signature Request
 Below is an example of how to initiate a notification-based signature request using the Smart-ID Java client, using both the Semantics Identifier and Document Number endpoints.
@@ -1595,6 +1567,7 @@ System.out.println("Session ID: " + sessionID);
 System.out.println("Verification Code Type: " + verificationCode.getType());
 System.out.println("Verification Code Value: " + verificationCode.getValue());
 ```
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 #### Initiating a Notification-Based Signature Session Using Document Number
 ```java
@@ -1632,17 +1605,7 @@ System.out.println("Session ID: " + sessionID);
 System.out.println("Verification Code Type: " + verificationCode.getType());
 System.out.println("Verification Code Value: " + verificationCode.getValue());
 ```
-Jump to [Requesting the IP Address of the User's Device](#requesting-the-ip-address-of-the-users-device) to see how to request the IP address of the user's device.
-Jump to [Examples of Allowed Notification-based Interactions Order](#examples-of-allowed-notification-based-interactions-order) to see how to set the order of preferred interactions for displaying text and asking PIN.
-
-#### Response on Successful Notification-based Signature Session Creation
-Upon successful initiation, the user will receive a notification on their Smart-ID app to complete the signing process. The response includes the `sessionID` and a `verificationCode` (Verification Code) object.
-
-### Response Parameters
-* `sessionID`: Required. String used to request the operation result.
-* `verificationCode`: Required. Object describing the Verification Code to be displayed.
-    * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
-    * `value`: Required. Value of the VC code.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Error Handling
 Handle exceptions appropriately. The Java client provides specific exceptions for different error scenarios, such as:
@@ -1653,7 +1616,7 @@ Handle exceptions appropriately. The Java client provides specific exceptions fo
 * `ServerMaintenanceException`
 * `SmartIdClientException`
 
-### Example of Error Handling
+#### Example of Error Handling
 ```java
 try {
     NotificationSignatureSessionResponse response = builder.initSignatureSession();
@@ -1670,7 +1633,7 @@ try {
 } catch (RelyingPartyAccountConfigurationException e) {
     System.out.println("Relying party account configuration issue.");
 } catch (RequiredInteractionNotSupportedByAppException e) {
-    System.out.println("The required interactionDeprecated is not supported by the user's app.");
+    System.out.println("The required interaction is not supported by the user's app.");
 } catch (ServerMaintenanceException e) {
     System.out.println("Server maintenance in progress, please try again later.");
 } catch (SmartIdClientException e) {
@@ -1678,43 +1641,43 @@ try {
 }
 ```
 
-### Additional Information
-* `Allowed Interactions Order`: Define the preferred interactions for displaying text and asking for PIN. The app will pick the first interactionDeprecated it supports from the list. For notification-based flows, use `verificationCodeChoice` and `confirmationMessageAndVerificationCodeChoice`.
-```java
-builder.withAllowedInteractionsOrder(List.of(
-    Interaction.confirmationMessageAndVerificationCodeChoice("Please confirm the transaction of 1024.50 EUR"),
-    Interaction.verificationCodeChoice("Confirm transaction")
-));
-```
+### Additional notification-based session request parameters
 
-* `Signature Protocol Parameters`: Specify the signature protocol parameters as required for `RAW_DIGEST_SIGNATURE`.
+#### Using nonce to override idempotent behaviour
+Authentication is used as an example, nonce can also be used with certificate choice and signature sessions requests by using method `withNonce("randomValue")`.
 ```java
-var parameters = new RawDigestSignatureProtocolParameters();
-parameters.setDigest(signableData.calculateHashInBase64());
-parameters.setSignatureAlgorithm("sha512WithRSAEncryption");
-builder.withSignatureProtocolParameters(parameters);
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                NotificationInteraction.verificationCodeChoice("Log in?")
+        ))
+        // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
+        // set nonce to override idempontent behaviour
+        .withNonce("randomValue")
+        .initAuthenticationSession();
 ```
+#### Using request properties to request the IP address of the user's device
 
-* `Request Properties`: Include additional properties in the request, such as requesting the IP address of the user's device.
-```java
-var requestProperties = new RequestProperties();
-requestProperties.setShareMdClientIpAddress(true);
-builder.withRequestProperties(requestProperties);
-```
+For the IP to be returned the service provider (SK) must switch on this option.
+More info available at https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/request_properties.html#ip_sharing
 
-* `Nonce`: A random string up to 30 characters to associate the request with a specific session or transaction.
-```java
-builder.withNonce("randomNonce123");
-```
+Authentication is used for an example, shareMdClientIpAddress can also be used with certificate choice and signature sessions request by using method `withShareMdClientIpAddress(true)`.
 
-* `Capabilities`: Specify capabilities if agreed with the Smart-ID provider. When omitted, capabilities are derived from the `certificateLevel`.
 ```java
-builder.withCapabilities(Set.of("QUALIFIED", "ADVANCED"));
-```
-
-* `Certificate Level`: Set the required certificate level (`ADVANCED`, `QUALIFIED`, or `QSCD`). Defaults to `QUALIFIED`.
-```java
-builder.withCertificateLevel(CertificateLevel.QUALIFIED);
+NotificationAuthenticationSessionResponse authenticationSessionResponse = client
+        .createNotificationAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRandomChallenge(randomChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withAllowedInteractionsOrder(Collections.singletonList(
+                NotificationInteraction.verificationCodeChoice("Log in?")
+        ))
+        // setting property to request the IP-address of the user's device
+        .withShareMdClientIpAddress(true)
+        .initAuthenticationSession();
 ```
 
 ### Full Example
@@ -1748,9 +1711,7 @@ NotificationSignatureSessionRequestBuilder builder = client.createNotificationSi
     .withAllowedInteractionsOrder(List.of(
         Interaction.confirmationMessageAndVerificationCodeChoice("Please confirm the transaction of 1024.50 EUR"),
         Interaction.verificationCodeChoice("Confirm transaction")
-    ))
-    .withNonce("randomNonce123")
-    .withShareMdClientIpAddress(true);
+    ));
 
 // Initiate the notification signature session
 NotificationSignatureSessionResponse response = builder.initSignatureSession();
@@ -1774,7 +1735,7 @@ SmartIdSignature signature = SmartIdSignature.fromSessionStatus(sessionStatus);
 ```
 
 ### Examples of Allowed Notification-based Interactions Order
-An app can support different interactionDeprecated types, and a Relying Party can specify the preferred interactions with or without fallback options. 
+An app can support different interaction types, and a Relying Party can specify the preferred interactions with or without fallback options. 
 Different interactions can support different amounts of data to display information to the user.
 
 Below are examples of `allowedInteractionsOrder` elements in JSON format:
@@ -1784,7 +1745,7 @@ Description: Use `verificationCodeChoice`  interaction exclusively.
 ```java
 builder.withAllowedInteractionsOrder(List.of(
         NotificationInteraction.verificationCodeChoice("Up to 60 characters of text here...")
-        ));
+));
 ```
 
 Example 2: `confirmationMessageAndVerificationCodeChoice` only
@@ -1792,22 +1753,7 @@ Description: Insist on `confirmationMessageAndVerificationCodeChoice`; if not av
 ```java
 builder.withAllowedInteractionsOrder(List.of(
         NotificationInteraction.confirmationMessageAndVerificationCodeChoice("Up to 200 characters of text here...")
-        ));
-```
-
-## Requesting the IP Address of the User's Device
-If you need to retrieve the user's device IP address as part of the authentication session, you can include the `withShareMdClientIpAddress(true)` method in the request. Note that this feature must be enabled by the Smart-ID service provider.
-```java
-NotificationAuthenticationSessionResponse authenticationSessionResponse = client
-        .createNotificationAuthentication()
-        .withDocumentNumber(documentNumber)
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-        .withAllowedInteractionsOrder(Collections.singletonList(
-                Interaction.verificationCodeChoice("Log in to self-service?")
-        ))
-        .withShareMdClientIpAddress(true) // Request the user's device IP address
-        .initAuthenticationSession();
+));
 ```
 
 ## Exception Handling

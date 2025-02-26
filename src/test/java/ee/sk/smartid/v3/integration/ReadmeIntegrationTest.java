@@ -26,6 +26,7 @@ import ee.sk.smartid.v3.AuthenticationCertificateLevel;
 import ee.sk.smartid.v3.AuthenticationResponse;
 import ee.sk.smartid.v3.AuthenticationResponseMapper;
 import ee.sk.smartid.v3.AuthenticationResponseValidator;
+import ee.sk.smartid.v3.CertificateLevel;
 import ee.sk.smartid.v3.DynamicLinkType;
 import ee.sk.smartid.v3.RandomChallenge;
 import ee.sk.smartid.v3.SessionType;
@@ -34,6 +35,7 @@ import ee.sk.smartid.v3.rest.SessionStatusPoller;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkInteraction;
 import ee.sk.smartid.v3.rest.dao.DynamicLinkSessionResponse;
 import ee.sk.smartid.v3.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.v3.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.v3.rest.dao.NotificationInteraction;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
@@ -371,6 +373,61 @@ public class ReadmeIntegrationTest {
             assertEquals("OK", authenticationIdentity.getGivenName());
             assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
             assertEquals("LT", authenticationIdentity.getCountry());
+        }
+
+        @Test
+        void certificateChoice_withDocumentNumber() {
+            String documentNumber = "PNOLT-40504040001-MOCK-Q"; // returned in authentication result and used for re-authentication
+
+            NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
+                    .createNotificationCertificateChoice()
+                    .withDocumentNumber(documentNumber)
+                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+                    .initCertificateChoice();
+
+            String sessionId = certificateChoiceSessionResponse.getSessionID();
+            // SessionID is used to query sessions status later
+
+            // Get the session status poller
+            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+
+            // Querying the sessions status
+            SessionStatus sessionStatus = poller.getSessionStatus(sessionId);
+
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals("OK", sessionStatus.getResult().getEndResult());
+            assertEquals("PNOLT-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
+            assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
+        }
+
+        @Test
+        void certificateChoice_withSemanticIdentifier() {
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
+                    // 3 character identity type
+                    // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+                    SemanticsIdentifier.IdentityType.PNO,
+                    SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+                    "40504040001"); // identifier (according to country and identity type reference)
+
+            NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
+                    .createNotificationCertificateChoice()
+                    .withSemanticsIdentifier(semanticsIdentifier)
+                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+                    .initCertificateChoice();
+
+            String sessionId = certificateChoiceSessionResponse.getSessionID();
+            // SessionID is used to query sessions status later
+
+            // Get the session status poller
+            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+
+            // Querying the sessions status
+            SessionStatus sessionStatus = poller.getSessionStatus(sessionId);
+
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals("OK", sessionStatus.getResult().getEndResult());
+            assertEquals("PNOEE-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
+            assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
         }
     }
 
