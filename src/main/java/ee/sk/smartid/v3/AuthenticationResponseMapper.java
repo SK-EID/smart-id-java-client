@@ -41,14 +41,14 @@ import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 /**
- * Validates and maps the session status received to authentication response
+ * Validates and maps the received session status to authentication response
  */
 public class AuthenticationResponseMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseMapper.class);
 
     /**
-     * Maps session status to dynamic-link authentication response
+     * Maps session status to authentication response
      *
      * @param sessionStatus session status received from Smart-ID server
      * @return authentication response
