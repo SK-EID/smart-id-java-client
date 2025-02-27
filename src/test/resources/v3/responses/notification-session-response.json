@@ -1,7 +1,9 @@
 {
   "sessionID": "00000000-0000-0000-0000-000000000000",
   "vc": {
+    "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future",
     "type": "alphaNumeric4",
     "value": "4927"
-  }
+  },
+  "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
 }

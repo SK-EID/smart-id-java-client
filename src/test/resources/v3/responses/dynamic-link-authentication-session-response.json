@@ -1,5 +1,6 @@
 {
   "sessionID": "00000000-0000-0000-0000-000000000000",
   "sessionToken": "sessionToken",
-  "sessionSecret": "c2Vzc2lvblNlY3JldA=="
+  "sessionSecret": "c2Vzc2lvblNlY3JldA==",
+  "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
 }

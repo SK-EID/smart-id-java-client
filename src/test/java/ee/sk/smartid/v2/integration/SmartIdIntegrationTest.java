@@ -1,4 +1,4 @@
-package ee.sk.smartid.integration;
+package ee.sk.smartid.v2.integration;
 
 /*-
  * #%L
@@ -76,8 +76,6 @@ public class SmartIdIntegrationTest {
         client.setRelyingPartyName(RELYING_PARTY_NAME);
         client.setHostUrl(HOST_URL);
         client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
-
-        // temporary solution to skip tests going against smart-id demo env
     }
 
     @Test

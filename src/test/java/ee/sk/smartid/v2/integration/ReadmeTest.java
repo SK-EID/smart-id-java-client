@@ -1,4 +1,4 @@
-package ee.sk.smartid.integration;
+package ee.sk.smartid.v2.integration;
 
 /*-
  * #%L
@@ -57,23 +57,23 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.v2.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.v2.AuthenticationHash;
+import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.v2.SignableHash;
 import ee.sk.smartid.v2.SmartIdAuthenticationResponse;
 import ee.sk.smartid.v2.SmartIdCertificate;
 import ee.sk.smartid.v2.SmartIdClient;
 import ee.sk.smartid.v2.SmartIdSignature;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.v2.rest.SmartIdConnector;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;

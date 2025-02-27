@@ -33,6 +33,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
@@ -137,10 +138,10 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
     public DynamicLinkSessionResponse initCertificateChoice() {
         validateParameters();
         CertificateChoiceSessionRequest request = createCertificateRequest();
-        DynamicLinkSessionResponse response = connector.getCertificate(request);
+        DynamicLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
 
         if (response == null || response.getSessionID() == null) {
-            throw new SmartIdClientException("Dynamic link certificate choice session failed: invalid response received.");
+            throw new UnprocessableSmartIdResponseException("Dynamic link certificate choice session failed: invalid response received.");
         }
         return response;
     }

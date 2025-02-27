@@ -138,7 +138,7 @@ public class SmartIdClient {
      *
      * @return Sessions status poller
      */
-    public SessionStatusPoller getSessionsStatusPoller() {
+    public SessionStatusPoller getSessionStatusPoller() {
         if (sessionStatusPoller == null) {
             sessionStatusPoller = new SessionStatusPoller(getSmartIdConnector());
             sessionStatusPoller.setPollingSleepTime(pollingSleepTimeUnit, pollingSleepTimeout);

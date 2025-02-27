@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,14 +30,11 @@ import java.io.Serializable;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 
-import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
-public class SingatureResponse implements Serializable {
+public class SignatureResponse implements Serializable {
 
     private String endResult;
-    private String signedHashInBase64;
-    private HashType hashType;
     private String signatureValueInBase64;
     private String algorithmName;
     private X509Certificate certificate;
@@ -94,22 +91,6 @@ public class SingatureResponse implements Serializable {
 
     public void setCertificateLevel(String certificateLevel) {
         this.certificateLevel = certificateLevel;
-    }
-
-    public String getSignedHashInBase64() {
-        return signedHashInBase64;
-    }
-
-    public void setSignedHashInBase64(String signedHashInBase64) {
-        this.signedHashInBase64 = signedHashInBase64;
-    }
-
-    public HashType getHashType() {
-        return hashType;
-    }
-
-    public void setHashType(HashType hashType) {
-        this.hashType = hashType;
     }
 
     public String getRequestedCertificateLevel() {

@@ -39,7 +39,9 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -219,9 +221,12 @@ class SmartIdRestConnectorTest {
         @Test
         void initDynamicLinkAuthentication() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-            DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
 
-            assertNotNull(response);
+            Instant start = Instant.now();
+            DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            Instant end = Instant.now();
+
+            assertResponseValues(response, "sessionToken", "c2Vzc2lvblNlY3JldA==", start, end);
         }
 
         @Test
@@ -255,9 +260,13 @@ class SmartIdRestConnectorTest {
         @Test
         void initDynamicLinkAuthentication() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-            DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
 
-            assertNotNull(response);
+            Instant start = Instant.now();
+            DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+            Instant end = Instant.now();
+
+            assertResponseValues(response, "sessionToken", "c2Vzc2lvblNlY3JldA==", start, end);
+
         }
 
         @Test
@@ -291,9 +300,12 @@ class SmartIdRestConnectorTest {
         @Test
         void initAnonymousDynamicLinkAuthentication() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
-            DynamicLinkSessionResponse response = connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
 
-            assertNotNull(response);
+            Instant start = Instant.now();
+            DynamicLinkSessionResponse response = connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+            Instant end = Instant.now();
+
+            assertResponseValues(response, "sessionToken", "c2Vzc2lvblNlY3JldA==", start, end);
         }
 
         @Test
@@ -397,102 +409,101 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void getCertificate() {
+        void initDynamicLinkCertificateChoice() {
             stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/responses/dynamic-link-certificate-choice-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            DynamicLinkSessionResponse response = connector.getCertificate(request);
+            Instant start = Instant.now();
+            DynamicLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
+            Instant end = Instant.now();
 
-            assertNotNull(response);
-            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
-            assertEquals("sampleSessionToken", response.getSessionToken());
-            assertEquals("sampleSessionSecret", response.getSessionSecret());
+            assertResponseValues(response, "sampleSessionToken", "sampleSessionSecret", start, end);
         }
 
         @Test
-        void getCertificate_invalidCertificateLevel_throwsBadRequestException() {
+        void initDynamicLinkCertificateChoice_invalidCertificateLevel_throwsBadRequestException() {
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             request.setCertificateLevel("INVALID_LEVEL");
 
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
 
-            assertThrows(SmartIdClientException.class, () -> connector.getCertificate(request));
+            assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
 
         @Test
-        void getCertificate_userAccountNotFound() {
+        void initDynamicLinkCertificateChoice_userAccountNotFound() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 404);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            assertThrows(UserAccountNotFoundException.class, () -> connector.getCertificate(request));
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
 
         @Test
-        void getCertificate_relyingPartyNoPermission() {
+        void initDynamicLinkCertificateChoice_relyingPartyNoPermission() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 403);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.getCertificate(request));
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
 
         @Test
-        void getCertificate_invalidRequest() {
+        void initDynamicLinkCertificateChoice_invalidRequest() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
 
             CertificateChoiceSessionRequest request = new CertificateChoiceSessionRequest();
             request.setRelyingPartyUUID("");
             request.setRelyingPartyName("");
 
-            assertThrows(SmartIdClientException.class, () -> connector.getCertificate(request));
+            assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
 
         @Test
-        void getCertificate_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
+        void initDynamicLinkCertificateChoice_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 401);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.getCertificate(request));
+            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkCertificateChoice(request));
 
             assertEquals("Request is unauthorized for URI http://localhost:18089/certificatechoice/dynamic-link/anonymous", exception.getMessage());
         }
 
         @Test
-        void getCertificate_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+        void initDynamicLinkCertificateChoice_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 471);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.getCertificate(request));
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
 
         @Test
-        void getCertificate_throwsPersonShouldViewSmartIdPortalException() {
+        void initDynamicLinkCertificateChoice_throwsPersonShouldViewSmartIdPortalException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 472);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.getCertificate(request));
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
 
         @Test
-        void getCertificate_throwsSmartIdClientException() {
+        void initDynamicLinkCertificateChoice_throwsSmartIdClientException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 480);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.getCertificate(request));
+            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkCertificateChoice(request));
 
             assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
         }
 
         @Test
-        void getCertificate_throwsServerMaintenanceException() {
+        void initDynamicLinkCertificateChoice_throwsServerMaintenanceException() {
             stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 580);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            assertThrows(ServerMaintenanceException.class, () -> connector.getCertificate(request));
+            assertThrows(ServerMaintenanceException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
     }
 
@@ -518,7 +529,7 @@ class SmartIdRestConnectorTest {
             NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, semanticsIdentifier);
 
             assertNotNull(response);
-            assertEquals("test-session-id", response.getSessionID());
+            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
         }
 
         @Test
@@ -560,7 +571,7 @@ class SmartIdRestConnectorTest {
             NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, documentNumber);
 
             assertNotNull(response);
-            assertEquals("test-session-id", response.getSessionID());
+            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
         }
 
         @Test
@@ -985,5 +996,18 @@ class SmartIdRestConnectorTest {
         request.setAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")));
 
         return request;
+    }
+
+    private static void assertResponseValues(DynamicLinkSessionResponse response,
+                                             String sessionToken,
+                                             String expected,
+                                             Instant start,
+                                             Instant end) {
+        assertNotNull(response);
+        assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
+        assertEquals(sessionToken, response.getSessionToken());
+        assertEquals(expected, response.getSessionSecret());
+        assertTrue(start.isBefore(response.getReceivedAt()));
+        assertTrue(end.isAfter(response.getReceivedAt()));
     }
 }
