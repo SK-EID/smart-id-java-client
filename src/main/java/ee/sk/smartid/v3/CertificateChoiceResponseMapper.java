@@ -7,6 +7,7 @@ import java.security.cert.X509Certificate;
 import ee.sk.smartid.CertificateParser;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
@@ -32,7 +33,7 @@ public class CertificateChoiceResponseMapper {
     /**
      * Maps session status to certificate choice response
      *
-     * @param sessionStatus           session status received from Smart-ID server
+     * @param sessionStatus             session status received from Smart-ID server
      * @param requestedCertificateLevel requested certificate level
      * @return certificate choice response
      */
@@ -104,7 +105,7 @@ public class CertificateChoiceResponseMapper {
         }
 
         if (!isCertificateLevelValid(requestedCertificateLevel.name(), sessionCertificate.getCertificateLevel())) {
-            throw new UnprocessableSmartIdResponseException("Certificate level returned by Smart-ID is lower than requested");
+            throw new CertificateLevelMismatchException("Certificate level returned by Smart-ID is lower than requested");
         }
     }
 
