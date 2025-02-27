@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
-import ee.sk.smartid.integration.SmartIdIntegrationTest;
+import ee.sk.smartid.v2.integration.SmartIdIntegrationTest;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
