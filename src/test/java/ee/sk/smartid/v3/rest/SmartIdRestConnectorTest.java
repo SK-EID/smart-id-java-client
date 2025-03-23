@@ -76,6 +76,8 @@ import ee.sk.smartid.v3.rest.dao.SignatureSessionRequest;
 
 class SmartIdRestConnectorTest {
 
+    private static final String SESSION_SECRET = "c2Vzc2lvblNlY3JldA==";
+
     @Nested
     @WireMockTest(httpPort = 18089)
     class SessionStatusTests {
@@ -211,6 +213,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18082)
     class SemanticsIdentifierDynamicLinkAuthentication {
 
+        private static final String AUTHENTICATION_WITH_PERSON_CODE_PATH = "/authentication/dynamic-link/etsi/PNOEE-48010010101";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -220,19 +223,19 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
 
             Instant start = Instant.now();
             DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             Instant end = Instant.now();
 
-            assertResponseValues(response, "sessionToken", "c2Vzc2lvblNlY3JldA==", start, end);
+            assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
         }
 
         @Test
         void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             });
         }
@@ -240,7 +243,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/etsi/PNOEE-48010010101", "v3/requests/dynamic-link-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             });
         }
@@ -250,6 +253,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18083)
     class DocumentNumberDynamicLinkAuthentication {
 
+        private static final String AUTHENTICATION_WITH_DOCUMENT_NR_PATH = "/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -259,20 +263,22 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH,
+                    "v3/requests/dynamic-link-authentication-session-request.json",
+                    "v3/responses/dynamic-link-authentication-session-response.json");
 
             Instant start = Instant.now();
             DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             Instant end = Instant.now();
 
-            assertResponseValues(response, "sessionToken", "c2Vzc2lvblNlY3JldA==", start, end);
+            assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
 
         }
 
         @Test
         void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -280,7 +286,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q", "v3/requests/dynamic-link-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -290,6 +296,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18081)
     class AnonymousDynamicLinkAuthentication {
 
+        private static final String ANONYMOUS_AUTHENTICATION_PATH = "/authentication/dynamic-link/anonymous";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -299,19 +306,19 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initAnonymousDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(ANONYMOUS_AUTHENTICATION_PATH, "v3/requests/dynamic-link-authentication-session-request.json", "v3/responses/dynamic-link-authentication-session-response.json");
 
             Instant start = Instant.now();
             DynamicLinkSessionResponse response = connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
             Instant end = Instant.now();
 
-            assertResponseValues(response, "sessionToken", "c2Vzc2lvblNlY3JldA==", start, end);
+            assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
         }
 
         @Test
         void initAnonymousDynamicLinkAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(ANONYMOUS_AUTHENTICATION_PATH, "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
             });
         }
@@ -319,7 +326,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initAnonymousDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/dynamic-link/anonymous", "v3/requests/dynamic-link-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(ANONYMOUS_AUTHENTICATION_PATH, "v3/requests/dynamic-link-authentication-session-request.json");
                 connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
             });
         }
@@ -329,6 +336,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18082)
     class SemanticsIdentifierNotificationAuthentication {
 
+        private static final String AUTHENTICATION_WITH_PERSON_CODE_PATH = "/authentication/notification/etsi/PNOEE-48010010101";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -338,7 +346,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/etsi/PNOEE-48010010101", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
             NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
 
             assertNotNull(response);
@@ -347,7 +355,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/notification/etsi/PNOEE-48010010101", "v3/requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "v3/requests/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             });
         }
@@ -355,7 +363,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/notification/etsi/PNOEE-48010010101", "v3/requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "v3/requests/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             });
         }
@@ -365,6 +373,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18083)
     class DocumentNumberNotificationAuthentication {
 
+        private static final String AUTHENTICATION_WITH_DOCUMENT_NR_PATH = "/authentication/notification/document/PNOEE-48010010101-MOCK-Q";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -374,7 +383,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "v3/requests/notification-authentication-session-request.json", "v3/responses/notification-session-response.json");
             NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
 
             assertNotNull(response);
@@ -383,7 +392,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/authentication/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "v3/requests/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -391,7 +400,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/authentication/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "v3/requests/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -401,6 +410,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class DynamicLinkCertificateChoiceTests {
 
+        private static final String ANONYMOUS_CERTIFICATE_CHOICE_PATH = "/certificatechoice/dynamic-link/anonymous";
         private SmartIdConnector connector;
 
         @BeforeEach
@@ -410,7 +420,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice() {
-            stubPostRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/responses/dynamic-link-certificate-choice-response.json");
+            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "v3/responses/dynamic-link-certificate-choice-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
@@ -425,14 +435,14 @@ class SmartIdRestConnectorTest {
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             request.setCertificateLevel("INVALID_LEVEL");
 
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
             assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkCertificateChoice(request));
         }
 
         @Test
         void initDynamicLinkCertificateChoice_userAccountNotFound() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 404);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 404);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             assertThrows(UserAccountNotFoundException.class, () -> connector.initDynamicLinkCertificateChoice(request));
@@ -440,7 +450,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice_relyingPartyNoPermission() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 403);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 403);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkCertificateChoice(request));
@@ -448,7 +458,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice_invalidRequest() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 400);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
             CertificateChoiceSessionRequest request = new CertificateChoiceSessionRequest();
             request.setRelyingPartyUUID("");
@@ -459,7 +469,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 401);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 401);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
@@ -470,7 +480,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice_throwsNoSuitableAccountOfRequestedTypeFoundException() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 471);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 471);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
@@ -479,7 +489,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice_throwsPersonShouldViewSmartIdPortalException() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 472);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 472);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
@@ -488,7 +498,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice_throwsSmartIdClientException() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 480);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 480);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
@@ -499,7 +509,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice_throwsServerMaintenanceException() {
-            stubPostErrorResponse("/certificatechoice/dynamic-link/anonymous", 580);
+            stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 580);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
@@ -511,6 +521,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class SemanticsIdentifierNotificationCertificateChoiceTests {
 
+        private static final String CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH = "/certificatechoice/notification/etsi/PNOEE-31111111111";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -521,7 +532,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initCertificateChoice_withSemanticsIdentifier_successful() {
-            stubPostRequestWithResponse("/certificatechoice/notification/etsi/PNOEE-31111111111", "v3/responses/notification-certificate-choice-session-response.json");
+            stubPostRequestWithResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "v3/responses/notification-certificate-choice-session-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -535,7 +546,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initCertificateChoice_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/certificatechoice/notification/etsi/PNOEE-31111111111", "v3/requests/certificate-choice-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "v3/requests/certificate-choice-session-request.json");
                 connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111"));
             });
         }
@@ -543,7 +554,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initCertificateChoice_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/certificatechoice/notification/etsi/PNOEE-31111111111", "v3/requests/certificate-choice-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "v3/requests/certificate-choice-session-request.json");
                 connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111"));
             });
         }
@@ -553,6 +564,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class DocumentNumberNotificationCertificateChoiceTests {
 
+        private static final String CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH = "/certificatechoice/notification/document/PNOEE-48010010101-MOCK-Q";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -563,7 +575,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initCertificateChoice_withDocumentNumber_successful() {
-            stubPostRequestWithResponse("/certificatechoice/notification/document/PNOEE-48010010101-MOCK-Q", "v3/responses/notification-certificate-choice-session-response.json");
+            stubPostRequestWithResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "v3/responses/notification-certificate-choice-session-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             String documentNumber = "PNOEE-48010010101-MOCK-Q";
@@ -577,7 +589,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse("/certificatechoice/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/certificate-choice-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "v3/requests/certificate-choice-session-request.json");
                 connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -585,7 +597,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse("/certificatechoice/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/certificate-choice-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "v3/requests/certificate-choice-session-request.json");
                 connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -595,6 +607,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class DynamicLinkSignatureTests {
 
+        private static final String SIGNATURE_WITH_PERSON_CODE_PATH = "/signature/dynamic-link/etsi/PNOEE-31111111111";
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -605,7 +618,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_withSemanticsIdentifier_successful() {
-            stubPostRequestWithResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", "v3/responses/dynamic-link-signature-response.json");
+            stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "v3/responses/dynamic-link-signature-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -620,10 +633,10 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_withDocumentNumber_successful() {
-            stubPostRequestWithResponse("/signature/dynamic-link/document/PNOEE-31111111111", "v3/responses/dynamic-link-signature-response.json");
+            stubPostRequestWithResponse("/signature/dynamic-link/document/PNOEE-31111111111-MOCK-Q", "v3/responses/dynamic-link-signature-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
-            String documentNumber = "PNOEE-31111111111";
+            String documentNumber = "PNOEE-31111111111-MOCK-Q";
 
             DynamicLinkSessionResponse response = connector.initDynamicLinkSignature(request, documentNumber);
 
@@ -635,7 +648,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_userAccountNotFound() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 404);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 404);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -645,7 +658,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_relyingPartyNoPermission() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 403);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 403);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -655,7 +668,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_invalidRequest() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 400);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 400);
 
             SignatureSessionRequest request = new SignatureSessionRequest();
             request.setRelyingPartyUUID("");
@@ -667,7 +680,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 401);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 401);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -679,7 +692,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 471);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 471);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -689,7 +702,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_throwsPersonShouldViewSmartIdPortalException() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 472);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 472);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -699,7 +712,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_throwsSmartIdClientException() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 480);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 480);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -711,7 +724,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_throwsServerMaintenanceException() {
-            stubPostErrorResponse("/signature/dynamic-link/etsi/PNOEE-31111111111", 580);
+            stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 580);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -999,14 +1012,14 @@ class SmartIdRestConnectorTest {
     }
 
     private static void assertResponseValues(DynamicLinkSessionResponse response,
-                                             String sessionToken,
-                                             String expected,
+                                             String expectedSessionToken,
+                                             String expectedSessionSecret,
                                              Instant start,
                                              Instant end) {
         assertNotNull(response);
         assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
-        assertEquals(sessionToken, response.getSessionToken());
-        assertEquals(expected, response.getSessionSecret());
+        assertEquals(expectedSessionToken, response.getSessionToken());
+        assertEquals(expectedSessionSecret, response.getSessionSecret());
         assertTrue(start.isBefore(response.getReceivedAt()));
         assertTrue(end.isAfter(response.getReceivedAt()));
     }

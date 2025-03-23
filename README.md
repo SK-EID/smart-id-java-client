@@ -418,7 +418,7 @@ Available interactions:
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
 The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
-The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
+The interaction that was actually used is reported back to RP with interactionFlowUsed response parameter to the session request.
 If the app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
 `displayText60`, `displayText200` - Text to display for authentication consent dialog on the mobile device. Limited to 60 and 200 characters respectively.
@@ -774,8 +774,8 @@ String sessionId = authenticationSessionResponse.getSessionID();
 // SessionID is used to query sessions status later
 
 String sessionToken = authenticationSessionResponse.getSessionToken();
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = authenticationSessionResponse.getSessionSecret();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
@@ -815,8 +815,8 @@ String sessionId = authenticationSessionResponse.getSessionID();
 // SessionID is used to query sessions status later
 
 String sessionToken = authenticationSessionResponse.getSessionToken();
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = authenticationSessionResponse.getSessionSecret();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
@@ -849,8 +849,8 @@ String sessionId = authenticationSessionResponse.getSessionID();
 // SessionID is used to query sessions status later
 
 String sessionToken = authenticationSessionResponse.getSessionToken();
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = authenticationSessionResponse.getSessionSecret();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
@@ -894,8 +894,8 @@ String sessionId = certificateChoice.getSessionID();
 // SessionID is used to query sessions status later
 
 String sessionToken = certificateChoice.getSessionToken();
-String sessionSecret = certificateChoice.getSessionSecret();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = certificateChoice.getSessionSecret();
 Instant responseReceivedAt = certificateChoice.getReceivedAt();
 ```
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
@@ -959,9 +959,8 @@ DynamicLinkSessionResponse signatureResponse = client.createDynamicLinkSignature
 // Process the signature response
 String sessionID = signatureResponse.getSessionID();
 String sessionToken = signatureResponse.getSessionToken();
-
-String sessionSecret = signatureResponse.getSessionSecret();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = signatureResponse.getSessionSecret();
 Instant receivedAt = signatureResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
@@ -993,8 +992,8 @@ DynamicLinkSessionResponse signatureResponse = client.createDynamicLinkSignature
 String sessionID = signatureResponse.getSessionID();
 String sessionToken = signatureResponse.getSessionToken();
 
-String sessionSecret = signatureResponse.getSessionSecret();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = signatureResponse.getSessionSecret();
 Instant receivedAt = signatureResponse.getReceivedAt();
 
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureResponse
@@ -1036,7 +1035,7 @@ DynamicLinkSessionResponse authenticationSessionResponse = client
             DynamicLinkInteraction.displayTextAndPIN("Log in?")
         ))
         // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
-        // set nonce to override idempontent behaviour
+        // set nonce to override idempotent behaviour
         .withNonce("randomValue")
         .initAuthenticationSession();
 ```
@@ -1665,7 +1664,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
                 NotificationInteraction.verificationCodeChoice("Log in?")
         ))
         // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
-        // set nonce to override idempontent behaviour
+        // set nonce to override idempotent behaviour
         .withNonce("randomValue")
         .initAuthenticationSession();
 ```

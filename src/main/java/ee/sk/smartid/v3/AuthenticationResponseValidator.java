@@ -115,9 +115,9 @@ public class AuthenticationResponseValidator {
     /**
      * Maps the Smart-ID authentication response {@link AuthenticationResponse} to {@link AuthenticationIdentity}
      *
-     * @param authenticationResponse Smart-ID authentication response
-     * @param requestedCertificateLevel         Certificate level used in the authentication session request
-     * @param randomChallenge                   Generate string used in the authentication session request
+     * @param authenticationResponse    Smart-ID authentication response
+     * @param requestedCertificateLevel Certificate level used in the authentication session request
+     * @param randomChallenge           Generate string used in the authentication session request
      * @return authentication identity
      */
     public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse,

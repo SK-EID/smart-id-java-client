@@ -122,8 +122,8 @@ public class ReadmeIntegrationTest {
             // SessionID is used to query sessions status later
 
             String sessionToken = authenticationSessionResponse.getSessionToken();
-            String sessionSecret = authenticationSessionResponse.getSessionSecret();
             // Store sessionSecret only on backend side. Do not expose it to the client side.
+            String sessionSecret = authenticationSessionResponse.getSessionSecret();
 
             // Will be used to calculate elapsed time being used in dynamic link and in authCode
             Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
@@ -196,8 +196,8 @@ public class ReadmeIntegrationTest {
             // SessionID is used to query sessions status later
 
             String sessionToken = authenticationSessionResponse.getSessionToken();
-            String sessionSecret = authenticationSessionResponse.getSessionSecret();
             // Store sessionSecret only on backend side. Do not expose it to the client side.
+            String sessionSecret = authenticationSessionResponse.getSessionSecret();
             Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
             // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
@@ -264,8 +264,8 @@ public class ReadmeIntegrationTest {
             // SessionID is used to query sessions status later
 
             String sessionToken = authenticationSessionResponse.getSessionToken();
-            String sessionSecret = authenticationSessionResponse.getSessionSecret();
             // Store sessionSecret only on backend side. Do not expose it to the client side.
+            String sessionSecret = authenticationSessionResponse.getSessionSecret();
             Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
             // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
@@ -347,9 +347,8 @@ public class ReadmeIntegrationTest {
             // Process the signature response
             String signatureSessionId = signatureSessionResponse.getSessionID();
             String sessionToken = signatureSessionResponse.getSessionToken();
-
-            String sessionSecret = signatureSessionResponse.getSessionSecret();
             // Store sessionSecret only on backend side. Do not expose it to the client side.
+            String sessionSecret = signatureSessionResponse.getSessionSecret();
             Instant receivedAt = signatureSessionResponse.getReceivedAt();
 
             // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
@@ -431,8 +430,8 @@ public class ReadmeIntegrationTest {
             String signatureSessionId = signatureSessionResponse.getSessionID();
             String sessionToken = signatureSessionResponse.getSessionToken();
 
-            String sessionSecret = signatureSessionResponse.getSessionSecret();
             // Store sessionSecret only on backend side. Do not expose it to the client side.
+            String sessionSecret = signatureSessionResponse.getSessionSecret();
             Instant receivedAt = signatureSessionResponse.getReceivedAt();
 
             // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
@@ -601,7 +600,7 @@ public class ReadmeIntegrationTest {
 
         @Test
         void certificateChoice_withSemanticIdentifier() {
-            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
+            var semanticsIdentifier = new SemanticsIdentifier(
                     // 3 character identity type
                     // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
                     SemanticsIdentifier.IdentityType.PNO,
@@ -713,7 +712,7 @@ public class ReadmeIntegrationTest {
             signableData.setHashType(HashType.SHA512);
 
             // Create the Semantics Identifier
-            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
+            var semanticsIdentifier = new SemanticsIdentifier(
                     SemanticsIdentifier.IdentityType.PNO,
                     SemanticsIdentifier.CountryCode.EE,
                     "40504040001"
@@ -752,7 +751,7 @@ public class ReadmeIntegrationTest {
         }
     }
 
-    private KeyStore getKeystore() {
+    private static KeyStore getKeystore() {
         try (InputStream is = ReadmeIntegrationTest.class.getResourceAsStream("/demo_server_trusted_ssl_certs.jks")) {
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             keyStore.load(is, "changeit".toCharArray());

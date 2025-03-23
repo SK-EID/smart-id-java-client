@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Helper class for dynamic link
     - AuthCode - used for generating authCode necessary for dynamic-link
     - QrCodeGenerator - to create QR-code from dynamic-link
-    - DynamicContentBuilder to create dynamic link or QR-code
+    - DynamicContentBuilder - to create dynamic link or QR-code
   - Support for sessions status request handling for the v3 path.
     - Added AuthenticationResponseMapper for validating required fields and mapping session status to authentication response 
     - Added AuthenticationResponseValidator to validate certificate and signed authentication response and construct AuthenticationIdentity
@@ -33,7 +33,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed deprecated methods from AuthenticationIdentity
 
 ### Java and dependency updates
-- Updated min supported java to version 17
+- Updated minimal supported java to version 17
 - Updated slf4j-api to version 2.0.16
 - Updated jackson dependencies to version 2.17.2
 - Added jakarta.ws.rs:jakarta.ws.rs-api

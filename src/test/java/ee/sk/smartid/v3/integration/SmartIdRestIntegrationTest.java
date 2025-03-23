@@ -123,7 +123,7 @@ class SmartIdRestIntegrationTest {
                 assertNotNull(sessionResponse.getReceivedAt());
             }
 
-            private AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
+            private static AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
                 var request = new AuthenticationSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -143,7 +143,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDynamicLinkCertificateChoice() {
-                CertificateChoiceSessionRequest request = new CertificateChoiceSessionRequest();
+                var request = new CertificateChoiceSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
 
@@ -231,7 +231,7 @@ class SmartIdRestIntegrationTest {
                 assertEquals("alphaNumeric4", sessionResponse.getVc().getType());
             }
 
-            private AuthenticationSessionRequest toAuthenticationRequest() {
+            private static AuthenticationSessionRequest toAuthenticationRequest() {
                 var request = new AuthenticationSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
@@ -303,14 +303,13 @@ class SmartIdRestIntegrationTest {
                 assertEquals("alphaNumeric4", sessionResponse.getVc().getType());
             }
 
-            private SignatureSessionRequest toSignatureSessionRequest() {
+            private static SignatureSessionRequest toSignatureSessionRequest() {
                 var request = new SignatureSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
                 request.setCertificateLevel("QUALIFIED");
 
-                RawDigestSignatureProtocolParameters signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-
+                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
                 String digest = Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512));
                 signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
                 signatureProtocolParameters.setDigest(digest);

@@ -421,7 +421,7 @@ Available interactions:
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
 The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
-The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
+The interaction that was actually used is reported back to RP with interactionFlowUsed response parameter to the session request.
 If the app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
 `displayText60`, `displayText200` - Text to display for authentication consent dialog on the mobile device. Limited to 60 and 200 characters respectively.

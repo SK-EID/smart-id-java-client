@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -81,7 +81,6 @@ public class CertificateChoiceResponseMapper {
         if (sessionStatus == null) {
             throw new SmartIdClientException("Session status parameter is not provided");
         }
-
         validateResult(sessionStatus.getResult());
     }
 
@@ -89,9 +88,7 @@ public class CertificateChoiceResponseMapper {
         if (sessionResult == null) {
             throw new UnprocessableSmartIdResponseException("Session result parameter is missing");
         }
-
         validateEndResult(sessionResult.getEndResult());
-
         if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
             throw new UnprocessableSmartIdResponseException("Document number parameter is missing in the session result");
         }
@@ -121,15 +118,12 @@ public class CertificateChoiceResponseMapper {
         if (sessionCertificate == null) {
             throw new UnprocessableSmartIdResponseException("Certificate parameter is missing in session status");
         }
-
         if (StringUtil.isEmpty(sessionCertificate.getValue())) {
             throw new UnprocessableSmartIdResponseException("Value parameter is missing in certificate");
         }
-
         if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
             throw new UnprocessableSmartIdResponseException("Certificate level parameter is missing in certificate");
         }
-
         if (!isCertificateLevelValid(requestedCertificateLevel.name(), sessionCertificate.getCertificateLevel())) {
             throw new CertificateLevelMismatchException("Certificate level returned by Smart-ID is lower than requested");
         }
@@ -138,7 +132,6 @@ public class CertificateChoiceResponseMapper {
     private static boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
         CertificateLevel requestedLevel = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
         CertificateLevel returnedLevel = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
-
         return returnedLevel.isSameLevelOrHigher(requestedLevel);
     }
 }
