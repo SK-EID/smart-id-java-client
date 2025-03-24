@@ -82,6 +82,8 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class SessionStatusTests {
 
+        private static final String SERVER_RANDOM = "J0iyCYOu8cTWuoD8rD05IIrZ";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -91,14 +93,14 @@ class SmartIdRestConnectorTest {
 
         @Test
         void getSessionStatus_running() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusRunning.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-running.json");
             assertNotNull(sessionStatus);
             assertEquals("RUNNING", sessionStatus.getState());
         }
 
         @Test
         void getSessionStatus_running_withIgnoredProperties() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusRunningWithIgnoredProperties.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-running-with-ignored-properties.json");
             assertNotNull(sessionStatus);
             assertEquals("RUNNING", sessionStatus.getState());
             assertNotNull(sessionStatus.getIgnoredProperties());
@@ -108,17 +110,51 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void getSessionStatus_forSuccessfulCertificateRequest() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusForSuccessfulCertificateRequest.json");
+        void getSessionStatus_forSuccessfulAuthenticationRequest() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-successful-authentication.json");
             assertSuccessfulResponse(sessionStatus);
+            assertEquals("verificationCodeChoice", sessionStatus.getInteractionFlowUsed());
+
+            assertEquals("ACSP_V1", sessionStatus.getSignatureProtocol());
+            assertNotNull(sessionStatus.getSignature());
+            assertThat(sessionStatus.getSignature().getValue(), startsWith("TstqDys5iuxUk/HZqxwTZH95ynaBF3GK8HziQlo//ujbQQTdN8e0bU1a9E7lQmBZ"));
+            assertEquals("sha512WithRSAEncryption", sessionStatus.getSignature().getSignatureAlgorithm());
+            assertEquals(SERVER_RANDOM, sessionStatus.getSignature().getServerRandom());
+
             assertNotNull(sessionStatus.getCert());
-            assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHhjCCBW6gAwIBAgIQDNYLtVwrKURYStrYApYViTANBgkqhkiG9"));
+            assertThat(sessionStatus.getCert().getValue(), startsWith("MIIGszCCBjmgAwIBAgIQZDoy+8wlWu/meKNnbvNU4zAKBggqhkjOPQQDAzBxMSww"));
+            assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
+        }
+
+        @Test
+        void getSessionStatus_forSuccessfulCertificateRequest() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-successful-certificate-choice.json");
+            assertSuccessfulResponse(sessionStatus);
+
+            assertNotNull(sessionStatus.getCert());
+            assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30zeIncWmIlTAKBggqhkjOPQQDAzBxMSww"));
+            assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
+        }
+
+        @Test
+        void getSessionStatus_forSuccessfulSignatureRequest() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-successful-signature.json");
+            assertSuccessfulResponse(sessionStatus);
+            assertEquals("verificationCodeChoice", sessionStatus.getInteractionFlowUsed());
+
+            assertEquals("RAW_DIGEST_SIGNATURE", sessionStatus.getSignatureProtocol());
+            assertNotNull(sessionStatus.getSignature());
+            assertThat(sessionStatus.getSignature().getValue(), startsWith("fa6riQ8ZXb6esyDpsag9xwupVv5c64jjlvIJ5b+A9g45onozUnd3MMM8S5UYmrgL"));
+            assertEquals("sha256WithRSAEncryption", sessionStatus.getSignature().getSignatureAlgorithm());
+
+            assertNotNull(sessionStatus.getCert());
+            assertThat(sessionStatus.getCert().getValue(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30zeIncWmIlTAKBggqhkjOPQQDAzBxMSww"));
             assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
         }
 
         @Test
         void getSessionStatus_hasUserAgentHeader() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusForSuccessfulSigningRequest.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-successful-authentication.json");
             assertSuccessfulResponse(sessionStatus);
 
             verify(getRequestedFor(urlEqualTo("/session/de305d54-75b4-431b-adb2-eb6b9e546016"))
@@ -128,7 +164,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void getSessionStatus_withTimeoutParameter() {
-            stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "v2/responses/sessionStatusForSuccessfulCertificateRequest.json");
+            stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", "v3/responses/session-status-successful-authentication.json");
             connector.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
             SessionStatus sessionStatus = connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
             assertSuccessfulResponse(sessionStatus);
@@ -145,67 +181,73 @@ class SmartIdRestConnectorTest {
 
         @Test
         void getSessionStatus_userHasRefused() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedGeneral.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-user-refused.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED");
         }
 
         @Test
         void getSessionStatus_userHasRefusedConfirmationMessage() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedConfirmationMessage.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-user-refused-confirmation.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE");
         }
 
         @Test
         void getSessionStatus_userHasRefusedConfirmationMessageWithVerificationCodeChoice() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedConfirmationMessageWithVerificationCodeChoice.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-user-refused-confirmation-vc-choice.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE");
         }
 
         @Test
         void getSessionStatus_userHasRefusedDisplayTextAndPin() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedDisplayTextAndPin.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-user-refused-display-text-and-pin.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_DISPLAYTEXTANDPIN");
         }
 
         @Test
         void getSessionStatus_userHasRefusedVerificationCodeChoice() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserRefusedVerificationCodeChoice.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-user-refused-vc-choice.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_VC_CHOICE");
         }
 
         @Test
+        void getSessionStatus_userHasRefusedCertChoice() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-user-refused-cert-choice.json");
+            assertSessionStatusErrorWithEndResult(sessionStatus, "USER_REFUSED_CERT_CHOICE");
+        }
+
+        @Test
         void getSessionStatus_timeout() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenTimeout.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-timeout.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "TIMEOUT");
         }
 
         @Test
         void getSessionStatus_userHasSelectedWrongVcCode() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenUserHasSelectedWrongVcCode.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-wrong-vc.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "WRONG_VC");
         }
 
         @Test
         void getSessionStatus_whenDocumentUnusable() {
-            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v2/responses/sessionStatusWhenDocumentUnusable.json");
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("v3/responses/session-status-document-unusable.json");
             assertSessionStatusErrorWithEndResult(sessionStatus, "DOCUMENT_UNUSABLE");
-        }
-
-        private void assertSuccessfulResponse(SessionStatus sessionStatus) {
-            assertEquals("COMPLETE", sessionStatus.getState());
-            assertNotNull(sessionStatus.getResult());
-            assertEquals("OK", sessionStatus.getResult().getEndResult());
-            assertEquals("PNOEE-31111111111", sessionStatus.getResult().getDocumentNumber());
-        }
-
-        private void assertSessionStatusErrorWithEndResult(SessionStatus sessionStatus, String endResult) {
-            assertEquals("COMPLETE", sessionStatus.getState());
-            assertEquals(endResult, sessionStatus.getResult().getEndResult());
         }
 
         private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {
             stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
             return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
+        }
+
+        private static void assertSuccessfulResponse(SessionStatus sessionStatus) {
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertNotNull(sessionStatus.getResult());
+            assertEquals("OK", sessionStatus.getResult().getEndResult());
+            assertEquals("PNOEE-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
+        }
+
+        private static void assertSessionStatusErrorWithEndResult(SessionStatus sessionStatus, String endResult) {
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals(endResult, sessionStatus.getResult().getEndResult());
         }
     }
 
@@ -214,6 +256,7 @@ class SmartIdRestConnectorTest {
     class SemanticsIdentifierDynamicLinkAuthentication {
 
         private static final String AUTHENTICATION_WITH_PERSON_CODE_PATH = "/authentication/dynamic-link/etsi/PNOEE-48010010101";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -254,6 +297,7 @@ class SmartIdRestConnectorTest {
     class DocumentNumberDynamicLinkAuthentication {
 
         private static final String AUTHENTICATION_WITH_DOCUMENT_NR_PATH = "/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -297,6 +341,7 @@ class SmartIdRestConnectorTest {
     class AnonymousDynamicLinkAuthentication {
 
         private static final String ANONYMOUS_AUTHENTICATION_PATH = "/authentication/dynamic-link/anonymous";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -411,6 +456,7 @@ class SmartIdRestConnectorTest {
     class DynamicLinkCertificateChoiceTests {
 
         private static final String ANONYMOUS_CERTIFICATE_CHOICE_PATH = "/certificatechoice/dynamic-link/anonymous";
+
         private SmartIdConnector connector;
 
         @BeforeEach
@@ -420,7 +466,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkCertificateChoice() {
-            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "v3/responses/dynamic-link-certificate-choice-response.json");
+            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "v3/responses/dynamic-link-certificate-choice-session-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
@@ -522,6 +568,7 @@ class SmartIdRestConnectorTest {
     class SemanticsIdentifierNotificationCertificateChoiceTests {
 
         private static final String CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH = "/certificatechoice/notification/etsi/PNOEE-31111111111";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -565,6 +612,7 @@ class SmartIdRestConnectorTest {
     class DocumentNumberNotificationCertificateChoiceTests {
 
         private static final String CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH = "/certificatechoice/notification/document/PNOEE-48010010101-MOCK-Q";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -608,6 +656,7 @@ class SmartIdRestConnectorTest {
     class DynamicLinkSignatureTests {
 
         private static final String SIGNATURE_WITH_PERSON_CODE_PATH = "/signature/dynamic-link/etsi/PNOEE-31111111111";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -618,7 +667,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_withSemanticsIdentifier_successful() {
-            stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "v3/responses/dynamic-link-signature-response.json");
+            stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "v3/responses/dynamic-link-signature-session-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -633,7 +682,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDynamicLinkSignature_withDocumentNumber_successful() {
-            stubPostRequestWithResponse("/signature/dynamic-link/document/PNOEE-31111111111-MOCK-Q", "v3/responses/dynamic-link-signature-response.json");
+            stubPostRequestWithResponse("/signature/dynamic-link/document/PNOEE-31111111111-MOCK-Q", "v3/responses/dynamic-link-signature-session-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             String documentNumber = "PNOEE-31111111111-MOCK-Q";
@@ -737,6 +786,8 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18084)
     class SemanticsIdentifierNotificationSignature {
 
+        private static final String SIGNATURE_WITH_PERSON_CODE_PATH = "/signature/notification/etsi/PNOEE-48010010101";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -746,7 +797,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -762,7 +813,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_userAccountNotFound_throwException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "v3/requests/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -774,7 +825,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_requestIsUnauthorized_throwException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse("/signature/notification/etsi/PNOEE-48010010101", "v3/requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "v3/requests/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -786,7 +837,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/etsi/PNOEE-48010010101", 471);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 471);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -798,7 +849,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_throwsPersonShouldViewSmartIdPortalException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/etsi/PNOEE-48010010101", 472);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 472);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -811,7 +862,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationSignature_throwsSmartIdClientException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(
-                    "/signature/notification/etsi/PNOEE-48010010101", 480);
+                    SIGNATURE_WITH_PERSON_CODE_PATH, 480);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -825,7 +876,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_throwsServerMaintenanceException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/etsi/PNOEE-48010010101", 580);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 580);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -840,6 +891,8 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18085)
     class DocumentNumberNotificationSignature {
 
+        private static final String SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/notification/document/PNOEE-48010010101-MOCK-Q";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -849,7 +902,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "v3/requests/notification-signature-session-request.json", "v3/responses/notification-session-response.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -865,7 +918,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_userAccountNotFound_throwException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "v3/requests/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -877,7 +930,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_requestIsUnauthorized_throwException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", "v3/requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "v3/requests/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -889,7 +942,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 471);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 471);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -901,7 +954,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_throwsPersonShouldViewSmartIdPortalException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 472);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 472);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -913,7 +966,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_throwsSmartIdClientException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 480);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 480);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -927,7 +980,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_throwsServerMaintenanceException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse("/signature/notification/document/PNOEE-48010010101-MOCK-Q", 580);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 580);
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 

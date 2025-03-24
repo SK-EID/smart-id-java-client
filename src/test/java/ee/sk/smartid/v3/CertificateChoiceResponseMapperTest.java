@@ -43,6 +43,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.v3.rest.dao.SessionCertificate;
 import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
@@ -128,7 +129,7 @@ public class CertificateChoiceResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setCert(sessionCertificate);
 
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
+        var ex = assertThrows(CertificateLevelMismatchException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
         assertEquals("Certificate level returned by Smart-ID is lower than requested", ex.getMessage());
     }
 

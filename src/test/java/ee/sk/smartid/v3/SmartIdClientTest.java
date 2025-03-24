@@ -77,7 +77,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicLinkCertificateChoice() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-session-response.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -185,7 +185,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicLinkSignature_withDocumentNumber() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "v3/requests/dynamic-link-signature-request.json", "v3/responses/dynamic-link-signature-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "v3/requests/dynamic-link-signature-request.json", "v3/responses/dynamic-link-signature-session-response.json");
 
             var signableHash = new SignableHash();
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
@@ -206,7 +206,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicLinkSignature_withSemanticsIdentifier() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-signature-request.json", "v3/responses/dynamic-link-signature-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/etsi/PNOEE-1234567890", "v3/requests/dynamic-link-signature-request.json", "v3/responses/dynamic-link-signature-session-response.json");
 
             var signableHash = new SignableHash();
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
@@ -368,7 +368,7 @@ class SmartIdClientTest {
         @ParameterizedTest
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DynamicLinkType dynamicLinkType) {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-session-response.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
@@ -391,7 +391,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicContent_createQrCode() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "v3/requests/certificate-choice-session-request.json", "v3/responses/dynamic-link-certificate-choice-session-response.json");
 
             DynamicLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
