@@ -4,7 +4,7 @@ package ee.sk.smartid.v3;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -132,6 +132,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * This response includes essential values such as sessionID, sessionToken, and sessionSecret,
      * which can be used by the Relying Party to manage and verify the session independently.
      * <p>
+     *
      * @return DynamicLinkCertificateChoiceSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
      */

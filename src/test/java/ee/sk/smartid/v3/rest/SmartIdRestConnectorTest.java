@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -382,6 +382,7 @@ class SmartIdRestConnectorTest {
     class SemanticsIdentifierNotificationAuthentication {
 
         private static final String AUTHENTICATION_WITH_PERSON_CODE_PATH = "/authentication/notification/etsi/PNOEE-48010010101";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -419,6 +420,7 @@ class SmartIdRestConnectorTest {
     class DocumentNumberNotificationAuthentication {
 
         private static final String AUTHENTICATION_WITH_DOCUMENT_NR_PATH = "/authentication/notification/document/PNOEE-48010010101-MOCK-Q";
+
         private SmartIdRestConnector connector;
 
         @BeforeEach
@@ -991,7 +993,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
-    private AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
+    private static AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
         var dynamicLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
@@ -1008,7 +1010,7 @@ class SmartIdRestConnectorTest {
         return dynamicLinkAuthenticationSessionRequest;
     }
 
-    private AuthenticationSessionRequest toNotificationAuthenticationSessionRequest() {
+    private static AuthenticationSessionRequest toNotificationAuthenticationSessionRequest() {
         var dynamicLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
@@ -1024,7 +1026,7 @@ class SmartIdRestConnectorTest {
         return dynamicLinkAuthenticationSessionRequest;
     }
 
-    private CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
+    private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
         var request = new CertificateChoiceSessionRequest();
         request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         request.setRelyingPartyName("DEMO");
@@ -1033,7 +1035,7 @@ class SmartIdRestConnectorTest {
         return request;
     }
 
-    private SignatureSessionRequest createSignatureSessionRequest() {
+    private static SignatureSessionRequest createSignatureSessionRequest() {
         var request = new SignatureSessionRequest();
         request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
         request.setRelyingPartyName("BANK123");
@@ -1049,7 +1051,7 @@ class SmartIdRestConnectorTest {
         return request;
     }
 
-    private SignatureSessionRequest createNotificationSignatureSessionRequest() {
+    private static SignatureSessionRequest createNotificationSignatureSessionRequest() {
         var request = new SignatureSessionRequest();
         request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         request.setRelyingPartyName("DEMO");

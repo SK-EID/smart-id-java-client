@@ -4,7 +4,7 @@ package ee.sk.smartid.v2;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,10 +33,8 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 
@@ -54,13 +52,13 @@ import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.v2.rest.SessionStatusPoller;
 import ee.sk.smartid.v2.rest.SmartIdConnectorSpy;
+import ee.sk.smartid.v2.rest.dao.Capability;
 import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SessionSignature;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionResponse;
-import ee.sk.smartid.v2.rest.SessionStatusPoller;
-import ee.sk.smartid.v2.rest.dao.Capability;
 
 public class SignatureRequestBuilderTest {
 

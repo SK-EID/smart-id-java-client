@@ -4,7 +4,7 @@ package ee.sk.smartid.v2.util;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2022 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,10 +41,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.util.NationalIdentityNumberUtil;
 import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.v2.CertificateUtil;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 public class NationalIdentityNumberUtilTest {
 

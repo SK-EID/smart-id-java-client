@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,7 @@ public class DynamicLinkSessionResponse implements Serializable {
     private String sessionToken;
     private String sessionSecret;
 
-    public DynamicLinkSessionResponse(){
+    public DynamicLinkSessionResponse() {
         receivedAt = Instant.now();
     }
 

@@ -4,7 +4,7 @@ package ee.sk.smartid.v2.integration;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2022 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -59,14 +59,14 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.CertificateParser;
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.FileUtil;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.AuthenticationHash;
 import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.v2.SignableHash;
