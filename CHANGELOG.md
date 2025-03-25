@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - Added AuthenticationResponseMapper for validating required fields and mapping session status to authentication response 
     - Added AuthenticationResponseValidator to validate certificate and signed authentication response and construct AuthenticationIdentity
     - Added SignatureResponseMapper for validating required fields and mapping session status to signature response
+    - Added CertificateChoiceResponseMapper for validating required fields and mapping session status to certificate choice response
 
 ### Changed
 - Most of the existing code for RP API v2.0 has been moved into the ee.sk.smartid.v2 package for clarity.
