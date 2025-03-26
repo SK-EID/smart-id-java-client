@@ -317,7 +317,7 @@ class SmartIdClientTest {
 
         @Test
         void fetchFinalSessionStatus() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-ok.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "v3/responses/session-status-successful-authentication.json");
 
             SessionStatus status = smartIdClient.getSessionStatusPoller().fetchFinalSessionStatus("abcdef1234567890");
 
