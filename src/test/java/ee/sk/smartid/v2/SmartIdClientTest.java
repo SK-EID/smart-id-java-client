@@ -4,7 +4,7 @@ package ee.sk.smartid.v2;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -79,11 +79,11 @@ import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppE
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
-import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.SmartIdConnector;
 import ee.sk.smartid.v2.rest.SmartIdRestConnector;
+import ee.sk.smartid.v2.rest.dao.Interaction;
+import ee.sk.smartid.v2.rest.dao.SessionStatus;
 
 @WireMockTest(httpPort = 18089)
 class SmartIdClientTest {

@@ -7,16 +7,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Support for handling RP API v3.0 requests. View V3 section in README.md for more information. Related classes can be found in the ee.sk.smartid.v3
   package.
-  - New builder classes to start dynamic-link sessions:
+  - New builder classes to start v3 sessions:
     - DynamicLinkAuthenticationSessionRequestBuilder
     - DynamicLinkCertificateChoiceSessionRequestBuilder
     - DynamicLinkSignatureSessionRequestBuilder
-  - Helper class for generating authCode used in generating dynamic link - AuthCode#generateAuthCode()
-  - Helper class for generating Qr-code - QrCodeGenerator
-  - Helper class for building and generating dynamic-link and/or QR-code - DynamicContentBuilder
-  - Sessions status request handling for the v3 path.
-    - Helper class for validating completed auth session status response - DynamicLinkAuthenticationResponseMapper
-    - Constructing AuthenticationIdentity from DynamicLinkAuthenticationResponse - AuthenticationResponseValidator
+    - NotificationAuthenticationSessionRequestBuilder
+    - NotificationCertificateChoiceSessionRequestBuilder
+    - NotificationSignatureSessionRequestBuilder
+  - Helper class for dynamic link
+    - AuthCode - used for generating authCode necessary for dynamic-link
+    - QrCodeGenerator - to create QR-code from dynamic-link
+    - DynamicContentBuilder - to create dynamic link or QR-code
+  - Support for sessions status request handling for the v3 path.
+    - Added AuthenticationResponseMapper for validating required fields and mapping session status to authentication response 
+    - Added AuthenticationResponseValidator to validate certificate and signed authentication response and construct AuthenticationIdentity
+    - Added SignatureResponseMapper for validating required fields and mapping session status to signature response
+    - Added CertificateChoiceResponseMapper for validating required fields and mapping session status to certificate choice response
 
 ### Changed
 - Most of the existing code for RP API v2.0 has been moved into the ee.sk.smartid.v2 package for clarity.
@@ -28,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Removed deprecated methods from AuthenticationIdentity
 
 ### Java and dependency updates
-- Updated java to version 17
+- Updated minimal supported java to version 17
 - Updated slf4j-api to version 2.0.16
 - Updated jackson dependencies to version 2.17.2
 - Added jakarta.ws.rs:jakarta.ws.rs-api

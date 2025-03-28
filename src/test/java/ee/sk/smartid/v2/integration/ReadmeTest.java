@@ -1,10 +1,10 @@
-package ee.sk.smartid.integration;
+package ee.sk.smartid.v2.integration;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2022 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,23 +57,23 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.v2.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateParser;
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.FileUtil;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v2.AuthenticationHash;
+import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.v2.SignableHash;
 import ee.sk.smartid.v2.SmartIdAuthenticationResponse;
 import ee.sk.smartid.v2.SmartIdCertificate;
 import ee.sk.smartid.v2.SmartIdClient;
 import ee.sk.smartid.v2.SmartIdSignature;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
-import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.v2.rest.SmartIdConnector;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
@@ -421,7 +421,7 @@ Available interactions:
 
 RP uses `allowedInteractionsOrder` parameter to list interactions it allows for the current transaction. Not all app versions can support all interactions though.
 The Smart-ID server is aware of which app installations support which interactions. When processing Replying Party request the first interaction supported by the app is taken from `allowedInteractionsOrder` list and sent to client.
-The interaction that was actually used is reported back to RP with interactionUsed response parameter to the session request.
+The interaction that was actually used is reported back to RP with interactionFlowUsed response parameter to the session request.
 If the app cannot support any interaction requested the session is cancelled and client throws exception `RequiredInteractionNotSupportedByAppException`.
 
 `displayText60`, `displayText200` - Text to display for authentication consent dialog on the mobile device. Limited to 60 and 200 characters respectively.

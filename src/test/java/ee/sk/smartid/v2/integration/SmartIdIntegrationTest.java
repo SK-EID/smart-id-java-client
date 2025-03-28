@@ -1,10 +1,10 @@
-package ee.sk.smartid.integration;
+package ee.sk.smartid.v2.integration;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,12 +42,12 @@ import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.v2.AuthenticationHash;
 import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.v2.AuthenticationResponseValidator;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v2.AuthenticationHash;
+import ee.sk.smartid.v2.AuthenticationResponseValidator;
 import ee.sk.smartid.v2.SignableData;
 import ee.sk.smartid.v2.SmartIdAuthenticationResponse;
 import ee.sk.smartid.v2.SmartIdCertificate;
@@ -76,8 +76,6 @@ public class SmartIdIntegrationTest {
         client.setRelyingPartyName(RELYING_PARTY_NAME);
         client.setHostUrl(HOST_URL);
         client.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
-
-        // temporary solution to skip tests going against smart-id demo env
     }
 
     @Test

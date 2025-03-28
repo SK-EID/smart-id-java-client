@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ public class SessionStatusPoller {
     private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
         SessionStatus sessionStatus = null;
         while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
-            sessionStatus = getSessionsStatus(sessionId);
+            sessionStatus = getSessionStatus(sessionId);
             if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
                 break;
             }
@@ -84,7 +84,7 @@ public class SessionStatusPoller {
      * @param sessionId session id from init session response
      * @return Sessions status
      */
-    public SessionStatus getSessionsStatus(String sessionId) {
+    public SessionStatus getSessionStatus(String sessionId) {
         logger.debug("Querying session status");
         return connector.getSessionStatus(sessionId);
     }

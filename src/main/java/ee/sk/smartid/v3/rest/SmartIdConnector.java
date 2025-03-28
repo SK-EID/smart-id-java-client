@@ -4,7 +4,7 @@ package ee.sk.smartid.v3.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -67,7 +67,7 @@ public interface SmartIdConnector extends Serializable {
      * @param request CertificateChoiceSessionRequest containing necessary parameters
      * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSessionResponse getCertificate(CertificateChoiceSessionRequest request);
+    DynamicLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request);
 
     /**
      * Initiates a notification based certificate choice request.

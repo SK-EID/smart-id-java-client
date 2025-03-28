@@ -1,3 +1,4 @@
 {
-  "sessionID": "test-session-id"
+  "sessionID": "00000000-0000-0000-0000-000000000000",
+  "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
 }

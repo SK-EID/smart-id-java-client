@@ -4,7 +4,7 @@ package ee.sk.smartid.v2;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,10 +29,8 @@ package ee.sk.smartid.v2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.cert.X509Certificate;
 
@@ -52,11 +50,11 @@ import ee.sk.smartid.HashType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.SessionStatusPoller;
 import ee.sk.smartid.v2.rest.SmartIdConnectorSpy;
 import ee.sk.smartid.v2.rest.dao.Capability;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.v2.rest.dao.SessionCertificate;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 

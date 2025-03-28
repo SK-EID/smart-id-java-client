@@ -4,7 +4,7 @@ package ee.sk.smartid.v3;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,36 +41,36 @@ import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
 /**
- * Validates and maps the session status received as dynamic-link authentication response
+ * Validates and maps the received session status to authentication response
  */
-public class DynamicLinkAuthenticationResponseMapper {
+public class AuthenticationResponseMapper {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicLinkAuthenticationResponseMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseMapper.class);
 
     /**
-     * Maps session status to dynamic-link authentication response
+     * Maps session status to authentication response
      *
      * @param sessionStatus session status received from Smart-ID server
-     * @return dynamic-link authentication response
+     * @return authentication response
      */
-    public static DynamicLinkAuthenticationResponse from(SessionStatus sessionStatus) {
+    public static AuthenticationResponse from(SessionStatus sessionStatus) {
         validateSessionStatus(sessionStatus);
 
         SessionResult sessionResult = sessionStatus.getResult();
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate sessionCertificate = sessionStatus.getCert();
 
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setEndResult(sessionResult.getEndResult());
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        dynamicLinkAuthenticationResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
-        dynamicLinkAuthenticationResponse.setCertificate(toCertificate(sessionCertificate));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(toAuthenticationCertificateLevel(sessionCertificate));
-        dynamicLinkAuthenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-        dynamicLinkAuthenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
-        dynamicLinkAuthenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
-        dynamicLinkAuthenticationResponse.setServerRandom(sessionSignature.getServerRandom());
-        return dynamicLinkAuthenticationResponse;
+        var authenticationResponse = new AuthenticationResponse();
+        authenticationResponse.setEndResult(sessionResult.getEndResult());
+        authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
+        authenticationResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
+        authenticationResponse.setCertificate(toCertificate(sessionCertificate));
+        authenticationResponse.setCertificateLevel(toAuthenticationCertificateLevel(sessionCertificate));
+        authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
+        authenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        authenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
+        authenticationResponse.setServerRandom(sessionSignature.getServerRandom());
+        return authenticationResponse;
     }
 
     private static void validateSessionStatus(SessionStatus sessionStatus) {

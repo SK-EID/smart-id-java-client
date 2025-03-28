@@ -4,7 +4,7 @@ package ee.sk.smartid.v3;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -66,7 +66,7 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
@@ -94,7 +94,7 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity_certificateLevelHigherThanRequested_ok() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
@@ -124,7 +124,7 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity_requestedCertificateLevelIsSetToNull_doNotValidateCertificateLevel_ok() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
@@ -160,7 +160,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_randomChallengeIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel.QUALIFIED, null));
 
         assertEquals("Random challenge is not provided", exception.getMessage());
@@ -168,7 +168,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_certificateValueIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
 
         assertEquals("Certificate is not provided", exception.getMessage());
@@ -176,7 +176,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_expiredCertificateProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(EXPIRED_CERT));
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
 
@@ -185,7 +185,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_certificateIsNotTrusted_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
 
@@ -194,7 +194,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_certificateLevelIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(null);
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
@@ -204,7 +204,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_certificateLevelIsLowerThanRequested_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.ADVANCED);
         var exception = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
@@ -214,7 +214,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_algorithmNameIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
@@ -224,7 +224,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_signatureValueIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
@@ -235,7 +235,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_invalidAlgorithmNameIsProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName("invalidAlgorithmName");
@@ -247,7 +247,7 @@ class AuthenticationResponseValidatorTest {
 
     @Test
     void toAuthenticationIdentity_invalidSignatureValueIsProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
@@ -260,7 +260,7 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity_signatureDoesNotMatch_throwException() {
-        var dynamicLinkAuthenticationResponse = new DynamicLinkAuthenticationResponse();
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
         dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");

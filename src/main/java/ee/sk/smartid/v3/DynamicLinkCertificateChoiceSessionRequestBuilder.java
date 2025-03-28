@@ -4,7 +4,7 @@ package ee.sk.smartid.v3;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,6 +33,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.v3.rest.SmartIdConnector;
 import ee.sk.smartid.v3.rest.dao.CertificateChoiceSessionRequest;
@@ -131,16 +132,17 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * This response includes essential values such as sessionID, sessionToken, and sessionSecret,
      * which can be used by the Relying Party to manage and verify the session independently.
      * <p>
+     *
      * @return DynamicLinkCertificateChoiceSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
      */
     public DynamicLinkSessionResponse initCertificateChoice() {
         validateParameters();
         CertificateChoiceSessionRequest request = createCertificateRequest();
-        DynamicLinkSessionResponse response = connector.getCertificate(request);
+        DynamicLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
 
         if (response == null || response.getSessionID() == null) {
-            throw new SmartIdClientException("Dynamic link certificate choice session failed: invalid response received.");
+            throw new UnprocessableSmartIdResponseException("Dynamic link certificate choice session failed: invalid response received.");
         }
         return response;
     }

@@ -4,7 +4,7 @@ package ee.sk.smartid.v3;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -50,7 +50,7 @@ import ee.sk.smartid.v3.rest.dao.SessionResult;
 import ee.sk.smartid.v3.rest.dao.SessionSignature;
 import ee.sk.smartid.v3.rest.dao.SessionStatus;
 
-class DynamicLinkAuthenticationResponseMapperTest {
+class AuthenticationResponseMapperTest {
 
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
 
@@ -61,27 +61,27 @@ class DynamicLinkAuthenticationResponseMapperTest {
         var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
 
-        DynamicLinkAuthenticationResponse dynamicLinkAuthenticationResponse = DynamicLinkAuthenticationResponseMapper.from(sessionStatus);
+        AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
 
-        assertEquals("OK", dynamicLinkAuthenticationResponse.getEndResult());
-        assertEquals("signatureValue", dynamicLinkAuthenticationResponse.getSignatureValueInBase64());
-        assertEquals(toX509Certificate(AUTH_CERT), dynamicLinkAuthenticationResponse.getCertificate());
-        assertEquals(AuthenticationCertificateLevel.QUALIFIED, dynamicLinkAuthenticationResponse.getCertificateLevel());
-        assertEquals("PNOEE-12345678901-MOCK-Q", dynamicLinkAuthenticationResponse.getDocumentNumber());
-        assertEquals("displayTextAndPIN", dynamicLinkAuthenticationResponse.getInteractionFlowUsed());
-        assertEquals("0.0.0.0", dynamicLinkAuthenticationResponse.getDeviceIpAddress());
+        assertEquals("OK", authenticationResponse.getEndResult());
+        assertEquals("signatureValue", authenticationResponse.getSignatureValueInBase64());
+        assertEquals(toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
+        assertEquals(AuthenticationCertificateLevel.QUALIFIED, authenticationResponse.getCertificateLevel());
+        assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
+        assertEquals("displayTextAndPIN", authenticationResponse.getInteractionFlowUsed());
+        assertEquals("0.0.0.0", authenticationResponse.getDeviceIpAddress());
     }
 
     @Test
     void from_sessionStatusNull_throwException() {
-        var exception = assertThrows(SmartIdClientException.class, () -> DynamicLinkAuthenticationResponseMapper.from(null));
+        var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(null));
         assertEquals("Session status parameter is not provided", exception.getMessage());
     }
 
     @Test
     void from_sessionResultIsNotPresent_throwException() {
         var sessionStatus = new SessionStatus();
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Session result parameter is missing", exception.getMessage());
     }
 
@@ -94,7 +94,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("End result parameter is missing in the session result", exception.getMessage());
     }
 
@@ -106,7 +106,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        assertThrows(SessionTimeoutException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        assertThrows(SessionTimeoutException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
     }
 
     @ParameterizedTest
@@ -117,7 +117,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Document number parameter is missing in the session result", exception.getMessage());
     }
 
@@ -130,7 +130,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setSignatureProtocol(signatureProtocol);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Signature protocol parameter is missing in session status", exception.getMessage());
     }
 
@@ -143,7 +143,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setSignatureProtocol(invalidSignatureProtocol);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Invalid signature protocol in sessions status", exception.getMessage());
     }
 
@@ -155,7 +155,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setSignatureProtocol("ACSP_V1");
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Signature parameter is missing in session status", exception.getMessage());
     }
 
@@ -172,7 +172,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol("ACSP_V1");
         sessionStatus.setSignature(sessionSignature);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Value parameter is missing in signature", exception.getMessage());
     }
 
@@ -190,7 +190,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol("ACSP_V1");
         sessionStatus.setSignature(sessionSignature);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Server random parameter is missing in signature", exception.getMessage());
     }
 
@@ -205,7 +205,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol("ACSP_V1");
         sessionStatus.setSignature(sessionSignature);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Signature algorithm parameter is missing in signature", exception.getMessage());
     }
 
@@ -219,7 +219,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol("ACSP_V1");
         sessionStatus.setSignature(sessionSignature);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Certificate parameter is missing in session status", exception.getMessage());
     }
 
@@ -238,7 +238,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Value parameter is missing in certificate", exception.getMessage());
     }
 
@@ -255,7 +255,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Certificate level parameter is missing in certificate", exception.getMessage());
     }
 
@@ -273,7 +273,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setCert(sessionCertificate);
         sessionStatus.setInteractionFlowUsed(interactionFlowUsed);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Interaction flow used parameter is missing in the session status", exception.getMessage());
     }
 
@@ -290,7 +290,7 @@ class DynamicLinkAuthenticationResponseMapperTest {
         sessionStatus.setCert(sessionCertificate);
         sessionStatus.setInteractionFlowUsed("displayTextAndPIN");
 
-        var exception = assertThrows(SmartIdClientException.class, () -> DynamicLinkAuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertTrue(exception.getMessage().startsWith("Failed to parse X509 certificate from"));
     }
 

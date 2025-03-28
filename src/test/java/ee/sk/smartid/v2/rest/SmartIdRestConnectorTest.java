@@ -4,7 +4,7 @@ package ee.sk.smartid.v2.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,18 +57,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import ee.sk.smartid.v2.rest.dao.CertificateRequest;
-import ee.sk.smartid.v2.rest.dao.Interaction;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.v2.ClientRequestHeaderFilter;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.v2.ClientRequestHeaderFilter;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.v2.rest.dao.AuthenticationSessionResponse;
 import ee.sk.smartid.v2.rest.dao.CertificateChoiceResponse;
+import ee.sk.smartid.v2.rest.dao.CertificateRequest;
+import ee.sk.smartid.v2.rest.dao.Interaction;
 import ee.sk.smartid.v2.rest.dao.SessionStatus;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.v2.rest.dao.SignatureSessionResponse;

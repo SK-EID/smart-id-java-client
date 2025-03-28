@@ -4,7 +4,7 @@ package ee.sk.smartid.v3;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,7 +52,7 @@ public class SignatureResponseMapper {
     private static final Logger logger = LoggerFactory.getLogger(SignatureResponseMapper.class);
 
     /**
-     * Create {@link SingatureResponse} from {@link SessionStatus}
+     * Create {@link SignatureResponse} from {@link SessionStatus}
      *
      * @param sessionStatus             session status response
      * @param requestedCertificateLevel certificate level used to start the signature session
@@ -62,28 +62,27 @@ public class SignatureResponseMapper {
      * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
      * @throws DocumentUnusableException                  when for some reason, this relying party request cannot be completed.
      */
-    public static SingatureResponse from(SessionStatus sessionStatus,
+    public static SignatureResponse from(SessionStatus sessionStatus,
                                          String requestedCertificateLevel
-    ) throws UserRefusedException,
-            UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
+    ) throws UserRefusedException, UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
         validateSessionsStatus(sessionStatus, requestedCertificateLevel);
 
         SessionResult sessionResult = sessionStatus.getResult();
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate certificate = sessionStatus.getCert();
 
-        var singatureResponse = new SingatureResponse();
-        singatureResponse.setEndResult(sessionResult.getEndResult());
-        singatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        singatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
-        singatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
-        singatureResponse.setRequestedCertificateLevel(requestedCertificateLevel);
-        singatureResponse.setCertificateLevel(certificate.getCertificateLevel());
-        singatureResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-        singatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
-        singatureResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
+        var signatureResponse = new SignatureResponse();
+        signatureResponse.setEndResult(sessionResult.getEndResult());
+        signatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
+        signatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
+        signatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
+        signatureResponse.setRequestedCertificateLevel(requestedCertificateLevel);
+        signatureResponse.setCertificateLevel(certificate.getCertificateLevel());
+        signatureResponse.setDocumentNumber(sessionResult.getDocumentNumber());
+        signatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        signatureResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
 
-        return singatureResponse;
+        return signatureResponse;
     }
 
     private static void validateSessionsStatus(SessionStatus sessionStatus, String requestedCertificateLevel) {

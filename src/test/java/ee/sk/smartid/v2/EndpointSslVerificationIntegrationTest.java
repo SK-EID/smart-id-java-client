@@ -4,7 +4,7 @@ package ee.sk.smartid.v2;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2022 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
-import ee.sk.smartid.integration.SmartIdIntegrationTest;
+import ee.sk.smartid.v2.integration.SmartIdIntegrationTest;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
