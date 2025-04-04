@@ -2,9 +2,9 @@
 
 Library v3.0 supports Smart-ID v2 and Smart-ID v3 API.
 All the previous code was moved to v2 package and all the code necessary for Smart-ID API v3 is under package v3. 
-Some class could also be used in v3 and for those classes the package did not change.
+Some classes could also be used in v3 and for those classes the package did not change.
 
-# Why code for Smart-ID v2 API was not removed?
+# Why was the code for Smart-ID v2 API not removed?
 
 To allow more gradual migration from Smart-ID v2 to Smart-ID v3, the library v3.0 supports both versions of the Smart-ID API.
 For example, switching to Smart-ID v3 authentication can be done first and then switching to Smart-ID v3 signing can be done later. 
@@ -39,7 +39,7 @@ It is recommended to start using dynamic-link authentication flows from Smart-ID
 ### Moving to V3 authentication flow
 
 1. Replace generating authentication hash with generating random challenge using `RandomChallenge.generate()`
-2. [Create dynamic-link authentication builder and set values.](README.md#examples-of-initiating-a-dynamic-link-authentication-session) and start authentication session by calling build-method `initAuthenticationSession()`
+2. [Create dynamic-link authentication builder and set values](README.md#examples-of-initiating-a-dynamic-link-authentication-session) and start authentication session by calling build-method `initAuthenticationSession()`
 3. Replace showing verification code with showing dynamic link or QR-code. Recommended to use dynamic link for same device and QR-code for cross-device authentication.
    - [Create dynamic link or QR-code](README.md#generating-qr-code-or-dynamic-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
 4. Querying session status can be done in parallel while displaying dynamic content. Check out [session status poller](README.md#example-of-using-session-status-poller-to-query-final-sessions-status). `ee.sk.smartid.v3.SmartIdClient` provides method `getSessionsStatusPoller()` to get version specific session status poller.
