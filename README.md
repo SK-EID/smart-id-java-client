@@ -867,8 +867,8 @@ Scanning QR-code or clicking on dynamic link will prove that the certificates of
 
 #### Request Parameters
 
-* `relyingPartyUUID`: UUID of the Relying Party.
-* `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
 * `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency. 
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
@@ -909,7 +909,7 @@ The request parameters for the dynamic-link signature session are as follows:
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
-* `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
+* `certificateLevel`: Level of certificate requested. Possible values are ADVANCED, QUALIFIED or QSCD. Defaults to QUALIFIED.
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
 * `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
@@ -1252,7 +1252,7 @@ if("COMPLETE".equalsIgnoreCase(sessionStatus.getState())){
 
 #### Example of querying sessions status only once
 The following example shows how to use the SessionStatusPoller to only query the sessions status single time.
-NB! If using this method for dynamic-link flows. Make sure the pollingSleepTimeout and 
+NB! If using this method for dynamic-link flows. Make sure the pollingSleepTimeout is not set or does not impact generating the dynamic-content for every second.
 
 ```java
 *SessionResponse sessionResponse;
@@ -1394,7 +1394,7 @@ The session status response may return various error codes indicating the outcom
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
-* `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
+* `certificateLevel`: Level of certificate requested. Possible values are ADVANCED, QUALIFIED or QSCD. Defaults to QUALIFIED.
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V1.
 * `signatureProtocolParameters`: Required. Parameters for the ACSP_V1 signature protocol.
     * `randomChallenge`: Required. Random value with size in range of 32-64 bytes. Must be base64 encoded.
@@ -1480,8 +1480,8 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 
 #### Request parameters
 
-* `relyingPartyUUID`: UUID of the Relying Party.
-* `relyingPartyName`: RP friendly name, one of those configured for the particular RP. Limited to 32 bytes in UTF-8 encoding.
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
 * `nonce`: Random string, up to 30 characters. If present, must have at least 1 character.
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
