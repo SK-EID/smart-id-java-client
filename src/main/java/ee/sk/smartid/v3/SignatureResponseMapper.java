@@ -154,13 +154,12 @@ public class SignatureResponseMapper {
         try {
             X509Certificate cert = CertificateParser.parseX509Certificate(sessionCertificate.getValue());
             cert.checkValidity();
-
-            if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
-                throw new CertificateLevelMismatchException();
-            }
-
         } catch (Exception e) {
             throw new SmartIdClientException("Certificate validation failed", e);
+        }
+
+        if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
+            throw new CertificateLevelMismatchException();
         }
     }
 
