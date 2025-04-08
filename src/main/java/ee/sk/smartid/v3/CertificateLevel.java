@@ -44,6 +44,6 @@ public enum CertificateLevel {
      * @return the level of the certificate
      */
     public boolean isSameLevelOrHigher(CertificateLevel certificateLevel) {
-        return this == certificateLevel || this.level > certificateLevel.level;
+        return this == certificateLevel || this.level >= certificateLevel.level;
     }
 }

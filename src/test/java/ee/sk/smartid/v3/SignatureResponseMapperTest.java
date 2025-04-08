@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import ee.sk.smartid.FileUtil;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
@@ -152,18 +153,8 @@ class SignatureResponseMapperTest {
             SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
             sessionStatus.getCert().setCertificateLevel("ADVANCED");
 
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
-
-            assertTrue(ex.getCause() instanceof CertificateLevelMismatchException);
-        }
-
-        @Test
-        void from_withQscdRequestedAndQualifiedReturned() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
-            sessionStatus.getCert().setCertificateLevel("QUALIFIED");
-
-            var ex = assertThrows(SmartIdClientException.class, () -> SignatureResponseMapper.from(sessionStatus, "QSCD"));
-            assertTrue(ex.getCause() instanceof CertificateLevelMismatchException);
+            var ex = assertThrows(CertificateLevelMismatchException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+            assertEquals("Signer's certificate is below requested certificate level", ex.getMessage());
         }
     }
 
@@ -177,6 +168,17 @@ class SignatureResponseMapperTest {
 
             SignatureResponse response = SignatureResponseMapper.from(sessionStatus, "QUALIFIED");
             assertEquals("OK", response.getEndResult());
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = CertificateLevel.class, names = {"QUALIFIED", "QSCD"})
+        void from_returnedCertificateLevelSameAsRequested(CertificateLevel certificateLevel) {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
+
+            SignatureResponse response = SignatureResponseMapper.from(sessionStatus, certificateLevel.name());
+            assertEquals("OK", response.getEndResult());
+            assertEquals("QUALIFIED", response.getCertificateLevel());
         }
 
         @Test

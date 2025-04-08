@@ -12,10 +12,10 @@ package ee.sk.smartid.v3;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,6 +38,7 @@ import java.security.cert.X509Certificate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import ee.sk.smartid.FileUtil;
@@ -68,6 +69,29 @@ public class CertificateChoiceResponseMapperTest {
         sessionStatus.setCert(sessionCertificate);
 
         CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus);
+
+        assertEquals("OK", response.getEndResult());
+        assertEquals("PNOEE-40504040001-MOCK-Q", response.getDocumentNumber());
+        assertEquals(toX509Certificate(), response.getCertificate());
+        assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = CertificateLevel.class, names = {"QUALIFIED", "QSCD"})
+    void from_returnedCertificateLevelSameAsRequested_ok(CertificateLevel requestedCertificateLevel) {
+        var sessionResult = new SessionResult();
+        sessionResult.setEndResult("OK");
+        sessionResult.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+
+        var sessionCertificate = new SessionCertificate();
+        sessionCertificate.setValue(getEncodedCertificateData(CERTIFICATE_CHOICE_CERT));
+        sessionCertificate.setCertificateLevel("QUALIFIED");
+
+        var sessionStatus = new SessionStatus();
+        sessionStatus.setResult(sessionResult);
+        sessionStatus.setCert(sessionCertificate);
+
+        CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus, requestedCertificateLevel);
 
         assertEquals("OK", response.getEndResult());
         assertEquals("PNOEE-40504040001-MOCK-Q", response.getDocumentNumber());
