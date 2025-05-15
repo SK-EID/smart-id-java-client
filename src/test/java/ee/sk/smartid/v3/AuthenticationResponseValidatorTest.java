@@ -152,6 +152,38 @@ class AuthenticationResponseValidatorTest {
     }
 
     @Test
+    void toAuthenticationIdentity_certificateHasMatchingIssuerDnAndValidSignature_ok() {
+        var validator = new AuthenticationResponseValidator(new X509Certificate[]{toX509Certificate(CA_CERT)});
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
+
+        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
+
+        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("validSignatureForAuthCert"));
+        dynamicLinkAuthenticationResponse.setServerRandom("serverRandom");
+        dynamicLinkAuthenticationResponse.setEndResult("OK");
+
+        assertThrows(SmartIdClientException.class, () -> validator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallenge"));
+    }
+
+    @Test
+    void toAuthenticationIdentity_certificateHasMatchingKeyButDifferentDN_throwException() {
+        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
+        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
+        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
+        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("validSignatureForFakeCert"));
+        dynamicLinkAuthenticationResponse.setServerRandom("serverRandom");
+        dynamicLinkAuthenticationResponse.setEndResult("OK");
+
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () ->
+                authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallenge"));
+
+        assertEquals("Signer's certificate is not trusted", exception.getMessage());
+    }
+
+    @Test
     void toAuthenticationIdentity_dynamicLinkAuthenticationResponseIsMissing_throwException() {
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(null, null));
 
