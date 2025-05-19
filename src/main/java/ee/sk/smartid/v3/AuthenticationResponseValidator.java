@@ -44,6 +44,12 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
+
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+import javax.security.auth.x500.X500Principal;
 
 import org.slf4j.Logger;
 
@@ -191,20 +197,73 @@ public class AuthenticationResponseValidator {
         }
     }
 
+    private record CertDnDetails(String country, String organization, String commonName) {
+
+        private static CertDnDetails from(X500Principal principal) {
+            String country = null;
+            String organization = null;
+            String commonName = null;
+
+            LdapName ldapName;
+            try {
+                ldapName = new LdapName(principal.getName());
+            } catch (InvalidNameException e) {
+                String errorMessage = "Error getting certificate distinguished name";
+                logger.error(errorMessage, e);
+                throw new SmartIdClientException(errorMessage, e);
+            }
+
+            for (Rdn rdn : ldapName.getRdns()) {
+                if ("C".equalsIgnoreCase(rdn.getType())) {
+                    country = rdn.getValue().toString();
+                } else if ("O".equalsIgnoreCase(rdn.getType())) {
+                    organization = rdn.getValue().toString();
+                } else if ("CN".equalsIgnoreCase(rdn.getType())) {
+                    commonName = rdn.getValue().toString();
+                }
+            }
+            return new CertDnDetails(country, organization, commonName);
+        }
+
+        private static boolean equal(CertDnDetails first, CertDnDetails second) {
+            return Objects.equals(first.country, second.country) &&
+                    Objects.equals(first.organization, second.organization) &&
+                    Objects.equals(first.commonName, second.commonName);
+        }
+    }
+
     private void validateCertificateIsTrusted(X509Certificate responseCertificate) {
+        CertDnDetails issuerDn = CertDnDetails.from(responseCertificate.getIssuerX500Principal());
+
         for (X509Certificate trustedCACertificate : trustedCACertificates) {
+            logger.debug("Verifying signer's certificate '{}' against CA certificate '{}'",
+                    responseCertificate.getSubjectX500Principal(),
+                    trustedCACertificate.getSubjectX500Principal());
+
+            CertDnDetails caCertDn = CertDnDetails.from(trustedCACertificate.getSubjectX500Principal());
+
+            if (!CertDnDetails.equal(issuerDn, caCertDn)) {
+                logger.debug("Skipped trusted CA certificate '{}', no match with signer's certificate issuer '{}'",
+                        trustedCACertificate.getSubjectX500Principal(),
+                        responseCertificate.getIssuerX500Principal());
+                continue;
+            }
+
             try {
                 responseCertificate.verify(trustedCACertificate.getPublicKey());
-                logger.info("Certificate verification passed for '{}' against CA responseCertificate '{}' ",
+                logger.info("Certificate verification passed for '{}' against CA certificate '{}'",
                         responseCertificate.getSubjectX500Principal(),
                         trustedCACertificate.getSubjectX500Principal());
                 return;
             } catch (GeneralSecurityException ex) {
-                logger.debug("Error verifying signer's responseCertificate: {} against CA responseCertificate: {}",
+                logger.debug("Error verifying signer's certificate: {} against CA certificate: {}",
                         responseCertificate.getSubjectX500Principal(),
                         trustedCACertificate.getSubjectX500Principal(), ex);
             }
         }
+
+        logger.error("No suitable trusted CA certificate found: '{}'. Ensure that this CA certificate is present in the trusted CA certificate list",
+                responseCertificate.getIssuerX500Principal());
         throw new UnprocessableSmartIdResponseException("Signer's certificate is not trusted");
     }
 
