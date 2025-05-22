@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/SK-EID/smart-id-java-client.svg?branch=master)](https://app.travis-ci.com/SK-EID/smart-id-java-client)
+[![Tests](https://github.com/SK-EID/smart-id-java-client/actions/workflows/tests.yaml/badge.svg)](https://github.com/SK-EID/smart-id-java-client/actions/workflows/tests.yaml)
 [![Dependencies](https://img.shields.io/librariesio/release/maven/ee.sk.smartid:smart-id-java-client)](https://libraries.io/maven/ee.sk.smartid:smart-id-java-client)
 [![Coverage Status](https://img.shields.io/codecov/c/github/SK-EID/smart-id-java-client.svg)](https://codecov.io/github/SK-EID/smart-id-java-client/)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/ee.sk.smartid/smart-id-java-client/badge.svg)](https://maven-badges.herokuapp.com/maven-central/ee.sk.smartid/smart-id-java-client)
@@ -409,6 +409,7 @@ smartIdSignature.getInteractionFlowUsed(); // which interaction was used
 
 The app can support different interaction flows and a Relying Party can demand a particular flow with or without a fallback possibility.
 Different interaction flows can support different amount of data to display information to user.
+By now all devices (app versions) are supporting a larger amount of data (displayText200) to be displayed to the user.
 
 Available interactions:
 * `displayTextAndPIN` with `displayText60`. The simplest interaction with max 60 chars of text and PIN entry on a single screen. Every app has this interaction available.
