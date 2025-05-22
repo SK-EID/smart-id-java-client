@@ -6,7 +6,7 @@
 
 # Smart-ID Java client
 
-This library supports both Smart-ID API v3.1.
+This library supports Smart-ID API v3.1.
 
 # Table of contents
 
@@ -17,6 +17,9 @@ This library supports both Smart-ID API v3.1.
     *   [Getting the library](#getting-the-library)
     *   [Changelog](#changelog)
 * [How to use it with RP API v3.1](#how-to-use-api-v31)
+    * [Test accounts for testing](#test-accounts-for-testing)
+    * [Logging](#logging)
+        *   [Log request payloads](#log-request-payloads)
     * [Setting up SmartIdClient for v3.1](#setting-up-smartidclient-for-v31)
     * [Dynamic link flows](#dynamic-link-flows)
         * [Dynamic link authentication session](#dynamic-link-authentication-session)
@@ -66,6 +69,8 @@ This library supports both Smart-ID API v3.1.
               * [Initiating a notification-based signature session with document number](#initiating-a-notification-based-signature-session-with-document-number)
         * [Examples of allowed notification-based interactions order](#examples-of-allowed-notification-based-interactions-order)
     * [Exception handling](#exception-handling)
+    * [Network connection configuration of the client](#network-connection-configuration-of-the-client)
+        *   [Example of creating a client with configured ssl context on JBoss using JAXWS RS](#example-of-creating-a-client-with-configured-ssl-context-on-jboss-using-jaxws-rs)
      
 ## Introduction
 
@@ -114,6 +119,21 @@ To use the v3.1 API, import the relevant classes from the ee.sk.smartid package.
 ```java 
 
 import ee.sk.smartid.SmartIdConnector;
+```
+
+## Test accounts for testing
+
+[Test accounts for testing](https://github.com/SK-EID/smart-id-documentation/wiki/Environment-technical-parameters#test-accounts-for-automated-testing)
+
+
+## Logging
+
+### Log request payloads
+
+To log requests going to Smart-ID API set ee.sk.smartid.rest.LoggingFilter to log at trace level.
+For applications on Spring Boot this can be done by adding following line to application.yml:
+```
+logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 ```
 
 ## Setting up SmartIdClient for v3.1
@@ -1176,3 +1196,68 @@ Exception Categories
   These exceptions arise during validation or parsing operations within the library.
   * `CertificateParsingException` Thrown when the X.509 certificate cannot be parsed.
   * `SignatureValidationException` Thrown when signature validation fails due to mismatched algorithms or corrupted data.
+
+## Network connection configuration of the client
+
+Under the hood each operation (authentication, choosing certificate and signing) consist of 2 request steps:
+
+- Initiation request
+- Session status request
+
+Session status request by default is a long poll method, meaning the request method might not return until a timeout expires. Caller can tune each poll's timeout value in milliseconds inside the bounds set by service operator to turn it into a short poll.
+
+```java
+SmartIdClient client = new SmartIdClient();
+// ...
+// sets the timeout for each session status poll
+client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5L); 
+// sets the pause between each session status poll
+client.setPollingSleepTimeout(TimeUnit.SECONDS, 1L); 
+```
+
+As Smart-ID Java client uses Jersey client for network communication underneath, we've exposed Jersey API for network connection configuration.
+
+Here's an example how to configure HTTP connector's custom socket timeouts for the Smart-ID client:
+
+```java
+SmartIdClient client = new SmartIdClient();
+// ...
+ClientConfig clientConfig = new ClientConfig();
+clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 5000);
+clientConfig.property(ClientProperties.READ_TIMEOUT, 30000);
+
+client.setNetworkConnectionConfig(clientConfig);
+```
+And here's an example how to use Apache Http Client with custom socket timeouts as the HTTP connector instead of the default HttpUrlConnection:
+
+```java
+SmartIdClient client = new SmartIdClient();
+// ...
+ClientConfig clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
+RequestConfig reqConfig = RequestConfig.custom()
+        .setConnectTimeout(5000)
+        .setSocketTimeout(30000)
+        .setConnectionRequestTimeout(5000)
+        .build();
+clientConfig.property(ApacheClientProperties.REQUEST_CONFIG, reqConfig);
+
+client.setNetworkConnectionConfig(clientConfig);
+```
+
+Keep in mind that the HTTP connector timeout of waiting for data shouldn't normally be less than the timeout for session status poll.
+
+### Example of creating a client with configured ssl context on JBoss using JAXWS RS
+
+
+```java
+ResteasyClient resteasyClient = new ResteasyClientBuilder()
+        .sslContext(SmartIdClient.createSslContext(Arrays.asList(
+            "pem cert 1", "pem cert 2")))
+        .build();
+
+SmartIdClient client = new SmartIdClient();
+client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+client.setRelyingPartyName("DEMO");
+client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+client.setConfiguredClient(resteasyClient);
+```
