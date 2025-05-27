@@ -185,41 +185,6 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private record CertDnDetails(String country, String organization, String commonName) {
-
-        private static CertDnDetails from(X500Principal principal) {
-            String country = null;
-            String organization = null;
-            String commonName = null;
-
-            LdapName ldapName;
-            try {
-                ldapName = new LdapName(principal.getName());
-            } catch (InvalidNameException e) {
-                String errorMessage = "Error getting certificate distinguished name";
-                logger.error(errorMessage, e);
-                throw new SmartIdClientException(errorMessage, e);
-            }
-
-            for (Rdn rdn : ldapName.getRdns()) {
-                if ("C".equalsIgnoreCase(rdn.getType())) {
-                    country = rdn.getValue().toString();
-                } else if ("O".equalsIgnoreCase(rdn.getType())) {
-                    organization = rdn.getValue().toString();
-                } else if ("CN".equalsIgnoreCase(rdn.getType())) {
-                    commonName = rdn.getValue().toString();
-                }
-            }
-            return new CertDnDetails(country, organization, commonName);
-        }
-
-        private static boolean equal(CertDnDetails first, CertDnDetails second) {
-            return Objects.equals(first.country, second.country) &&
-                    Objects.equals(first.organization, second.organization) &&
-                    Objects.equals(first.commonName, second.commonName);
-        }
-    }
-
     private void validateCertificateIsTrusted(X509Certificate responseCertificate) {
         CertDnDetails issuerDn = CertDnDetails.from(responseCertificate.getIssuerX500Principal());
 
@@ -295,16 +260,7 @@ public class AuthenticationResponseValidator {
                 randomChallenge);
     }
 
-    private static class CertDnDetails {
-        private final String country;
-        private final String organization;
-        private final String commonName;
-
-        public CertDnDetails(String country, String organization, String commonName) {
-            this.country = country;
-            this.organization = organization;
-            this.commonName = commonName;
-        }
+    private record CertDnDetails(String country, String organization, String commonName) {
 
         private static CertDnDetails from(X500Principal principal) {
             String country = null;

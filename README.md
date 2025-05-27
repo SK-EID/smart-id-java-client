@@ -84,7 +84,7 @@ This library supports Smart-ID API v3.1.
 * creating digital signature
 
 ## Requirements
- * Java 17 or later
+ * Java 17, 21 or later
 
 ## Getting the library
 
