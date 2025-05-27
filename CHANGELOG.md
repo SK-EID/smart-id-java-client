@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [3.1] - 2025-05-20
+
+### Changed
+- Moved Smart-ID v3 related classes from ee.sk.smartid.v3 package to root ee.sk.smartid package.
+- Removed all Smart-ID v2 related classes, tests, and documentation.
+- Updated README to reflect removal of v2-related information.
+
 ## [3.0] - 2023-10-14
 
 ### Added
