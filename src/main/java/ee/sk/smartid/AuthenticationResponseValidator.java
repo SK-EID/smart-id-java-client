@@ -173,16 +173,6 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private static Signature getSignature(AuthenticationResponse authenticationResponse) throws NoSuchAlgorithmException {
-        String algorithm = authenticationResponse.getAlgorithmName().replace("Encryption", "");
-        try {
-            return Signature.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException ex) {
-            logger.error("Invalid signature algorithm was provided: {}", algorithm);
-            throw new UnprocessableSmartIdResponseException("Invalid signature algorithm was provided", ex);
-        }
-    }
-
     private void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
         if (requestedCertificateLevel == null) {
             return;
@@ -192,41 +182,6 @@ public class AuthenticationResponseValidator {
         }
         if (!authenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
             throw new CertificateLevelMismatchException();
-        }
-    }
-
-    private record CertDnDetails(String country, String organization, String commonName) {
-
-        private static CertDnDetails from(X500Principal principal) {
-            String country = null;
-            String organization = null;
-            String commonName = null;
-
-            LdapName ldapName;
-            try {
-                ldapName = new LdapName(principal.getName());
-            } catch (InvalidNameException e) {
-                String errorMessage = "Error getting certificate distinguished name";
-                logger.error(errorMessage, e);
-                throw new SmartIdClientException(errorMessage, e);
-            }
-
-            for (Rdn rdn : ldapName.getRdns()) {
-                if ("C".equalsIgnoreCase(rdn.getType())) {
-                    country = rdn.getValue().toString();
-                } else if ("O".equalsIgnoreCase(rdn.getType())) {
-                    organization = rdn.getValue().toString();
-                } else if ("CN".equalsIgnoreCase(rdn.getType())) {
-                    commonName = rdn.getValue().toString();
-                }
-            }
-            return new CertDnDetails(country, organization, commonName);
-        }
-
-        private static boolean equal(CertDnDetails first, CertDnDetails second) {
-            return Objects.equals(first.country, second.country) &&
-                    Objects.equals(first.organization, second.organization) &&
-                    Objects.equals(first.commonName, second.commonName);
         }
     }
 
@@ -281,6 +236,16 @@ public class AuthenticationResponseValidator {
         }
     }
 
+    private static Signature getSignature(AuthenticationResponse authenticationResponse) throws NoSuchAlgorithmException {
+        String algorithm = authenticationResponse.getAlgorithmName().replace("Encryption", "");
+        try {
+            return Signature.getInstance(algorithm);
+        } catch (NoSuchAlgorithmException ex) {
+            logger.error("Invalid signature algorithm was provided: {}", algorithm);
+            throw new UnprocessableSmartIdResponseException("Invalid signature algorithm was provided", ex);
+        }
+    }
+
     private static void validateCertificateNotExpired(X509Certificate certificate) {
         try {
             certificate.checkValidity();
@@ -293,5 +258,40 @@ public class AuthenticationResponseValidator {
         return String.format("%s;%s;%s", SignatureProtocol.ACSP_V1.name(),
                 authenticationResponse.getServerRandom(),
                 randomChallenge);
+    }
+
+    private record CertDnDetails(String country, String organization, String commonName) {
+
+        private static CertDnDetails from(X500Principal principal) {
+            String country = null;
+            String organization = null;
+            String commonName = null;
+
+            LdapName ldapName;
+            try {
+                ldapName = new LdapName(principal.getName());
+            } catch (InvalidNameException e) {
+                String errorMessage = "Error getting certificate distinguished name";
+                logger.error(errorMessage, e);
+                throw new SmartIdClientException(errorMessage, e);
+            }
+
+            for (Rdn rdn : ldapName.getRdns()) {
+                if ("C".equalsIgnoreCase(rdn.getType())) {
+                    country = rdn.getValue().toString();
+                } else if ("O".equalsIgnoreCase(rdn.getType())) {
+                    organization = rdn.getValue().toString();
+                } else if ("CN".equalsIgnoreCase(rdn.getType())) {
+                    commonName = rdn.getValue().toString();
+                }
+            }
+            return new CertDnDetails(country, organization, commonName);
+        }
+
+        private static boolean equal(CertDnDetails first, CertDnDetails second) {
+            return Objects.equals(first.country, second.country) &&
+                    Objects.equals(first.organization, second.organization) &&
+                    Objects.equals(first.commonName, second.commonName);
+        }
     }
 }

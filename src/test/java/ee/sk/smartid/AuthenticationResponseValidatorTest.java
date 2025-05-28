@@ -149,7 +149,7 @@ class AuthenticationResponseValidatorTest {
     }
 
     @Test
-    void toAuthenticationIdentity_certificateHasMatchingIssuerDnAndValidSignature_ok() {
+    void toAuthenticationIdentity_certificateHasMatchingIssuerDnAndInvalidSignature_throwsException() {
         var validator = new AuthenticationResponseValidator(new X509Certificate[]{toX509Certificate(CA_CERT)});
         var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
 
@@ -157,11 +157,14 @@ class AuthenticationResponseValidatorTest {
         dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
         dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
 
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("validSignatureForAuthCert"));
+        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureData"));
         dynamicLinkAuthenticationResponse.setServerRandom("serverRandom");
         dynamicLinkAuthenticationResponse.setEndResult("OK");
 
-        assertThrows(SmartIdClientException.class, () -> validator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallenge"));
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class,
+                () -> validator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallenge"));
+
+        assertEquals("Signature verification failed", ex.getMessage());
     }
 
     @Test
