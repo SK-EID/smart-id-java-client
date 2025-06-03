@@ -11,8 +11,8 @@ For Smart-ID v3 API replace `ee.sk.smartid.v2.SmartIdClient` with `ee.sk.smartid
 ## Migrating authentication
 
 To migrate from Smart-ID v2 to Smart-ID v3 authentication you need to change the following:
-`ee.sk.smartid.SmartIdClient` provides methods `createDynamicLinkAuthentication()` and `createNotificationAuthentication()` to create session request builders.
-It is recommended to start using dynamic-link authentication flows from Smart-ID API v3 as these are more secure.
+`ee.sk.smartid.SmartIdClient` provides methods `createDeviceLinkAuthentication()` and `createNotificationAuthentication()` to create session request builders.
+It is recommended to start using device-link authentication flows from Smart-ID API v3 as these are more secure.
 
 ### Overview of V2 authentication flow
 
@@ -26,11 +26,11 @@ It is recommended to start using dynamic-link authentication flows from Smart-ID
 
 ### Moving to V3 authentication flow
 
-1. Replace generating authentication hash with generating random challenge using `RandomChallenge.generate()`
-2. [Create dynamic-link authentication builder and set values](README.md#examples-of-initiating-a-dynamic-link-authentication-session) and start authentication session by calling build-method `initAuthenticationSession()`
-3. Replace showing verification code with showing dynamic link or QR-code. Recommended to use dynamic link for same device and QR-code for cross-device authentication.
-   - [Create dynamic link or QR-code](README.md#generating-qr-code-or-dynamic-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
-4. Querying session status can be done in parallel while displaying dynamic content. Check out [session status poller](README.md#example-of-using-session-status-poller-to-query-final-sessions-status). `ee.sk.smartid.SmartIdClient` provides method `getSessionsStatusPoller()` to get version specific session status poller.
+1. Replace generating authentication hash with generating RP challenge using `RpChallengeGenerator.generate()`
+2. [Create device-link authentication builder and set values](README.md#examples-of-initiating-a-device-link-authentication-session) and start authentication session by calling build-method `initAuthenticationSession()`
+3. Replace showing verification code with showing device link or QR-code. Recommended to use device link for same device and QR-code for cross-device authentication.
+   - [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
+4. Querying session status can be done in parallel while displaying device content. Check out [session status poller](README.md#example-of-using-session-status-poller-to-query-final-sessions-status). `ee.sk.smartid.SmartIdClient` provides method `getSessionsStatusPoller()` to get version specific session status poller.
 5. When session status state is `COMPLETE` polling will be stopped and [response should be checked](README.md#example-of-validating-the-authentication-sessions-response) with `AuthenticationResponseMapper`, that will validate required fields and will also handler errors. `AuthenticationResponse` will be returned when everything is ok.
 6. Finally use `ee.sk.smartid.AuthenticationResponseValidator` to validate the certificate and the signature in the response. If everything is ok `AuthenticationIdentity` will be returned. AuthenticationIdentity is same as used for V2.
 
@@ -55,7 +55,7 @@ In here will be focusing on [signing on same device with prior authentication se
 2. Poll for session status with `sessionStatusPoller::fetchFinalSessionState(sessionID)`. 
 3. If session status state is `COMPLETE` then check response with `CertificateChoiceResponseMapper` for errors and to validate required fields. `CertificateChoiceResponse` will be returned when everything is ok.
 4. Replace V2 SignableData with `ee.sk.smartid.SignableData`. In V3 SignableData the code to generate verification code was removed other than should be same as before. NB! If you are using Digidoc4j `DataToSign` make sure hash type in signable data matches digest algorithm in DataToSign.
-5. Use `ee.sk.smartid.SmartIdClient` to [create session request builder](README.md#examples-of-initiating-a-dynamic-link-signature-session) `createDynamicLinkSignature()` and call build method `initSignatureSession()` to start the signing session.
-6. Replace showing verification code with showing dynamic link or QR-code. [Create dynamic link or QR-code](README.md#generating-qr-code-or-dynamic-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
+5. Use `ee.sk.smartid.SmartIdClient` to [create session request builder](README.md#examples-of-initiating-a-device-link-signature-session) `createDeviceLinkSignature()` and call build method `initSignatureSession()` to start the signing session.
+6. Replace showing verification code with showing device link or QR-code. [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
 7. Poll for session status until its complete.
 8. Validate session response with `SignatureSessionResponseMapper` and validate required fields. `SignatureSessionResponse` will be returned when everything is ok.

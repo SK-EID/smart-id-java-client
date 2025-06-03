@@ -41,7 +41,7 @@ public abstract class Interaction {
         return type;
     }
 
-    public void setType(DynamicLinkInteractionFlow type) {
+    public void setType(DeviceLinkInteractionFlow type) {
         this.type = type;
     }
 

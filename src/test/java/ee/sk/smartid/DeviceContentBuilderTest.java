@@ -48,50 +48,50 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-class DynamicContentBuilderTest {
+class DeviceContentBuilderTest {
 
     @Nested
     class CreateUri {
 
         @ParameterizedTest
         @EnumSource
-        void createUri_forDifferentDynamicLinks(DynamicLinkType dynamicLinkType) {
+        void createUri_forDifferentDynamicLinks(DeviceLinkType deviceLinkType) {
             long elapsedSeconds = 1L;
-            URI uri = new DynamicContentBuilder()
+            URI uri = new DeviceContentBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
-                    .withDynamicLinkType(dynamicLinkType)
+                    .withDeviceLinkType(deviceLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken("sessionToken")
                     .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(AuthCode.createHash(dynamicLinkType, SessionType.AUTHENTICATION, elapsedSeconds, toBase64("sessionSecret")))
+                    .withAuthCode(AuthCode.createHash(deviceLinkType, SessionType.AUTHENTICATION, elapsedSeconds, toBase64("sessionSecret")))
                     .createUri();
 
-            assertUri(uri, dynamicLinkType, SessionType.AUTHENTICATION);
+            assertUri(uri, deviceLinkType, SessionType.AUTHENTICATION);
         }
 
         @ParameterizedTest
         @EnumSource
         void createUri_withSessionType(SessionType sessionType) {
             long elapsedSeconds = 1L;
-            URI uri = new DynamicContentBuilder()
+            URI uri = new DeviceContentBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
-                    .withDynamicLinkType(DynamicLinkType.QR_CODE)
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(sessionType)
                     .withSessionToken("sessionToken")
                     .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, elapsedSeconds, toBase64("sessionSecret")))
+                    .withAuthCode(AuthCode.createHash(DeviceLinkType.QR_CODE, sessionType, elapsedSeconds, toBase64("sessionSecret")))
                     .createUri();
 
-            assertUri(uri, DynamicLinkType.QR_CODE, sessionType);
+            assertUri(uri, DeviceLinkType.QR_CODE, sessionType);
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void createUri_baseUrlIsOverriddenToBeEmpty_throwException(String baseUrl) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
+                    () -> new DeviceContentBuilder()
                             .withBaseUrl(baseUrl)
                             .createUri());
             assertEquals("Parameter baseUrl must be set", ex.getMessage());
@@ -101,7 +101,7 @@ class DynamicContentBuilderTest {
         @NullAndEmptySource
         void createUri_versionIsOverriddenToBeEmpty_throwException(String version) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
+                    () -> new DeviceContentBuilder()
                             .withVersion(version)
                             .createUri());
             assertEquals("Parameter version must be set", ex.getMessage());
@@ -110,8 +110,8 @@ class DynamicContentBuilderTest {
         @Test
         void createUri_dynamicLinkTypeIsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
-                            .withDynamicLinkType(null)
+                    () -> new DeviceContentBuilder()
+                            .withDeviceLinkType(null)
                             .createUri());
             assertEquals("Parameter dynamicLinkType must be set", ex.getMessage());
         }
@@ -119,8 +119,8 @@ class DynamicContentBuilderTest {
         @Test
         void createUri_sessionTypeIsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
-                            .withDynamicLinkType(DynamicLinkType.QR_CODE)
+                    () -> new DeviceContentBuilder()
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(null)
                             .createUri());
             assertEquals("Parameter sessionType must be set", ex.getMessage());
@@ -130,8 +130,8 @@ class DynamicContentBuilderTest {
         @NullAndEmptySource
         void createUri_sessionTokenIsEmpty_throwException(String sessionToken) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
-                            .withDynamicLinkType(DynamicLinkType.QR_CODE)
+                    () -> new DeviceContentBuilder()
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken(sessionToken)
                             .createUri());
@@ -141,8 +141,8 @@ class DynamicContentBuilderTest {
         @Test
         void createUri_elapsedSecondsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
-                            .withDynamicLinkType(DynamicLinkType.QR_CODE)
+                    () -> new DeviceContentBuilder()
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
                             .withElapsedSeconds(null)
@@ -154,8 +154,8 @@ class DynamicContentBuilderTest {
         @NullAndEmptySource
         void createUri_userLanguageIsEmpty_throwException(String userLanguage) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
-                            .withDynamicLinkType(DynamicLinkType.QR_CODE)
+                    () -> new DeviceContentBuilder()
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
                             .withElapsedSeconds(1L)
@@ -168,8 +168,8 @@ class DynamicContentBuilderTest {
         @NullAndEmptySource
         void createUri_authCodeIsEmpty_throwException(String authCode) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
-                            .withDynamicLinkType(DynamicLinkType.QR_CODE)
+                    () -> new DeviceContentBuilder()
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
                             .withElapsedSeconds(1L)
@@ -185,37 +185,37 @@ class DynamicContentBuilderTest {
         @ParameterizedTest
         @EnumSource
         void createQrCode_forDifferentSessionsTypes(SessionType sessionType) {
-            String qrDataUri = new DynamicContentBuilder()
+            String qrDataUri = new DeviceContentBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
-                    .withDynamicLinkType(DynamicLinkType.QR_CODE)
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(sessionType)
                     .withSessionToken("sessionToken")
                     .withElapsedSeconds(1L)
-                    .withAuthCode(AuthCode.createHash(DynamicLinkType.QR_CODE, sessionType, 1, toBase64("sessionSecret")))
+                    .withAuthCode(AuthCode.createHash(DeviceLinkType.QR_CODE, sessionType, 1, toBase64("sessionSecret")))
                     .createQrCodeDataUri();
 
             String[] qrDataUriParts = qrDataUri.split(",");
             URI uri = URI.create(QrCodeUtil.extractQrContent(qrDataUriParts[1]).getText());
-            assertUri(uri, DynamicLinkType.QR_CODE, sessionType);
+            assertUri(uri, DeviceLinkType.QR_CODE, sessionType);
         }
 
         @ParameterizedTest
-        @EnumSource(value = DynamicLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
-        void createQrCode_wrongLinkTypeIsBeingUsed_throwException(DynamicLinkType notSupportedDynamicLinkType) {
+        @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
+        void createQrCode_wrongLinkTypeIsBeingUsed_throwException(DeviceLinkType notSupportedDeviceLinkType) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DynamicContentBuilder()
-                            .withDynamicLinkType(notSupportedDynamicLinkType)
+                    () -> new DeviceContentBuilder()
+                            .withDeviceLinkType(notSupportedDeviceLinkType)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
                             .withElapsedSeconds(1L)
                             .withAuthCode("authCode")
                             .createQrCodeDataUri());
-            assertEquals("Dynamic link type must be QR_CODE", ex.getMessage());
+            assertEquals("Device link type must be QR_CODE", ex.getMessage());
         }
     }
 
-    private static void assertUri(URI uri, DynamicLinkType qrCode, SessionType sessionType) {
+    private static void assertUri(URI uri, DeviceLinkType qrCode, SessionType sessionType) {
         assertThat(uri.getScheme(), equalTo("https"));
         assertThat(uri.getHost(), equalTo("smart-id.com"));
         assertThat(uri.getPath(), equalTo("/dynamic-link/"));

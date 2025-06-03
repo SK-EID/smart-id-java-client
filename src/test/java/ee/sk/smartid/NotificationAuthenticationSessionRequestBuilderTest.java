@@ -94,10 +94,10 @@ class NotificationAuthenticationSessionRequestBuilderTest {
 
             assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
             assertEquals("DEMO", request.getRelyingPartyName());
-            assertEquals(SignatureProtocol.ACSP_V1, request.getSignatureProtocol());
+            assertEquals(SignatureProtocol.ACSP_V2, request.getSignatureProtocol());
             assertNotNull(request.getSignatureProtocolParameters());
-            assertEquals("sha512WithRSAEncryption", request.getSignatureProtocolParameters().getSignatureAlgorithm());
-            assertNotNull(request.getAllowedInteractionsOrder());
+            assertEquals("rsassa-pss", request.getSignatureProtocolParameters().getSignatureAlgorithm());
+            assertNotNull(request.getInteractions());
         }
 
         @ParameterizedTest

@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,22 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-/**
- * Enum for dynamic link types
- */
-public enum DynamicLinkType {
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bouncycastle.util.encoders.Base64;
 
-    QR_CODE("QR"),
-    WEB_2_APP("Web2App"),
-    APP_2_APP("App2App");
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
-    private final String value;
+public class InteractionUtil {
 
-    DynamicLinkType(String value) {
-        this.value = value;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    private InteractionUtil() {
     }
 
-    public String getValue() {
-        return value;
+    public static String encodeInteractionsAsBase64(List<?> interactions) {
+        try {
+            String json = objectMapper.writeValueAsString(interactions);
+            return Base64.toBase64String(json.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to encode interactions to Base64", e);
+        }
     }
 }

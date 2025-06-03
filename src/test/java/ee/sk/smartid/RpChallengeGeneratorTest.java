@@ -35,11 +35,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class RandomChallengeTest {
+class RpChallengeGeneratorTest {
 
     @Test
     void generate_defaultValueUsed() {
-        String challenge = RandomChallenge.generate();
+        String challenge = RpChallengeGenerator.generate();
 
         assertNotNull(challenge);
         byte[] decodeChallenge = Base64.decode(challenge);
@@ -49,7 +49,7 @@ class RandomChallengeTest {
     @ParameterizedTest
     @ValueSource(ints = {32, 43, 59, 64})
     void generate_providedValuesAreInAllowedRange(int allowedValue) {
-        String challenge = RandomChallenge.generate(allowedValue);
+        String challenge = RpChallengeGenerator.generate(allowedValue);
         assertNotNull(challenge);
         byte[] decodeChallenge = Base64.decode(challenge);
         assertEquals(allowedValue, decodeChallenge.length);
@@ -57,12 +57,12 @@ class RandomChallengeTest {
 
     @Test
     void generate_providedValueIsLessThanAllowed_throwException() {
-        assertThrows(IllegalArgumentException.class, () -> RandomChallenge.generate(31));
+        assertThrows(IllegalArgumentException.class, () -> RpChallengeGenerator.generate(31));
     }
 
     @Test
     void generate_providedValueIsMoreThanAllowed_throwException() {
-        assertThrows(IllegalArgumentException.class, () -> RandomChallenge.generate(65));
+        assertThrows(IllegalArgumentException.class, () -> RpChallengeGenerator.generate(65));
     }
 
 }

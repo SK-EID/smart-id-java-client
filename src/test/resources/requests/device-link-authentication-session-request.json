@@ -6,10 +6,6 @@
     "rpChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "rsassa-pss"
   },
-  "interactions": [
-    {
-      "type": "verificationCodeChoice",
-      "displayText60": "Verify the code"
-    }
-  ]
+  "certificateLevel": "QUALIFIED",
+  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbj8ifV0="
 }

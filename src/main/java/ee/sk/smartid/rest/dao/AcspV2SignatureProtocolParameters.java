@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L
@@ -26,7 +26,38 @@ package ee.sk.smartid;
  * #L%
  */
 
-public enum SignatureProtocol {
-    ACSP_V2,
-    RAW_DIGEST_SIGNATURE
+import java.io.Serializable;
+
+import ee.sk.smartid.SignatureAlgorithmParameters;
+
+public class AcspV2SignatureProtocolParameters implements Serializable {
+
+    private String rpChallenge;
+    private String signatureAlgorithm;
+    private SignatureAlgorithmParameters signatureAlgorithmParameters;
+
+    public String getRpChallenge() {
+        return rpChallenge;
+    }
+
+    public void setRpChallenge(String rpChallenge) {
+        this.rpChallenge = rpChallenge;
+    }
+
+    public String getSignatureAlgorithm() {
+        return signatureAlgorithm;
+    }
+
+    public void setSignatureAlgorithm(String signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
+    }
+
+
+    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
+        return signatureAlgorithmParameters;
+    }
+
+    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
+        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
+    }
 }

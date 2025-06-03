@@ -28,14 +28,14 @@ package ee.sk.smartid.rest.dao;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum DynamicLinkInteractionFlow implements InteractionFlow {
+public enum DeviceLinkInteractionFlow implements InteractionFlow {
 
     DISPLAY_TEXT_AND_PIN("displayTextAndPIN"),
     CONFIRMATION_MESSAGE("confirmationMessage");
 
     private final String code;
 
-    DynamicLinkInteractionFlow(String code) {
+    DeviceLinkInteractionFlow(String code) {
         this.code = code;
     }
 

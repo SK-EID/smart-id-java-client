@@ -43,23 +43,10 @@ public class SignatureUtil {
         }
     }
 
-    public static String getSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm, SignableHash signableHash, SignableData signableData) {
-        if (signatureAlgorithm != null) {
-            return signatureAlgorithm.getAlgorithmName();
-        } else if (signableHash != null && signableHash.getHashType() != null) {
-            return getAlgorithmFromHashType(signableHash.getHashType());
-        } else if (signableData != null && signableData.getHashType() != null) {
-            return getAlgorithmFromHashType(signableData.getHashType());
-        } else {
-            return SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
+    public static String getSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+        if (signatureAlgorithm != null && signatureAlgorithm != SignatureAlgorithm.RSASSA_PSS) {
+            throw new SmartIdClientException("Only RSASSA_PSS is supported.");
         }
-    }
-
-    private static String getAlgorithmFromHashType(HashType hashType) {
-        return switch (hashType) {
-            case SHA256 -> SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName();
-            case SHA384 -> SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName();
-            case SHA512 -> SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
-        };
+        return SignatureAlgorithm.RSASSA_PSS.getAlgorithmName();
     }
 }

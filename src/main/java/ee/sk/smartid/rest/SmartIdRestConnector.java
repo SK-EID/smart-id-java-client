@@ -47,7 +47,7 @@ import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
@@ -86,9 +86,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final String NOTIFICATION_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH = "/signature/notification/etsi";
     private static final String NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/notification/document";
 
-    private static final String ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH = "authentication/dynamic-link/anonymous";
-    private static final String DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/dynamic-link/etsi";
-    private static final String DYNAMIC_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/dynamic-link/document";
+    private static final String ANONYMOUS_DEVICE_LINK_AUTHENTICATION_PATH = "authentication/device-link/anonymous";
+    private static final String DEVICE_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/device-link/etsi";
+    private static final String DEVICE_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/device-link/document";
 
     private static final String NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/notification/etsi";
     private static final String NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/notification/document";
@@ -128,32 +128,32 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
+    public DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
         logger.debug("Starting dynamic link authentication session with semantics identifier");
         URI uri = UriBuilder.fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
+                .path(DEVICE_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postDynamicLinkAuthenticationRequest(uri, authenticationRequest);
+        return postDeviceLinkAuthenticationRequest(uri, authenticationRequest);
     }
 
     @Override
-    public DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber) {
-        logger.debug("Starting dynamic link authentication session with document number");
+    public DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber) {
+        logger.debug("Starting device link authentication session with document number");
         URI uri = UriBuilder.fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
+                .path(DEVICE_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postDynamicLinkAuthenticationRequest(uri, authenticationRequest);
+        return postDeviceLinkAuthenticationRequest(uri, authenticationRequest);
     }
 
     @Override
-    public DynamicLinkSessionResponse initAnonymousDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest) {
-        logger.debug("Starting anonymous dynamic link authentication session");
+    public DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest) {
+        logger.debug("Starting anonymous device link authentication session");
         URI uri = UriBuilder.fromUri(endpointUrl)
-                .path(ANONYMOUS_DYNAMIC_LINK_AUTHENTICATION_PATH)
+                .path(ANONYMOUS_DEVICE_LINK_AUTHENTICATION_PATH)
                 .build();
-        return postDynamicLinkAuthenticationRequest(uri, authenticationRequest);
+        return postDeviceLinkAuthenticationRequest(uri, authenticationRequest);
     }
 
     @Override
@@ -177,7 +177,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request) {
+    public DeviceLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request) {
         logger.debug("Initiating dynamic link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
@@ -208,7 +208,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
+    public DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
@@ -218,7 +218,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber) {
+    public DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
@@ -296,9 +296,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSessionResponse postDynamicLinkAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
+    private DeviceLinkSessionResponse postDeviceLinkAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
         try {
-            return postRequest(uri, request, DynamicLinkSessionResponse.class);
+            return postRequest(uri, request, DeviceLinkSessionResponse.class);
         } catch (NotFoundException e) {
             logger.warn("User account not found for URI " + uri, e);
             throw new UserAccountNotFoundException();
@@ -320,9 +320,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSessionResponse postDynamicLinkCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
+    private DeviceLinkSessionResponse postDynamicLinkCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
         try {
-            return postRequest(uri, request, DynamicLinkSessionResponse.class);
+            return postRequest(uri, request, DeviceLinkSessionResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI {}", uri, ex);
             throw new UserAccountNotFoundException();
@@ -344,9 +344,9 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DynamicLinkSessionResponse postDynamicLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
+    private DeviceLinkSessionResponse postDynamicLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
         try {
-            return postRequest(uri, request, DynamicLinkSessionResponse.class);
+            return postRequest(uri, request, DeviceLinkSessionResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI " + uri, ex);
             throw new UserAccountNotFoundException();

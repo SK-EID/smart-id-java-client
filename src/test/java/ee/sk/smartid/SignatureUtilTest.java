@@ -85,53 +85,53 @@ class SignatureUtilTest {
 
     @Test
     void getSignatureAlgorithm_withExplicitSignatureAlgorithm() {
-        String algorithm = SignatureUtil.getSignatureAlgorithm(SignatureAlgorithm.SHA384WITHRSA, null, null);
-        assertEquals(SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName(), algorithm);
+        String algorithm = SignatureUtil.getSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS);
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), algorithm);
     }
 
-    @Test
-    void getSignatureAlgorithm_withSignableHashHashTypeNull() {
-        var signableHash = new SignableHash();
-        signableHash.setHash("Test hash".getBytes());
-        signableHash.setHashType(null);
+//    @Test
+//    void getSignatureAlgorithm_withSignableHashHashTypeNull() {
+//        var signableHash = new SignableHash();
+//        signableHash.setHash("Test hash".getBytes());
+//        signableHash.setHashType(null);
+//
+//        String algorithm = SignatureUtil.getSignatureAlgorithm(null, signableHash, null);
+//        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
+//    }
 
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, signableHash, null);
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
-    }
+//    @ParameterizedTest
+//    @EnumSource(HashType.class)
+//    void getSignatureAlgorithm_withHashTypeInSignableHash(HashType hashType) {
+//        var signableHash = new SignableHash();
+//        signableHash.setHashType(hashType);
+//
+//        String algorithm = SignatureUtil.getSignatureAlgorithm(null, signableHash, null);
+//        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", algorithm);
+//    }
 
-    @ParameterizedTest
-    @EnumSource(HashType.class)
-    void getSignatureAlgorithm_withHashTypeInSignableHash(HashType hashType) {
-        var signableHash = new SignableHash();
-        signableHash.setHashType(hashType);
+//    @ParameterizedTest
+//    @EnumSource(HashType.class)
+//    void getSignatureAlgorithm_withHashTypeInSignableData(HashType hashType) {
+//        var signableData = new SignableData("Test data".getBytes());
+//        signableData.setHashType(hashType);
+//
+//        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
+//        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", algorithm);
+//    }
 
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, signableHash, null);
-        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", algorithm);
-    }
-
-    @ParameterizedTest
-    @EnumSource(HashType.class)
-    void getSignatureAlgorithm_withHashTypeInSignableData(HashType hashType) {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(hashType);
-
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
-        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", algorithm);
-    }
-
-    @Test
-    void getSignatureAlgorithm_withSignableDataHashTypeNull() {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(null);
-
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
-    }
+//    @Test
+//    void getSignatureAlgorithm_withSignableDataHashTypeNull() {
+//        var signableData = new SignableData("Test data".getBytes());
+//        signableData.setHashType(null);
+//
+//        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
+//        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
+//    }
 
     @Test
     void getSignatureAlgorithm_withDefaultAlgorithm() {
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, null);
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
+        String algorithm = SignatureUtil.getSignatureAlgorithm(null);
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), algorithm);
     }
 
     @Test

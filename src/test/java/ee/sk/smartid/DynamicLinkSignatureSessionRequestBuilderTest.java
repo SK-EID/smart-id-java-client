@@ -36,6 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -57,8 +58,8 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.DynamicLinkInteraction;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
 class DynamicLinkSignatureSessionRequestBuilderTest {
@@ -73,7 +74,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         builder = new DynamicLinkSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Please sign the document")))
+                .withAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()))
                 .withCertificateChoiceMade(false);
     }
@@ -85,12 +86,13 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), eq(semanticsIdentifier))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
         assertEquals("test-session-id", signature.getSessionID());
         assertEquals("test-session-token", signature.getSessionToken());
         assertEquals("test-session-secret", signature.getSessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), signature.getDeviceLinkBase());
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), eq(semanticsIdentifier));
@@ -105,12 +107,13 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
         assertEquals("test-session-id", signature.getSessionID());
         assertEquals("test-session-token", signature.getSessionToken());
         assertEquals("test-session-secret", signature.getSessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), signature.getDeviceLinkBase());
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), eq(documentNumber));
@@ -125,7 +128,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -144,7 +147,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -162,7 +165,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -179,11 +182,11 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     void initSignatureSession_withSignatureAlgorithm_setsCorrectAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(HashType.SHA256);
-        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA384WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -191,7 +194,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
@@ -206,14 +209,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString("Test hash".getBytes()), capturedRequest.getSignatureProtocolParameters().getDigest());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
@@ -225,7 +228,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -242,18 +245,18 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
     void initSignatureSession_withHashType_overridesExplicitSignatureAlgorithm(HashType hashType) {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(hashType);
-        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA256WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
@@ -267,14 +270,14 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         when(connector.initDynamicLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class)))
                 .thenReturn(mockSignatureSessionResponse());
 
-        DynamicLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initDynamicLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
     }
 
     @Nested
@@ -318,7 +321,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<DynamicLinkInteraction> allowedInteractionsOrder) {
+        void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<DeviceLinkInteraction> allowedInteractionsOrder) {
             builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -373,7 +376,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionID(String sessionID) {
-            var response = new DynamicLinkSessionResponse();
+            var response = new DeviceLinkSessionResponse();
             response.setSessionID(sessionID);
             response.setSessionToken("test-session-token");
             response.setSessionSecret("test-session-secret");
@@ -388,7 +391,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionToken(String sessionToken) {
-            var response = new DynamicLinkSessionResponse();
+            var response = new DeviceLinkSessionResponse();
             response.setSessionID("test-session-id");
             response.setSessionToken(sessionToken);
             response.setSessionSecret("test-session-secret");
@@ -403,7 +406,7 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionSecret(String sessionSecret) {
-            var response = new DynamicLinkSessionResponse();
+            var response = new DeviceLinkSessionResponse();
             response.setSessionID("test-session-id");
             response.setSessionToken("test-session-token");
             response.setSessionSecret(sessionSecret);
@@ -416,11 +419,12 @@ class DynamicLinkSignatureSessionRequestBuilderTest {
         }
     }
 
-    private DynamicLinkSessionResponse mockSignatureSessionResponse() {
-        var response = new DynamicLinkSessionResponse();
+    private DeviceLinkSessionResponse mockSignatureSessionResponse() {
+        var response = new DeviceLinkSessionResponse();
         response.setSessionID("test-session-id");
         response.setSessionToken("test-session-token");
         response.setSessionSecret("test-session-secret");
+        response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
         return response;
     }
 

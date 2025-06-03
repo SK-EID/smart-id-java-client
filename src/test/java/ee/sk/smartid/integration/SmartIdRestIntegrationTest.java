@@ -41,17 +41,18 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.InteractionUtil;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.RandomChallenge;
+import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SignatureAlgorithm;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
-import ee.sk.smartid.rest.dao.AcspV1SignatureProtocolParameters;
+import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DynamicLinkInteraction;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -89,9 +90,9 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initAnonymousDynamicLinkAuthentication() {
-                AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
+                AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
-                DynamicLinkSessionResponse sessionsResponse = smartIdConnector.initAnonymousDynamicLinkAuthentication(request);
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initAnonymousDeviceLinkAuthentication(request);
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
@@ -101,9 +102,9 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDynamicLinkAuthentication_withDocumentNumber() {
-                AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
+                AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
-                DynamicLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkAuthentication(request, "PNOEE-40504040001-MOCK-Q");
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkAuthentication(request, "PNOEE-40504040001-MOCK-Q");
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
@@ -113,9 +114,9 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDynamicLinkAuthentication_withSemanticsIdentifier() {
-                AuthenticationSessionRequest request = toDynamicLinkAuthenticationSessionRequest();
+                AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
-                DynamicLinkSessionResponse sessionResponse = smartIdConnector.initDynamicLinkAuthentication(request, new SemanticsIdentifier("PNOEE-40504040001"));
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkAuthentication(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionResponse.getSessionToken()));
@@ -123,16 +124,16 @@ class SmartIdRestIntegrationTest {
                 assertNotNull(sessionResponse.getReceivedAt());
             }
 
-            private static AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
+            private static AuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
                 var request = new AuthenticationSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
 
-                var signatureParameters = new AcspV1SignatureProtocolParameters();
-                signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
-                signatureParameters.setRandomChallenge(RandomChallenge.generate());
+                var signatureParameters = new AcspV2SignatureProtocolParameters();
+                signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+                signatureParameters.setRpChallenge(RpChallengeGenerator.generate());
                 request.setSignatureProtocolParameters(signatureParameters);
-                request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Log in?")));
+                request.setInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")).toString());
                 return request;
             }
         }
@@ -147,7 +148,7 @@ class SmartIdRestIntegrationTest {
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
 
-                DynamicLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkCertificateChoice(request);
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkCertificateChoice(request);
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
@@ -164,15 +165,15 @@ class SmartIdRestIntegrationTest {
                 var request = new SignatureSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign it!")));
+                request.setAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")));
 
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
+                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
                 String digest = Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512));
                 signatureProtocolParameters.setDigest(digest);
                 request.setSignatureProtocolParameters(signatureProtocolParameters);
 
-                DynamicLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
@@ -185,15 +186,15 @@ class SmartIdRestIntegrationTest {
                 var request = new SignatureSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign it!")));
+                request.setAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")));
 
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
+                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
                 String digest = Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512));
                 signatureProtocolParameters.setDigest(digest);
                 request.setSignatureProtocolParameters(signatureProtocolParameters);
 
-                DynamicLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
@@ -237,13 +238,13 @@ class SmartIdRestIntegrationTest {
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
                 request.setCertificateLevel("QUALIFIED");
 
-                String randomChallenge = RandomChallenge.generate();
-                var signatureParameters = new AcspV1SignatureProtocolParameters();
-                signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
-                signatureParameters.setRandomChallenge(randomChallenge);
+                String randomChallenge = RpChallengeGenerator.generate();
+                var signatureParameters = new AcspV2SignatureProtocolParameters();
+                signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+                signatureParameters.setRpChallenge(randomChallenge);
                 request.setSignatureProtocolParameters(signatureParameters);
 
-                request.setAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Log in?")));
+                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))));
 
                 var requestProperties = new RequestProperties();
                 requestProperties.setShareMdClientIpAddress(true);
@@ -311,7 +312,7 @@ class SmartIdRestIntegrationTest {
 
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
                 String digest = Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512));
-                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
+                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
                 signatureProtocolParameters.setDigest(digest);
                 request.setSignatureProtocolParameters(signatureProtocolParameters);
                 request.setAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Sign it!")));

@@ -37,7 +37,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
 
 /**
- * This class is responsible for creating an authentication code hash for the dynamic link.
+ * This class is responsible for creating an authentication code hash for the device link.
  */
 public final class AuthCode {
 
@@ -47,17 +47,17 @@ public final class AuthCode {
     }
 
     /**
-     * Creates an authentication code hash for the dynamic link with the given time.
+     * Creates an authentication code hash for the device link with the given time.
      *
-     * @param dynamicLinkType the type of the dynamic link @{@link DynamicLinkType}
+     * @param deviceLinkType the type of the device link @{@link DeviceLinkType}
      * @param sessionType     the type of the session @{@link SessionType}
      * @param elapsedSeconds  the time from session creation response was received
      * @param sessionSecret   the session secret in Base64 format
      * @return the authentication code in Base64 URL safe format
      */
-    public static String createHash(DynamicLinkType dynamicLinkType, SessionType sessionType, long elapsedSeconds, String sessionSecret) {
-        validateHashingInputs(dynamicLinkType, sessionType);
-        String payload = createPayload(dynamicLinkType, sessionType, elapsedSeconds);
+    public static String createHash(DeviceLinkType deviceLinkType, SessionType sessionType, long elapsedSeconds, String sessionSecret) {
+        validateHashingInputs(deviceLinkType, sessionType);
+        String payload = createPayload(deviceLinkType, sessionType, elapsedSeconds);
         return hashThePayload(payload, sessionSecret);
     }
 
@@ -83,8 +83,8 @@ public final class AuthCode {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(result);
     }
 
-    private static void validateHashingInputs(DynamicLinkType dynamicLinkType, SessionType sessionType) {
-        if (dynamicLinkType == null) {
+    private static void validateHashingInputs(DeviceLinkType deviceLinkType, SessionType sessionType) {
+        if (deviceLinkType == null) {
             throw new SmartIdClientException("Dynamic link type must be set");
         }
         if (sessionType == null) {
@@ -101,7 +101,7 @@ public final class AuthCode {
         }
     }
 
-    private static String createPayload(DynamicLinkType dynamicLinkType, SessionType sessionType, long elapsedSeconds) {
-        return String.format(PAYLOAD_FORMAT, dynamicLinkType.getValue(), sessionType.getValue(), elapsedSeconds);
+    private static String createPayload(DeviceLinkType deviceLinkType, SessionType sessionType, long elapsedSeconds) {
+        return String.format(PAYLOAD_FORMAT, deviceLinkType.getValue(), sessionType.getValue(), elapsedSeconds);
     }
 }

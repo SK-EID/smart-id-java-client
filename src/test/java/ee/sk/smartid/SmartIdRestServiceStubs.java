@@ -80,7 +80,7 @@ public class SmartIdRestServiceStubs {
     public static void stubErrorResponse(String url, String requestFile, int errorStatus) {
         stubFor(post(urlEqualTo(url))
                 .withHeader("Accept", equalTo("application/json"))
-                .withRequestBody(equalToJson(readFileBody(requestFile)))
+                .withRequestBody(equalToJson(readFileBody(requestFile), true, true))
                 .willReturn(aResponse()
                         .withStatus(errorStatus)
                         .withHeader("Content-Type", "application/json")
@@ -99,7 +99,7 @@ public class SmartIdRestServiceStubs {
     public static void stubRequestWithResponse(String url, String requestFile, String responseFile) {
         stubFor(post(urlEqualTo(url))
                 .withHeader("Accept", equalTo("application/json"))
-                .withRequestBody(equalToJson(readFileBody(requestFile)))
+                .withRequestBody(equalToJson(readFileBody(requestFile), true, true))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")

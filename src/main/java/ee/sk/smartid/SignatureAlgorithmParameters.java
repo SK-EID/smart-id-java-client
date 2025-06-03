@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-public enum SignatureProtocol {
-    ACSP_V2,
-    RAW_DIGEST_SIGNATURE
+import java.io.Serializable;
+import java.util.Set;
+
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+
+public class SignatureAlgorithmParameters implements Serializable {
+
+    private static final Set<String> SUPPORTED_HASH_ALGORITHMS = Set.of("SHA-256", "SHA-384", "SHA-512", "SHA3-256", "SHA3-384", "SHA3-512");
+
+    private String hashAlgorithm;
+
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
+    public void setHashAlgorithm(String hashAlgorithm) {
+        if (!SUPPORTED_HASH_ALGORITHMS.contains(hashAlgorithm)) {
+            throw new SmartIdClientException("Unsupported hashAlgorithm: " + hashAlgorithm + ". Supported values: " + SUPPORTED_HASH_ALGORITHMS);
+        }
+        this.hashAlgorithm = hashAlgorithm;
+    }
 }

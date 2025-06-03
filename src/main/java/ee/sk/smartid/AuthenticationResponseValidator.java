@@ -112,8 +112,8 @@ public class AuthenticationResponseValidator {
      * @param authenticationResponse Smart-ID authentication response
      * @return authentication identity
      */
-    public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse, String randomChallenge) {
-        return toAuthenticationIdentity(authenticationResponse, AuthenticationCertificateLevel.QUALIFIED, randomChallenge);
+    public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse, String rpChallenge) {
+        return toAuthenticationIdentity(authenticationResponse, AuthenticationCertificateLevel.QUALIFIED, rpChallenge);
     }
 
     /**
@@ -121,24 +121,24 @@ public class AuthenticationResponseValidator {
      *
      * @param authenticationResponse    Smart-ID authentication response
      * @param requestedCertificateLevel Certificate level used in the authentication session request
-     * @param randomChallenge           Generate string used in the authentication session request
+     * @param rpChallenge           Generate string used in the authentication session request
      * @return authentication identity
      */
     public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse,
                                                            AuthenticationCertificateLevel requestedCertificateLevel,
-                                                           String randomChallenge) {
-        validateInputs(authenticationResponse, randomChallenge);
+                                                           String rpChallenge) {
+        validateInputs(authenticationResponse, rpChallenge);
         validateCertificate(authenticationResponse, requestedCertificateLevel);
-        validateSignature(authenticationResponse, randomChallenge);
+        validateSignature(authenticationResponse, rpChallenge);
         return AuthenticationIdentityMapper.from(authenticationResponse.getCertificate());
     }
 
-    private void validateInputs(AuthenticationResponse authenticationResponse, String randomChallenge) {
+    private void validateInputs(AuthenticationResponse authenticationResponse, String rpChallenge) {
         if (authenticationResponse == null) {
-            throw new SmartIdClientException("Dynamic link authentication response is not provided");
+            throw new SmartIdClientException("Device link authentication response is not provided");
         }
-        if (StringUtil.isEmpty(randomChallenge)) {
-            throw new SmartIdClientException("Random challenge is not provided");
+        if (StringUtil.isEmpty(rpChallenge)) {
+            throw new SmartIdClientException("RP challenge is not provided");
         }
     }
 
@@ -151,7 +151,7 @@ public class AuthenticationResponseValidator {
         validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
     }
 
-    private void validateSignature(AuthenticationResponse authenticationResponse, String randomChallenge) {
+    private void validateSignature(AuthenticationResponse authenticationResponse, String rpChallenge) {
         if (StringUtil.isEmpty(authenticationResponse.getAlgorithmName())) {
             throw new SmartIdClientException("Algorithm name is not provided");
         }
@@ -161,7 +161,7 @@ public class AuthenticationResponseValidator {
         try {
             Signature signature = getSignature(authenticationResponse);
             signature.initVerify(authenticationResponse.getCertificate().getPublicKey());
-            String data = createSignatureData(authenticationResponse, randomChallenge);
+            String data = createSignatureData(authenticationResponse, rpChallenge);
             signature.update(data.getBytes(StandardCharsets.UTF_8));
             byte[] signedHash = authenticationResponse.getSignatureValue();
             if (!signature.verify(signedHash)) {
@@ -254,10 +254,10 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private static String createSignatureData(AuthenticationResponse authenticationResponse, String randomChallenge) {
-        return String.format("%s;%s;%s", SignatureProtocol.ACSP_V1.name(),
+    private static String createSignatureData(AuthenticationResponse authenticationResponse, String rpChallenge) {
+        return String.format("%s;%s;%s", SignatureProtocol.ACSP_V2.name(),
                 authenticationResponse.getServerRandom(),
-                randomChallenge);
+                rpChallenge);
     }
 
     private record CertDnDetails(String country, String organization, String commonName) {

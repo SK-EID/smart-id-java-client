@@ -31,20 +31,20 @@ import java.security.SecureRandom;
 import org.bouncycastle.util.encoders.Base64;
 
 /**
- * Utility class for generating random challenges in Base64 format
+ * Utility class for generating RP challenges in Base64 format
  */
-public class RandomChallenge {
+public class RpChallengeGenerator {
 
     private static final int MAX_LENGTH = 64;
     private static final int MIN_LENGTH = 32;
 
-    private RandomChallenge() {
+    private RpChallengeGenerator() {
     }
 
     /**
-     * Generates a random challenge with max length of 64 bytes
+     * Generates a RP challenge with max length of 64 bytes
      *
-     * @return random challenge in Base64 format
+     * @return RP challenge in Base64 format
      */
     public static String generate() {
         byte[] randBytes = new byte[MAX_LENGTH];
@@ -53,10 +53,10 @@ public class RandomChallenge {
     }
 
     /**
-     * Generates a random challenge with specified length
+     * Generates a RP challenge with specified length
      *
      * @param length length of the challenge
-     * @return random challenge in Base64 format
+     * @return RP challenge in Base64 format
      */
     public static String generate(int length) {
         if (length < MIN_LENGTH || length > MAX_LENGTH) {

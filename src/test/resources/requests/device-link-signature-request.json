@@ -6,7 +6,7 @@
     "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "sha512WithRSAEncryption"
   },
-  "allowedInteractionsOrder": [
+  "interactions": [
     {
       "type": "displayTextAndPIN",
       "displayText60": "Sign document?"

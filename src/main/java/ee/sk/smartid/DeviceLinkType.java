@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,26 +26,22 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
+/**
+ * Enum for device link types
+ */
+public enum DeviceLinkType {
 
-public class AcspV1SignatureProtocolParameters implements Serializable {
+    QR_CODE("QR"),
+    WEB_2_APP("Web2App"),
+    APP_2_APP("App2App");
 
-    private String randomChallenge;
-    private String signatureAlgorithm;
+    private final String value;
 
-    public String getRandomChallenge() {
-        return randomChallenge;
+    DeviceLinkType(String value) {
+        this.value = value;
     }
 
-    public void setRandomChallenge(String randomChallenge) {
-        this.randomChallenge = randomChallenge;
-    }
-
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
-    }
-
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
+    public String getValue() {
+        return value;
     }
 }

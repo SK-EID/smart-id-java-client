@@ -162,7 +162,7 @@ class SignatureResponseMapperTest {
 
         @Test
         void from_validRawDigestSignature() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
             sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
 
             SignatureResponse response = SignatureResponseMapper.from(sessionStatus, "QUALIFIED");
@@ -172,7 +172,7 @@ class SignatureResponseMapperTest {
         @ParameterizedTest
         @EnumSource(value = CertificateLevel.class, names = {"QUALIFIED", "QSCD"})
         void from_returnedCertificateLevelSameAsRequested(CertificateLevel certificateLevel) {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
             sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
 
             SignatureResponse response = SignatureResponseMapper.from(sessionStatus, certificateLevel.name());

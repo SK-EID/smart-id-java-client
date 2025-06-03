@@ -63,23 +63,23 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
-        dynamicLinkAuthenticationResponse.setEndResult("OK");
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        deviceLinkAuthenticationResponse.setEndResult("OK");
 
-        dynamicLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
-        dynamicLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
-        dynamicLinkAuthenticationResponse.setHashType(HashType.SHA512);
-        dynamicLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
+        deviceLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        deviceLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
+        deviceLinkAuthenticationResponse.setHashType(HashType.SHA512);
+        deviceLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
 
-        // TODO - 04.12.24: if dynamic-link authentication can be completed with test number then replace these values
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
-        dynamicLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
+        // TODO - 04.12.24: if device-link authentication can be completed with test number then replace these values
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
+        deviceLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
 
         AuthenticationIdentity authenticationIdentity =
-                authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest");
+                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest");
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
@@ -91,25 +91,25 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity_certificateLevelHigherThanRequested_ok() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
-        dynamicLinkAuthenticationResponse.setEndResult("OK");
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        deviceLinkAuthenticationResponse.setEndResult("OK");
 
-        dynamicLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
-        dynamicLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
-        dynamicLinkAuthenticationResponse.setHashType(HashType.SHA512);
-        dynamicLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
+        deviceLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        deviceLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
+        deviceLinkAuthenticationResponse.setHashType(HashType.SHA512);
+        deviceLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
 
-        // TODO - 04.12.24: if dynamic-link authentication can be completed with test number then replace these values
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
-        dynamicLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
+        // TODO - 04.12.24: if device-link authentication can be completed with test number then replace these values
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
+        deviceLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
 
         AuthenticationIdentity authenticationIdentity =
-                authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse,
+                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse,
                         AuthenticationCertificateLevel.ADVANCED,
-                        "randomChallengeFromTestUserAuthRequest");
+                        "rpChallengeFromTestUserAuthRequest");
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
@@ -121,25 +121,25 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity_requestedCertificateLevelIsSetToNull_doNotValidateCertificateLevel_ok() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName());
-        dynamicLinkAuthenticationResponse.setEndResult("OK");
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        deviceLinkAuthenticationResponse.setEndResult("OK");
 
-        dynamicLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
-        dynamicLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
-        dynamicLinkAuthenticationResponse.setHashType(HashType.SHA512);
-        dynamicLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
+        deviceLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        deviceLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
+        deviceLinkAuthenticationResponse.setHashType(HashType.SHA512);
+        deviceLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
 
-        // TODO - 04.12.24: if dynamic-link authentication can be completed with test number then replace these values
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
-        dynamicLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
+        // TODO - 04.12.24: if device-link authentication can be completed with test number then replace these values
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
+        deviceLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
 
         AuthenticationIdentity authenticationIdentity =
-                authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse,
+                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse,
                         null,
-                        "randomChallengeFromTestUserAuthRequest");
+                        "rpChallengeFromTestUserAuthRequest");
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
@@ -151,140 +151,140 @@ class AuthenticationResponseValidatorTest {
     @Test
     void toAuthenticationIdentity_certificateHasMatchingIssuerDnAndInvalidSignature_throwsException() {
         var validator = new AuthenticationResponseValidator(new X509Certificate[]{toX509Certificate(CA_CERT)});
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
 
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
 
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureData"));
-        dynamicLinkAuthenticationResponse.setServerRandom("serverRandom");
-        dynamicLinkAuthenticationResponse.setEndResult("OK");
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureData"));
+        deviceLinkAuthenticationResponse.setServerRandom("serverRandom");
+        deviceLinkAuthenticationResponse.setEndResult("OK");
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> validator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallenge"));
+                () -> validator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallenge"));
 
         assertEquals("Signature verification failed", ex.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_certificateHasMatchingKeyButDifferentDN_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("validSignatureForFakeCert"));
-        dynamicLinkAuthenticationResponse.setServerRandom("serverRandom");
-        dynamicLinkAuthenticationResponse.setEndResult("OK");
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("validSignatureForFakeCert"));
+        deviceLinkAuthenticationResponse.setServerRandom("serverRandom");
+        deviceLinkAuthenticationResponse.setEndResult("OK");
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () ->
-                authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallenge"));
+                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallenge"));
 
         assertEquals("Signer's certificate is not trusted", exception.getMessage());
     }
 
     @Test
-    void toAuthenticationIdentity_dynamicLinkAuthenticationResponseIsMissing_throwException() {
+    void toAuthenticationIdentity_deviceLinkAuthenticationResponseIsMissing_throwException() {
         var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(null, null));
 
-        assertEquals("Dynamic link authentication response is not provided", exception.getMessage());
+        assertEquals("Device link authentication response is not provided", exception.getMessage());
     }
 
     @Test
-    void toAuthenticationIdentity_randomChallengeIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, AuthenticationCertificateLevel.QUALIFIED, null));
+    void toAuthenticationIdentity_rpChallengeIsNotProvided_throwException() {
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, AuthenticationCertificateLevel.QUALIFIED, null));
 
-        assertEquals("Random challenge is not provided", exception.getMessage());
+        assertEquals("RP challenge is not provided", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_certificateValueIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Certificate is not provided", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_expiredCertificateProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(EXPIRED_CERT));
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(EXPIRED_CERT));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Signer's certificate is not valid", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_certificateIsNotTrusted_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Signer's certificate is not trusted", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_certificateLevelIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(null);
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(null);
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Certificate level is not provided", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_certificateLevelIsLowerThanRequested_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.ADVANCED);
-        var exception = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.ADVANCED);
+        var exception = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Signer's certificate is below requested certificate level", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_algorithmNameIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Algorithm name is not provided", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_signatureValueIsNotProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Signature value is not provided", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_invalidAlgorithmNameIsProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName("invalidAlgorithmName");
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureValue"));
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName("invalidAlgorithmName");
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureValue"));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Invalid signature algorithm was provided", exception.getMessage());
     }
 
     @Test
     void toAuthenticationIdentity_invalidSignatureValueIsProvided_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureValue"));
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureValue"));
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Signature verification failed", exception.getMessage());
     }
@@ -292,12 +292,12 @@ class AuthenticationResponseValidatorTest {
     @Disabled("Do not have necessary test data to make this work.")
     @Test
     void toAuthenticationIdentity_signatureDoesNotMatch_throwException() {
-        var dynamicLinkAuthenticationResponse = new AuthenticationResponse();
-        dynamicLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        dynamicLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        dynamicLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        dynamicLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("bXhY5CO3gxQ2hxnuQm0Lm/4fXoFPogy4LwS6d0aUu9sZjCfNV5n6IUse45UYLhvmfK4NW5QarlYRTEqIYxlVQ0UMFm6WXQA5AHeOu/JoxKQDnbSeH8Y9FADOnqYXbPWz0W4aFVo0JFoMPO2JrwjC3rFrfded0EkD76vrazzwZxWNkWskC3jJq2Dgu3tsuDdv+Q4moNJYamADQtxYc7a16GNUEklo/ZlUS1pFanDplWTIwGaJd+ZWCvqPrz7cr+PObYfv4NsSN1QBij+eYDS+o6pTK/Ba/ve9AmdR4zS7dv/i1paSmGx3kbm/N0fNn+gelgPv8poOat1TGadT5FLEXWdytDW6I7S+d80xiInPHwKeXI4G4DL+F6zdRw8zWvR6ziXHIkxh/LnioRnoKxOiQZbQbrws2exjyFAS2HkX5UHugPfOkK0YSrJHVpwkOarDAvj7RoOHTFxLd/6FKbugDTG+0tIY4W6RROENePjZW+1eJIOkivO7/iHv3Qi6iIPhW9fB7XUDEtOdmmSrnheU6S9lvKnFYoW3Wcjy12bpK9QoaIzUykzQpO6maOxGr7nQv20AdM6y0vI16Y/8GIEqrGf9V/XVvv5SZFX3BPT3sAsBj0C18imfyyqhU33y1Gr/xMAc0Qbf4Cs92SLczY5yzd1BKGeM3ajaSaHRZbtjRdfiP7xyedyVyWF8COOHVfZb4cXwdpIbtXFkWNcYrfSnhLsRenhIrbKmiDsPRRZCZW8tpDWhr7ge2KY8wb1SbOa38WiNXTjNJAuviZ4ZmUOl5y4CrESdPXN7x7qH+jmfzxUSvBFYaSY2ey46ShHr9zQj7kz3NajIztGK7//sMnQsXuToUnSc5H0XwEwVUT6kSS6ZVYe58quDOgD47Dtj8wczXx081LSXAJXJ75XfxcwJhNn78oHVOR6EqTjOmRLlqj12Bw0WjhzIaut4wQdx0eTXGLqwn6b3RrVoVuwhJ2kwkURe0WDoKa7AWqYZBCHjGlgB3fNEBCNdKLw5ji+0C0jO"));
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(dynamicLinkAuthenticationResponse, "randomChallengeFromTestUserAuthRequest"));
+        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
+        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
+        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
+        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
+        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("bXhY5CO3gxQ2hxnuQm0Lm/4fXoFPogy4LwS6d0aUu9sZjCfNV5n6IUse45UYLhvmfK4NW5QarlYRTEqIYxlVQ0UMFm6WXQA5AHeOu/JoxKQDnbSeH8Y9FADOnqYXbPWz0W4aFVo0JFoMPO2JrwjC3rFrfded0EkD76vrazzwZxWNkWskC3jJq2Dgu3tsuDdv+Q4moNJYamADQtxYc7a16GNUEklo/ZlUS1pFanDplWTIwGaJd+ZWCvqPrz7cr+PObYfv4NsSN1QBij+eYDS+o6pTK/Ba/ve9AmdR4zS7dv/i1paSmGx3kbm/N0fNn+gelgPv8poOat1TGadT5FLEXWdytDW6I7S+d80xiInPHwKeXI4G4DL+F6zdRw8zWvR6ziXHIkxh/LnioRnoKxOiQZbQbrws2exjyFAS2HkX5UHugPfOkK0YSrJHVpwkOarDAvj7RoOHTFxLd/6FKbugDTG+0tIY4W6RROENePjZW+1eJIOkivO7/iHv3Qi6iIPhW9fB7XUDEtOdmmSrnheU6S9lvKnFYoW3Wcjy12bpK9QoaIzUykzQpO6maOxGr7nQv20AdM6y0vI16Y/8GIEqrGf9V/XVvv5SZFX3BPT3sAsBj0C18imfyyqhU33y1Gr/xMAc0Qbf4Cs92SLczY5yzd1BKGeM3ajaSaHRZbtjRdfiP7xyedyVyWF8COOHVfZb4cXwdpIbtXFkWNcYrfSnhLsRenhIrbKmiDsPRRZCZW8tpDWhr7ge2KY8wb1SbOa38WiNXTjNJAuviZ4ZmUOl5y4CrESdPXN7x7qH+jmfzxUSvBFYaSY2ey46ShHr9zQj7kz3NajIztGK7//sMnQsXuToUnSc5H0XwEwVUT6kSS6ZVYe58quDOgD47Dtj8wczXx081LSXAJXJ75XfxcwJhNn78oHVOR6EqTjOmRLlqj12Bw0WjhzIaut4wQdx0eTXGLqwn6b3RrVoVuwhJ2kwkURe0WDoKa7AWqYZBCHjGlgB3fNEBCNdKLw5ji+0C0jO"));
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
 
         assertEquals("Failed to verify validity of signature returned by Smart-ID", exception.getMessage());
     }

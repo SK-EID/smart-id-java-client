@@ -68,9 +68,9 @@ public class SmartIdClient {
     private SessionStatusPoller sessionStatusPoller;
 
     /**
-     * Creates a new builder for creating a dynamic link certificate choice session request.
+     * Creates a new builder for creating a device link certificate choice session request.
      *
-     * @return a builder for creating a new dynamic link certificate choice session request
+     * @return a builder for creating a new device link certificate choice session request
      */
     public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
         return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector())
@@ -90,12 +90,12 @@ public class SmartIdClient {
     }
 
     /**
-     * Creates a new builder for creating a new dynamic link authentication session request
+     * Creates a new builder for creating a new device link authentication session request
      *
-     * @return builder for creating a new dynamic link authentication session request
+     * @return builder for creating a new device link authentication session request
      */
-    public DynamicLinkAuthenticationSessionRequestBuilder createDynamicLinkAuthentication() {
-        return new DynamicLinkAuthenticationSessionRequestBuilder(getSmartIdConnector())
+    public DeviceLinkAuthenticationSessionRequestBuilder createDeviceLinkAuthentication() {
+        return new DeviceLinkAuthenticationSessionRequestBuilder(getSmartIdConnector())
                 .withRelyingPartyUUID(relyingPartyUUID)
                 .withRelyingPartyName(relyingPartyName);
     }
@@ -151,8 +151,8 @@ public class SmartIdClient {
      *
      * @return DynamicLinkRequestBuilder
      */
-    public DynamicContentBuilder createDynamicContent() {
-        return new DynamicContentBuilder();
+    public DeviceContentBuilder createDynamicContent() {
+        return new DeviceContentBuilder();
     }
 
     /**

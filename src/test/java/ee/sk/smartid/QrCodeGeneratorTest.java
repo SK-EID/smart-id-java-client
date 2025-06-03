@@ -154,8 +154,8 @@ class QrCodeGeneratorTest {
     }
 
     private static URI createUri() {
-        return new DynamicContentBuilder()
-                .withDynamicLinkType(DynamicLinkType.QR_CODE)
+        return new DeviceContentBuilder()
+                .withDeviceLinkType(DeviceLinkType.QR_CODE)
                 .withSessionType(SessionType.AUTHENTICATION)
                 .withSessionToken("rTBfEhy0z4SlqmGHjIW6uQid")
                 .withAuthCode("Y7jBVqtP_KcY4GyJ0gTK717wZnfRLvondEUjjCRJAsQ")

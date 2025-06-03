@@ -49,6 +49,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -60,16 +61,15 @@ import ee.sk.smartid.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateChoiceResponse;
 import ee.sk.smartid.CertificateChoiceResponseMapper;
 import ee.sk.smartid.CertificateLevel;
-import ee.sk.smartid.DynamicLinkType;
-import ee.sk.smartid.RandomChallenge;
+import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
 import ee.sk.smartid.SignatureResponse;
 import ee.sk.smartid.SignatureResponseMapper;
 import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.dao.DynamicLinkInteraction;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -103,18 +103,18 @@ public class ReadmeIntegrationTest {
         @Test
         void anonymousAuthentication_withApp2App() {
             // For security reasons a new hash value must be created for each new authentication request
-            String randomChallenge = RandomChallenge.generate();
+            String randomChallenge = RpChallengeGenerator.generate();
             // Store generated randomChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
-            DynamicLinkSessionResponse authenticationSessionResponse = smartIdClient
-                    .createDynamicLinkAuthentication()
+            DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
+                    .createDeviceLinkAuthentication()
                     // to use anonymous authentication, do not set semantics identifier or document number
-                    .withRandomChallenge(randomChallenge)
+                    .withRpChallenge(randomChallenge)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-                    .withAllowedInteractionsOrder(Collections.singletonList(
+                    .withInteractions(Collections.singletonList(
                             // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
-                            DynamicLinkInteraction.displayTextAndPIN("Log in?")
+                            DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ))
                     .initAuthenticationSession();
 
@@ -132,10 +132,10 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
+            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
             // Generate dynamic link
             URI dynamicLink = smartIdClient.createDynamicContent()
-                    .withDynamicLinkType(DynamicLinkType.APP_2_APP) // specify the type of dynamic link
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP) // specify the type of dynamic link
                     .withSessionType(SessionType.AUTHENTICATION) // specify type of the session the dynamic link is for
                     .withSessionToken(sessionToken) // provide token from sessions response
                     .withElapsedSeconds(elapsedSeconds) // calculate elapsed seconds from response received time
@@ -175,17 +175,17 @@ public class ReadmeIntegrationTest {
                     "40504040001"); // identifier (according to country and identity type reference)
 
             // For security reasons a new random challenge must be created for each new authentication request
-            String randomChallenge = RandomChallenge.generate();
+            String randomChallenge = RpChallengeGenerator.generate();
             // Store generated randomChallenge only backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
-            DynamicLinkSessionResponse authenticationSessionResponse = smartIdClient
-                    .createDynamicLinkAuthentication()
+            DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
+                    .createDeviceLinkAuthentication()
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-                    .withRandomChallenge(randomChallenge)
-                    .withAllowedInteractionsOrder(Collections.singletonList(
-                            DynamicLinkInteraction.displayTextAndPIN("Log in?")
+                    .withRpChallenge(randomChallenge)
+                    .withInteractions(Collections.singletonList(
+                            DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ))
                     // we want to get the IP address of the device running Smart-ID app
                     // for the IP to be returned the service provider (SK) must switch on this option
@@ -205,10 +205,10 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
+            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
             // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
             String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
                     .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
                     .withSessionToken(sessionToken) // provide token from sessions response
                     .withElapsedSeconds(elapsedSeconds)
@@ -243,17 +243,17 @@ public class ReadmeIntegrationTest {
             String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
             // For security reasons a new random challenge must be created for each new authentication request
-            String randomChallenge = RandomChallenge.generate();
+            String randomChallenge = RpChallengeGenerator.generate();
             // Store generated randomChallenge only backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
-            DynamicLinkSessionResponse authenticationSessionResponse = smartIdClient
-                    .createDynamicLinkAuthentication()
+            DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
+                    .createDeviceLinkAuthentication()
                     .withDocumentNumber(documentNumber)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-                    .withRandomChallenge(randomChallenge)
-                    .withAllowedInteractionsOrder(Collections.singletonList(
-                            DynamicLinkInteraction.displayTextAndPIN("Log in?")
+                    .withRpChallenge(randomChallenge)
+                    .withInteractions(Collections.singletonList(
+                            DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ))
                     // we want to get the IP address of the device running Smart-ID app
                     // for the IP to be returned the service provider (SK) must switch on this option
@@ -273,10 +273,10 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
+            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
             // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
             String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
                     .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
                     .withSessionToken(sessionToken) // provide token from sessions response
                     .withElapsedSeconds(elapsedSeconds)
@@ -334,14 +334,14 @@ public class ReadmeIntegrationTest {
             signableData.setHashType(HashType.SHA512);
 
             // Build the dynamic link signature request
-            DynamicLinkSessionResponse signatureSessionResponse = smartIdClient.createDynamicLinkSignature()
+            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDynamicLinkSignature()
                     .withRelyingPartyUUID(smartIdClient.getRelyingPartyUUID())
                     .withRelyingPartyName(smartIdClient.getRelyingPartyName())
                     .withCertificateLevel(CertificateLevel.QUALIFIED)
                     .withSignableData(signableData)
                     .withDocumentNumber(documentNumber)
                     .withAllowedInteractionsOrder(List.of(
-                            DynamicLinkInteraction.displayTextAndPIN("Please sign the document")))
+                            DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                     .initSignatureSession();
 
             // Process the signature response
@@ -357,10 +357,10 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.SIGNATURE, elapsedSeconds, sessionSecret);
+            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.SIGNATURE, elapsedSeconds, sessionSecret);
             // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
             String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
                     .withSessionType(SessionType.SIGNATURE) // specify type of the sessions the dynamic link is for
                     .withSessionToken(sessionToken) // provide token from sessions response
                     .withElapsedSeconds(elapsedSeconds)
@@ -416,14 +416,14 @@ public class ReadmeIntegrationTest {
                     "40504040001"); // identifier (according to country and identity type reference)
 
             // Build the dynamic link signature request
-            DynamicLinkSessionResponse signatureSessionResponse = smartIdClient.createDynamicLinkSignature()
+            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDynamicLinkSignature()
                     .withRelyingPartyUUID(smartIdClient.getRelyingPartyUUID())
                     .withRelyingPartyName(smartIdClient.getRelyingPartyName())
                     .withCertificateLevel(CertificateLevel.QUALIFIED)
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withAllowedInteractionsOrder(List.of(
-                            DynamicLinkInteraction.displayTextAndPIN("Please sign the document")))
+                            DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                     .initSignatureSession();
 
             // Process the signature response
@@ -440,10 +440,10 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.SIGNATURE, elapsedSeconds, sessionSecret);
+            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.SIGNATURE, elapsedSeconds, sessionSecret);
             // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
             String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
                     .withSessionType(SessionType.SIGNATURE) // specify type of the sessions the dynamic link is for
                     .withSessionToken(sessionToken) // provide token from sessions response
                     .withElapsedSeconds(elapsedSeconds)
@@ -476,7 +476,7 @@ public class ReadmeIntegrationTest {
             String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
             // For security reasons a new hash value must be created for each new authentication request
-            String randomChallenge = RandomChallenge.generate();
+            String randomChallenge = RpChallengeGenerator.generate();
             // Store generated randomChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
@@ -503,7 +503,7 @@ public class ReadmeIntegrationTest {
 
             assertEquals("COMPLETE", sessionStatus.getState());
             assertEquals(documentNumber, sessionStatus.getResult().getDocumentNumber());
-            assertEquals("ACSP_V1", sessionStatus.getSignatureProtocol());
+            assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
             // validate sessions status result and map session status to authentication response
             AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
@@ -529,7 +529,7 @@ public class ReadmeIntegrationTest {
                     "40504040001"); // identifier (according to country and identity type reference)
 
             // For security reasons a new hash value must be created for each new authentication request
-            String randomChallenge = RandomChallenge.generate();
+            String randomChallenge = RpChallengeGenerator.generate();
             // Store generated randomChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
@@ -556,7 +556,7 @@ public class ReadmeIntegrationTest {
 
             assertEquals("COMPLETE", sessionStatus.getState());
             assertEquals("PNOLT-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
-            assertEquals("ACSP_V1", sessionStatus.getSignatureProtocol());
+            assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
             // validate sessions status result and map session status to authentication response
             AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);

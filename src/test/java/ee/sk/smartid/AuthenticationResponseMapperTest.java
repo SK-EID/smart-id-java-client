@@ -152,7 +152,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Signature parameter is missing in session status", exception.getMessage());
@@ -168,7 +168,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
@@ -186,7 +186,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
@@ -201,7 +201,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
@@ -215,7 +215,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
@@ -233,7 +233,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
 
@@ -250,7 +250,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
 
@@ -267,7 +267,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
         sessionStatus.setInteractionFlowUsed(interactionFlowUsed);
@@ -284,7 +284,7 @@ class AuthenticationResponseMapperTest {
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
         sessionStatus.setInteractionFlowUsed("displayTextAndPIN");
@@ -318,7 +318,7 @@ class AuthenticationResponseMapperTest {
     private static SessionStatus toSessionStatus(SessionResult sessionResult, SessionSignature sessionSignature, SessionCertificate sessionCertificate) {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V1");
+        sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
         sessionStatus.setInteractionFlowUsed("displayTextAndPIN");

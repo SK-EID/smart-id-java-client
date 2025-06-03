@@ -6,7 +6,7 @@
     "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
     "signatureAlgorithm": "sha512WithRSAEncryption"
   },
-  "allowedInteractionsOrder": [
+  "interactions": [
     {
       "type": "verificationCodeChoice",
       "displayText60": "Verify the code"

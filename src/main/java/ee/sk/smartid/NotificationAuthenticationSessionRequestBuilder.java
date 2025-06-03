@@ -26,6 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -33,12 +34,15 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.AcspV1SignatureProtocolParameters;
+import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
@@ -59,9 +63,9 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private String relyingPartyName;
     private AuthenticationCertificateLevel certificateLevel;
     private String randomChallenge;
-    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.SHA512WITHRSA;
+    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
     private String nonce;
-    private List<NotificationInteraction> allowedInteractionsOrder;
+    private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
     private SemanticsIdentifier semanticsIdentifier;
@@ -151,7 +155,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @return this builder
      */
     public NotificationAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<NotificationInteraction> allowedInteractionsOrder) {
-        this.allowedInteractionsOrder = allowedInteractionsOrder;
+        this.interactions = allowedInteractionsOrder;
         return this;
     }
 
@@ -287,11 +291,11 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     private void validateAllowedInteractionOrder() {
-        if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
+        if (interactions == null || interactions.isEmpty()) {
             logger.error("Parameter allowedInteractionsOrder must be set");
             throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
         }
-        allowedInteractionsOrder.forEach(Interaction::validate);
+        interactions.forEach(Interaction::validate);
     }
 
     private AuthenticationSessionRequest createAuthenticationRequest() {
@@ -303,12 +307,12 @@ public class NotificationAuthenticationSessionRequestBuilder {
             request.setCertificateLevel(certificateLevel.name());
         }
 
-        var signatureProtocolParameters = new AcspV1SignatureProtocolParameters();
-        signatureProtocolParameters.setRandomChallenge(randomChallenge);
+        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
+        signatureProtocolParameters.setRpChallenge(randomChallenge);
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
-        request.setAllowedInteractionsOrder(allowedInteractionsOrder);
+        request.setInteractions(encodeInteractionsToBase64(interactions));
 
         if (this.shareMdClientIpAddress != null) {
             var requestProperties = new RequestProperties();
@@ -345,6 +349,15 @@ public class NotificationAuthenticationSessionRequestBuilder {
         if (StringUtil.isEmpty(verificationCode.getValue())) {
             logger.error("VC value is missing from the response");
             throw new UnprocessableSmartIdResponseException("VC value is missing from the response");
+        }
+    }
+
+    private String encodeInteractionsToBase64(List<NotificationInteraction> interactions) {
+        try {
+            var mapper = new ObjectMapper();
+            return Base64.getEncoder().encodeToString(mapper.writeValueAsString(interactions).getBytes(StandardCharsets.UTF_8));
+        } catch (JsonProcessingException e) {
+            throw new SmartIdClientException("Unable to encode interactions to base64", e);
         }
     }
 }
