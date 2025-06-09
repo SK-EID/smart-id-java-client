@@ -154,7 +154,7 @@ class QrCodeGeneratorTest {
     }
 
     private static URI createUri() {
-        return new DeviceContentBuilder()
+        return new DeviceLinkBuilder()
                 .withDeviceLinkType(DeviceLinkType.QR_CODE)
                 .withSessionType(SessionType.AUTHENTICATION)
                 .withSessionToken("rTBfEhy0z4SlqmGHjIW6uQid")

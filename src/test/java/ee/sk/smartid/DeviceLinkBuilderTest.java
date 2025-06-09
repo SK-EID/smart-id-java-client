@@ -48,7 +48,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-class DeviceContentBuilderTest {
+class DeviceLinkBuilderTest {
 
     @Nested
     class CreateUri {
@@ -57,7 +57,7 @@ class DeviceContentBuilderTest {
         @EnumSource
         void createUri_forDifferentDynamicLinks(DeviceLinkType deviceLinkType) {
             long elapsedSeconds = 1L;
-            URI uri = new DeviceContentBuilder()
+            URI uri = new DeviceLinkBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
                     .withDeviceLinkType(deviceLinkType)
@@ -74,7 +74,7 @@ class DeviceContentBuilderTest {
         @EnumSource
         void createUri_withSessionType(SessionType sessionType) {
             long elapsedSeconds = 1L;
-            URI uri = new DeviceContentBuilder()
+            URI uri = new DeviceLinkBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
@@ -91,7 +91,7 @@ class DeviceContentBuilderTest {
         @NullAndEmptySource
         void createUri_baseUrlIsOverriddenToBeEmpty_throwException(String baseUrl) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withBaseUrl(baseUrl)
                             .createUri());
             assertEquals("Parameter baseUrl must be set", ex.getMessage());
@@ -101,7 +101,7 @@ class DeviceContentBuilderTest {
         @NullAndEmptySource
         void createUri_versionIsOverriddenToBeEmpty_throwException(String version) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withVersion(version)
                             .createUri());
             assertEquals("Parameter version must be set", ex.getMessage());
@@ -110,7 +110,7 @@ class DeviceContentBuilderTest {
         @Test
         void createUri_dynamicLinkTypeIsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withDeviceLinkType(null)
                             .createUri());
             assertEquals("Parameter dynamicLinkType must be set", ex.getMessage());
@@ -119,7 +119,7 @@ class DeviceContentBuilderTest {
         @Test
         void createUri_sessionTypeIsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(null)
                             .createUri());
@@ -130,7 +130,7 @@ class DeviceContentBuilderTest {
         @NullAndEmptySource
         void createUri_sessionTokenIsEmpty_throwException(String sessionToken) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken(sessionToken)
@@ -141,7 +141,7 @@ class DeviceContentBuilderTest {
         @Test
         void createUri_elapsedSecondsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
@@ -154,7 +154,7 @@ class DeviceContentBuilderTest {
         @NullAndEmptySource
         void createUri_userLanguageIsEmpty_throwException(String userLanguage) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
@@ -168,7 +168,7 @@ class DeviceContentBuilderTest {
         @NullAndEmptySource
         void createUri_authCodeIsEmpty_throwException(String authCode) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")
@@ -185,7 +185,7 @@ class DeviceContentBuilderTest {
         @ParameterizedTest
         @EnumSource
         void createQrCode_forDifferentSessionsTypes(SessionType sessionType) {
-            String qrDataUri = new DeviceContentBuilder()
+            String qrDataUri = new DeviceLinkBuilder()
                     .withBaseUrl("https://smart-id.com/dynamic-link/")
                     .withVersion("0.1")
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
@@ -204,7 +204,7 @@ class DeviceContentBuilderTest {
         @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
         void createQrCode_wrongLinkTypeIsBeingUsed_throwException(DeviceLinkType notSupportedDeviceLinkType) {
             var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceContentBuilder()
+                    () -> new DeviceLinkBuilder()
                             .withDeviceLinkType(notSupportedDeviceLinkType)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withSessionToken("sessionToken")

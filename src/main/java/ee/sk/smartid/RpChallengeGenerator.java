@@ -42,7 +42,7 @@ public class RpChallengeGenerator {
     }
 
     /**
-     * Generates a RP challenge with max length of 64 bytes
+     * Generates a RP challenge with a maximum length of 64 bytes
      *
      * @return RP challenge in Base64 format
      */

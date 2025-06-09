@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,27 +26,24 @@ package ee.sk.smartid;
  * #L%
  */
 
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import java.io.Serializable;
 
-public class SignatureUtil {
+public enum HashAlgorithm implements Serializable {
 
-    public static String getDigestToSignBase64(SignableHash signableHash, SignableData signableData) {
-        if (signableHash != null && signableHash.areFieldsFilled()) {
-            return signableHash.getHashInBase64();
-        } else if (signableData != null) {
-            if (signableData.getHashType() == null) {
-                throw new SmartIdClientException("HashType must be set for signableData.");
-            }
-            return signableData.calculateHashInBase64();
-        } else {
-            throw new SmartIdClientException("Either signableHash or signableData must be set.");
-        }
+    SHA_256("SHA-256"),
+    SHA_384("SHA-384"),
+    SHA_512("SHA-512"),
+    SHA3_256("SHA3-256"),
+    SHA3_384("SHA3-384"),
+    SHA3_512("SHA3-512");
+
+    private final String value;
+
+    HashAlgorithm(String value) {
+        this.value = value;
     }
 
-    public static String getSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
-        if (signatureAlgorithm != null && signatureAlgorithm != SignatureAlgorithm.RSASSA_PSS) {
-            throw new SmartIdClientException("Only RSASSA_PSS is supported.");
-        }
-        return SignatureAlgorithm.RSASSA_PSS.getAlgorithmName();
+    public String getValue() {
+        return value;
     }
 }

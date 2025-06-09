@@ -311,7 +311,6 @@ public class NotificationAuthenticationSessionRequestBuilder {
         signatureProtocolParameters.setRpChallenge(randomChallenge);
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
-        request.setNonce(nonce);
         request.setInteractions(encodeInteractionsToBase64(interactions));
 
         if (this.shareMdClientIpAddress != null) {

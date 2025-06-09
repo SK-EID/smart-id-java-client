@@ -26,7 +26,7 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -34,16 +34,17 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.util.DeviceLinkUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -52,6 +53,7 @@ import ee.sk.smartid.util.StringUtil;
 public class DeviceLinkAuthenticationSessionRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(DeviceLinkAuthenticationSessionRequestBuilder.class);
+    private static final String INITIAL_CALLBACK_URL_PATTERN = "^https://[^|]+$";
 
     private final SmartIdConnector connector;
 
@@ -61,7 +63,6 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private String rpChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
     private SignatureAlgorithmParameters signatureAlgorithmParameters;
-    private String nonce;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
@@ -114,11 +115,14 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the RP challenge
+     * Sets the RP challenge.
      * <p>
-     * The provided RP challenge must be a Base64 encoded string
+     * RP challenge is a randomly generated string that must be Base64 encoded and
+     * should be regenerated for every new authentication session request.
+     * <p>
+     * You can use {@link ee.sk.smartid.RpChallengeGenerator} to generate a suitable RP challenge.
      *
-     * @param rpChallenge the signature protocol parameters
+     * @param rpChallenge RP challenge in Base64 encoded format
      * @return this builder
      */
     public DeviceLinkAuthenticationSessionRequestBuilder withRpChallenge(String rpChallenge) {
@@ -140,22 +144,13 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     /**
      * Sets the signature algorithm parameters
      *
-     * @param signatureAlgorithmParameters the signature algorithm parameters
+     * @param hashAlgorithm the signature algorithm parameters
      * @return this builder
      */
-    public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
-        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
-        return this;
-    }
-
-    /**
-     * Sets the nonce
-     *
-     * @param nonce the nonce
-     * @return this builder
-     */
-    public DeviceLinkAuthenticationSessionRequestBuilder withNonce(String nonce) {
-        this.nonce = nonce;
+    public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithmParameters(HashAlgorithm hashAlgorithm) {
+        var params = new SignatureAlgorithmParameters();
+        params.setHashAlgorithm(hashAlgorithm);
+        this.signatureAlgorithmParameters = params;
         return this;
     }
 
@@ -219,9 +214,11 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the initial callback URL
+     * Sets the initial callback URL.
      * <p>
-     * This URL will be used to redirect the user after the authentication session is initialized
+     * This URL is used to redirect the user after the authentication session is started.
+     * <p>
+     * The callback URL should be set when using same device flows (like Web2App or App2App).
      *
      * @param initialCallbackURL the initial callback URL
      * @return this builder
@@ -242,6 +239,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * </ul>
      *
      * @return init session response
+     * @throws SmartIdClientException if request parameters are invalid or response is missing required fields
      */
     public DeviceLinkSessionResponse initAuthenticationSession() {
         validateRequestParameters();
@@ -271,7 +269,6 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             throw new SmartIdClientException("Parameter relyingPartyName must be set");
         }
         validateSignatureParameters();
-        validateNonce();
         validateAllowedInteractionOrder();
         validateInitialCallbackURL();
     }
@@ -301,31 +298,9 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             throw new SmartIdClientException("SignatureAlgorithmParameters must be set");
         }
 
-        String hashAlgorithm = signatureAlgorithmParameters.getHashAlgorithm();
-        if (StringUtil.isEmpty(hashAlgorithm)) {
+        if (signatureAlgorithmParameters.getHashAlgorithm() == null) {
             logger.error("Parameter SignatureAlgorithmParameters.hashAlgorithm must be set");
             throw new SmartIdClientException("SignatureAlgorithmParameters.hashAlgorithm must be set");
-        }
-
-        try {
-            new SignatureAlgorithmParameters().setHashAlgorithm(hashAlgorithm);
-        } catch (SmartIdClientException ex) {
-            logger.error("Unsupported hashAlgorithm provided: {}", hashAlgorithm);
-            throw ex;
-        }
-    }
-
-    private void validateNonce() {
-        if (nonce == null) {
-            return;
-        }
-        if (nonce.isEmpty()) {
-            logger.error("Parameter nonce value has to be at least 1 character long");
-            throw new SmartIdClientException("Parameter nonce value has to be at least 1 character long");
-        }
-        if (nonce.length() > 30) {
-            logger.error("Nonce cannot be longer that 30 chars");
-            throw new SmartIdClientException("Nonce cannot be longer that 30 chars");
         }
     }
 
@@ -334,7 +309,10 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             logger.error("Parameter allowedInteractionsOrder must be set");
             throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
         }
-        if (interactions.stream().distinct().count() != interactions.size()) {
+        if (interactions.stream()
+                .map(i -> Arrays.asList(i.getType(), i.getDisplayText60(), i.getDisplayText200()))
+                .distinct()
+                .count() != interactions.size()) {
             logger.error("Duplicate values found in allowedInteractionsOrder");
             throw new SmartIdClientException("Duplicate values in allowedInteractionsOrder are not allowed");
         }
@@ -342,9 +320,8 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateInitialCallbackURL() {
-        if (!StringUtil.isEmpty(initialCallbackURL) &&
-                !initialCallbackURL.matches("^https://([^\\\\|]+)$")) {
-            throw new SmartIdClientException("initialCallbackURL must match pattern ^https:\\/\\/([^\\\\|]+)$ and must not contain unencoded vertical bars");
+        if (!StringUtil.isEmpty(initialCallbackURL) && !initialCallbackURL.matches(INITIAL_CALLBACK_URL_PATTERN)) {
+            throw new SmartIdClientException("initialCallbackURL must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
         }
     }
 
@@ -361,8 +338,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
         signatureProtocolParameters.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
         request.setSignatureProtocolParameters(signatureProtocolParameters);
-        request.setNonce(nonce);
-        request.setInteractions(encodeInteractionsToBase64(interactions));
+        request.setInteractions(DeviceLinkUtil.encodeToBase64(interactions));
 
         if (this.shareMdClientIpAddress != null) {
             var requestProperties = new RequestProperties();
@@ -389,18 +365,9 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             logger.error("Session secret is missing from the response");
             throw new SmartIdClientException("Session secret is missing from the response");
         }
-        if (deviceLinkAuthenticationSessionResponse.getDeviceLinkBase() == null) {
-            logger.error("deviceLinkBase is missing from the response");
-            throw new SmartIdClientException("deviceLinkBase is missing from the response");
-        }
-    }
-
-    private String encodeInteractionsToBase64(List<DeviceLinkInteraction> interactions) {
-        try {
-            var mapper = new ObjectMapper();
-            return Base64.getEncoder().encodeToString(mapper.writeValueAsString(interactions).getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException e) {
-            throw new SmartIdClientException("Unable to encode interactions to base64", e);
+        if (deviceLinkAuthenticationSessionResponse.getDeviceLinkBase() == null || deviceLinkAuthenticationSessionResponse.getDeviceLinkBase().toString().isBlank()) {
+            logger.error("deviceLinkBase is missing or empty in the response");
+            throw new SmartIdClientException("deviceLinkBase is missing or empty in the response");
         }
     }
 }

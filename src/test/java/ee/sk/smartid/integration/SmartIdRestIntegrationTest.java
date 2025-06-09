@@ -133,7 +133,7 @@ class SmartIdRestIntegrationTest {
                 signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
                 signatureParameters.setRpChallenge(RpChallengeGenerator.generate());
                 request.setSignatureProtocolParameters(signatureParameters);
-                request.setInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")).toString());
+                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))));
                 return request;
             }
         }

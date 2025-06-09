@@ -133,8 +133,8 @@ public interface SmartIdConnector extends Serializable {
     /**
      * Create anonymous authentication session with dynamic link
      *
-     * @param authenticationRequest The dynamic link authentication session request
-     * @return The dynamic link authentication session response
+     * @param authenticationRequest The device link authentication session request
+     * @return The device link authentication session response
      */
     DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest);
 

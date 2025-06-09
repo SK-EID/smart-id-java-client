@@ -260,7 +260,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withSemanticsIdentifier(semanticsIdentifier)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withSignatureAlgorithm("rsassa-pss")
+        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
         .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters(HashAlgorithm.SHA_512))
         .withRpChallenge(rpChallenge)
         .withInteractions(Collections.singletonList(

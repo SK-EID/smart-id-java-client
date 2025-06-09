@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L
@@ -27,24 +27,16 @@ package ee.sk.smartid;
  */
 
 import java.io.Serializable;
-import java.util.Set;
-
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 public class SignatureAlgorithmParameters implements Serializable {
 
-    private static final Set<String> SUPPORTED_HASH_ALGORITHMS = Set.of("SHA-256", "SHA-384", "SHA-512", "SHA3-256", "SHA3-384", "SHA3-512");
+    private HashAlgorithm hashAlgorithm;
 
-    private String hashAlgorithm;
-
-    public String getHashAlgorithm() {
+    public HashAlgorithm getHashAlgorithm() {
         return hashAlgorithm;
     }
 
-    public void setHashAlgorithm(String hashAlgorithm) {
-        if (!SUPPORTED_HASH_ALGORITHMS.contains(hashAlgorithm)) {
-            throw new SmartIdClientException("Unsupported hashAlgorithm: " + hashAlgorithm + ". Supported values: " + SUPPORTED_HASH_ALGORITHMS);
-        }
+    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
         this.hashAlgorithm = hashAlgorithm;
     }
 }

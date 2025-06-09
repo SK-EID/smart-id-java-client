@@ -35,7 +35,7 @@ import jakarta.ws.rs.core.UriBuilder;
 /**
  * Builds device content. Can be used to generate dynamic link or QR code.
  */
-public class DeviceContentBuilder {
+public class DeviceLinkBuilder {
 
     private static final String DEFAULT_BASE_URL = "https://smart-id.com/device-link/";
     private static final String DEFAULT_VERSION = "0.1";
@@ -58,7 +58,7 @@ public class DeviceContentBuilder {
      * @param baseUrl the URL that will direct to SMART-ID application
      * @return this builder
      */
-    public DeviceContentBuilder withBaseUrl(String baseUrl) {
+    public DeviceLinkBuilder withBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
         return this;
     }
@@ -71,7 +71,7 @@ public class DeviceContentBuilder {
      * @param version the version of
      * @return this builder
      */
-    public DeviceContentBuilder withVersion(String version) {
+    public DeviceLinkBuilder withVersion(String version) {
         this.version = version;
         return this;
     }
@@ -82,7 +82,7 @@ public class DeviceContentBuilder {
      * @param deviceLinkType the type of the device link the builder is creating
      * @return this builder
      */
-    public DeviceContentBuilder withDeviceLinkType(DeviceLinkType deviceLinkType) {
+    public DeviceLinkBuilder withDeviceLinkType(DeviceLinkType deviceLinkType) {
         this.deviceLinkType = deviceLinkType;
         return this;
     }
@@ -93,7 +93,7 @@ public class DeviceContentBuilder {
      * @param sessionType the type of the session the device link is created for
      * @return this builder
      */
-    public DeviceContentBuilder withSessionType(SessionType sessionType) {
+    public DeviceLinkBuilder withSessionType(SessionType sessionType) {
         this.sessionType = sessionType;
         return this;
     }
@@ -104,7 +104,7 @@ public class DeviceContentBuilder {
      * @param sessionToken the session token that was received from the Smart-ID server
      * @return this builder
      */
-    public DeviceContentBuilder withSessionToken(String sessionToken) {
+    public DeviceLinkBuilder withSessionToken(String sessionToken) {
         this.sessionToken = sessionToken;
         return this;
     }
@@ -115,7 +115,7 @@ public class DeviceContentBuilder {
      * @param elapsedSeconds the time passed since the session response was received in seconds
      * @return this builder
      */
-    public DeviceContentBuilder withElapsedSeconds(Long elapsedSeconds) {
+    public DeviceLinkBuilder withElapsedSeconds(Long elapsedSeconds) {
         this.elapsedSeconds = elapsedSeconds;
         return this;
     }
@@ -128,7 +128,7 @@ public class DeviceContentBuilder {
      * @param userLanguage the language of the user
      * @return this builder
      */
-    public DeviceContentBuilder withUserLanguage(String userLanguage) {
+    public DeviceLinkBuilder withUserLanguage(String userLanguage) {
         this.userLanguage = userLanguage;
         return this;
     }
@@ -139,7 +139,7 @@ public class DeviceContentBuilder {
      * @param authCode the auth code in the device link
      * @return this builder
      */
-    public DeviceContentBuilder withAuthCode(String authCode) {
+    public DeviceLinkBuilder withAuthCode(String authCode) {
         this.authCode = authCode;
         return this;
     }

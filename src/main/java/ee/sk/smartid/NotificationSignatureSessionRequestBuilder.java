@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.util.SignatureUtil;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.Interaction;
@@ -254,7 +255,7 @@ public class NotificationSignatureSessionRequestBuilder {
         if (signableHash != null || signableData != null) {
             signatureProtocolParameters.setDigest(SignatureUtil.getDigestToSignBase64(signableHash, signableData));
         }
-        signatureProtocolParameters.setSignatureAlgorithm(SignatureUtil.getSignatureAlgorithm(signatureAlgorithm));
+        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
         request.setAllowedInteractionsOrder(allowedInteractionsOrder);

@@ -44,6 +44,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
@@ -52,6 +53,7 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 
 class SmartIdClientTest {
 
@@ -131,7 +133,7 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
@@ -149,7 +151,7 @@ class SmartIdClientTest {
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
@@ -167,7 +169,7 @@ class SmartIdClientTest {
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
@@ -349,7 +351,7 @@ class SmartIdClientTest {
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
                     .initAuthenticationSession();
 
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
