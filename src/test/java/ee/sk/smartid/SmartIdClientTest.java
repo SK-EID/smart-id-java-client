@@ -353,15 +353,22 @@ class SmartIdClientTest {
                     .initAuthenticationSession();
 
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-            String authCode = AuthCode.createHash(deviceLinkType, SessionType.AUTHENTICATION, elapsedSeconds, response.getSessionSecret());
-            URI qrCodeUri = smartIdClient.createDynamicContent()
+
+            String relyingPartyNameBase64 = java.util.Base64.getEncoder().encodeToString("DEMO".getBytes());
+
+            AuthCodeBuilder authCodeBuilder = new AuthCodeBuilder()
+                    .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+                    .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+                    .withRelyingPartyNameBase64(relyingPartyNameBase64);
+
+            URI qrCodeUri = new UnprotectedLinkBuilder()
+                    .withDeviceLinkBase("https://smart-id.com/dynamic-link/")
                     .withDeviceLinkType(deviceLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
-                    .withUserLanguage("eng")
-                    .withAuthCode(authCode)
-                    .createUri();
+                    .withLang("eng")
+                    .buildDeviceLinkWithAuthCode(response.getSessionSecret(), authCodeBuilder);
 
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, deviceLinkType, response.getSessionToken());
         }
@@ -377,17 +384,30 @@ class SmartIdClientTest {
                     .initCertificateChoice();
 
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-            String authCode = AuthCode.createHash(deviceLinkType, SessionType.CERTIFICATE_CHOICE, elapsedSeconds, response.getSessionSecret());
-            URI qrCodeUri = smartIdClient.createDynamicContent()
+
+            AuthCodeBuilder authCodeBuilder = new AuthCodeBuilder()
+                    .withRelyingPartyNameBase64(Base64.toBase64String("DEMO".getBytes()))
+                    .withUnprotectedDeviceLink(
+                            new UnprotectedLinkBuilder()
+                                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                                    .withDeviceLinkType(deviceLinkType)
+                                    .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                                    .withSessionToken(response.getSessionToken())
+                                    .withElapsedSeconds(elapsedSeconds)
+                                    .withLang("eng")
+                                    .createUnprotectedUri().toString()
+                    );
+
+            URI fullUri = new UnprotectedLinkBuilder()
+                    .withDeviceLinkBase("https://smart-id.com/device-link/")
                     .withDeviceLinkType(deviceLinkType)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
-                    .withUserLanguage("eng")
-                    .withAuthCode(authCode)
-                    .createUri();
+                    .withLang("eng")
+                    .buildDeviceLinkWithAuthCode(response.getSessionSecret(), authCodeBuilder);
 
-            assertUri(qrCodeUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
+            assertUri(fullUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
         }
 
         @Test
@@ -400,18 +420,33 @@ class SmartIdClientTest {
                     .initCertificateChoice();
 
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, elapsedSeconds, response.getSessionSecret());
-            String qrCodeDataUri = smartIdClient.createDynamicContent()
+
+            AuthCodeBuilder authCodeBuilder = new AuthCodeBuilder()
+                    .withRelyingPartyNameBase64(Base64.toBase64String("DEMO".getBytes()))
+                    .withUnprotectedDeviceLink(
+                            new UnprotectedLinkBuilder()
+                                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                                    .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                                    .withSessionToken(response.getSessionToken())
+                                    .withElapsedSeconds(elapsedSeconds)
+                                    .withLang("eng")
+                                    .createUnprotectedUri().toString()
+                    );
+
+            URI fullUri = new UnprotectedLinkBuilder()
+                    .withDeviceLinkBase("https://smart-id.com/device-link/")
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
-                    .withUserLanguage("eng")
-                    .withAuthCode(authCode)
-                    .createQrCodeDataUri();
+                    .withLang("eng")
+                    .buildDeviceLinkWithAuthCode(response.getSessionSecret(), authCodeBuilder);
 
+            String qrCodeDataUri = QrCodeGenerator.generateDataUri(fullUri.toString());
             String[] qrCodeDataUriParts = qrCodeDataUri.split(",");
             URI uri = URI.create(QrCodeUtil.extractQrContent(qrCodeDataUriParts[1]).getText());
+
             assertUri(uri, SessionType.CERTIFICATE_CHOICE, DeviceLinkType.QR_CODE, response.getSessionToken());
         }
 

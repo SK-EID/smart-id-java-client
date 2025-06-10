@@ -37,8 +37,8 @@ This library supports Smart-ID API v3.1.
         * [Examples of allowed dynamic-link interactions order](#examples-of-allowed-dynamic-link-interactions-order)
         * [Additional request properties](#additional-dynamic-link-session-request-properties)
         * [Generating QR-code or dynamic link](#generating-qr-code-or-device-link)
-            * [Generating dynamic link ](#generating-dynamic-link)
-            * [Dynamic link parameters](#dynamic-link-parameters)
+            * [Generating dynamic link ](#generating-device-link)
+            * [Dynamic link parameters](#device-link-parameters)
             * [Overriding default values](#overriding-default-values)
             * [Generating QR-code](#generating-qr-code)
             * [Generate QR-code Data URI](#generate-qr-code-data-uri)
@@ -564,56 +564,72 @@ https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/dynamic_link_flows.
 
 Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app.
 
-##### Dynamic link parameters
+##### Device link parameters
 
-* `baseUrl`: Base URL for the dynamic link. Default value is `https://smart-id.com/dynamic-link`.
-* `version`: Version of the dynamic link. Default value is `0.1`.
+* `deviceLinkBase`: Value of `deviceLinkBase` returned in session-init response.
+* `version`: Version of the dynamic link. Only allowed value is `"1.0"`.
 * `deviceLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
 * `sessionType`: Type of the sessions the dynamic link is for. Possible values are `auth`, `sign`, `cert`.
 * `sessionToken`: Token from the session response.
-* `elapsedSeconds`: Elapsed time from when the session response was received.
-* `userLanguage`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
-* `authCode`: Auth code is HMAC256 hash value generated from deviceLinkType, sessionType, calculated elapsed seconds since response was received and session secret. Received at and sessions secret can be found from the session response.
+* `elapsedSeconds`: Seconds since the session-init response was received – only for `QR_CODE`
+* `lang`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
 
 ```java
-DynamicLinkSessionResponse sessionResponse; // response from the session initiation query.
+DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(sessionResponse.getReceivedAt(), Instant.now()).getSeconds();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionResponse.getSessionSecret());
-// Generate dynamic link
-URI dynamicLink = client.createDynamicContent()
-        .withDynamicLinkType(DynamicLinkType.APP_2_APP) // specify the type of dynamic link
+// Generate device link
+URI unprotected = client.createDynamicContent()
+        .withDeviceLinkBase(session.getDeviceLinkBase()) // base URI returned in session initiation response
+        .withDynamicLinkType(DeviceLinkType.APP_2_APP) // specify the type of dynamic link
         .withSessionType(SessionType.AUTHENTICATION) // specify type of the session the dynamic link is for
         .withSessionToken(response.getSessionToken()) // provide token from sessions response
+        .withLang("eng") // specify user language, default is "eng"
         .withElapsedSeconds(elapsedSeconds) // calculate elapsed seconds from response received time
-        .withAuthCode(authCode)
-        .createUri();
+        .createUnprotectedUri();
+
+String authCode = new AuthCodeBuilder()
+        .withUnprotectedDeviceLink(unprotected)
+        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+        .withDigest(rpChallenge)
+        .withRelyingPartyNameBase64(
+                Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
+        .calculateAuthCode(session.getSessionSecret());         // sessionSecret only used here
+
+URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
 ```
 
 ##### Overriding default values
 
 ```java
-DynamicLinkSessionResponse response; // response from the session initiation query.
+DeviceLinkSessionResponse response; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, response.getSessionSecret());
-// Generate dynamic link
-URI dynamicLink = client.createDynamicContent()
-        .withBaseUrl("https://example.com") // override default base URL (https://smart-id.com/dynamic-link)
-        .withDynamicLinkType(DynamicLinkType.APP_2_APP) // specify the type of dynamic link
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
-        .withElapsedSeconds(elapsedSeconds) 
-        .withUserLanguage("est") // override default user language (eng)
-        .withAuthCode(authCode)
-        .createUri();
+// Generate device link
+URI unprotectedLink = client.createDynamicContent()
+        .withDeviceLinkBase("https://example.com/dl")   // override deviceLinkBase
+        .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+        .withSessionType(SessionType.AUTH) 
+        .withSessionToken(session.getSessionToken())
+        .withLang("est")
+        .createUnprotectedUri();
+
+String rpNameB64 = Base64.getEncoder()
+        .encodeToString("DEMO".getBytes(StandardCharsets.UTF_8));
+
+String authCode = new AuthCodeBuilder()
+        .withUnprotectedDeviceLink(unprotected.toString())
+        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+        .withDigest(rpChallenge)
+        .withRelyingPartyNameBase64(rpNameB64)
+        .calculateAuthCode(session.getSessionSecret());
+
+URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
 ```
 
 #### Generating QR-code
 
-Creating a QR code uses the Zxing library to generate a QR code image with dynamic link as content.
+Creating a QR code uses the Zxing library to generate a QR code image with device link as content.
 According to link size the QR-code of version 9 (53x53 modules) is used.
 For the QR-code to be scannable by most devices the QR code module size should be ~10px.
 It is achieved by setting the height and width of the QR code to 610px (calculated as (53+2x4)*10px)).
@@ -622,20 +638,32 @@ Generated QR code will have error correction level low.
 ##### Generate QR-code Data URI
 
 ```java
-DynamicLinkSessionResponse response; // response from the session initiation query.
-
+DeviceLinkSessionResponse response; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, response.getSessionSecret());
-// Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
-String qrCodeDataUri = client.createDynamicContent()
-        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
+// Build unprotected device link (without authCode)
+URI unprotected = client.createDynamicContent()
+        .withDeviceLinkBase(response.getDeviceLinkBase()) // base URI returned in session initiation response
+        .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        .withSessionType(SessionType.AUTHENTICATION)
+        .withSessionToken(response.getSessionToken())
+        .withLang("eng")                  // specify user language, default is "eng"
         .withElapsedSeconds(elapsedSeconds)
-        .withAuthCode(authCode)
-        .createQrCodeDataUri();
+        .createUnprotectedUri();
+
+// Calculate authCode
+String rpNameB64 = Base64.getEncoder()
+        .encodeToString("DEMO".getBytes(StandardCharsets.UTF_8));
+
+String authCode = new AuthCodeBuilder()
+        .withUnprotectedDeviceLink(unprotected.toString())
+        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+        .withDigest(rpChallenge) // rpChallenge or digest, whichever used in init
+        .withRelyingPartyNameBase64(rpNameB64)
+        .calculateAuthCode(response.getSessionSecret());
+
+// Build final device-link URI
+URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
 ```
 
 ##### Generate QR-code with custom height, width, quiet area and image format
@@ -647,24 +675,36 @@ Other image size in range 366px to 1159px is also possible. Width and height of 
 The width and height of 1159px produce a QR code with a module size of 19px.
 
 ```java
-DynamicLinkSessionResponse response; // response from the session initiation query.
+DeviceLinkSessionResponse response; // response from the session initiation query.
 
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-// Generate auth code
-String authCode = AuthCode.createHash(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, response.getSessionSecret());
-// Generate dynamic link
-URI qrDynamicLink = client.createDynamicContent()
-        .withDynamicLinkType(DynamicLinkType.QR_CODE) // using other values than QR will result in an error
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for, possible values (auth, sign, cert)
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
-        .withElapsedSeconds(elapsedSeconds) // calculate elapsed seconds from response received time
-        .withAuthCode(authCode)
-        .createUri();
-// At this point URI can be returned to frontend and QR-code could be generated from it at frontend side. Or continue to next steps.
+// Build unprotected device link (without authCode)
+URI unprotected = client.createDynamicContent()
+        .withDeviceLinkBase(response.getDeviceLinkBase()) // base URI returned in session initiation response
+        .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        .withSessionType(SessionType.AUTHENTICATION)
+        .withSessionToken(response.getSessionToken())
+        .withLang("eng")                  // specify user language, default is "eng"
+        .withElapsedSeconds(elapsedSeconds)
+        .createUnprotectedUri();
+
+// Calculate authCode
+String rpNameB64 = Base64.getEncoder()
+        .encodeToString("DEMO".getBytes(StandardCharsets.UTF_8));
+
+String authCode = new AuthCodeBuilder()
+        .withUnprotectedDeviceLink(unprotected.toString())
+        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+        .withDigest(rpChallenge) // rpChallenge or digest, whichever used in init
+        .withRelyingPartyNameBase64(rpNameB64)
+        .calculateAuthCode(response.getSessionSecret());
+
+// Build final device-link URI
+URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
 
 // Create QR-code with height and width of 570px and quiet area of 2 modules.
-BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(qrDataUri, 570, 570, 2);
+BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toString(), 570, 570, 2);
 
 // Convert BufferedImage to Data URI
 String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
