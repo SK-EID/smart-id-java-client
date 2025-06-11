@@ -53,6 +53,7 @@ public class AuthenticationSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<String> capabilities;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String initialCallbackURL;
 
     public String getRelyingPartyUUID() {

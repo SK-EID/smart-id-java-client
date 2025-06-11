@@ -26,6 +26,8 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
@@ -93,4 +95,18 @@ public abstract class Interaction {
             throw new SmartIdClientException("displayText60 must be null for AllowedInteractionOrder of type " + getType());
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof Interaction other)
+                && type == other.type
+                && Objects.equals(displayText60, other.displayText60)
+                && Objects.equals(displayText200, other.displayText200);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(type, displayText60, displayText200);
+    }
+
 }

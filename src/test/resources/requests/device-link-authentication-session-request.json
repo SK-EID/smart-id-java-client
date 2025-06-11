@@ -4,7 +4,10 @@
   "signatureProtocol": "ACSP_V2",
   "signatureProtocolParameters": {
     "rpChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
-    "signatureAlgorithm": "rsassa-pss"
+    "signatureAlgorithm": "rsassa-pss",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA_512"
+    }
   },
   "certificateLevel": "QUALIFIED",
   "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbj8ifV0="

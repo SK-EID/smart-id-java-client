@@ -420,7 +420,7 @@ class SmartIdClientTest {
         private static void assertUri(URI qrCodeUri, SessionType sessionType, DeviceLinkType deviceLinkType, String sessionToken) {
             assertEquals("https", qrCodeUri.getScheme());
             assertEquals("smart-id.com", qrCodeUri.getHost());
-            assertEquals("/dynamic-link/", qrCodeUri.getPath());
+            assertEquals("/device-link/", qrCodeUri.getPath());
 
             assertTrue(qrCodeUri.getQuery().contains("version=0.1"));
             assertTrue(qrCodeUri.getQuery().contains("sessionType=" + sessionType.getValue()));

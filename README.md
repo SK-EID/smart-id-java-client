@@ -184,11 +184,10 @@ More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
-* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
-* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded.
+* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be set when using same device flows.
 
 #### Response parameters
 
@@ -217,7 +216,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters(HashAlgorithm.SHA_512))
+        .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))
@@ -261,7 +260,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters(HashAlgorithm.SHA_512))
+        .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
         .withRpChallenge(rpChallenge)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
@@ -300,7 +299,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters(HashAlgorithm.SHA_512))
+        .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
             DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))

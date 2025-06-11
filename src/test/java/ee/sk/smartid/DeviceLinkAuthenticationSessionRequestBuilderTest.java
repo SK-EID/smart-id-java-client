@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.bouncycastle.util.encoders.Base64;
@@ -59,6 +60,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -105,7 +107,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             assertNotNull(request.getSignatureProtocolParameters().getRpChallenge());
             assertEquals("rsassa-pss", request.getSignatureProtocolParameters().getSignatureAlgorithm());
             assertNotNull(request.getInteractions());
-            assertTrue(request.getSignatureProtocolParameters().getRpChallenge().matches(BASE64_PATTERN));
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
 
             DeviceLinkInteraction[] parsed = parseInteractionsFromBase64(request.getInteractions());
             assertTrue(Stream.of(parsed).anyMatch(i -> i.getType().is("displayTextAndPIN")));
@@ -153,7 +155,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(signatureAlgorithm.getAlgorithmName(), request.getSignatureProtocolParameters().getSignatureAlgorithm());
-            assertTrue(request.getSignatureProtocolParameters().getRpChallenge().matches(BASE64_PATTERN));
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
         }
 
         @Test
@@ -197,7 +199,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
             assertNotNull(request.getRequestProperties());
             assertEquals(ipRequested, request.getRequestProperties().getShareMdClientIpAddress());
-            assertTrue(request.getSignatureProtocolParameters().getRpChallenge().matches(BASE64_PATTERN));
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
         }
 
         @ParameterizedTest
@@ -374,7 +376,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession()
             );
-            assertEquals("SignatureAlgorithmParameters must be set", exception.getMessage());
+            assertEquals("Parameter hashAlgorithm must be set", exception.getMessage());
         }
 
         @Test
@@ -389,7 +391,24 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .initAuthenticationSession()
             );
 
-            assertEquals("SignatureAlgorithmParameters.hashAlgorithm must be set", exception.getMessage());
+            assertEquals("Parameter hashAlgorithm must be set", exception.getMessage());
+        }
+
+        @Test
+        void initAuthenticationSession_bothSemanticsIdentifierAndDocumentNumberSet_throwException() {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRpChallenge(generateBase64String("a".repeat(32)))
+                            .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+                            .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
+                            .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
+                            .initAuthenticationSession()
+            );
+
+            assertEquals("Only one of semanticsIdentifier or documentNumber may be set", exception.getMessage());
         }
 
         private DeviceLinkInteraction[] parseInteractionsFromBase64(String base64EncodedJson) throws Exception {
@@ -406,7 +425,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID(sessionId);
                 when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
@@ -419,7 +438,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionTokenIsNotPresentInTheResponse_throwException(String sessionToken) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
                 deviceLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 deviceLinkAuthenticationSessionResponse.setSessionToken(sessionToken);
@@ -433,7 +452,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
@@ -448,7 +467,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_deviceLinkBaseIsMissingOrBlank_throwException(String deviceLinkBaseValue) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var response = new DeviceLinkSessionResponse();
                 response.setSessionID("00000000-0000-0000-0000-000000000000");
                 response.setSessionToken(generateBase64String("sessionToken"));

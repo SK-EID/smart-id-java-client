@@ -34,6 +34,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
@@ -62,7 +63,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private AuthenticationCertificateLevel certificateLevel = AuthenticationCertificateLevel.QUALIFIED;
     private String rpChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
-    private SignatureAlgorithmParameters signatureAlgorithmParameters;
+    private HashAlgorithm hashAlgorithm;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
@@ -148,9 +149,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * @return this builder
      */
     public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithmParameters(HashAlgorithm hashAlgorithm) {
-        var params = new SignatureAlgorithmParameters();
-        params.setHashAlgorithm(hashAlgorithm);
-        this.signatureAlgorithmParameters = params;
+        this.hashAlgorithm = hashAlgorithm;
         return this;
     }
 
@@ -239,7 +238,8 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * </ul>
      *
      * @return init session response
-     * @throws SmartIdClientException if request parameters are invalid or response is missing required fields
+     * @throws SmartIdClientException if request parameters are invalid
+     * @throws UnprocessableSmartIdResponseException if the response is missing required fields
      */
     public DeviceLinkSessionResponse initAuthenticationSession() {
         validateRequestParameters();
@@ -250,6 +250,10 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     private DeviceLinkSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
+        if (semanticsIdentifier != null && documentNumber != null) {
+            logger.error("Both semanticsIdentifier and documentNumber are set – only one can be used");
+            throw new SmartIdClientException("Only one of semanticsIdentifier or documentNumber may be set");
+        }
         if (semanticsIdentifier != null) {
             return connector.initDeviceLinkAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
@@ -292,15 +296,9 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             logger.error("Parameter signatureAlgorithm must be set");
             throw new SmartIdClientException("Parameter signatureAlgorithm must be set");
         }
-
-        if (signatureAlgorithmParameters == null) {
-            logger.error("Parameter SignatureAlgorithmParameters must be set");
-            throw new SmartIdClientException("SignatureAlgorithmParameters must be set");
-        }
-
-        if (signatureAlgorithmParameters.getHashAlgorithm() == null) {
-            logger.error("Parameter SignatureAlgorithmParameters.hashAlgorithm must be set");
-            throw new SmartIdClientException("SignatureAlgorithmParameters.hashAlgorithm must be set");
+        if (hashAlgorithm == null) {
+            logger.error("Parameter hashAlgorithm must be set");
+            throw new SmartIdClientException("Parameter hashAlgorithm must be set");
         }
     }
 
@@ -309,13 +307,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             logger.error("Parameter allowedInteractionsOrder must be set");
             throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
         }
-        if (interactions.stream()
-                .map(i -> Arrays.asList(i.getType(), i.getDisplayText60(), i.getDisplayText200()))
-                .distinct()
-                .count() != interactions.size()) {
-            logger.error("Duplicate values found in allowedInteractionsOrder");
-            throw new SmartIdClientException("Duplicate values in allowedInteractionsOrder are not allowed");
-        }
+        validateNoDuplicateInteractions();
         interactions.forEach(DeviceLinkInteraction::validate);
     }
 
@@ -336,7 +328,11 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
         signatureProtocolParameters.setRpChallenge(rpChallenge);
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
+
+        var signatureAlgorithmParameters = new SignatureAlgorithmParameters();
+        signatureAlgorithmParameters.setHashAlgorithm(this.hashAlgorithm);
         signatureProtocolParameters.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setInteractions(DeviceLinkUtil.encodeToBase64(interactions));
 
@@ -353,21 +349,28 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkAuthenticationSessionResponse) {
         if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
-            throw new SmartIdClientException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
         }
 
         if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.getSessionToken())) {
             logger.error("Session token is missing from the response");
-            throw new SmartIdClientException("Session token is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session token is missing from the response");
         }
 
         if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.getSessionSecret())) {
             logger.error("Session secret is missing from the response");
-            throw new SmartIdClientException("Session secret is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
         }
         if (deviceLinkAuthenticationSessionResponse.getDeviceLinkBase() == null || deviceLinkAuthenticationSessionResponse.getDeviceLinkBase().toString().isBlank()) {
             logger.error("deviceLinkBase is missing or empty in the response");
-            throw new SmartIdClientException("deviceLinkBase is missing or empty in the response");
+            throw new UnprocessableSmartIdResponseException("deviceLinkBase is missing or empty in the response");
+        }
+    }
+
+    private void validateNoDuplicateInteractions() {
+        if (interactions.stream().distinct().count() != interactions.size()) {
+            logger.error("Duplicate values found in allowedInteractionsOrder");
+            throw new SmartIdClientException("Duplicate values in allowedInteractionsOrder are not allowed");
         }
     }
 }

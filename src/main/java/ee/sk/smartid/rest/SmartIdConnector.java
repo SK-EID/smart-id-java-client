@@ -131,7 +131,7 @@ public interface SmartIdConnector extends Serializable {
     void setSslContext(SSLContext sslContext);
 
     /**
-     * Create anonymous authentication session with dynamic link
+     * Create anonymous authentication session with device link
      *
      * @param authenticationRequest The device link authentication session request
      * @return The device link authentication session response
