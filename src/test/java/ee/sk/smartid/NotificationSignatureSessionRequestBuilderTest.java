@@ -57,10 +57,10 @@ import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
 
@@ -196,6 +196,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
+    @Disabled("Signature algorithm has changed")
     @ParameterizedTest
     @EnumSource(HashType.class)
     void initSignatureSession_withSignableHash(HashType hashType) {

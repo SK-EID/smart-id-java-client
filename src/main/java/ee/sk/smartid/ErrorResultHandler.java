@@ -38,29 +38,40 @@ import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
+import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.util.StringUtil;
 
 /**
  * Handles session status results that end as completed but with an error
  */
 public class ErrorResultHandler {
 
-    public static void handle(String endResult) {
-        if (endResult == null) {
+    public static void handle(SessionResult sessionResult) {
+        if (sessionResult == null) {
             throw new SmartIdClientException("Session end result is not provided");
         }
-
-        switch (endResult.toUpperCase()) {
+        switch (sessionResult.getEndResult()) {
             case "USER_REFUSED" -> throw new UserRefusedException();
             case "TIMEOUT" -> throw new SessionTimeoutException();
             case "DOCUMENT_UNUSABLE" -> throw new DocumentUnusableException();
             case "WRONG_VC" -> throw new UserSelectedWrongVerificationCodeException();
             case "REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP" -> throw new RequiredInteractionNotSupportedByAppException();
             case "USER_REFUSED_CERT_CHOICE" -> throw new UserRefusedCertChoiceException();
-            case "USER_REFUSED_DISPLAYTEXTANDPIN" -> throw new UserRefusedDisplayTextAndPinException();
-            case "USER_REFUSED_VC_CHOICE" -> throw new UserRefusedVerificationChoiceException();
-            case "USER_REFUSED_CONFIRMATIONMESSAGE" -> throw new UserRefusedConfirmationMessageException();
-            case "USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE" -> throw new UserRefusedConfirmationMessageWithVerificationChoiceException();
-            default -> throw new UnprocessableSmartIdResponseException("Unexpected session result: " + endResult);
+            case "USER_REFUSED_INTERACTION" -> handleUserRefusedInteraction(sessionResult);
+            default -> throw new UnprocessableSmartIdResponseException("Unexpected session result: " + sessionResult.getEndResult());
+        }
+    }
+
+    private static void handleUserRefusedInteraction(SessionResult sessionResult) {
+        if (sessionResult.getDetails() == null || StringUtil.isEmpty(sessionResult.getDetails().getInteraction())) {
+            throw new UnprocessableSmartIdResponseException("Details for refused interaction are missing");
+        }
+        switch (sessionResult.getDetails().getInteraction()) {
+            case "displayTextAndPIN" -> throw new UserRefusedDisplayTextAndPinException();
+            case "verificationCodeChoice" -> throw new UserRefusedVerificationChoiceException();
+            case "confirmationMessage" -> throw new UserRefusedConfirmationMessageException();
+            case "confirmationMessageAndVerificationCodeChoice" -> throw new UserRefusedConfirmationMessageWithVerificationChoiceException();
+            default -> throw new UnprocessableSmartIdResponseException("Unexpected interaction type: " + sessionResult.getDetails().getInteraction());
         }
     }
 }

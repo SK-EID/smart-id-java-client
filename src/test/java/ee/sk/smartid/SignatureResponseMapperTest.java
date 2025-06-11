@@ -41,6 +41,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
@@ -204,10 +205,31 @@ class SignatureResponseMapperTest {
         @ParameterizedTest
         @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
         void from_handleSessionEndResultErrors(String endResult, Class<? extends Exception> expectedException) {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
-            sessionStatus.getResult().setEndResult(endResult);
+            var sessionResult = new SessionResult();
+            sessionResult.setEndResult(endResult);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setState("COMPLETE");
+            sessionStatus.setResult(sessionResult);
 
             assertThrows(expectedException, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
+        }
+
+        @ParameterizedTest
+        @ArgumentsSource(UserRefusedInteractionArgumentsProvider.class)
+        void from_endResultIsUserRefusedInteraction(String interaction, Class<? extends Exception> expectedException) {
+            var sessionResultDetails = new SessionResultDetails();
+            sessionResultDetails.setInteraction(interaction);
+
+            var sessionResult = new SessionResult();
+            sessionResult.setEndResult("USER_REFUSED_INTERACTION");
+            sessionResult.setDetails(sessionResultDetails);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setState("COMPLETE");
+            sessionStatus.setResult(sessionResult);
+
+            var exception = assertThrows(expectedException, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
         }
 
         @Test

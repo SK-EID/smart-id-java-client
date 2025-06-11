@@ -33,11 +33,11 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.util.StringUtil;
 
 /**
  * Validates and maps the received session status to authentication response
@@ -91,20 +91,15 @@ public class AuthenticationResponseMapper {
         if (sessionResult == null) {
             throw new UnprocessableSmartIdResponseException("Session result parameter is missing");
         }
-
-        validateEndResult(sessionResult.getEndResult());
-
-        if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
-            throw new UnprocessableSmartIdResponseException("Document number parameter is missing in the session result");
-        }
-    }
-
-    private static void validateEndResult(String endResult) {
+        String endResult = sessionResult.getEndResult();
         if (StringUtil.isEmpty(endResult)) {
             throw new UnprocessableSmartIdResponseException("End result parameter is missing in the session result");
         }
         if (!"OK".equalsIgnoreCase(endResult)) {
-            ErrorResultHandler.handle(endResult);
+            ErrorResultHandler.handle(sessionResult);
+        }
+        if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
+            throw new UnprocessableSmartIdResponseException("Document number parameter is missing in the session result");
         }
     }
 

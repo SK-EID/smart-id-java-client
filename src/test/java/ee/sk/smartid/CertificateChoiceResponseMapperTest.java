@@ -46,6 +46,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
 public class CertificateChoiceResponseMapperTest {
@@ -225,7 +226,24 @@ public class CertificateChoiceResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var ex = assertThrows(expectedException, () -> CertificateChoiceResponseMapper.from(sessionStatus));
+        assertThrows(expectedException, () -> CertificateChoiceResponseMapper.from(sessionStatus));
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(UserRefusedInteractionArgumentsProvider.class)
+    void from_endResultIsUserRefusedInteraction(String interaction, Class<? extends Exception> expectedException) {
+        var sessionResultDetails = new SessionResultDetails();
+        sessionResultDetails.setInteraction(interaction);
+
+        var sessionResult = new SessionResult();
+        sessionResult.setEndResult("USER_REFUSED_INTERACTION");
+        sessionResult.setDetails(sessionResultDetails);
+
+        var sessionStatus = new SessionStatus();
+        sessionStatus.setState("COMPLETE");
+        sessionStatus.setResult(sessionResult);
+
+        assertThrows(expectedException, () -> CertificateChoiceResponseMapper.from(sessionStatus));
     }
 
     @Test

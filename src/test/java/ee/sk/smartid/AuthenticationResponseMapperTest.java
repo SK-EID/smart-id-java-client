@@ -38,14 +38,15 @@ import java.security.cert.X509Certificate;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
@@ -97,15 +98,32 @@ class AuthenticationResponseMapperTest {
         assertEquals("End result parameter is missing in the session result", exception.getMessage());
     }
 
-    @Test
-    void from_endResultIsTimeout_throwException() {
+    @ParameterizedTest
+    @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
+    void from_endResultIsError_throwException(String endResult, Class<? extends Exception> expectedException) {
         var sessionResult = new SessionResult();
-        sessionResult.setEndResult("TIMEOUT");
+        sessionResult.setEndResult(endResult);
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        assertThrows(SessionTimeoutException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+        assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(UserRefusedInteractionArgumentsProvider.class)
+    void from_endResultIsUserRefusedInteraction(String interaction, Class<? extends Exception> expectedException) {
+        var sessionResultDetails = new SessionResultDetails();
+        sessionResultDetails.setInteraction(interaction);
+
+        var sessionResult = new SessionResult();
+        sessionResult.setEndResult("USER_REFUSED_INTERACTION");
+        sessionResult.setDetails(sessionResultDetails);
+
+        var sessionStatus = new SessionStatus();
+        sessionStatus.setResult(sessionResult);
+
+        var exception = assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
     }
 
     @ParameterizedTest
