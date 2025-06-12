@@ -53,9 +53,9 @@ import org.junit.jupiter.api.Test;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.HashType;
+import ee.sk.smartid.SignatureAlgorithmParameters;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.AuthCodeBuilder;
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationResponse;
 import ee.sk.smartid.AuthenticationResponseMapper;
@@ -77,7 +77,6 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import jakarta.ws.rs.core.UriBuilder;
 
 
 @Disabled("Replace relying party UUID and name with your own values in setup")
@@ -114,6 +113,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     // to use anonymous authentication, do not set semantics identifier or document number
                     .withRpChallenge(rpChallenge)
+                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
                             // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
@@ -136,37 +136,16 @@ public class ReadmeIntegrationTest {
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
             // Build the  device link URI (without the authCode parameter)
             // This base URI will be used for QR code or App2App flows
-            URI unprotectedUri = smartIdClient.createDynamicContent()
+            URI deviceLink = smartIdClient.createDynamicContent()
                     .withDeviceLinkBase("smartid://")
                     .withDeviceLinkType(DeviceLinkType.APP_2_APP)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(sessionToken)
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
                     .withLang("est")
-                    .createUnprotectedUri();
-
-            // Prepare values needed for the authCode payload according to the Smart-ID 3.1 specification
-            String relyingPartyNameBase64 = Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8));
-            String interactionsBase64 = "";
-            String initialCallbackUrl = "";
-            String brokeredRpNameBase64 = "";
-
-            // Build and calculate authCode for this session
-            String authCode = new AuthCodeBuilder()
-                    .withSignatureProtocol(null)
-                    .withDigest(rpChallenge)
-                    .withRelyingPartyNameBase64(relyingPartyNameBase64)
-                    .withBrokeredRpNameBase64(brokeredRpNameBase64)
-                    .withInteractions(interactionsBase64)
-                    .withInitialCallbackUrl(initialCallbackUrl)
-                    .withUnprotectedDeviceLink(unprotectedUri.toString())
-                    .calculateAuthCode(sessionSecret);
-
-            // Combine the unprotected URI and the generated authCode to form the final device link
-            // This device link can be displayed to the user as a clickable link or QR code
-            URI deviceLink = UriBuilder.fromUri(unprotectedUri)
-                    .queryParam("authCode", authCode)
-                    .build();
+                    .buildDeviceLink(sessionSecret);
 
             // Use the sessionId from the authentication session response to poll for session status updates
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -204,6 +183,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
                     .withRpChallenge(rpChallenge)
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
@@ -225,37 +205,16 @@ public class ReadmeIntegrationTest {
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
             // Build the  device link URI (without the authCode parameter)
             // This base URI will be used for QR code or App2App flows
-            URI unprotectedUri = smartIdClient.createDynamicContent()
+            URI deviceLink = smartIdClient.createDynamicContent()
                     .withDeviceLinkBase("smartid://")
                     .withDeviceLinkType(DeviceLinkType.APP_2_APP)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(sessionToken)
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
                     .withLang("est")
-                    .createUnprotectedUri();
-
-            // Prepare values needed for the authCode payload according to the Smart-ID 3.1 specification
-            String relyingPartyNameBase64 = Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8));
-            String interactionsBase64 = "";
-            String initialCallbackUrl = "";
-            String brokeredRpNameBase64 = "";
-
-            // Build and calculate authCode for this session
-            String authCode = new AuthCodeBuilder()
-                    .withSignatureProtocol(null)
-                    .withDigest(rpChallenge)
-                    .withRelyingPartyNameBase64(relyingPartyNameBase64)
-                    .withBrokeredRpNameBase64(brokeredRpNameBase64)
-                    .withInteractions(interactionsBase64)
-                    .withInitialCallbackUrl(initialCallbackUrl)
-                    .withUnprotectedDeviceLink(unprotectedUri.toString())
-                    .calculateAuthCode(sessionSecret);
-
-            // Combine the unprotected URI and the generated authCode to form the final device link
-            // This device link can be displayed to the user as a clickable link or QR code
-            URI deviceLink = UriBuilder.fromUri(unprotectedUri)
-                    .queryParam("authCode", authCode)
-                    .build();
+                    .buildDeviceLink(sessionSecret);
 
             // Use sessionId to poll for session status updates
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -291,6 +250,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     .withDocumentNumber(documentNumber)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
                     .withRpChallenge(rpChallenge)
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
@@ -308,37 +268,16 @@ public class ReadmeIntegrationTest {
 
             // Generate the base (unprotected) device link URI, which does not yet include the authCode
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
-            URI unprotectedUri = smartIdClient.createDynamicContent()
+            URI deviceLink = smartIdClient.createDynamicContent()
                     .withDeviceLinkBase("smartid://")
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(sessionToken)
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
                     .withLang("est")
-                    .createUnprotectedUri();
-
-            // Prepare values needed for the authCode payload according to the Smart-ID 3.1 specification
-            String relyingPartyNameBase64 = Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8));
-            String interactionsBase64 = "";
-            String initialCallbackUrl = "";
-            String brokeredRpNameBase64 = "";
-
-            // Build and calculate authCode for this session
-            String authCode = new AuthCodeBuilder()
-                    .withSignatureProtocol(null)
-                    .withDigest(rpChallenge)
-                    .withRelyingPartyNameBase64(relyingPartyNameBase64)
-                    .withBrokeredRpNameBase64(brokeredRpNameBase64)
-                    .withInteractions(interactionsBase64)
-                    .withInitialCallbackUrl(initialCallbackUrl)
-                    .withUnprotectedDeviceLink(unprotectedUri.toString())
-                    .calculateAuthCode(sessionSecret);
-
-            // Combine the unprotected URI and the generated authCode to form the final device link
-            // This device link can be displayed to the user as a clickable link or QR code
-            URI deviceLink = UriBuilder.fromUri(unprotectedUri)
-                    .queryParam("authCode", authCode)
-                    .build();
+                    .buildDeviceLink(sessionSecret);
 
             // Use sessionId to poll for session status updates
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -359,6 +298,34 @@ public class ReadmeIntegrationTest {
             assertEquals("OK", authenticationIdentity.getGivenName());
             assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
             assertEquals("EE", authenticationIdentity.getCountry());
+        }
+
+        @Test
+        void authentication_withBrokeredRpName() {
+            String rpChallenge = RpChallengeGenerator.generate();
+
+            DeviceLinkSessionResponse response = smartIdClient
+                    .createDeviceLinkAuthentication()
+                    .withDocumentNumber("PNOLT-40504040001-MOCK-Q")
+                    .withRpChallenge(rpChallenge)
+                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Authorize?")))
+                    .initAuthenticationSession();
+
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase("smartid://")
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(response.getSessionToken())
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
+                    .withBrokeredRpNameBase64(Base64.getEncoder().encodeToString("BANK_XYZ".getBytes(StandardCharsets.UTF_8)))
+                    .withElapsedSeconds(Duration.between(response.getReceivedAt(), Instant.now()).getSeconds())
+                    .withLang("est")
+                    .buildDeviceLink(response.getSessionSecret());
+
+            assertNotNull(deviceLink);
         }
 
         @Test
@@ -411,36 +378,15 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            URI unprotectedUri = smartIdClient.createDynamicContent()
+            URI deviceLink = smartIdClient.createDynamicContent()
                     .withDeviceLinkBase("smartid://")
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.SIGNATURE)
                     .withSessionToken(sessionToken)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
                     .withLang("est")
-                    .createUnprotectedUri();
-
-            // Prepare values for the authCode payload according to Smart-ID 3.1 spec
-            String relyingPartyNameBase64 = Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8));
-            String interactionsBase64 = "";
-            String initialCallbackUrl = "";
-            String brokeredRpNameBase64 = "";
-
-            // Build and calculate authCode for this signature session
-            String authCode = new AuthCodeBuilder()
-                    .withSignatureProtocol(null)
-                    .withDigest("dataToSign") // NB! In real usage, set the digest of the actual signable data!
-                    .withRelyingPartyNameBase64(relyingPartyNameBase64)
-                    .withBrokeredRpNameBase64(brokeredRpNameBase64)
-                    .withInteractions(interactionsBase64)
-                    .withInitialCallbackUrl(initialCallbackUrl)
-                    .withUnprotectedDeviceLink(unprotectedUri.toString())
-                    .calculateAuthCode(sessionSecret);
-
-            // Combine the unprotected URI and the generated authCode to form the final device link
-            URI deviceLink = UriBuilder.fromUri(unprotectedUri)
-                    .queryParam("authCode", authCode)
-                    .build();
+                    .buildDeviceLink(sessionSecret);
 
             // Get the session status poller
             poller = smartIdClient.getSessionStatusPoller();
@@ -514,36 +460,15 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            URI unprotectedUri = smartIdClient.createDynamicContent()
+            URI deviceLink = smartIdClient.createDynamicContent()
                     .withDeviceLinkBase("smartid://")
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.SIGNATURE)
                     .withSessionToken(sessionToken)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
                     .withLang("est")
-                    .createUnprotectedUri();
-
-            // Prepare values for the authCode payload according to Smart-ID 3.1 spec
-            String relyingPartyNameBase64 = Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8));
-            String interactionsBase64 = "";
-            String initialCallbackUrl = "";
-            String brokeredRpNameBase64 = "";
-
-            // Build and calculate authCode for this signature session
-            String authCode = new AuthCodeBuilder()
-                    .withSignatureProtocol(null)
-                    .withDigest("dataToSign") // NB! In real usage, set the digest of the actual signable data!
-                    .withRelyingPartyNameBase64(relyingPartyNameBase64)
-                    .withBrokeredRpNameBase64(brokeredRpNameBase64)
-                    .withInteractions(interactionsBase64)
-                    .withInitialCallbackUrl(initialCallbackUrl)
-                    .withUnprotectedDeviceLink(unprotectedUri.toString())
-                    .calculateAuthCode(sessionSecret);
-
-            // Combine the unprotected URI and the generated authCode to form the final device link
-            URI deviceLink = UriBuilder.fromUri(unprotectedUri)
-                    .queryParam("authCode", authCode)
-                    .build();
+                    .buildDeviceLink(sessionSecret);
             // Display QR-code to the user
 
             // Get the session status poller

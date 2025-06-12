@@ -27,17 +27,23 @@ package ee.sk.smartid;
  */
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.StringUtil;
 import jakarta.ws.rs.core.UriBuilder;
 
 /**
- * Builds unprotected Smart-ID device link URI.
+ * Builds Smart-ID device link URI.
  */
-public class UnprotectedLinkBuilder {
+public class DeviceLinkBuilder {
 
     private static final String ALLOWED_VERSION = "1.0";
+    private static final String SCHEME_NAME = "smart-id";
 
     private String deviceLinkBase;
     private String version = ALLOWED_VERSION;
@@ -47,6 +53,12 @@ public class UnprotectedLinkBuilder {
     private Long elapsedSeconds;
     private String lang;
 
+    private String digest;
+    private String relyingPartyNameBase64;
+    private String brokeredRpNameBase64;
+    private String interactions;
+    private String initialCallbackUrl;
+
     /**
      * Sets the URL
      * <p>
@@ -54,7 +66,7 @@ public class UnprotectedLinkBuilder {
      * @param deviceLinkBase the URL that will direct to SMART-ID application
      * @return this builder
      */
-    public UnprotectedLinkBuilder withDeviceLinkBase(String deviceLinkBase) {
+    public DeviceLinkBuilder withDeviceLinkBase(String deviceLinkBase) {
         this.deviceLinkBase = deviceLinkBase;
         return this;
     }
@@ -67,7 +79,7 @@ public class UnprotectedLinkBuilder {
      * @param version the version of
      * @return this builder
      */
-    public UnprotectedLinkBuilder withVersion(String version) {
+    public DeviceLinkBuilder withVersion(String version) {
         this.version = version;
         return this;
     }
@@ -78,7 +90,7 @@ public class UnprotectedLinkBuilder {
      * @param deviceLinkType the type of the device link the builder is creating
      * @return this builder
      */
-    public UnprotectedLinkBuilder withDeviceLinkType(DeviceLinkType deviceLinkType) {
+    public DeviceLinkBuilder withDeviceLinkType(DeviceLinkType deviceLinkType) {
         this.deviceLinkType = deviceLinkType;
         return this;
     }
@@ -89,7 +101,7 @@ public class UnprotectedLinkBuilder {
      * @param sessionType the type of the session the device link is created for
      * @return this builder
      */
-    public UnprotectedLinkBuilder withSessionType(SessionType sessionType) {
+    public DeviceLinkBuilder withSessionType(SessionType sessionType) {
         this.sessionType = sessionType;
         return this;
     }
@@ -100,7 +112,7 @@ public class UnprotectedLinkBuilder {
      * @param sessionToken the session token that was received from the Smart-ID server
      * @return this builder
      */
-    public UnprotectedLinkBuilder withSessionToken(String sessionToken) {
+    public DeviceLinkBuilder withSessionToken(String sessionToken) {
         this.sessionToken = sessionToken;
         return this;
     }
@@ -112,7 +124,7 @@ public class UnprotectedLinkBuilder {
      * @param elapsedSeconds the time passed since the session response was received in seconds
      * @return this builder
      */
-    public UnprotectedLinkBuilder withElapsedSeconds(Long elapsedSeconds) {
+    public DeviceLinkBuilder withElapsedSeconds(Long elapsedSeconds) {
         this.elapsedSeconds = elapsedSeconds;
         return this;
     }
@@ -124,8 +136,67 @@ public class UnprotectedLinkBuilder {
      * @param lang the language of the user
      * @return this builder
      */
-    public UnprotectedLinkBuilder withLang(String lang) {
+    public DeviceLinkBuilder withLang(String lang) {
         this.lang = lang;
+        return this;
+    }
+
+    /**
+     * Sets the digest or rpChallenge used in the session.
+     * Required when signatureProtocol is defined.
+     *
+     * @param digest the digest or rpChallenge value
+     * @return this builder
+     */
+    public DeviceLinkBuilder withDigest(String digest) {
+        this.digest = digest;
+        return this;
+    }
+
+    /**
+     * Sets the relying party name in Base64 encoding.
+     *
+     * @param relyingPartyName RP name in Base64
+     * @return this builder
+     */
+    public DeviceLinkBuilder withRelyingPartyName(String relyingPartyName) {
+        this.relyingPartyNameBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(relyingPartyName.getBytes(StandardCharsets.UTF_8));
+        return this;
+    }
+
+    /**
+     * Sets the brokered relying party name in Base64.
+     * Leave empty if not acting as a broker.
+     *
+     * @param brokeredRpNameBase64 brokered RP name in Base64
+     * @return this builder
+     */
+    public DeviceLinkBuilder withBrokeredRpNameBase64(String brokeredRpNameBase64) {
+        this.brokeredRpNameBase64 = brokeredRpNameBase64;
+        return this;
+    }
+
+    /**
+     * Sets the interactions used during session initiation as Base64 string.
+     *
+     * @param interactions interactions string in Base64
+     * @return this builder
+     */
+    public DeviceLinkBuilder withInteractions(String interactions) {
+        this.interactions = interactions;
+        return this;
+    }
+
+    /**
+     * Sets the callback URL used in session initiation.
+     * Required only for same device flows (Web2App and App2App).
+     * Must be left empty for QR-code flow.
+     *
+     * @param initialCallbackUrl initial callback URL
+     * @return this builder
+     */
+    public DeviceLinkBuilder withInitialCallbackUrl(String initialCallbackUrl) {
+        this.initialCallbackUrl = initialCallbackUrl;
         return this;
     }
 
@@ -146,13 +217,7 @@ public class UnprotectedLinkBuilder {
                 .queryParam("sessionType", sessionType.getValue())
                 .queryParam("lang", lang);
 
-        if (elapsedSeconds != null) {
-            if (deviceLinkType != DeviceLinkType.QR_CODE) {
-                throw new SmartIdClientException("elapsedSeconds is only valid for QR_CODE deviceLinkType");
-            }
-            uriBuilder.queryParam("elapsedSeconds", elapsedSeconds);
-        }
-
+        addElapsedSecondsIfQrCode(uriBuilder);
         return uriBuilder.build();
     }
 
@@ -160,19 +225,60 @@ public class UnprotectedLinkBuilder {
      * Builds the final Smart-ID device link URI by combining unprotected link and authCode.
      *
      * @param sessionSecret session secret received from session init
-     * @param authCodeBuilder a preconfigured AuthCodeBuilder instance
      * @return full device link URI with authCode parameter
      */
-    public URI buildDeviceLinkWithAuthCode(String sessionSecret, AuthCodeBuilder authCodeBuilder) {
+    public URI buildDeviceLink(String sessionSecret) {
         URI unprotectedUri = createUnprotectedUri();
-
-        String authCode = authCodeBuilder
-                .withUnprotectedDeviceLink(unprotectedUri.toString())
-                .calculateAuthCode(sessionSecret);
-
+        String authCode = generateAuthCode(unprotectedUri.toString(), sessionSecret);
         return UriBuilder.fromUri(unprotectedUri)
                 .queryParam("authCode", authCode)
                 .build();
+    }
+
+    private void addElapsedSecondsIfQrCode(UriBuilder uriBuilder) {
+        if (elapsedSeconds != null) {
+            if (deviceLinkType != DeviceLinkType.QR_CODE) {
+                throw new SmartIdClientException("elapsedSeconds is only valid for QR_CODE deviceLinkType");
+            }
+            uriBuilder.queryParam("elapsedSeconds", elapsedSeconds);
+        }
+    }
+
+    private String generateAuthCode(String unprotectedLink, String sessionSecret) {
+        validateAuthCodeParams(unprotectedLink);
+        return calculateAuthCode(buildPayload(unprotectedLink), sessionSecret);
+    }
+
+    private String buildPayload(String unprotectedLink) {
+        return String.join("|",
+                SCHEME_NAME,
+                getSignatureProtocolForSession(),
+                StringUtil.orEmpty(digest),
+                relyingPartyNameBase64,
+                StringUtil.orEmpty(brokeredRpNameBase64),
+                StringUtil.orEmpty(interactions),
+                StringUtil.orEmpty(initialCallbackUrl),
+                unprotectedLink
+        );
+    }
+
+    private String getSignatureProtocolForSession() {
+        return switch (sessionType) {
+            case AUTHENTICATION -> SignatureProtocol.ACSP_V2.name();
+            case SIGNATURE -> SignatureProtocol.RAW_DIGEST_SIGNATURE.name();
+            case CERTIFICATE_CHOICE -> "";
+        };
+    }
+
+    private String calculateAuthCode(String data, String base64Key) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(Base64.getDecoder().decode(base64Key), "HmacSHA256"));
+            byte[] hmac = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(hmac);
+        } catch (Exception e) {
+            throw new SmartIdClientException("Failed to calculate authCode", e);
+        }
     }
 
     private void validateInputParameters() {
@@ -199,6 +305,27 @@ public class UnprotectedLinkBuilder {
         }
         if (StringUtil.isEmpty(lang)) {
             throw new SmartIdClientException("Parameter lang must be set");
+        }
+    }
+
+    private void validateAuthCodeParams(String unprotectedLink) {
+        if (StringUtil.isEmpty(relyingPartyNameBase64)) {
+            throw new SmartIdClientException("relyingPartyNameBase64 must be set");
+        }
+
+        boolean hasCallback = StringUtil.isNotEmpty(initialCallbackUrl);
+        if (deviceLinkType == DeviceLinkType.QR_CODE && hasCallback) {
+            throw new SmartIdClientException("initialCallbackUrl must be empty for QR_CODE flow");
+        }
+        if ((deviceLinkType == DeviceLinkType.APP_2_APP || deviceLinkType == DeviceLinkType.WEB_2_APP) && !hasCallback) {
+            throw new SmartIdClientException("initialCallbackUrl must be provided for same-device flows");
+        }
+
+        if (sessionType != SessionType.CERTIFICATE_CHOICE && StringUtil.isEmpty(digest)) {
+            throw new SmartIdClientException("digest must be set for AUTH or SIGN flows");
+        }
+        if (StringUtil.isEmpty(unprotectedLink)) {
+            throw new SmartIdClientException("unprotected device-link must not be empty");
         }
     }
 }

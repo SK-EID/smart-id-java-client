@@ -151,8 +151,8 @@ public class SmartIdClient {
      *
      * @return DynamicLinkRequestBuilder
      */
-    public UnprotectedLinkBuilder createDynamicContent() {
-        return new UnprotectedLinkBuilder();
+    public DeviceLinkBuilder createDynamicContent() {
+        return new DeviceLinkBuilder();
     }
 
     /**

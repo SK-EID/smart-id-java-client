@@ -558,11 +558,11 @@ builder.withAllowedInteractionsOrder(List.of(
 ### Generating QR-code or device link
 
 Documentation to device link and QR-code requirements
-https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/dynamic_link_flows.html#_dynamic_link_and_qr_presentation
+https://sk-eid.github.io/smart-id-documentation/rp-api/3.1_DRAFT/dynamic_link_flows.html
 
 #### Generating device link
 
-Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app.
+Device link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app.
 
 ##### Device link parameters
 
@@ -573,30 +573,25 @@ Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app
 * `sessionToken`: Token from the session response.
 * `elapsedSeconds`: Seconds since the session-init response was received – only for `QR_CODE`
 * `lang`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
+* `digest`: Base64-encoded digest or rpChallenge from session-init. Required for `auth` and `sign` flows.
+* `relyingPartyNameBase64`: Base64-encoded relying party name, used for authentication sessions. It is used to calculate the authCode.
+* `initialCallbackUrl`: Optional. Initial callback URL to be used for the dynamic link. It must match the regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded.
 
 ```java
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
-// Calculate elapsed seconds from response received time
-long elapsedSeconds = Duration.between(sessionResponse.getReceivedAt(), Instant.now()).getSeconds();
-// Generate device link
-URI unprotected = client.createDynamicContent()
-        .withDeviceLinkBase(session.getDeviceLinkBase()) // base URI returned in session initiation response
-        .withDynamicLinkType(DeviceLinkType.APP_2_APP) // specify the type of dynamic link
-        .withSessionType(SessionType.AUTHENTICATION) // specify type of the session the dynamic link is for
-        .withSessionToken(response.getSessionToken()) // provide token from sessions response
-        .withLang("eng") // specify user language, default is "eng"
-        .withElapsedSeconds(elapsedSeconds) // calculate elapsed seconds from response received time
-        .createUnprotectedUri();
-
-String authCode = new AuthCodeBuilder()
-        .withUnprotectedDeviceLink(unprotected)
-        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withDigest(rpChallenge)
-        .withRelyingPartyNameBase64(
-                Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
-        .calculateAuthCode(session.getSessionSecret());         // sessionSecret only used here
-
-URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
+// Calculate elapsed seconds since session response
+long elapsedSeconds = Duration.between(session.getReceivedAt(), Instant.now()).getSeconds();
+// Build final device link URI with authCode
+URI deviceLink = new DeviceLinkBuilder()
+        .withDeviceLinkBase(session.getDeviceLinkBase())
+        .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        .withSessionType(SessionType.AUTHENTICATION)
+        .withSessionToken(session.getSessionToken())
+        .withElapsedSeconds(elapsedSeconds)
+        .withLang("eng")
+        .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
+        .buildDeviceLink(session.getSessionSecret());
 ```
 
 ##### Overriding default values
@@ -605,26 +600,17 @@ URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
 DeviceLinkSessionResponse response; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-// Generate device link
-URI unprotectedLink = client.createDynamicContent()
-        .withDeviceLinkBase("https://example.com/dl")   // override deviceLinkBase
+// Build final device link URI with authCode
+URI deviceLink = new DeviceLinkBuilder()
+        .withDeviceLinkBase("https://example.com/device-link") // override default base
         .withDeviceLinkType(DeviceLinkType.APP_2_APP)
-        .withSessionType(SessionType.AUTH) 
+        .withSessionType(SessionType.AUTHENTICATION)
         .withSessionToken(session.getSessionToken())
-        .withLang("est")
-        .createUnprotectedUri();
-
-String rpNameB64 = Base64.getEncoder()
-        .encodeToString("DEMO".getBytes(StandardCharsets.UTF_8));
-
-String authCode = new AuthCodeBuilder()
-        .withUnprotectedDeviceLink(unprotected.toString())
-        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withDigest(rpChallenge)
-        .withRelyingPartyNameBase64(rpNameB64)
-        .calculateAuthCode(session.getSessionSecret());
-
-URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
+        .withLang("est") // override language
+        .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+        .withInitialCallbackUrl("https://your-app/callback")
+        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
+        .buildDeviceLink(session.getSessionSecret());
 ```
 
 #### Generating QR-code
@@ -641,29 +627,17 @@ Generated QR code will have error correction level low.
 DeviceLinkSessionResponse response; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-// Build unprotected device link (without authCode)
-URI unprotected = client.createDynamicContent()
-        .withDeviceLinkBase(response.getDeviceLinkBase()) // base URI returned in session initiation response
+// Build final device link URI with authCode
+URI deviceLink = new DeviceLinkBuilder()
+        .withDeviceLinkBase("https://example.com/device-link") // override default base
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(response.getSessionToken())
-        .withLang("eng")                  // specify user language, default is "eng"
-        .withElapsedSeconds(elapsedSeconds)
-        .createUnprotectedUri();
-
-// Calculate authCode
-String rpNameB64 = Base64.getEncoder()
-        .encodeToString("DEMO".getBytes(StandardCharsets.UTF_8));
-
-String authCode = new AuthCodeBuilder()
-        .withUnprotectedDeviceLink(unprotected.toString())
-        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withDigest(rpChallenge) // rpChallenge or digest, whichever used in init
-        .withRelyingPartyNameBase64(rpNameB64)
-        .calculateAuthCode(response.getSessionSecret());
-
-// Build final device-link URI
-URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
+        .withSessionToken(session.getSessionToken())
+        .withLang("est") // override language
+        .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+        .withInitialCallbackUrl("https://your-app/callback")
+        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
+        .buildDeviceLink(session.getSessionSecret());
 ```
 
 ##### Generate QR-code with custom height, width, quiet area and image format
@@ -676,32 +650,19 @@ The width and height of 1159px produce a QR code with a module size of 19px.
 
 ```java
 DeviceLinkSessionResponse response; // response from the session initiation query.
-
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
-// Build unprotected device link (without authCode)
-URI unprotected = client.createDynamicContent()
-        .withDeviceLinkBase(response.getDeviceLinkBase()) // base URI returned in session initiation response
+// Build final device link URI with authCode
+URI deviceLink = new DeviceLinkBuilder()
+        .withDeviceLinkBase("https://example.com/device-link") // override default base
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(response.getSessionToken())
-        .withLang("eng")                  // specify user language, default is "eng"
-        .withElapsedSeconds(elapsedSeconds)
-        .createUnprotectedUri();
-
-// Calculate authCode
-String rpNameB64 = Base64.getEncoder()
-        .encodeToString("DEMO".getBytes(StandardCharsets.UTF_8));
-
-String authCode = new AuthCodeBuilder()
-        .withUnprotectedDeviceLink(unprotected.toString())
-        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withDigest(rpChallenge) // rpChallenge or digest, whichever used in init
-        .withRelyingPartyNameBase64(rpNameB64)
-        .calculateAuthCode(response.getSessionSecret());
-
-// Build final device-link URI
-URI deviceLink = URI.create(unprotected + "&authCode=" + authCode);
+        .withSessionToken(session.getSessionToken())
+        .withLang("est") // override language
+        .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+        .withInitialCallbackUrl("https://your-app/callback")
+        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
+        .buildDeviceLink(session.getSessionSecret());
 
 // Create QR-code with height and width of 570px and quiet area of 2 modules.
 BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toString(), 570, 570, 2);

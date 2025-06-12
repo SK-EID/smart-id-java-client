@@ -154,7 +154,7 @@ class QrCodeGeneratorTest {
     }
 
     private static URI createUri() {
-        var linkBuilder = new UnprotectedLinkBuilder()
+        var linkBuilder = new DeviceLinkBuilder()
                 .withDeviceLinkBase("smartid://link")
                 .withDeviceLinkType(DeviceLinkType.QR_CODE)
                 .withSessionType(SessionType.AUTHENTICATION)
@@ -162,12 +162,7 @@ class QrCodeGeneratorTest {
                 .withElapsedSeconds(1L)
                 .withLang("ENG");
 
-        var authCodeBuilder = new AuthCodeBuilder()
-                .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-                .withDigest("abcd1234==")
-                .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("BANK".getBytes()));
-
-        return linkBuilder.buildDeviceLinkWithAuthCode("B98ODiVCebRedSwdTk51zFSaGYyHtY1H2A0ocAi3/Ps=", authCodeBuilder);
+        return linkBuilder.buildDeviceLink("B98ODiVCebRedSwdTk51zFSaGYyHtY1H2A0ocAi3/Ps=");
     }
 
     private static BufferedImage convertToBufferedImage(String qrDataUri) {
