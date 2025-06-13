@@ -165,7 +165,7 @@ setTrustStore(trustStore);
 ## Device-link flows
 
 Device-link flows are more secure way to make sure user that started the authentication or signing is in control of the device or in the proximity of the device. 
-More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/device_link_flows.html
+More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/device_link_flows.html
 
 ### Device-link authentication session
 
@@ -484,22 +484,6 @@ try {
 
 ### Additional dynamic-link session request properties
 
-#### Using nonce to override idempotent behaviour
-
-Authentication is used as an example, nonce can also be used with certificate choice and signature sessions requests by using method `withNonce("randomValue")`.
-```java
-DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withAllowedInteractionsOrder(Collections.singletonList(
-            DynamicLinkInteraction.displayTextAndPIN("Log in?")
-        ))
-        // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
-        // set nonce to override idempotent behaviour
-        .withNonce("randomValue")
-        .initAuthenticationSession();
-```
 #### Using request properties to request the IP address of the user's device
 
 For the IP to be returned the service provider (SK) must switch on this option.
@@ -509,7 +493,7 @@ Authentication is used for an example, shareMdClientIpAddress can also be used w
 
 ```java
 DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
+        .createDeviceLinkAuthentication()
         .withRandomChallenge(randomChallenge)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withAllowedInteractionsOrder(Collections.singletonList(

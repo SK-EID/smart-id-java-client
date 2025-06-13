@@ -26,7 +26,6 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +41,7 @@ import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.HashAlgorithm;
+import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
@@ -63,7 +63,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private AuthenticationCertificateLevel certificateLevel = AuthenticationCertificateLevel.QUALIFIED;
     private String rpChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
-    private HashAlgorithm hashAlgorithm;
+    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
@@ -143,9 +143,10 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the signature algorithm parameters
+     * Sets the hash algorithm to be used for signature creation.
+     * By default, SHA3-512 is used.
      *
-     * @param hashAlgorithm the signature algorithm parameters
+     * @param hashAlgorithm the hash algorithm to use
      * @return this builder
      */
     public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithmParameters(HashAlgorithm hashAlgorithm) {
@@ -273,7 +274,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             throw new SmartIdClientException("Parameter relyingPartyName must be set");
         }
         validateSignatureParameters();
-        validateAllowedInteractionOrder();
+        validateInteractions();
         validateInitialCallbackURL();
     }
 
@@ -302,10 +303,10 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         }
     }
 
-    private void validateAllowedInteractionOrder() {
+    private void validateInteractions() {
         if (interactions == null || interactions.isEmpty()) {
-            logger.error("Parameter allowedInteractionsOrder must be set");
-            throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
+            logger.error("Parameter interactions must be set");
+            throw new SmartIdClientException("Parameter interactions must be set");
         }
         validateNoDuplicateInteractions();
         interactions.forEach(DeviceLinkInteraction::validate);
@@ -368,9 +369,9 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateNoDuplicateInteractions() {
-        if (interactions.stream().distinct().count() != interactions.size()) {
-            logger.error("Duplicate values found in allowedInteractionsOrder");
-            throw new SmartIdClientException("Duplicate values in allowedInteractionsOrder are not allowed");
+        if (interactions.stream().map(Interaction::getType).distinct().count() != interactions.size()) {
+            logger.error("Duplicate values found in interactions");
+            throw new SmartIdClientException("Duplicate values in interactions are not allowed");
         }
     }
 }

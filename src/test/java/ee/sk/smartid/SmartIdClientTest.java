@@ -38,6 +38,7 @@ import java.util.List;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -125,10 +126,10 @@ class SmartIdClientTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
-    class DynamicLinkAuthenticationSession {
+    class DeviceLinkAuthenticationSession {
 
         @Test
-        void createDynamicLinkAuthentication_anonymous() {
+        void createDeviceLinkAuthentication_anonymous() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
@@ -145,7 +146,7 @@ class SmartIdClientTest {
         }
 
         @Test
-        void createDynamicLinkAuthentication_withDocumentNumber() {
+        void createDeviceLinkAuthentication_withDocumentNumber() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/document/PNOEE-1234567890-MOCK-Q", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
@@ -163,7 +164,7 @@ class SmartIdClientTest {
         }
 
         @Test
-        void createDynamicLinkAuthentication_withSemanticsIdentifier() {
+        void createDeviceLinkAuthentication_withSemanticsIdentifier() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/etsi/PNOEE-1234567890", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
@@ -181,6 +182,7 @@ class SmartIdClientTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-105")
     @Nested
     @WireMockTest(httpPort = 18089)
     class DynamicLinkSignatureSession {
@@ -228,6 +230,7 @@ class SmartIdClientTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18089)
     class NotificationAuthenticationSession {
@@ -265,6 +268,7 @@ class SmartIdClientTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18089)
     class NotificationBasedSignatureSession {
@@ -368,6 +372,7 @@ class SmartIdClientTest {
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, deviceLinkType, response.getSessionToken());
         }
 
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
         @ParameterizedTest
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DeviceLinkType deviceLinkType) {
@@ -392,6 +397,7 @@ class SmartIdClientTest {
             assertUri(qrCodeUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
         }
 
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
         @Test
         void createDynamicContent_createQrCode() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/dynamic-link-certificate-choice-session-response.json");

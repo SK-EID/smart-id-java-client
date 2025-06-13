@@ -223,6 +223,26 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             assertEquals(expectedCapabilities, request.getCapabilities());
         }
 
+        @Test
+        void initAuthenticationSession_initialCallbackUrlIsValid_ok() {
+            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+
+            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                    .withRelyingPartyName("DEMO")
+                    .withRpChallenge(generateBase64String("a".repeat(32)))
+                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+                    .withInitialCallbackURL("https://valid.example.com/path")
+                    .initAuthenticationSession();
+
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
+            AuthenticationSessionRequest request = requestCaptor.getValue();
+
+            assertEquals("https://valid.example.com/path", request.getInitialCallbackURL());
+        }
+
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
@@ -298,7 +318,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
                             .withInteractions(interactions)
                             .initAuthenticationSession());
-            assertEquals("Parameter allowedInteractionsOrder must be set", exception.getMessage());
+            assertEquals("Parameter interactions must be set", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -313,7 +333,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withInteractions(duplicateInteractions)
                             .initAuthenticationSession());
 
-            assertEquals("Duplicate values in allowedInteractionsOrder are not allowed", exception.getMessage());
+            assertEquals("Duplicate values in interactions are not allowed", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -347,32 +367,13 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @Test
-        void initAuthenticationSession_initialCallbackUrlIsValid_doesNotThrowException() {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
-
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .withInitialCallbackURL("https://valid.example.com/path")
-                    .initAuthenticationSession();
-
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
-            verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertEquals("https://valid.example.com/path", request.getInitialCallbackURL());
-        }
-
-        @Test
         void initAuthenticationSession_signatureAlgorithmParametersIsNull_throwException() {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
+                            .withSignatureAlgorithmParameters(null)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession()
             );

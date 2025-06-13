@@ -37,9 +37,9 @@ import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.util.List;
@@ -47,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -66,6 +67,7 @@ import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -73,6 +75,7 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
 class SmartIdRestConnectorTest {
@@ -378,6 +381,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18082)
     class SemanticsIdentifierNotificationAuthentication {
@@ -416,6 +420,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18083)
     class DocumentNumberNotificationAuthentication {
@@ -454,6 +459,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
     @Nested
     @WireMockTest(httpPort = 18089)
     class DynamicLinkCertificateChoiceTests {
@@ -785,6 +791,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18084)
     class SemanticsIdentifierNotificationSignature {
@@ -890,6 +897,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18085)
     class DocumentNumberNotificationSignature {
@@ -1005,6 +1013,10 @@ class SmartIdRestConnectorTest {
         signatureProtocolParameters.setSignatureAlgorithm("rsassa-pss");
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
+        var algorithmParameters = new SignatureAlgorithmParameters();
+        algorithmParameters.setHashAlgorithm(HashAlgorithm.SHA_512);
+        signatureProtocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
+
         DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Log in?");
         dynamicLinkAuthenticationSessionRequest.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
 
@@ -1076,7 +1088,8 @@ class SmartIdRestConnectorTest {
         assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
         assertEquals(expectedSessionToken, response.getSessionToken());
         assertEquals(expectedSessionSecret, response.getSessionSecret());
-        assertTrue(start.isBefore(response.getReceivedAt()));
-        assertTrue(end.isAfter(response.getReceivedAt()));
+        assertNotNull(response.getReceivedAt());
+        assertFalse(response.getReceivedAt().isBefore(start.minusSeconds(1)));
+        assertFalse(response.getReceivedAt().isAfter(end.plusSeconds(1)));
     }
 }

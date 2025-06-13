@@ -33,7 +33,7 @@ import ee.sk.smartid.util.StringUtil;
 import jakarta.ws.rs.core.UriBuilder;
 
 /**
- * Builds device link or QR-code. Can be used to generate device link or QR code.
+ * Builds device link or QR-code.
  */
 public class DeviceLinkBuilder {
 

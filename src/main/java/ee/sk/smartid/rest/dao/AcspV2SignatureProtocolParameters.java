@@ -50,7 +50,6 @@ public class AcspV2SignatureProtocolParameters implements Serializable {
         this.signatureAlgorithm = signatureAlgorithm;
     }
 
-
     public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
         return signatureAlgorithmParameters;
     }
