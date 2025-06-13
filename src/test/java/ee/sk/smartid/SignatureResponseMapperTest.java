@@ -100,7 +100,7 @@ class SignatureResponseMapperTest {
     @Test
     void from_missingInteractionFlowUsed() {
         SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "sha512WithRSAEncryption");
-        sessionStatus.setInteractionFlowUsed(null);
+        sessionStatus.setInteractionTypeUsed(null);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> SignatureResponseMapper.from(sessionStatus, "QUALIFIED"));
 
@@ -289,7 +289,7 @@ class SignatureResponseMapperTest {
         sessionStatus.setCert(sessionCertificate);
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setSignatureProtocol(signatureProtocol);
-        sessionStatus.setInteractionFlowUsed("displayTextAndPIN");
+        sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
 
         return sessionStatus;
     }

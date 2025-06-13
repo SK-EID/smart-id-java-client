@@ -78,7 +78,7 @@ public class SignatureResponseMapper {
         signatureResponse.setRequestedCertificateLevel(requestedCertificateLevel);
         signatureResponse.setCertificateLevel(certificate.getCertificateLevel());
         signatureResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-        signatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        signatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
         signatureResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
 
         return signatureResponse;
@@ -121,7 +121,7 @@ public class SignatureResponseMapper {
                 throw new UnprocessableSmartIdResponseException("Document number is missing in the session result");
             }
 
-            if (StringUtil.isEmpty(sessionStatus.getInteractionFlowUsed())) {
+            if (StringUtil.isEmpty(sessionStatus.getInteractionTypeUsed())) {
                 logger.error("InteractionFlowUsed is missing in the session status");
                 throw new UnprocessableSmartIdResponseException("InteractionFlowUsed is missing in the session status");
             }

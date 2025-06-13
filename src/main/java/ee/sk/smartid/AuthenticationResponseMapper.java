@@ -66,7 +66,7 @@ public class AuthenticationResponseMapper {
         authenticationResponse.setCertificate(toCertificate(sessionCertificate));
         authenticationResponse.setCertificateLevel(toAuthenticationCertificateLevel(sessionCertificate));
         authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-        authenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        authenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
         authenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
         authenticationResponse.setServerRandom(sessionSignature.getServerRandom());
         return authenticationResponse;
@@ -82,7 +82,7 @@ public class AuthenticationResponseMapper {
         validateSignature(sessionStatus.getSignature());
         validateCertificate(sessionStatus.getCert());
 
-        if (StringUtil.isEmpty(sessionStatus.getInteractionFlowUsed())) {
+        if (StringUtil.isEmpty(sessionStatus.getInteractionTypeUsed())) {
             throw new UnprocessableSmartIdResponseException("Interaction flow used parameter is missing in the session status");
         }
     }

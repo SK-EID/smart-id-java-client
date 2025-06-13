@@ -16,6 +16,6 @@
     "certificateLevel": "QUALIFIED",
     "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
   },
-  "interactionFlowUsed": "verificationCodeChoice",
+  "interactionTypeUsed": "verificationCodeChoice",
   "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
 }

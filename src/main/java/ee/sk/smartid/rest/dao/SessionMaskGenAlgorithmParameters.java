@@ -26,20 +26,21 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
+
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SessionResultDetails implements Serializable {
+public class SessionMaskGenAlgorithmParameters implements Serializable {
 
-    private String interaction;
+    private String hashAlgorithm;
 
-    public String getInteraction() {
-        return interaction;
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
     }
 
-    public void setInteraction(String interaction) {
-        this.interaction = interaction;
+    public void setHashAlgorithm(String hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
     }
 }

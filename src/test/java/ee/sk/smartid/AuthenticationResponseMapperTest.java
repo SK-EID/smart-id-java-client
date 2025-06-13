@@ -288,7 +288,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
-        sessionStatus.setInteractionFlowUsed(interactionFlowUsed);
+        sessionStatus.setInteractionTypeUsed(interactionFlowUsed);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertEquals("Interaction flow used parameter is missing in the session status", exception.getMessage());
@@ -305,7 +305,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
-        sessionStatus.setInteractionFlowUsed("displayTextAndPIN");
+        sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
 
         var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
         assertTrue(exception.getMessage().startsWith("Failed to parse X509 certificate from"));
@@ -339,7 +339,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol("ACSP_V2");
         sessionStatus.setSignature(sessionSignature);
         sessionStatus.setCert(sessionCertificate);
-        sessionStatus.setInteractionFlowUsed("displayTextAndPIN");
+        sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
         sessionStatus.setDeviceIpAddress("0.0.0.0");
         return sessionStatus;
     }

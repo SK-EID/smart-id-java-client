@@ -71,7 +71,7 @@ public class CertificateChoiceResponseMapper {
         certificateChoiceResponse.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
         certificateChoiceResponse.setCertificate(certificate);
         certificateChoiceResponse.setCertificateLevel(CertificateLevel.valueOf(sessionStatus.getCert().getCertificateLevel()));
-        certificateChoiceResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        certificateChoiceResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
         certificateChoiceResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
         return certificateChoiceResponse;
     }

@@ -31,15 +31,42 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SessionResultDetails implements Serializable {
+public class SessionSignatureAlgorithmParameters implements Serializable {
 
-    private String interaction;
+    private String hashAlgorithm;
+    private SessionMaskGenAlgorithm maskGenAlgorithm;
+    private Integer saltLength;
+    private String trailerField;
 
-    public String getInteraction() {
-        return interaction;
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
     }
 
-    public void setInteraction(String interaction) {
-        this.interaction = interaction;
+    public void setHashAlgorithm(String hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+    }
+
+    public SessionMaskGenAlgorithm getMaskGenAlgorithm() {
+        return maskGenAlgorithm;
+    }
+
+    public void setMaskGenAlgorithm(SessionMaskGenAlgorithm maskGenAlgorithm) {
+        this.maskGenAlgorithm = maskGenAlgorithm;
+    }
+
+    public Integer getSaltLength() {
+        return saltLength;
+    }
+
+    public void setSaltLength(Integer saltLength) {
+        this.saltLength = saltLength;
+    }
+
+    public String getTrailerField() {
+        return trailerField;
+    }
+
+    public void setTrailerField(String trailerField) {
+        this.trailerField = trailerField;
     }
 }

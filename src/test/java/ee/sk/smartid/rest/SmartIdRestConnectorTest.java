@@ -45,6 +45,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,6 +78,9 @@ import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithmParameters;
+import ee.sk.smartid.rest.dao.SessionSignature;
+import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
@@ -120,16 +124,28 @@ class SmartIdRestConnectorTest {
         void getSessionStatus_forSuccessfulAuthenticationRequest() {
             SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-successful-authentication.json");
             assertSuccessfulResponse(sessionStatus);
-            assertEquals("verificationCodeChoice", sessionStatus.getInteractionFlowUsed());
+            assertEquals("displayTextAndPIN", sessionStatus.getInteractionTypeUsed());
 
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
-            assertNotNull(sessionStatus.getSignature());
-            assertThat(sessionStatus.getSignature().getValue(), startsWith("TstqDys5iuxUk/HZqxwTZH95ynaBF3GK8HziQlo//ujbQQTdN8e0bU1a9E7lQmBZ"));
-            assertEquals("sha512WithRSAEncryption", sessionStatus.getSignature().getSignatureAlgorithm());
-            assertEquals(SERVER_RANDOM, sessionStatus.getSignature().getServerRandom());
+            SessionSignature sessionSignature = sessionStatus.getSignature();
+            assertNotNull(sessionSignature);
+            assertTrue(Pattern.matches("^[a-zA-Z0-9+\\/]+={0,2}$", sessionSignature.getValue()));
+            assertEquals(SERVER_RANDOM, sessionSignature.getServerRandom());
+            assertTrue(Pattern.matches("^[a-zA-Z0-9-_]{43}$", sessionSignature.getUserChallenge()));
+            assertEquals("QR", sessionSignature.getFlowType());
+            assertEquals("rsassa-pss", sessionSignature.getSignatureAlgorithm());
+
+            SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
+            assertEquals("SHA3-512", signatureAlgorithmParameters.getHashAlgorithm());
+            var maskGenAlgorithm = signatureAlgorithmParameters.getMaskGenAlgorithm();
+            assertEquals("id-mgf1", maskGenAlgorithm.getAlgorithm());
+            SessionMaskGenAlgorithmParameters parameters = maskGenAlgorithm.getParameters();
+            assertEquals("SHA3-512", parameters.getHashAlgorithm());
+            assertEquals(64, signatureAlgorithmParameters.getSaltLength());
+            assertEquals("0xbc", signatureAlgorithmParameters.getTrailerField());
 
             assertNotNull(sessionStatus.getCert());
-            assertThat(sessionStatus.getCert().getValue(), startsWith("MIIGszCCBjmgAwIBAgIQZDoy+8wlWu/meKNnbvNU4zAKBggqhkjOPQQDAzBxMSww"));
+            assertTrue(Pattern.matches("^[a-zA-Z0-9+\\/]+={0,2}$", sessionStatus.getCert().getValue()));
             assertEquals("QUALIFIED", sessionStatus.getCert().getCertificateLevel());
         }
 
@@ -147,7 +163,7 @@ class SmartIdRestConnectorTest {
         void getSessionStatus_forSuccessfulSignatureRequest() {
             SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-successful-signature.json");
             assertSuccessfulResponse(sessionStatus);
-            assertEquals("verificationCodeChoice", sessionStatus.getInteractionFlowUsed());
+            assertEquals("verificationCodeChoice", sessionStatus.getInteractionTypeUsed());
 
             assertEquals("RAW_DIGEST_SIGNATURE", sessionStatus.getSignatureProtocol());
             assertNotNull(sessionStatus.getSignature());

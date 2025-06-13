@@ -31,15 +31,24 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class SessionResultDetails implements Serializable {
+public class SessionMaskGenAlgorithm implements Serializable {
 
-    private String interaction;
+    private String algorithm;
+    private SessionMaskGenAlgorithmParameters parameters;
 
-    public String getInteraction() {
-        return interaction;
+    public String getAlgorithm() {
+        return algorithm;
     }
 
-    public void setInteraction(String interaction) {
-        this.interaction = interaction;
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public SessionMaskGenAlgorithmParameters getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(SessionMaskGenAlgorithmParameters parameters) {
+        this.parameters = parameters;
     }
 }
