@@ -27,6 +27,8 @@ package ee.sk.smartid;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.rest.dao.Interaction;
+
 import org.bouncycastle.util.encoders.Base64;
 
 import java.nio.charset.StandardCharsets;
@@ -39,7 +41,7 @@ public class InteractionUtil {
     private InteractionUtil() {
     }
 
-    public static String encodeInteractionsAsBase64(List<?> interactions) {
+    public static String encodeInteractionsAsBase64(List<? extends Interaction> interactions) {
         try {
             String json = objectMapper.writeValueAsString(interactions);
             return Base64.toBase64String(json.getBytes(StandardCharsets.UTF_8));

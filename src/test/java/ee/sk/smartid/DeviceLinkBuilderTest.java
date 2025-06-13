@@ -284,7 +284,7 @@ class DeviceLinkBuilderTest {
                             .withDigest(BASE64_DIGEST)
                             .buildDeviceLink(SESSION_SECRET)
             );
-            assertEquals("relyingPartyNameBase64 must be set", ex.getMessage());
+            assertEquals("Parameter relyingPartyNameBase64 must be set", ex.getMessage());
         }
 
         @Test

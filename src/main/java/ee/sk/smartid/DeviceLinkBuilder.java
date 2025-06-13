@@ -310,7 +310,7 @@ public class DeviceLinkBuilder {
 
     private void validateAuthCodeParams(String unprotectedLink) {
         if (StringUtil.isEmpty(relyingPartyNameBase64)) {
-            throw new SmartIdClientException("relyingPartyNameBase64 must be set");
+            throw new SmartIdClientException("Parameter relyingPartyNameBase64 must be set");
         }
 
         boolean hasCallback = StringUtil.isNotEmpty(initialCallbackUrl);
