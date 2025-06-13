@@ -216,7 +216,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))
@@ -260,7 +260,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withRpChallenge(rpChallenge)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
@@ -299,7 +299,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
             DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))

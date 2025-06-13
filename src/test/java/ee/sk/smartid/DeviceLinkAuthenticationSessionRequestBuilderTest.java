@@ -91,7 +91,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -124,7 +124,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withCertificateLevel(certificateLevel)
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -145,7 +145,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withSignatureAlgorithm(signatureAlgorithm)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
@@ -167,7 +167,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -188,7 +188,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .withShareMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
@@ -211,7 +211,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .withCapabilities(capabilities)
                     .initAuthenticationSession();
@@ -231,7 +231,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .withInitialCallbackURL("https://valid.example.com/path")
                     .initAuthenticationSession();
@@ -288,7 +288,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(rpChallenge)
-                            .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                            .withHashAlgorithm(HashAlgorithm.SHA_512)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
@@ -315,7 +315,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                            .withHashAlgorithm(HashAlgorithm.SHA_512)
                             .withInteractions(interactions)
                             .initAuthenticationSession());
             assertEquals("Parameter interactions must be set", exception.getMessage());
@@ -329,7 +329,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                            .withHashAlgorithm(HashAlgorithm.SHA_512)
                             .withInteractions(duplicateInteractions)
                             .initAuthenticationSession());
 
@@ -344,7 +344,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                            .withHashAlgorithm(HashAlgorithm.SHA_512)
                             .withInteractions(List.of(interaction))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
@@ -358,7 +358,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                            .withHashAlgorithm(HashAlgorithm.SHA_512)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log in")))
                             .withInitialCallbackURL(url)
                             .initAuthenticationSession()
@@ -373,7 +373,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(null)
+                            .withHashAlgorithm(null)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession()
             );
@@ -387,7 +387,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(null)
+                            .withHashAlgorithm(null)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession()
             );
@@ -402,7 +402,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                            .withHashAlgorithm(HashAlgorithm.SHA_512)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                             .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
@@ -487,7 +487,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                    .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
         }
@@ -502,7 +502,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withRpChallenge(generateBase64String("a".repeat(32)))
-                .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                .withHashAlgorithm(HashAlgorithm.SHA_512)
                 .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                 .initAuthenticationSession();
@@ -523,7 +523,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withRpChallenge(generateBase64String("a".repeat(32)))
-                .withSignatureAlgorithmParameters(HashAlgorithm.SHA_512)
+                .withHashAlgorithm(HashAlgorithm.SHA_512)
                 .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                 .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
                 .initAuthenticationSession();

@@ -149,7 +149,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * @param hashAlgorithm the hash algorithm to use
      * @return this builder
      */
-    public DeviceLinkAuthenticationSessionRequestBuilder withSignatureAlgorithmParameters(HashAlgorithm hashAlgorithm) {
+    public DeviceLinkAuthenticationSessionRequestBuilder withHashAlgorithm(HashAlgorithm hashAlgorithm) {
         this.hashAlgorithm = hashAlgorithm;
         return this;
     }
