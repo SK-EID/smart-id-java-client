@@ -679,11 +679,11 @@ The session status response includes various fields depending on whether the ses
 * `result.documentNumber`: Document number returned when `endResult` is `OK`. Can be used in further signature and authentication requests to target the same device.
 * `signatureProtocol`: Either ACSP_V2 (for authentication) or RAW_DIGEST_SIGNATURE (for signature)
 * `signature`: Contains the following fields based on the signatureProtocol used:
-   * For `ACSP_V2`: value, serverRandom, signatureAlgorithm, hashAlgorithm
-   * For `RAW_DIGEST_SIGNATURE`: value, signatureAlgorithm, hashAlgorithm
+   * For `ACSP_V2`: value, serverRandom, userChallenge, flowType, signatureAlgorithm, signatureAlgorithmParameters,
+   * For `RAW_DIGEST_SIGNATURE`: value, flowType, signatureAlgorithm, signatureAlgorithmParameters
 * `cert`: Includes certificate information with value (Base64-encoded certificate) and certificateLevel (ADVANCED or QUALIFIED).
 * `ignoredProperties`: Any unsupported or ignored properties from the request.
-* `interactionFlowUsed`: The interaction flow used for the session.
+* `interactionTypeUsed`: The interaction type used for the session.
 * `deviceIpAddress`: IP address of the mobile device, if requested.
 
 ### Examples of querying session status in v3.1
@@ -825,10 +825,15 @@ The session status response may return various error codes indicating the outcom
 * `WRONG_VC`: User selected the wrong verification code.
 * `REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP`: The requested interaction is not supported by the user's app.
 * `USER_REFUSED_CERT_CHOICE`: User has multiple accounts and pressed Cancel on device choice screen.
-* `USER_REFUSED_DISPLAYTEXTANDPIN`: User pressed Cancel on PIN screen (either during displayTextAndPIN or verificationCodeChoice flow).
-* `USER_REFUSED_VC_CHOICE`: User cancelled verificationCodeChoice screen.
-* `USER_REFUSED_CONFIRMATIONMESSAGE`: User cancelled on confirmationMessage screen.
-* `USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE`: User cancelled on confirmationMessageAndVerificationCodeChoice screen.
+* `USER_REFUSED_INTERACTION`: User pressed Cancel on the interaction screen. `interaction` field in the result details contains info which interaction
+  was canceled.
+    * `displayTextAndPIN` - User pressed Cancel on PIN screen (either during displayTextAndPIN or verificationCodeChoice flow).
+    * `confirmationMessage` - User cancelled on confirmationMessage screen.
+    * `confirmationMessageAndVerificationCodeChoice` - User cancelled on confirmationMessageAndVerificationCodeChoice screen.
+* `PROTOCOL_FAILURE`: An error occurred in the signing protocol.
+* `EXPECTED_LINKED_SESSION`: RP has configured signature session that should follow device-link certificate choice session incorrectly and the process
+  cannot be completed.
+* `SERVER_ERROR` - Technical error occurred at the server side and the process was terminated.
 
 ## Certificate by document number
 

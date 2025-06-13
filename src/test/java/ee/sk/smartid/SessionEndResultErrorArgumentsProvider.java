@@ -32,6 +32,9 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 
+import ee.sk.smartid.exception.permanent.ExpectedLinkedSessionException;
+import ee.sk.smartid.exception.permanent.ProtocolFailureException;
+import ee.sk.smartid.exception.permanent.SmartIdServerException;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
@@ -51,6 +54,9 @@ public class SessionEndResultErrorArgumentsProvider implements ArgumentsProvider
                 Arguments.of("WRONG_VC", UserSelectedWrongVerificationCodeException.class),
                 Arguments.of("REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP", RequiredInteractionNotSupportedByAppException.class),
                 Arguments.of("USER_REFUSED_CERT_CHOICE", UserRefusedCertChoiceException.class),
+                Arguments.of("PROTOCOL_FAILURE", ProtocolFailureException.class),
+                Arguments.of("EXPECTED_LINKED_SESSION", ExpectedLinkedSessionException.class),
+                Arguments.of("SERVER_ERROR", SmartIdServerException.class),
                 Arguments.of("UNKNOWN_RESULT", UnprocessableSmartIdResponseException.class)
         );
     }

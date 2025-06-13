@@ -206,6 +206,13 @@ class SmartIdRestConnectorTest {
         class UserRefusedInteractions {
 
             @Test
+            void getSessionStatus_userHasRefused() {
+                SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-user-refused.json");
+                assertEquals("COMPLETE", sessionStatus.getState());
+                assertEquals("USER_REFUSED", sessionStatus.getResult().getEndResult());
+            }
+
+            @Test
             void getSessionStatus_userHasRefusedConfirmationMessage() {
                 SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-user-refused-confirmation.json");
                 assertEquals("COMPLETE", sessionStatus.getState());
@@ -260,10 +267,31 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void getSessionStatus_whenDocumentUnusable() {
+        void getSessionStatus_documentUnusable() {
             SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-document-unusable.json");
             assertEquals("COMPLETE", sessionStatus.getState());
             assertEquals("DOCUMENT_UNUSABLE", sessionStatus.getResult().getEndResult());
+        }
+
+        @Test
+        void getSessionStatus_protocolFailure() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-protocol-failure.json");
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals("PROTOCOL_FAILURE", sessionStatus.getResult().getEndResult());
+        }
+
+        @Test
+        void getSessionStatus_expectedLinkedSession() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-expected-linked-session.json");
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals("EXPECTED_LINKED_SESSION", sessionStatus.getResult().getEndResult());
+        }
+
+        @Test
+        void getSessionStatus_serverError() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-server-error.json");
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals("SERVER_ERROR", sessionStatus.getResult().getEndResult());
         }
 
         private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {

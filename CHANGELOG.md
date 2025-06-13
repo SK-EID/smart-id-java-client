@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Updates to session status response
   - Updated USER_REFUSED_INTERACTION responses and updated error handling for these cases.
+  - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
   - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
   - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
 
