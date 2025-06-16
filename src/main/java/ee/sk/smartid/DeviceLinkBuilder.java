@@ -60,8 +60,9 @@ public class DeviceLinkBuilder {
     private String initialCallbackUrl;
 
     /**
-     * Sets the URL
+     * Sets the base URI to which all query parameters will be appended to form the full Smart-ID device link.
      * <p>
+     * This is a required parameter and must be taken from the `deviceLinkBase` value received in the session-init response.
      *
      * @param deviceLinkBase the URL that will direct to SMART-ID application
      * @return this builder
@@ -132,6 +133,9 @@ public class DeviceLinkBuilder {
     /**
      * Sets the language of the user. The language must be given as a 3-letter ISO 639-2 language code.
      * <p>
+     * Default value is "eng".
+     * The value must match the language shown to the user in the UI.
+     * Also used for the fallback web page if the Smart-ID app is not installed.
      *
      * @param lang the language of the user
      * @return this builder
@@ -168,11 +172,11 @@ public class DeviceLinkBuilder {
      * Sets the brokered relying party name in Base64.
      * Leave empty if not acting as a broker.
      *
-     * @param brokeredRpNameBase64 brokered RP name in Base64
+     * @param brokeredRpName brokered RP name in Base64
      * @return this builder
      */
-    public DeviceLinkBuilder withBrokeredRpNameBase64(String brokeredRpNameBase64) {
-        this.brokeredRpNameBase64 = brokeredRpNameBase64;
+    public DeviceLinkBuilder withBrokeredRpName(String brokeredRpName) {
+        this.brokeredRpNameBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
@@ -310,7 +314,7 @@ public class DeviceLinkBuilder {
 
     private void validateAuthCodeParams(String unprotectedLink) {
         if (StringUtil.isEmpty(relyingPartyNameBase64)) {
-            throw new SmartIdClientException("Parameter relyingPartyNameBase64 must be set");
+            throw new SmartIdClientException("Parameter relyingPartyName must be set");
         }
 
         boolean hasCallback = StringUtil.isNotEmpty(initialCallbackUrl);

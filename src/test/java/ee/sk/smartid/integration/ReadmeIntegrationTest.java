@@ -320,7 +320,7 @@ public class ReadmeIntegrationTest {
                     .withSessionToken(response.getSessionToken())
                     .withDigest(rpChallenge)
                     .withRelyingPartyName(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
-                    .withBrokeredRpNameBase64(Base64.getEncoder().encodeToString("BANK_XYZ".getBytes(StandardCharsets.UTF_8)))
+                    .withBrokeredRpName(Base64.getEncoder().encodeToString("BANK_XYZ".getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(Duration.between(response.getReceivedAt(), Instant.now()).getSeconds())
                     .withLang("est")
                     .buildDeviceLink(response.getSessionSecret());

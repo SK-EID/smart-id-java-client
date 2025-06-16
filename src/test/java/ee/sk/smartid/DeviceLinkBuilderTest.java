@@ -57,10 +57,9 @@ class DeviceLinkBuilderTest {
     private static final String VERSION_INVALID = "0.9";
     private static final long ELAPSED_SECONDS = 1L;
     private static final String CALLBACK_URL = "https://callback.url";
-    private static final String PLAIN_RELYING_PARTY_NAME = "DEMO";
-    private static final String BASE64_RELYING_PARTY_NAME = Base64.getEncoder().encodeToString(PLAIN_RELYING_PARTY_NAME.getBytes(StandardCharsets.UTF_8));
+    private static final String RELYING_PARTY_NAME = "DEMO";
     private static final String BASE64_DIGEST = "dGVzdC1kaWdlc3Q=";
-    private static final String BASE64_BROKERED_RP = "QlJP";
+    private static final String BROKERED_RP = "QlJP";
     private static final String BASE64_INTERACTIONS = "SW50ZXJhY3Rpb25z";
     private static final String AUTH_CODE_PATTERN = "^[A-Za-z0-9_-]{43}$";
 
@@ -75,7 +74,7 @@ class DeviceLinkBuilderTest {
                     .withSessionToken(SESSION_TOKEN)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withDeviceLinkType(deviceLinkType)
-                    .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                    .withBrokeredRpName(BROKERED_RP)
                     .withInteractions(BASE64_INTERACTIONS)
                     .withLang(LANGUAGE)
                     .withElapsedSeconds(deviceLinkType == DeviceLinkType.QR_CODE ? ELAPSED_SECONDS : null)
@@ -93,7 +92,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -111,7 +110,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -130,7 +129,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -147,7 +146,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(null)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -163,7 +162,7 @@ class DeviceLinkBuilderTest {
                             .withDeviceLinkBase(DEVICE_LINK_BASE)
                             .withSessionToken(SESSION_TOKEN)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -181,7 +180,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(token)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -198,7 +197,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .createUnprotectedUri()
@@ -215,7 +214,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(lang)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -232,7 +231,7 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.APP_2_APP)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(ELAPSED_SECONDS)
@@ -253,11 +252,11 @@ class DeviceLinkBuilderTest {
                     .withSessionToken(SESSION_TOKEN)
                     .withSessionType(sessionType)
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                    .withBrokeredRpName(BROKERED_RP)
                     .withInteractions(BASE64_INTERACTIONS)
                     .withLang(LANGUAGE)
                     .withElapsedSeconds(1L)
-                    .withRelyingPartyName(BASE64_RELYING_PARTY_NAME);
+                    .withRelyingPartyName(RELYING_PARTY_NAME);
 
             if (sessionType != SessionType.CERTIFICATE_CHOICE) {
                 builder.withDigest(BASE64_DIGEST);
@@ -277,14 +276,14 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(1L)
                             .withDigest(BASE64_DIGEST)
                             .buildDeviceLink(SESSION_SECRET)
             );
-            assertEquals("Parameter relyingPartyNameBase64 must be set", ex.getMessage());
+            assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
         }
 
         @Test
@@ -295,11 +294,11 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(1L)
-                            .withRelyingPartyName(BASE64_RELYING_PARTY_NAME)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
                             .buildDeviceLink(SESSION_SECRET)
             );
             assertEquals("digest must be set for AUTH or SIGN flows", ex.getMessage());
@@ -313,12 +312,12 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withElapsedSeconds(1L)
                             .withDigest(BASE64_DIGEST)
-                            .withRelyingPartyName(BASE64_RELYING_PARTY_NAME)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
                             .withInitialCallbackUrl(CALLBACK_URL)
                             .buildDeviceLink(SESSION_SECRET)
             );
@@ -334,11 +333,11 @@ class DeviceLinkBuilderTest {
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(deviceLinkType)
-                            .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                            .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
                             .withLang(LANGUAGE)
                             .withDigest(BASE64_DIGEST)
-                            .withRelyingPartyName(BASE64_RELYING_PARTY_NAME)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
                             .buildDeviceLink(SESSION_SECRET)
             );
             assertEquals("initialCallbackUrl must be provided for same-device flows", exception.getMessage());
@@ -356,14 +355,14 @@ class DeviceLinkBuilderTest {
             builder
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                    .withBrokeredRpName(BROKERED_RP)
                     .withInteractions(BASE64_INTERACTIONS)
                     .withElapsedSeconds(1L)
                     .withDeviceLinkBase(DEVICE_LINK_BASE)
                     .withSessionToken(SESSION_TOKEN)
                     .withLang(LANGUAGE)
                     .withDigest(BASE64_DIGEST)
-                    .withRelyingPartyName(BASE64_RELYING_PARTY_NAME);
+                    .withRelyingPartyName(RELYING_PARTY_NAME);
 
             var exception = assertThrows(SmartIdClientException.class, () -> builder.buildDeviceLink(SESSION_SECRET));
             assertEquals("unprotected device-link must not be empty", exception.getMessage());
@@ -376,12 +375,12 @@ class DeviceLinkBuilderTest {
                     .withSessionToken(SESSION_TOKEN)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withDeviceLinkType(DeviceLinkType.APP_2_APP)
-                    .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                    .withBrokeredRpName(BROKERED_RP)
                     .withInteractions(BASE64_INTERACTIONS)
                     .withLang(LANGUAGE)
                     .withInitialCallbackUrl(CALLBACK_URL)
                     .withDigest(BASE64_DIGEST)
-                    .withRelyingPartyName(BASE64_RELYING_PARTY_NAME)
+                    .withRelyingPartyName(RELYING_PARTY_NAME)
                     .buildDeviceLink(SESSION_SECRET);
 
             Map<String, String> params = toQueryParamsMap(uri);
@@ -395,12 +394,12 @@ class DeviceLinkBuilderTest {
                     .withSessionToken(SESSION_TOKEN)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withBrokeredRpNameBase64(BASE64_BROKERED_RP)
+                    .withBrokeredRpName(BROKERED_RP)
                     .withInteractions(BASE64_INTERACTIONS)
                     .withLang(LANGUAGE)
                     .withElapsedSeconds(1L)
                     .withDigest(BASE64_DIGEST)
-                    .withRelyingPartyName(BASE64_RELYING_PARTY_NAME);
+                    .withRelyingPartyName(RELYING_PARTY_NAME);
 
             var exception = assertThrows(SmartIdClientException.class, () -> builder.buildDeviceLink("!!!invalidBase64==="));
 

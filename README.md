@@ -590,7 +590,7 @@ URI deviceLink = new DeviceLinkBuilder()
         .withElapsedSeconds(elapsedSeconds)
         .withLang("eng")
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
+        .withRelyingPartyName("DEMO")
         .buildDeviceLink(session.getSessionSecret());
 ```
 
@@ -602,14 +602,13 @@ DeviceLinkSessionResponse response; // response from the session initiation quer
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase("https://example.com/device-link") // override default base
+        .withDeviceLinkBase("https://example.com/device-link") //required: no default value
         .withDeviceLinkType(DeviceLinkType.APP_2_APP)
         .withSessionType(SessionType.AUTHENTICATION)
         .withSessionToken(session.getSessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withInitialCallbackUrl("https://your-app/callback")
-        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
         .buildDeviceLink(session.getSessionSecret());
 ```
 
@@ -629,15 +628,20 @@ DeviceLinkSessionResponse response; // response from the session initiation quer
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase("https://example.com/device-link") // override default base
+        .withDeviceLinkBase("https://example.com/device-link") //required: no default value
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
         .withSessionToken(session.getSessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-        .withInitialCallbackUrl("https://your-app/callback")
-        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
         .buildDeviceLink(session.getSessionSecret());
+
+// Generate QR code image from device link URI
+BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toString(), 610, 610, 4);
+
+// Convert BufferedImage to Data URI
+String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
+// Return Data URI to frontend and display the QR-code
 ```
 
 ##### Generate QR-code with custom height, width, quiet area and image format
@@ -654,14 +658,12 @@ DeviceLinkSessionResponse response; // response from the session initiation quer
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase("https://example.com/device-link") // override default base
+        .withDeviceLinkBase("https://example.com/device-link") //required: no default value
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
         .withSessionToken(session.getSessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-        .withInitialCallbackUrl("https://your-app/callback")
-        .withRelyingPartyNameBase64(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
         .buildDeviceLink(session.getSessionSecret());
 
 // Create QR-code with height and width of 570px and quiet area of 2 modules.

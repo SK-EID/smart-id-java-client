@@ -153,7 +153,8 @@ public class SmartIdClient {
      * @throws SmartIdClientException if required parameters are missing or invalid
      */
     public DeviceLinkBuilder createDynamicContent() {
-        return new DeviceLinkBuilder();
+        return new DeviceLinkBuilder()
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
