@@ -108,19 +108,6 @@ class SmartIdClientTest {
 
             assertNotNull(response.getSessionID());
         }
-
-        @Test
-        void createNotificationCertificateChoice_withDocumentNumber() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/notification/document/PNOEE-1234567890-MOCK-Q", "requests/certificate-choice-session-request.json", "responses/notification-certificate-choice-session-response.json");
-
-            NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
-                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                    .withCertificateLevel(CertificateLevel.ADVANCED)
-                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                    .initCertificateChoice();
-
-            assertNotNull(response.getSessionID());
-        }
     }
 
     @Nested
@@ -226,6 +213,24 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
             assertNotNull(response.getReceivedAt());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class CertificateByDocumentNumberRequest {
+
+        @Test
+        void createCertificateRequest_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response.json");
+
+            var response = smartIdClient.createCertificateByDocumentNumber()
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .initCertificateByDocumentNumber();
+
+            assertNotNull(response);
+            assertNotNull(response.getCert());
         }
     }
 

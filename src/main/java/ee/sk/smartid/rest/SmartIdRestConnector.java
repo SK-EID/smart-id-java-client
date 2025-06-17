@@ -44,6 +44,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
@@ -78,7 +79,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
     private static final String CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH = "/certificatechoice/dynamic-link/anonymous";
     private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH = "/certificatechoice/notification/etsi";
-    private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_DOCUMENT_NUMBER_PATH = "/certificatechoice/notification/document";
+
+    private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/";
 
     private static final String DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH = "/signature/dynamic-link/etsi";
     private static final String DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/dynamic-link/document";
@@ -92,6 +94,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private static final String NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/notification/etsi";
     private static final String NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/notification/document";
+
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -197,14 +200,13 @@ public class SmartIdRestConnector implements SmartIdConnector {
         return postNotificationCertificateChoiceRequest(uri, request);
     }
 
-    @Override
-    public NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, String documentNumber) {
+    public CertificateByDocumentNumberResponse initCertificateByDocumentNumber(String documentNumber, CertificateChoiceSessionRequest request) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(NOTIFICATION_CERTIFICATE_CHOICE_WITH_DOCUMENT_NUMBER_PATH)
+                .path(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postNotificationCertificateChoiceRequest(uri, request);
+        return postRequest(uri, request, CertificateByDocumentNumberResponse.class);
     }
 
     @Override

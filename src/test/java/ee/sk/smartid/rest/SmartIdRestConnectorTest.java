@@ -618,50 +618,6 @@ class SmartIdRestConnectorTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
-    class DocumentNumberNotificationCertificateChoiceTests {
-
-        private static final String CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH = "/certificatechoice/notification/document/PNOEE-48010010101-MOCK-Q";
-
-        private SmartIdRestConnector connector;
-
-        @BeforeEach
-        public void setUp() {
-            WireMock.configureFor("localhost", 18089);
-            connector = new SmartIdRestConnector("http://localhost:18089");
-        }
-
-        @Test
-        void initCertificateChoice_withDocumentNumber_successful() {
-            stubPostRequestWithResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "responses/notification-certificate-choice-session-response.json");
-
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            String documentNumber = "PNOEE-48010010101-MOCK-Q";
-
-            NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, documentNumber);
-
-            assertNotNull(response);
-            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
-        }
-
-        @Test
-        void initNotificationAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "requests/certificate-choice-session-request.json");
-                connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), "PNOEE-48010010101-MOCK-Q");
-            });
-        }
-
-        @Test
-        void initNotificationAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "requests/certificate-choice-session-request.json");
-                connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), "PNOEE-48010010101-MOCK-Q");
-            });
-        }
-    }
-
-    @Nested
-    @WireMockTest(httpPort = 18089)
     class DynamicLinkSignatureTests {
 
         private static final String SIGNATURE_WITH_PERSON_CODE_PATH = "/signature/dynamic-link/etsi/PNOEE-31111111111";

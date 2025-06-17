@@ -308,87 +308,17 @@ public class ReadmeIntegrationTest {
         }
 
         @Test
-        void signature_withDocumentNumber() {
-            String documentNumber = "PNOLT-40504040001-MOCK-Q";
-
-            NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
-                    .createNotificationCertificateChoice()
-                    .withDocumentNumber(documentNumber)
-                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-                    .initCertificateChoice();
-
-            String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
-            // SessionID is used to query sessions status later
-
-            // Get the session status poller
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-
-            // Querying the sessions status
-            SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
-            CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
-
-            // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
-
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes());
-            signableData.setHashType(HashType.SHA512);
-
-            // Build the dynamic link signature request
-            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDynamicLinkSignature()
-                    .withRelyingPartyUUID(smartIdClient.getRelyingPartyUUID())
-                    .withRelyingPartyName(smartIdClient.getRelyingPartyName())
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withSignableData(signableData)
-                    .withDocumentNumber(documentNumber)
-                    .withAllowedInteractionsOrder(List.of(
-                            DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                    .initSignatureSession();
-
-            // Process the signature response
-            String signatureSessionId = signatureSessionResponse.getSessionID();
-            String sessionToken = signatureSessionResponse.getSessionToken();
-            // Store sessionSecret only on backend side. Do not expose it to the client side.
-            String sessionSecret = signatureSessionResponse.getSessionSecret();
-            Instant receivedAt = signatureSessionResponse.getReceivedAt();
-
-            // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
-            // Start querying sessions status
-
-            // Calculate elapsed seconds from response received time
-            long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
-            // Generate auth code
-            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.SIGNATURE, elapsedSeconds, sessionSecret);
-            // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
-            String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
-                    .withSessionType(SessionType.SIGNATURE) // specify type of the sessions the dynamic link is for
-                    .withSessionToken(sessionToken) // provide token from sessions response
-                    .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(authCode)
-                    .createQrCodeDataUri();
-            // Display QR-code to the user
-
-            // Get the session status poller
-            poller = smartIdClient.getSessionStatusPoller();
-            // Get signatureSessionId from current session response and poll for session status
-            SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
-            assertEquals("COMPLETE", signatureSessionStatus.getState());
-
-            SignatureResponse signatureResponse = SignatureResponseMapper.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
-            assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
-            assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
-            assertNotNull(signatureResponse.getCertificate());
-        }
-
-        @Test
         void signature_withSemanticIdentifier() {
+            var semanticIdentifier = new SemanticsIdentifier(
+                    // 3 character identity type
+                    // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+                    SemanticsIdentifier.IdentityType.PNO,
+                    SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+                    "40504040001"); // identifier (according to country and identity type reference)
+
             NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
                     .createNotificationCertificateChoice()
-                    .withDocumentNumber("PNOLT-40504040001-MOCK-Q")
+                    .withSemanticsIdentifier(semanticIdentifier)
                     .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
                     .initCertificateChoice();
 
@@ -573,32 +503,6 @@ public class ReadmeIntegrationTest {
         }
 
         @Test
-        void certificateChoice_withDocumentNumber() {
-            String documentNumber = "PNOLT-40504040001-MOCK-Q"; // returned in authentication result and used for re-authentication
-
-            NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
-                    .createNotificationCertificateChoice()
-                    .withDocumentNumber(documentNumber)
-                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-                    .initCertificateChoice();
-
-            String sessionId = certificateChoiceSessionResponse.getSessionID();
-            // SessionID is used to query sessions status later
-
-            // Get the session status poller
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-
-            // Querying the sessions status
-            SessionStatus sessionStatus = poller.getSessionStatus(sessionId);
-            CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus);
-
-            assertEquals("OK", response.getEndResult());
-            assertEquals("PNOLT-40504040001-MOCK-Q", response.getDocumentNumber());
-            assertNotNull(response.getCertificate());
-            assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
-        }
-
-        @Test
         void certificateChoice_withSemanticIdentifier() {
             var semanticsIdentifier = new SemanticsIdentifier(
                     // 3 character identity type
@@ -630,68 +534,17 @@ public class ReadmeIntegrationTest {
         }
 
         @Test
-        void signature_withDocumentNumber(){
-            String documentNumber = "PNOLT-40504040001-MOCK-Q";
-
-            NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
-                    .createNotificationCertificateChoice()
-                    .withDocumentNumber(documentNumber)
-                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-                    .initCertificateChoice();
-
-            String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
-            // SessionID is used to query sessions status later
-
-            // Get the session status poller
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-
-            // Querying the sessions status
-            SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
-
-            CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
-            // For example use SignatureBuilder from digidoc4j to create DataToSign using certificateChoiceResponse.getCertificate();
-
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes());
-            signableData.setHashType(HashType.SHA512);
-
-            NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
-                    .withRelyingPartyUUID(smartIdClient.getRelyingPartyUUID())
-                    .withRelyingPartyName(smartIdClient.getRelyingPartyName())
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withSignableData(signableData)
-                    .withDocumentNumber(documentNumber)
-                    .withAllowedInteractionsOrder(List.of(
-                            NotificationInteraction.verificationCodeChoice("Please sign the document"))
-                    )
-                    .initSignatureSession();
-
-            // Process the querying sessions status response
-            String sessionID = signatureSessionResponse.getSessionID();
-
-            // Display verification code to the user
-            String verificationCode = signatureSessionResponse.getVc().getValue();
-            assertTrue(Pattern.matches(ALPHA_NUMERIC_PATTERN, verificationCode));
-
-            // Get sessionID from current session response and poll for session status
-            SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(sessionID);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
-            assertEquals("COMPLETE", signatureSessionStatus.getState());
-
-            SignatureResponse signatureResponse = SignatureResponseMapper.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
-            assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
-            assertEquals("verificationCodeChoice", signatureResponse.getInteractionFlowUsed());
-            assertNotNull(signatureResponse.getCertificate());
-        }
-
-        @Test
         void signature_withSemanticsIdentifier(){
+            var semanticIdentifier = new SemanticsIdentifier(
+                    // 3 character identity type
+                    // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+                    SemanticsIdentifier.IdentityType.PNO,
+                    SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+                    "40504040001"); // identifier (according to country and identity type reference)
+
             NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
                     .createNotificationCertificateChoice()
-                    .withDocumentNumber("PNOEE-40504040001-MOCK-Q")
+                    .withSemanticsIdentifier(semanticIdentifier)
                     .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
                     .initCertificateChoice();
 

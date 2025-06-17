@@ -91,26 +91,6 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
         }
 
-        @Test
-        void initCertificateChoiceSession_withDocumentNumber() {
-            when(connector.initNotificationCertificateChoice(any(CertificateChoiceSessionRequest.class), any(String.class)))
-                    .thenReturn(createCertificateChoiceSessionResponse());
-
-            new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
-                    .initCertificateChoice();
-
-            ArgumentCaptor<String> documentNumberCaptor = ArgumentCaptor.forClass(String.class);
-            verify(connector).initNotificationCertificateChoice(any(CertificateChoiceSessionRequest.class), documentNumberCaptor.capture());
-            String capturedDocumentNumber = documentNumberCaptor.getValue();
-
-            assertEquals("PNOEE-48010010101-MOCK-Q", capturedDocumentNumber);
-        }
-
         @ParameterizedTest
         @ArgumentsSource(CertificateLevelArgumentProvider.class)
         void initCertificateChoiceSession_certificateLevel_ok(CertificateLevel certificateLevel, String expectedValue) {
@@ -260,7 +240,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
                             .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                             .withCertificateLevel(CertificateLevel.QUALIFIED)
                             .initCertificateChoice());
-            assertEquals("Either documentNumber or semanticsIdentifier must be set.", exception.getMessage());
+            assertEquals("SemanticsIdentifier must be set.", exception.getMessage());
         }
     }
 

@@ -45,12 +45,18 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 import javax.security.auth.x500.X500Principal;
 
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Sequence;
 import org.slf4j.Logger;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
@@ -66,6 +72,11 @@ public class AuthenticationResponseValidator {
     private static final Logger logger = getLogger(AuthenticationResponseValidator.class);
 
     private final List<X509Certificate> trustedCACertificates = new ArrayList<>();
+
+    private static final Set<String> QUALIFIED_POLICIES = Set.of("1.3.6.1.4.1.10015.17.2", "0.4.0.194112.1.2");
+    private static final Set<String> NONQUALIFIED_POLICIES = Set.of("1.3.6.1.4.1.10015.17.1", "0.4.0.2042.1.1");
+    private static final String QC_STATEMENT_OID = "1.3.6.1.5.5.7.1.3";
+    private static final String QC_ELECTRONIC_SIGNATURE_OID = "0.4.0.1862.1.6.1";
 
     /**
      * Initializes the mapper with trusted CA certificates from a keystore.
@@ -148,6 +159,9 @@ public class AuthenticationResponseValidator {
         }
         validateCertificateNotExpired(authenticationResponse.getCertificate());
         validateCertificateIsTrusted(authenticationResponse.getCertificate());
+        validateCertificateKeyUsage(authenticationResponse.getCertificate());
+        validateQcStatement(authenticationResponse.getCertificate());
+        validateCertificatePolicy(authenticationResponse.getCertificate(), requestedCertificateLevel);
         validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
     }
 
@@ -171,6 +185,66 @@ public class AuthenticationResponseValidator {
             logger.error("Signature verification failed");
             throw new UnprocessableSmartIdResponseException("Signature verification failed", ex);
         }
+    }
+
+    private void validateCertificateKeyUsage(X509Certificate certificate) {
+        boolean[] keyUsage = certificate.getKeyUsage();
+        if (keyUsage == null || keyUsage.length < 2 || !keyUsage[1]) {
+            throw new UnprocessableSmartIdResponseException("Certificate key usage does not include non-repudiation");
+        }
+    }
+
+    private void validateQcStatement(X509Certificate certificate) {
+        byte[] extensionValue = certificate.getExtensionValue(QC_STATEMENT_OID);
+        if (extensionValue == null) {
+            throw new UnprocessableSmartIdResponseException("Certificate does not contain QCStatements extension");
+        }
+        try {
+            ASN1Sequence qcStatements = parseExtensionAsSequence(extensionValue);
+            for (ASN1Encodable statementObj : qcStatements) {
+                ASN1Sequence statement = (ASN1Sequence) statementObj;
+                ASN1ObjectIdentifier statementId = (ASN1ObjectIdentifier) statement.getObjectAt(0);
+                if (QC_ELECTRONIC_SIGNATURE_OID.equals(statementId.getId())) {
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            throw new UnprocessableSmartIdResponseException("Failed to parse QCStatements extension", e);
+        }
+        throw new UnprocessableSmartIdResponseException("QCStatements does not contain required electronic signature OID: " + QC_ELECTRONIC_SIGNATURE_OID);
+    }
+
+    private ASN1Sequence parseExtensionAsSequence(byte[] extValue) throws IOException {
+        try (ASN1InputStream outer = new ASN1InputStream(extValue)) {
+            ASN1OctetString octets = (ASN1OctetString) outer.readObject();
+            try (ASN1InputStream inner = new ASN1InputStream(octets.getOctets())) {
+                return (ASN1Sequence) inner.readObject();
+            }
+        }
+    }
+
+    private void validateCertificatePolicy(X509Certificate certificate, AuthenticationCertificateLevel authenticationCertificateLevel) {
+        byte[] extensionValue = certificate.getExtensionValue("2.5.29.32");
+        if (extensionValue == null) {
+            throw new UnprocessableSmartIdResponseException("Certificate does not contain Certificate Policies");
+        }
+
+        try {
+            ASN1Sequence policies = parseExtensionAsSequence(extensionValue);
+            Set<String> requiredPolicies = (authenticationCertificateLevel == AuthenticationCertificateLevel.QUALIFIED) ? QUALIFIED_POLICIES : NONQUALIFIED_POLICIES;
+
+            for (ASN1Encodable policyInfoObj : policies) {
+                ASN1Sequence policyInfo = (ASN1Sequence) policyInfoObj;
+                ASN1ObjectIdentifier policyOid = (ASN1ObjectIdentifier) policyInfo.getObjectAt(0);
+
+                if (requiredPolicies.contains(policyOid.getId())) {
+                    return;
+                }
+            }
+        } catch (Exception e) {
+            throw new UnprocessableSmartIdResponseException("Failed to parse Certificate Policies extension", e);
+        }
+        throw new UnprocessableSmartIdResponseException("Certificate Policies extension does not contain required OID");
     }
 
     private void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
