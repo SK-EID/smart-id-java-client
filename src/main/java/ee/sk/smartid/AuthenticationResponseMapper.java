@@ -114,7 +114,7 @@ public class AuthenticationResponseMapper {
             throw new UnprocessableSmartIdResponseException("Signature protocol parameter is missing in session status");
         }
 
-        if (!SignatureProtocol.ACSP_V1.name().equals(sessionStatus.getSignatureProtocol())) {
+        if (!SignatureProtocol.ACSP_V2.name().equals(sessionStatus.getSignatureProtocol())) {
             logger.error("Invalid signature protocol in sessions status: {}", sessionStatus.getSignatureProtocol());
             throw new UnprocessableSmartIdResponseException("Invalid signature protocol in sessions status");
         }

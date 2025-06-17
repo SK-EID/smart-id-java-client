@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
@@ -26,6 +26,8 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.SignableData;
+import ee.sk.smartid.SignableHash;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 public class SignatureUtil {
@@ -41,25 +43,5 @@ public class SignatureUtil {
         } else {
             throw new SmartIdClientException("Either signableHash or signableData must be set.");
         }
-    }
-
-    public static String getSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm, SignableHash signableHash, SignableData signableData) {
-        if (signatureAlgorithm != null) {
-            return signatureAlgorithm.getAlgorithmName();
-        } else if (signableHash != null && signableHash.getHashType() != null) {
-            return getAlgorithmFromHashType(signableHash.getHashType());
-        } else if (signableData != null && signableData.getHashType() != null) {
-            return getAlgorithmFromHashType(signableData.getHashType());
-        } else {
-            return SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
-        }
-    }
-
-    private static String getAlgorithmFromHashType(HashType hashType) {
-        return switch (hashType) {
-            case SHA256 -> SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName();
-            case SHA384 -> SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName();
-            case SHA512 -> SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName();
-        };
     }
 }

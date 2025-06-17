@@ -27,7 +27,6 @@ package ee.sk.smartid.rest.dao;
  */
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -42,20 +41,20 @@ public class AuthenticationSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String certificateLevel;
 
-    private final SignatureProtocol signatureProtocol = SignatureProtocol.ACSP_V1;
+    private final SignatureProtocol signatureProtocol = SignatureProtocol.ACSP_V2;
 
-    private AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters;
+    private AcspV2SignatureProtocolParameters acspV2SignatureProtocolParameters;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String nonce;
-
-    private List<? extends Interaction> allowedInteractionsOrder;
+    private String interactions;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<String> capabilities;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String initialCallbackURL;
 
     public String getRelyingPartyUUID() {
         return relyingPartyUUID;
@@ -85,28 +84,20 @@ public class AuthenticationSessionRequest implements Serializable {
         return signatureProtocol;
     }
 
-    public AcspV1SignatureProtocolParameters getSignatureProtocolParameters() {
-        return acspV1SignatureProtocolParameters;
+    public AcspV2SignatureProtocolParameters getSignatureProtocolParameters() {
+        return acspV2SignatureProtocolParameters;
     }
 
-    public void setSignatureProtocolParameters(AcspV1SignatureProtocolParameters acspV1SignatureProtocolParameters) {
-        this.acspV1SignatureProtocolParameters = acspV1SignatureProtocolParameters;
+    public void setSignatureProtocolParameters(AcspV2SignatureProtocolParameters acspV2SignatureProtocolParameters) {
+        this.acspV2SignatureProtocolParameters = acspV2SignatureProtocolParameters;
     }
 
-    public String getNonce() {
-        return nonce;
-    }
+    public String getInteractions() {
+        return interactions;
 
-    public void setNonce(String nonce) {
-        this.nonce = nonce;
     }
-
-    public List<? extends Interaction> getAllowedInteractionsOrder() {
-        return allowedInteractionsOrder;
-    }
-
-    public void setAllowedInteractionsOrder(List<? extends Interaction> allowedInteractionsOrder) {
-        this.allowedInteractionsOrder = allowedInteractionsOrder;
+    public void setInteractions(String interactions) {
+        this.interactions = interactions;
     }
 
     public RequestProperties getRequestProperties() {
@@ -123,5 +114,13 @@ public class AuthenticationSessionRequest implements Serializable {
 
     public void setCapabilities(Set<String> capabilities) {
         this.capabilities = capabilities;
+    }
+
+    public String getInitialCallbackURL() {
+        return initialCallbackURL;
+    }
+
+    public void setInitialCallbackURL(String initialCallbackURL) {
+        this.initialCallbackURL = initialCallbackURL;
     }
 }

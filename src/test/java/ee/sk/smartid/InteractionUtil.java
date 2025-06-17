@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-public enum SignatureProtocol {
-    ACSP_V2,
-    RAW_DIGEST_SIGNATURE
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.bouncycastle.util.encoders.Base64;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+public class InteractionUtil {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    private InteractionUtil() {
+    }
+
+    public static String encodeInteractionsAsBase64(List<?> interactions) {
+        try {
+            String json = objectMapper.writeValueAsString(interactions);
+            return Base64.toBase64String(json.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to encode interactions to Base64", e);
+        }
+    }
 }

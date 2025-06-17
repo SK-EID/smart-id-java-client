@@ -26,7 +26,22 @@ package ee.sk.smartid;
  * #L%
  */
 
-public enum SignatureProtocol {
-    ACSP_V2,
-    RAW_DIGEST_SIGNATURE
+/**
+ * Enum for device link types
+ */
+public enum DeviceLinkType {
+
+    QR_CODE("QR"),
+    WEB_2_APP("Web2App"),
+    APP_2_APP("App2App");
+
+    private final String value;
+
+    DeviceLinkType(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }

@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-public enum SignatureProtocol {
-    ACSP_V2,
-    RAW_DIGEST_SIGNATURE
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
+
+public class DeviceLinkUtil {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    public static String encodeToBase64(List<DeviceLinkInteraction> interactions) {
+        try {
+            String json = mapper.writeValueAsString(interactions);
+            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        } catch (JsonProcessingException e) {
+            throw new SmartIdClientException("Unable to encode interactions to base64", e);
+        }
+    }
 }

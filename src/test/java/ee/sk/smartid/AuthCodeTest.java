@@ -54,8 +54,8 @@ class AuthCodeTest {
 
     @ParameterizedTest
     @ArgumentsSource(AuthCodeArgumentsProvider.class)
-    void createHash(DynamicLinkType dynamicLinkType, SessionType sessionType, String expectedPayload) {
-        String authCodeInBase64 = AuthCode.createHash(dynamicLinkType, sessionType, 1, toBase64("sessionSecret"));
+    void createHash(DeviceLinkType deviceLinkType, SessionType sessionType, String expectedPayload) {
+        String authCodeInBase64 = AuthCode.createHash(deviceLinkType, sessionType, 1, toBase64("sessionSecret"));
 
         String expected = hashThePayload(expectedPayload);
         assertEquals(expected, authCodeInBase64);
@@ -69,7 +69,7 @@ class AuthCodeTest {
 
     @Test
     void createHash_sessionTypeNotProvided_throwException() {
-        var ex = assertThrows(SmartIdClientException.class, () -> AuthCode.createHash(DynamicLinkType.QR_CODE, null, 1, "sessionSecret"));
+        var ex = assertThrows(SmartIdClientException.class, () -> AuthCode.createHash(DeviceLinkType.QR_CODE, null, 1, "sessionSecret"));
         assertEquals("Session type must be set", ex.getMessage());
     }
 
@@ -118,17 +118,17 @@ class AuthCodeTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of(DynamicLinkType.QR_CODE, SessionType.AUTHENTICATION, "QR.auth.1"),
-                    Arguments.of(DynamicLinkType.WEB_2_APP, SessionType.AUTHENTICATION, "Web2App.auth.1"),
-                    Arguments.of(DynamicLinkType.APP_2_APP, SessionType.AUTHENTICATION, "App2App.auth.1"),
+                    Arguments.of(DeviceLinkType.QR_CODE, SessionType.AUTHENTICATION, "QR.auth.1"),
+                    Arguments.of(DeviceLinkType.WEB_2_APP, SessionType.AUTHENTICATION, "Web2App.auth.1"),
+                    Arguments.of(DeviceLinkType.APP_2_APP, SessionType.AUTHENTICATION, "App2App.auth.1"),
 
-                    Arguments.of(DynamicLinkType.QR_CODE, SessionType.SIGNATURE, "QR.sign.1"),
-                    Arguments.of(DynamicLinkType.WEB_2_APP, SessionType.SIGNATURE, "Web2App.sign.1"),
-                    Arguments.of(DynamicLinkType.APP_2_APP, SessionType.SIGNATURE, "App2App.sign.1"),
+                    Arguments.of(DeviceLinkType.QR_CODE, SessionType.SIGNATURE, "QR.sign.1"),
+                    Arguments.of(DeviceLinkType.WEB_2_APP, SessionType.SIGNATURE, "Web2App.sign.1"),
+                    Arguments.of(DeviceLinkType.APP_2_APP, SessionType.SIGNATURE, "App2App.sign.1"),
 
-                    Arguments.of(DynamicLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, "QR.cert.1"),
-                    Arguments.of(DynamicLinkType.WEB_2_APP, SessionType.CERTIFICATE_CHOICE, "Web2App.cert.1"),
-                    Arguments.of(DynamicLinkType.APP_2_APP, SessionType.CERTIFICATE_CHOICE, "App2App.cert.1")
+                    Arguments.of(DeviceLinkType.QR_CODE, SessionType.CERTIFICATE_CHOICE, "QR.cert.1"),
+                    Arguments.of(DeviceLinkType.WEB_2_APP, SessionType.CERTIFICATE_CHOICE, "Web2App.cert.1"),
+                    Arguments.of(DeviceLinkType.APP_2_APP, SessionType.CERTIFICATE_CHOICE, "App2App.cert.1")
             );
         }
     }

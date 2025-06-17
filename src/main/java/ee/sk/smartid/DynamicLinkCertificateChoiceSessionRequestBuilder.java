@@ -37,7 +37,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 
 public class DynamicLinkCertificateChoiceSessionRequestBuilder {
@@ -133,13 +133,13 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * which can be used by the Relying Party to manage and verify the session independently.
      * <p>
      *
-     * @return DynamicLinkCertificateChoiceSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
+     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
      */
-    public DynamicLinkSessionResponse initCertificateChoice() {
+    public DeviceLinkSessionResponse initCertificateChoice() {
         validateParameters();
         CertificateChoiceSessionRequest request = createCertificateRequest();
-        DynamicLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
+        DeviceLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
 
         if (response == null || response.getSessionID() == null) {
             throw new UnprocessableSmartIdResponseException("Dynamic link certificate choice session failed: invalid response received.");

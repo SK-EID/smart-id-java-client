@@ -1,10 +1,10 @@
-package ee.sk.smartid;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,22 +26,17 @@ package ee.sk.smartid;
  * #L%
  */
 
-/**
- * Enum for dynamic link types
- */
-public enum DynamicLinkType {
+import java.io.Serializable;
 
-    QR_CODE("QR"),
-    WEB_2_APP("Web2App"),
-    APP_2_APP("App2App");
+public class SignatureAlgorithmParameters implements Serializable {
 
-    private final String value;
+    private HashAlgorithm hashAlgorithm;
 
-    DynamicLinkType(String value) {
-        this.value = value;
+    public HashAlgorithm getHashAlgorithm() {
+        return hashAlgorithm;
     }
 
-    public String getValue() {
-        return value;
+    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
     }
 }

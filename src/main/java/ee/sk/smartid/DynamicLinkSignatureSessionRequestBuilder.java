@@ -35,10 +35,11 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.util.SignatureUtil;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.DynamicLinkInteraction;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
@@ -57,7 +58,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private List<DynamicLinkInteraction> allowedInteractionsOrder;
+    private List<DeviceLinkInteraction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm;
     private SignableData signableData;
@@ -156,7 +157,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param allowedInteractionsOrder the allowed interactions order
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<DynamicLinkInteraction> allowedInteractionsOrder) {
+    public DynamicLinkSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<DeviceLinkInteraction> allowedInteractionsOrder) {
         this.allowedInteractionsOrder = allowedInteractionsOrder;
         return this;
     }
@@ -234,18 +235,18 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      *     <li>with a semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
      * </ul>
      *
-     * @return a {@link DynamicLinkSessionResponse} containing session details such as
+     * @return a {@link DeviceLinkSessionResponse} containing session details such as
      * session ID, session token, and session secret.
      */
-    public DynamicLinkSessionResponse initSignatureSession() {
+    public DeviceLinkSessionResponse initSignatureSession() {
         validateParameters();
         SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
-        DynamicLinkSessionResponse dynamicLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
+        DeviceLinkSessionResponse dynamicLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
         validateResponseParameters(dynamicLinkSignatureSessionResponse);
         return dynamicLinkSignatureSessionResponse;
     }
 
-    private DynamicLinkSessionResponse initSignatureSession(SignatureSessionRequest request) {
+    private DeviceLinkSessionResponse initSignatureSession(SignatureSessionRequest request) {
         if (documentNumber != null) {
             return connector.initDynamicLinkSignature(request, documentNumber);
         } else if (semanticsIdentifier != null) {
@@ -268,7 +269,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         if (signableHash != null || signableData != null) {
             signatureProtocolParameters.setDigest(SignatureUtil.getDigestToSignBase64(signableHash, signableData));
         }
-        signatureProtocolParameters.setSignatureAlgorithm(SignatureUtil.getSignatureAlgorithm(signatureAlgorithm, signableHash, signableData));
+        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
         request.setSignatureProtocolParameters(signatureProtocolParameters);
         request.setNonce(nonce);
         request.setAllowedInteractionsOrder(allowedInteractionsOrder);
@@ -306,20 +307,24 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         allowedInteractionsOrder.forEach(Interaction::validate);
     }
 
-    private void validateResponseParameters(DynamicLinkSessionResponse dynamicLinkSignatureSessionResponse) {
-        if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionID())) {
+    private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkSignatureSessionResponse) {
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionID())) {
             logger.error("Session ID is missing from the response");
             throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
         }
 
-        if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionToken())) {
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionToken())) {
             logger.error("Session token is missing from the response");
             throw new UnprocessableSmartIdResponseException("Session token is missing from the response");
         }
 
-        if (StringUtil.isEmpty(dynamicLinkSignatureSessionResponse.getSessionSecret())) {
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionSecret())) {
             logger.error("Session secret is missing from the response");
             throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
         }
+        if (deviceLinkSignatureSessionResponse.getDeviceLinkBase() == null) {
+            throw new SmartIdClientException("deviceLinkBase is missing from the response");
+        }
+
     }
 }

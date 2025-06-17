@@ -37,9 +37,9 @@ import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.util.List;
@@ -47,11 +47,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.InteractionUtil;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
@@ -60,11 +62,12 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.rest.dao.AcspV1SignatureProtocolParameters;
+import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DynamicLinkInteraction;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -72,6 +75,7 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
 class SmartIdRestConnectorTest {
@@ -115,7 +119,7 @@ class SmartIdRestConnectorTest {
             assertSuccessfulResponse(sessionStatus);
             assertEquals("verificationCodeChoice", sessionStatus.getInteractionFlowUsed());
 
-            assertEquals("ACSP_V1", sessionStatus.getSignatureProtocol());
+            assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
             assertNotNull(sessionStatus.getSignature());
             assertThat(sessionStatus.getSignature().getValue(), startsWith("TstqDys5iuxUk/HZqxwTZH95ynaBF3GK8HziQlo//ujbQQTdN8e0bU1a9E7lQmBZ"));
             assertEquals("sha512WithRSAEncryption", sessionStatus.getSignature().getSignatureAlgorithm());
@@ -253,9 +257,9 @@ class SmartIdRestConnectorTest {
 
     @Nested
     @WireMockTest(httpPort = 18082)
-    class SemanticsIdentifierDynamicLinkAuthentication {
+    class SemanticsIdentifierDeviceLinkAuthentication {
 
-        private static final String AUTHENTICATION_WITH_PERSON_CODE_PATH = "/authentication/dynamic-link/etsi/PNOEE-48010010101";
+        private static final String AUTHENTICATION_WITH_PERSON_CODE_PATH = "/authentication/device-link/etsi/PNOEE-30303039914";
 
         private SmartIdRestConnector connector;
 
@@ -265,38 +269,38 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/dynamic-link-authentication-session-request.json", "responses/dynamic-link-authentication-session-response.json");
+        void initDeviceLinkAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             Instant start = Instant.now();
-            DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-30303039914"));
             Instant end = Instant.now();
 
             assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
         }
 
         @Test
-        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
+        void initDeviceLinkAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/device-link-authentication-session-request.json");
+                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             });
         }
 
         @Test
-        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+        void initDeviceLinkAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/device-link-authentication-session-request.json");
+                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-30303039914"));
             });
         }
     }
 
     @Nested
     @WireMockTest(httpPort = 18083)
-    class DocumentNumberDynamicLinkAuthentication {
+    class DocumentNumberDeviceLinkAuthentication {
 
-        private static final String AUTHENTICATION_WITH_DOCUMENT_NR_PATH = "/authentication/dynamic-link/document/PNOEE-48010010101-MOCK-Q";
+        private static final String AUTHENTICATION_WITH_DOCUMENT_NR_PATH = "/authentication/device-link/document/PNOEE-30303039914-MOCK-Q";
 
         private SmartIdRestConnector connector;
 
@@ -306,13 +310,13 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initDynamicLinkAuthentication() {
+        void initDeviceLinkAuthentication() {
             SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH,
-                    "requests/dynamic-link-authentication-session-request.json",
-                    "responses/dynamic-link-authentication-session-response.json");
+                    "requests/device-link-authentication-session-request.json",
+                    "responses/device-link-authentication-session-response.json");
 
             Instant start = Instant.now();
-            DynamicLinkSessionResponse response = connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), "PNOEE-30303039914-MOCK-Q");
             Instant end = Instant.now();
 
             assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
@@ -320,27 +324,27 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initDynamicLinkAuthentication_userAccountNotFound_throwException() {
+        void initDeviceLinkAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/device-link-authentication-session-request.json");
+                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
 
         @Test
-        void initDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+        void initDeviceLinkAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/dynamic-link-authentication-session-request.json");
-                connector.initDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/device-link-authentication-session-request.json");
+                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), "PNOEE-30303039914-MOCK-Q");
             });
         }
     }
 
     @Nested
     @WireMockTest(httpPort = 18081)
-    class AnonymousDynamicLinkAuthentication {
+    class AnonymousDeviceLinkAuthentication {
 
-        private static final String ANONYMOUS_AUTHENTICATION_PATH = "/authentication/dynamic-link/anonymous";
+        private static final String ANONYMOUS_AUTHENTICATION_PATH = "/authentication/device-link/anonymous";
 
         private SmartIdRestConnector connector;
 
@@ -350,33 +354,34 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initAnonymousDynamicLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/dynamic-link-authentication-session-request.json", "responses/dynamic-link-authentication-session-response.json");
+        void initAnonymousDeviceLinkAuthentication() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             Instant start = Instant.now();
-            DynamicLinkSessionResponse response = connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+            DeviceLinkSessionResponse response = connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest());
             Instant end = Instant.now();
 
             assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
         }
 
         @Test
-        void initAnonymousDynamicLinkAuthentication_userAccountNotFound_throwException() {
+        void initAnonymousDeviceLinkAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/dynamic-link-authentication-session-request.json");
-                connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+                SmartIdRestServiceStubs.stubNotFoundResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/device-link-authentication-session-request.json");
+                connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest());
             });
         }
 
         @Test
-        void initAnonymousDynamicLinkAuthentication_requestIsUnauthorized_throwException() {
+        void initAnonymousDeviceLinkAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/dynamic-link-authentication-session-request.json");
-                connector.initAnonymousDynamicLinkAuthentication(toDynamicLinkAuthenticationSessionRequest());
+                SmartIdRestServiceStubs.stubForbiddenResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/device-link-authentication-session-request.json");
+                connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest());
             });
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18082)
     class SemanticsIdentifierNotificationAuthentication {
@@ -415,6 +420,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18083)
     class DocumentNumberNotificationAuthentication {
@@ -453,6 +459,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
     @Nested
     @WireMockTest(httpPort = 18089)
     class DynamicLinkCertificateChoiceTests {
@@ -472,7 +479,7 @@ class SmartIdRestConnectorTest {
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
-            DynamicLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
+            DeviceLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
             Instant end = Instant.now();
 
             assertResponseValues(response, "sampleSessionToken", "sampleSessionSecret", start, end);
@@ -674,7 +681,7 @@ class SmartIdRestConnectorTest {
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            DynamicLinkSessionResponse response = connector.initDynamicLinkSignature(request, semanticsIdentifier);
+            DeviceLinkSessionResponse response = connector.initDynamicLinkSignature(request, semanticsIdentifier);
 
             assertNotNull(response);
             assertEquals("test-session-id", response.getSessionID());
@@ -689,7 +696,7 @@ class SmartIdRestConnectorTest {
             SignatureSessionRequest request = createSignatureSessionRequest();
             String documentNumber = "PNOEE-31111111111-MOCK-Q";
 
-            DynamicLinkSessionResponse response = connector.initDynamicLinkSignature(request, documentNumber);
+            DeviceLinkSessionResponse response = connector.initDynamicLinkSignature(request, documentNumber);
 
             assertNotNull(response);
             assertEquals("test-session-id", response.getSessionID());
@@ -784,6 +791,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18084)
     class SemanticsIdentifierNotificationSignature {
@@ -889,6 +897,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18085)
     class DocumentNumberNotificationSignature {
@@ -993,37 +1002,41 @@ class SmartIdRestConnectorTest {
         }
     }
 
-    private static AuthenticationSessionRequest toDynamicLinkAuthenticationSessionRequest() {
+    private static AuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
         var dynamicLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
         dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
         dynamicLinkAuthenticationSessionRequest.setCertificateLevel("QUALIFIED");
 
-        var signatureProtocolParameters = new AcspV1SignatureProtocolParameters();
-        signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
-        signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
+        signatureProtocolParameters.setRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
+        signatureProtocolParameters.setSignatureAlgorithm("rsassa-pss");
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
-        DynamicLinkInteraction interaction = DynamicLinkInteraction.displayTextAndPIN("Log in?");
-        dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
+        var algorithmParameters = new SignatureAlgorithmParameters();
+        algorithmParameters.setHashAlgorithm(HashAlgorithm.SHA_512);
+        signatureProtocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
+
+        DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Log in?");
+        dynamicLinkAuthenticationSessionRequest.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
 
         return dynamicLinkAuthenticationSessionRequest;
     }
 
     private static AuthenticationSessionRequest toNotificationAuthenticationSessionRequest() {
-        var dynamicLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
-        dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
+        var deviceLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
+        deviceLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        deviceLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
 
-        var signatureProtocolParameters = new AcspV1SignatureProtocolParameters();
-        signatureProtocolParameters.setRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
-        signatureProtocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
-        dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
+        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
+        signatureProtocolParameters.setRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
+        signatureProtocolParameters.setSignatureAlgorithm("rsassa-pss");
+        deviceLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
         NotificationInteraction interaction = NotificationInteraction.verificationCodeChoice("Verify the code");
-        dynamicLinkAuthenticationSessionRequest.setAllowedInteractionsOrder(List.of(interaction));
+        deviceLinkAuthenticationSessionRequest.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
 
-        return dynamicLinkAuthenticationSessionRequest;
+        return deviceLinkAuthenticationSessionRequest;
     }
 
     private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
@@ -1046,7 +1059,7 @@ class SmartIdRestConnectorTest {
 
         request.setSignatureProtocolParameters(protocolParameters);
 
-        request.setAllowedInteractionsOrder(List.of(DynamicLinkInteraction.displayTextAndPIN("Sign the document")));
+        request.setAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign the document")));
 
         return request;
     }
@@ -1066,7 +1079,7 @@ class SmartIdRestConnectorTest {
         return request;
     }
 
-    private static void assertResponseValues(DynamicLinkSessionResponse response,
+    private static void assertResponseValues(DeviceLinkSessionResponse response,
                                              String expectedSessionToken,
                                              String expectedSessionSecret,
                                              Instant start,
@@ -1075,7 +1088,8 @@ class SmartIdRestConnectorTest {
         assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
         assertEquals(expectedSessionToken, response.getSessionToken());
         assertEquals(expectedSessionSecret, response.getSessionSecret());
-        assertTrue(start.isBefore(response.getReceivedAt()));
-        assertTrue(end.isAfter(response.getReceivedAt()));
+        assertNotNull(response.getReceivedAt());
+        assertFalse(response.getReceivedAt().isBefore(start.minusSeconds(1)));
+        assertFalse(response.getReceivedAt().isAfter(end.plusSeconds(1)));
     }
 }

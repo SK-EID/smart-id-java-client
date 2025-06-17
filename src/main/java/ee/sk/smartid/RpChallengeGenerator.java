@@ -26,43 +26,49 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.security.SecureRandom;
 
 import org.bouncycastle.util.encoders.Base64;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
-class RandomChallengeTest {
+/**
+ * Utility class for generating RP challenges in Base64 format
+ */
+public class RpChallengeGenerator {
 
-    @Test
-    void generate_defaultValueUsed() {
-        String challenge = RandomChallenge.generate();
+    private static final int MAX_LENGTH = 64;
+    private static final int MIN_LENGTH = 32;
 
-        assertNotNull(challenge);
-        byte[] decodeChallenge = Base64.decode(challenge);
-        assertEquals(64, decodeChallenge.length);
+    private RpChallengeGenerator() {
     }
 
-    @ParameterizedTest
-    @ValueSource(ints = {32, 43, 59, 64})
-    void generate_providedValuesAreInAllowedRange(int allowedValue) {
-        String challenge = RandomChallenge.generate(allowedValue);
-        assertNotNull(challenge);
-        byte[] decodeChallenge = Base64.decode(challenge);
-        assertEquals(allowedValue, decodeChallenge.length);
+    /**
+     * Generates a RP challenge with a maximum length of 64 bytes
+     *
+     * @return RP challenge in Base64 format
+     */
+    public static String generate() {
+        byte[] randBytes = new byte[MAX_LENGTH];
+        new SecureRandom().nextBytes(randBytes);
+        return Base64.toBase64String(randBytes);
     }
 
-    @Test
-    void generate_providedValueIsLessThanAllowed_throwException() {
-        assertThrows(IllegalArgumentException.class, () -> RandomChallenge.generate(31));
+    /**
+     * Generates a RP challenge with specified length
+     *
+     * @param length length of the challenge
+     * @return RP challenge in Base64 format
+     */
+    public static String generate(int length) {
+        if (length < MIN_LENGTH || length > MAX_LENGTH) {
+            throw new IllegalArgumentException("Length must be between " + MIN_LENGTH + " and " + MAX_LENGTH);
+        }
+        byte[] randBytes = getRandomBytes(length);
+        return Base64.toBase64String(randBytes);
     }
 
-    @Test
-    void generate_providedValueIsMoreThanAllowed_throwException() {
-        assertThrows(IllegalArgumentException.class, () -> RandomChallenge.generate(65));
+    private static byte[] getRandomBytes(int length) {
+        byte[] randBytes = new byte[length];
+        new SecureRandom().nextBytes(randBytes);
+        return randBytes;
     }
-
 }

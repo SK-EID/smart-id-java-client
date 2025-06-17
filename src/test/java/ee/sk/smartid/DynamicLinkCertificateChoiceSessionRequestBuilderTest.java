@@ -43,7 +43,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 
 class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
 
@@ -65,7 +65,7 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
     void initiateCertificateChoice() {
         when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkSessionResponse result = builderService.initCertificateChoice();
+        DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
@@ -80,7 +80,7 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         builderService.withShareMdClientIpAddress(false);
         when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkSessionResponse result = builderService.initCertificateChoice();
+        DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
@@ -95,7 +95,7 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         builderService.withCertificateLevel(null);
         when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkSessionResponse result = builderService.initCertificateChoice();
+        DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
         verify(connector).initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
@@ -106,7 +106,7 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         builderService.withCapabilities("ADVANCED", "QUALIFIED");
         when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkSessionResponse result = builderService.initCertificateChoice();
+        DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
@@ -121,7 +121,7 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         builderService.withCapabilities();
         when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DynamicLinkSessionResponse result = builderService.initCertificateChoice();
+        DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
         assertEquals("test-session-id", result.getSessionID());
@@ -144,7 +144,7 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
 
         @Test
         void initiateCertificateChoice_whenSessionIDIsNull() {
-            var responseWithNullSessionID = new DynamicLinkSessionResponse();
+            var responseWithNullSessionID = new DeviceLinkSessionResponse();
             responseWithNullSessionID.setSessionToken("test-session-token");
             responseWithNullSessionID.setSessionSecret("test-session-secret");
             when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(responseWithNullSessionID);
@@ -194,8 +194,8 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         }
     }
 
-    private static DynamicLinkSessionResponse mockCertificateChoiceResponse() {
-        var response = new DynamicLinkSessionResponse();
+    private static DeviceLinkSessionResponse mockCertificateChoiceResponse() {
+        var response = new DeviceLinkSessionResponse();
         response.setSessionID("test-session-id");
         response.setSessionToken("test-session-token");
         response.setSessionSecret("test-session-secret");

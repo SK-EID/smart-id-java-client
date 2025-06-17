@@ -28,9 +28,7 @@ package ee.sk.smartid;
 
 public enum SignatureAlgorithm {
 
-    SHA256WITHRSA("sha256WithRSAEncryption"),
-    SHA384WITHRSA("sha384WithRSAEncryption"),
-    SHA512WITHRSA("sha512WithRSAEncryption");
+    RSASSA_PSS("rsassa-pss");
 
     private final String algorithmName;
 

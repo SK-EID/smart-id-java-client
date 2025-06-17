@@ -21,11 +21,11 @@ This library supports Smart-ID API v3.1.
     * [Logging](#logging)
         *   [Log request payloads](#log-request-payloads)
     * [Setting up SmartIdClient for v3.1](#setting-up-smartidclient-for-v31)
-    * [Dynamic link flows](#dynamic-link-flows)
-        * [Dynamic link authentication session](#dynamic-link-authentication-session)
-          * [Examples of authentication session](#examples-of-initiating-a-dynamic-link-authentication-session)
+    * [Device link flows](#device-link-flows)
+        * [Device link authentication session](#device-link-authentication-session)
+          * [Examples of authentication session](#examples-of-initiating-a-device-link-authentication-session)
             * [Initiating an anonymous authentication session](#initiating-an-anonymous-authentication-session)
-            * [Initiating a dynamic-link authentication session with semantics identifier](#initiating-a-dynamic-link-authentication-session-with-semantics-identifier)
+            * [Initiating a dynamic-link authentication session with semantics identifier](#initiating-a-device-link-authentication-session-with-semantics-identifier)
             * [Initiating a dynamic-link authentication session with document number](#initiating-a-dynamic-link-authentication-session-with-document-number)
         * [Dynamic link certificate choice session](#dynamic-link-certificate-choice-session)
             * [Examples of initiating a dynamic-link certificate choice session](#examples-of-initiating-a-dynamic-link-certificate-choice-session)
@@ -36,7 +36,7 @@ This library supports Smart-ID API v3.1.
               * [Initiating a dynamic-link signature session using document number](#initiating-a-dynamic-link-signature-session-with-document-number)
         * [Examples of allowed dynamic-link interactions order](#examples-of-allowed-dynamic-link-interactions-order)
         * [Additional request properties](#additional-dynamic-link-session-request-properties)
-        * [Generating QR-code or dynamic link](#generating-qr-code-or-dynamic-link)
+        * [Generating QR-code or dynamic link](#generating-qr-code-or-device-link)
             * [Generating dynamic link ](#generating-dynamic-link)
             * [Dynamic link parameters](#dynamic-link-parameters)
             * [Overriding default values](#overriding-default-values)
@@ -162,38 +162,41 @@ client.
 setTrustStore(trustStore);
 ```
 
-## Dynamic-link flows
+## Device-link flows
 
-Dynamic-link flows are more secure way to make sure user that started the authentication or signing is in control of the device or in the proximity of the device. 
-More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/dynamic_link_flows.html
+Device-link flows are more secure way to make sure user that started the authentication or signing is in control of the device or in the proximity of the device. 
+More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/device_link_flows.html
 
-### Dynamic-link authentication session
+### Device-link authentication session
 
 #### Request parameters
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
-* `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V1.
-* `signatureProtocolParameters`: Required. Parameters for the ACSP_V1 signature protocol.
-    * `randomChallenge`: Required. Random value with size in range of 32-64 bytes. Must be base64 encoded.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-* `allowedInteractionsOrder`: Required. An array of objects defining the allowed interactions in order of preference.
+* `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V2.
+* `signatureProtocolParameters`: Required. Parameters for the ACSP_V2 signature protocol.
+    * `rpChallenge`: Required. Base64-encoded value, length between 44 and 88 characters..
+    * `signatureAlgorithm`: Required. Signature algorithm name. Supported value only `rsassa-pss`.
+    * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
+        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+* `interactions`: Required. Base64-encoded JSON string of an array of interaction objects.
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
-* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
+* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be set when using same device flows.
 
 #### Response parameters
 
 * `sessionID`: A string that can be used to request the session status result.
 * `sessionToken`: Unique random value that will be used to connect this signature attempt between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+* `deviceLinkBase`: Required base URI used to form device link or QR code.
 
-#### Examples of initiating a dynamic-link authentication session
+#### Examples of initiating a device-link authentication session
 
 ##### Initiating an anonymous authentication session
 
@@ -202,19 +205,22 @@ RP can learn the user's identity only after the user has authenticated themselve
 
 ```java
 // For security reasons a new hash value must be created for each new authentication request
-String randomChallenge = RandomChallenge.generate();
-// Store generated randomChallenge only on backend side. Do not expose it to the client side. 
+String rpChallenge = RpChallengeGenerator.generate();
+// Store generated rpChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-DynamicLinkSessionResponse authenticationSessionResponse = client
-    .createDynamicLinkAuthentication()
-    // to use anonymous authentication, do not set semantics identifier or document number
-    .withRandomChallenge(randomChallenge)
-    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-    .withAllowedInteractionsOrder(Collections.singletonList(
-        DynamicLinkInteraction.displayTextAndPIN("Log in?")
-    ))
-    .initAuthenticationSession();
+DeviceLinkSessionResponse authenticationSessionResponse = client
+        .createDeviceLinkAuthentication()
+        // to use anonymous authentication, do not set semantics identifier or document number
+        .withRpChallenge(rpChallenge)
+        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
+        .withInteractions(Collections.singletonList(
+                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+        ))
+        .initAuthenticationSession();
 
 String sessionId = authenticationSessionResponse.getSessionID();
 // SessionID is used to query sessions status later
@@ -222,15 +228,16 @@ String sessionId = authenticationSessionResponse.getSessionID();
 String sessionToken = authenticationSessionResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = authenticationSessionResponse.getSessionSecret();
+String deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-// Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
 // Start querying sessions status
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-##### Initiating a dynamic-link authentication session with semantics identifier
+##### Initiating a device-link authentication session with semantics identifier
 
 More info about Semantics Identifier can be found [here](https://www.etsi.org/deliver/etsi_en/319400_319499/31941201/01.01.00_30/en_31941201v010100v.pdf)
 
@@ -243,17 +250,20 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
         "30303039914"); // identifier (according to country and identity type reference)
 
 // For security reasons a new random challenge must be created for each new authentication request
-String randomChallenge = RandomChallenge.generate();
+String rpChallenge = RpChallengeGenerator.generate();
 // Store generated randomChallenge only backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
+DeviceLinkSessionResponse authenticationSessionResponse = client
+        .createDeviceLinkAuthentication()
         .withSemanticsIdentifier(semanticsIdentifier)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withRandomChallenge(randomChallenge)
-        .withAllowedInteractionsOrder(Collections.singletonList(
-            DynamicLinkInteraction.displayTextAndPIN("Log in?")
+        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
+        .withRpChallenge(rpChallenge)
+        .withInteractions(Collections.singletonList(
+                DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))
         .initAuthenticationSession();
 
@@ -263,31 +273,35 @@ String sessionId = authenticationSessionResponse.getSessionID();
 String sessionToken = authenticationSessionResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = authenticationSessionResponse.getSessionSecret();
+String deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-// Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+// Generate QR-code or device link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
 // Start querying sessions status
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-##### Initiating a dynamic-link authentication session with document number
+##### Initiating a device-link authentication session with document number
 
 ```java
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
 // For security reasons a new hash value must be created for each new authentication request
-String randomChallenge = RandomChallenge.generate();
+String rpChallenge = RpChallengeGenerator.generate();
 // Store generated randomChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating OK authentication sessions status response
 
-DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
+DeviceLinkSessionResponse authenticationSessionResponse = client
+        .createDeviceLinkAuthentication()
         .withDocumentNumber(documentNumber)
-        .withRandomChallenge(randomChallenge)
+        .withRpChallenge(rpChallenge)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withAllowedInteractionsOrder(Collections.singletonList(
-            DynamicLinkInteraction.displayTextAndPIN("Log in?")
+        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
+        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
+        .withInteractions(Collections.singletonList(
+            DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))
         .initAuthenticationSession();
 
@@ -297,12 +311,13 @@ String sessionId = authenticationSessionResponse.getSessionID();
 String sessionToken = authenticationSessionResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = authenticationSessionResponse.getSessionSecret();
+String deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-// Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+// Generate QR-code or device link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
 // Start querying sessions status
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Dynamic-link certificate choice session
@@ -344,7 +359,7 @@ String sessionToken = certificateChoice.getSessionToken();
 String sessionSecret = certificateChoice.getSessionSecret();
 Instant responseReceivedAt = certificateChoice.getReceivedAt();
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-device-link) to see how to generate QR-code or dynamic link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Dynamic-link signature session
@@ -412,7 +427,7 @@ Instant receivedAt = signatureResponse.getReceivedAt();
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
 // Start querying sessions status
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-device-link) to see how to generate QR-code or dynamic link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ##### Initiating a dynamic-link signature session with document number
@@ -445,7 +460,7 @@ Instant receivedAt = signatureResponse.getReceivedAt();
 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureResponse
 // Start querying sessions status
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-dynamic-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-device-link) to see how to generate QR-code or dynamic link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Error Handling
@@ -469,22 +484,6 @@ try {
 
 ### Additional dynamic-link session request properties
 
-#### Using nonce to override idempotent behaviour
-
-Authentication is used as an example, nonce can also be used with certificate choice and signature sessions requests by using method `withNonce("randomValue")`.
-```java
-DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withAllowedInteractionsOrder(Collections.singletonList(
-            DynamicLinkInteraction.displayTextAndPIN("Log in?")
-        ))
-        // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
-        // set nonce to override idempotent behaviour
-        .withNonce("randomValue")
-        .initAuthenticationSession();
-```
 #### Using request properties to request the IP address of the user's device
 
 For the IP to be returned the service provider (SK) must switch on this option.
@@ -494,7 +493,7 @@ Authentication is used for an example, shareMdClientIpAddress can also be used w
 
 ```java
 DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
+        .createDeviceLinkAuthentication()
         .withRandomChallenge(randomChallenge)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withAllowedInteractionsOrder(Collections.singletonList(
@@ -539,12 +538,12 @@ builder.withAllowedInteractionsOrder(List.of(
 ));
 ```
 
-### Generating QR-code or dynamic link
+### Generating QR-code or device link
 
-Documentation to dynamic link and QR-code requirements
+Documentation to device link and QR-code requirements
 https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/dynamic_link_flows.html#_dynamic_link_and_qr_presentation
 
-#### Generating dynamic link
+#### Generating device link
 
 Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app, app link to Smart-ID app.
 
@@ -552,12 +551,12 @@ Dynamic link can be generated for 3 use cases: QR-code, web link to Smart-ID app
 
 * `baseUrl`: Base URL for the dynamic link. Default value is `https://smart-id.com/dynamic-link`.
 * `version`: Version of the dynamic link. Default value is `0.1`.
-* `dynamicLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
+* `deviceLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
 * `sessionType`: Type of the sessions the dynamic link is for. Possible values are `auth`, `sign`, `cert`.
 * `sessionToken`: Token from the session response.
 * `elapsedSeconds`: Elapsed time from when the session response was received.
 * `userLanguage`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
-* `authCode`: Auth code is HMAC256 hash value generated from dynamicLinkType, sessionType, calculated elapsed seconds since response was received and session secret. Received at and sessions secret can be found from the session response.
+* `authCode`: Auth code is HMAC256 hash value generated from deviceLinkType, sessionType, calculated elapsed seconds since response was received and session secret. Received at and sessions secret can be found from the session response.
 
 ```java
 DynamicLinkSessionResponse sessionResponse; // response from the session initiation query.
@@ -667,9 +666,9 @@ The session status response includes various fields depending on whether the ses
 * `state`: RUNNING or COMPLETE
 * `result.endResult`: Outcome of the session (e.g., OK, USER_REFUSED, TIMEOUT)
 * `result.documentNumber`: Document number returned when `endResult` is `OK`. Can be used in further signature and authentication requests to target the same device.
-* `signatureProtocol`: Either ACSP_V1 (for authentication) or RAW_DIGEST_SIGNATURE (for signature)
+* `signatureProtocol`: Either ACSP_V2 (for authentication) or RAW_DIGEST_SIGNATURE (for signature)
 * `signature`: Contains the following fields based on the signatureProtocol used:
-   * For `ACSP_V1`: value, serverRandom, signatureAlgorithm, hashAlgorithm
+   * For `ACSP_V2`: value, serverRandom, signatureAlgorithm, hashAlgorithm
    * For `RAW_DIGEST_SIGNATURE`: value, signatureAlgorithm, hashAlgorithm
 * `cert`: Includes certificate information with value (Base64-encoded certificate) and certificateLevel (ADVANCED or QUALIFIED).
 * `ignoredProperties`: Any unsupported or ignored properties from the request.
@@ -724,7 +723,7 @@ It's important to validate the session status response to ensure that the return
 
 * Validate that endResult is OK if the session was successful.
 * Check the certificate field to ensure it has the required certificate level and that it is signed by a trusted CA.
-* For `ACSP_V1` signature validation, compare the digest of the signature protocol, server random, and random challenge.
+* For `ACSP_V2` signature validation, compare the digest of the signature protocol, server random, and random challenge.
 * For `RAW_DIGEST_SIGNATURE`, validate the signature against the expected digest.
 
 #### Example of validating the authentication sessions response:
@@ -841,8 +840,8 @@ The session status response may return various error codes indicating the outcom
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. Possible values are ADVANCED, QUALIFIED or QSCD. Defaults to QUALIFIED.
-* `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V1.
-* `signatureProtocolParameters`: Required. Parameters for the ACSP_V1 signature protocol.
+* `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V2.
+* `signatureProtocolParameters`: Required. Parameters for the ACSP_V2 signature protocol.
     * `randomChallenge`: Required. Random value with size in range of 32-64 bytes. Must be base64 encoded.
     * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
 * `allowedInteractionsOrder`: Required. An array of interaction objects defining the allowed interactions in order of preference.

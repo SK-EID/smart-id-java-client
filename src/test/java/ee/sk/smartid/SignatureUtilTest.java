@@ -32,10 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.Base64;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.util.SignatureUtil;
 
 class SignatureUtilTest {
 
@@ -81,57 +80,6 @@ class SignatureUtilTest {
 
         var exception = assertThrows(SmartIdClientException.class, () -> SignatureUtil.getDigestToSignBase64(signableHash, null));
         assertEquals("Either signableHash or signableData must be set.", exception.getMessage());
-    }
-
-    @Test
-    void getSignatureAlgorithm_withExplicitSignatureAlgorithm() {
-        String algorithm = SignatureUtil.getSignatureAlgorithm(SignatureAlgorithm.SHA384WITHRSA, null, null);
-        assertEquals(SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName(), algorithm);
-    }
-
-    @Test
-    void getSignatureAlgorithm_withSignableHashHashTypeNull() {
-        var signableHash = new SignableHash();
-        signableHash.setHash("Test hash".getBytes());
-        signableHash.setHashType(null);
-
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, signableHash, null);
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
-    }
-
-    @ParameterizedTest
-    @EnumSource(HashType.class)
-    void getSignatureAlgorithm_withHashTypeInSignableHash(HashType hashType) {
-        var signableHash = new SignableHash();
-        signableHash.setHashType(hashType);
-
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, signableHash, null);
-        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", algorithm);
-    }
-
-    @ParameterizedTest
-    @EnumSource(HashType.class)
-    void getSignatureAlgorithm_withHashTypeInSignableData(HashType hashType) {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(hashType);
-
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
-        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", algorithm);
-    }
-
-    @Test
-    void getSignatureAlgorithm_withSignableDataHashTypeNull() {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(null);
-
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, signableData);
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
-    }
-
-    @Test
-    void getSignatureAlgorithm_withDefaultAlgorithm() {
-        String algorithm = SignatureUtil.getSignatureAlgorithm(null, null, null);
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), algorithm);
     }
 
     @Test

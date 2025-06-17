@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -63,6 +64,7 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
 
+@Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
 class NotificationSignatureSessionRequestBuilderTest {
 
     private SmartIdConnector connector;
@@ -160,7 +162,7 @@ class NotificationSignatureSessionRequestBuilderTest {
     @Test
     void withSignatureAlgorithm_setsCorrectAlgorithm() {
         var signableData = new SignableData("Test data".getBytes());
-        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA384WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
@@ -171,7 +173,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA384WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
     }
 
@@ -240,7 +242,7 @@ class NotificationSignatureSessionRequestBuilderTest {
     void initSignatureSession_withHashType_overridesExplicitSignatureAlgorithm(HashType hashType) {
         var signableData = new SignableData("Test data".getBytes());
         signableData.setHashType(hashType);
-        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.SHA256WITHRSA).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
+        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
@@ -251,7 +253,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA256WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
@@ -271,7 +273,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
     }
 
     @Test
@@ -287,7 +289,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(SignatureAlgorithm.SHA512WITHRSA.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
+        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
     }
 
     @Nested

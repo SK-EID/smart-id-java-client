@@ -94,10 +94,10 @@ class NotificationAuthenticationSessionRequestBuilderTest {
 
             assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
             assertEquals("DEMO", request.getRelyingPartyName());
-            assertEquals(SignatureProtocol.ACSP_V1, request.getSignatureProtocol());
+            assertEquals(SignatureProtocol.ACSP_V2, request.getSignatureProtocol());
             assertNotNull(request.getSignatureProtocolParameters());
-            assertEquals("sha512WithRSAEncryption", request.getSignatureProtocolParameters().getSignatureAlgorithm());
-            assertNotNull(request.getAllowedInteractionsOrder());
+            assertEquals("rsassa-pss", request.getSignatureProtocolParameters().getSignatureAlgorithm());
+            assertNotNull(request.getInteractions());
         }
 
         @ParameterizedTest
@@ -140,26 +140,6 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(signatureAlgorithm.getAlgorithmName(), request.getSignatureProtocolParameters().getSignatureAlgorithm());
-        }
-
-        @Test
-        void initAuthenticationSession_withNonce() {
-            when(connector.initNotificationAuthentication(any(AuthenticationSessionRequest.class), any(String.class))).thenReturn(createNotificationAuthenticationResponse("alphaNumeric4", "4927"));
-
-            new NotificationAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRandomChallenge(generateBase64String("a".repeat(32)))
-                    .withNonce("uniqueNonce")
-                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                    .withAllowedInteractionsOrder(Collections.singletonList(NotificationInteraction.verificationCodeChoice("Verify the code")))
-                    .initAuthenticationSession();
-
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
-            verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
-            AuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertEquals("uniqueNonce", request.getNonce());
         }
 
         @ParameterizedTest

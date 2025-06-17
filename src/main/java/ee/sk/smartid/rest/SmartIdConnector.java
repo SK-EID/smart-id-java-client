@@ -35,7 +35,7 @@ import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DynamicLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
@@ -67,7 +67,7 @@ public interface SmartIdConnector extends Serializable {
      * @param request CertificateChoiceSessionRequest containing necessary parameters
      * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request);
+    DeviceLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request);
 
     /**
      * Initiates a notification based certificate choice request.
@@ -94,7 +94,7 @@ public interface SmartIdConnector extends Serializable {
      * @param semanticsIdentifier The semantics identifier
      * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+    DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Initiates a dynamic link based signature sessions.
@@ -103,7 +103,7 @@ public interface SmartIdConnector extends Serializable {
      * @param documentNumber The document number
      * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
      */
-    DynamicLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber);
+    DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber);
 
     /**
      * Initiates a notification-based signature session using a semantics identifier.
@@ -131,30 +131,30 @@ public interface SmartIdConnector extends Serializable {
     void setSslContext(SSLContext sslContext);
 
     /**
-     * Create anonymous authentication session with dynamic link
+     * Create anonymous authentication session with device link
      *
-     * @param authenticationRequest The dynamic link authentication session request
-     * @return The dynamic link authentication session response
+     * @param authenticationRequest The device link authentication session request
+     * @return The device link authentication session response
      */
-    DynamicLinkSessionResponse initAnonymousDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest);
+    DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest);
 
     /**
-     * Create authentication session with dynamic link using semantics identifier
+     * Create authentication session with device link using semantics identifier
      *
-     * @param authenticationRequest The dynamic link authentication session request
+     * @param authenticationRequest The device link authentication session request
      * @param semanticsIdentifier   The semantics identifier
-     * @return The dynamic link authentication session response
+     * @return The device link authentication session response
      */
-    DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
+    DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
 
     /**
-     * Create authentication session with dynamic link using document number
+     * Create authentication session with device link using document number
      *
-     * @param authenticationRequest The dynamic link authentication session request
+     * @param authenticationRequest The device link authentication session request
      * @param documentNumber        The document number
-     * @return The dynamic link authentication session response
+     * @return The device link authentication session response
      */
-    DynamicLinkSessionResponse initDynamicLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
+    DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
 
     /**
      * Create authentication session with notification using semantics identifier

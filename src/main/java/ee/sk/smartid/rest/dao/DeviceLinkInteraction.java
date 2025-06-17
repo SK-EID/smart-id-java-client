@@ -26,23 +26,26 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import static ee.sk.smartid.rest.dao.DynamicLinkInteractionFlow.CONFIRMATION_MESSAGE;
-import static ee.sk.smartid.rest.dao.DynamicLinkInteractionFlow.DISPLAY_TEXT_AND_PIN;
+import static ee.sk.smartid.rest.dao.DeviceLinkInteractionFlow.CONFIRMATION_MESSAGE;
+import static ee.sk.smartid.rest.dao.DeviceLinkInteractionFlow.DISPLAY_TEXT_AND_PIN;
 
-public class DynamicLinkInteraction extends Interaction {
+public class DeviceLinkInteraction extends Interaction {
 
-    private DynamicLinkInteraction(DynamicLinkInteractionFlow type) {
+    public DeviceLinkInteraction() {
+    }
+
+    private DeviceLinkInteraction(DeviceLinkInteractionFlow type) {
         this.type = type;
     }
 
-    public static DynamicLinkInteraction displayTextAndPIN(String displayText60) {
-        var interaction = new DynamicLinkInteraction(DISPLAY_TEXT_AND_PIN);
+    public static DeviceLinkInteraction displayTextAndPIN(String displayText60) {
+        var interaction = new DeviceLinkInteraction(DISPLAY_TEXT_AND_PIN);
         interaction.displayText60 = displayText60;
         return interaction;
     }
 
-    public static DynamicLinkInteraction confirmationMessage(String displayText200) {
-        var interaction = new DynamicLinkInteraction(CONFIRMATION_MESSAGE);
+    public static DeviceLinkInteraction confirmationMessage(String displayText200) {
+        var interaction = new DeviceLinkInteraction(CONFIRMATION_MESSAGE);
         interaction.displayText200 = displayText200;
         return interaction;
     }

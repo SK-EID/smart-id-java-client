@@ -1,12 +1,12 @@
 {
   "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
   "relyingPartyName": "DEMO",
-  "signatureProtocol": "ACSP_V1",
+  "signatureProtocol": "ACSP_V2",
   "signatureProtocolParameters": {
-    "randomChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
-    "signatureAlgorithm": "sha512WithRSAEncryption"
+    "rpChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+    "signatureAlgorithm": "rsassa-pss"
   },
-  "allowedInteractionsOrder": [
+  "interactions": [
     {
       "type": "verificationCodeChoice",
       "displayText60": "Verify the code"
