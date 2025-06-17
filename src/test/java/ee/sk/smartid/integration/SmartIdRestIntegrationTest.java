@@ -89,7 +89,7 @@ class SmartIdRestIntegrationTest {
         class Authentication {
 
             @Test
-            void initAnonymousDynamicLinkAuthentication() {
+            void initAnonymousDeviceLinkAuthentication() {
                 AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
                 DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initAnonymousDeviceLinkAuthentication(request);
@@ -101,7 +101,7 @@ class SmartIdRestIntegrationTest {
             }
 
             @Test
-            void initDynamicLinkAuthentication_withDocumentNumber() {
+            void initDeviceLinkAuthentication_withDocumentNumber() {
                 AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
                 DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkAuthentication(request, "PNOEE-40504040001-MOCK-Q");
@@ -113,7 +113,7 @@ class SmartIdRestIntegrationTest {
             }
 
             @Test
-            void initDynamicLinkAuthentication_withSemanticsIdentifier() {
+            void initDeviceLinkAuthentication_withSemanticsIdentifier() {
                 AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
                 DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkAuthentication(request, new SemanticsIdentifier("PNOEE-40504040001"));
@@ -133,7 +133,7 @@ class SmartIdRestIntegrationTest {
                 signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
                 signatureParameters.setRpChallenge(RpChallengeGenerator.generate());
                 request.setSignatureProtocolParameters(signatureParameters);
-                request.setInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")).toString());
+                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))));
                 return request;
             }
         }

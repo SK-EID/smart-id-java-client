@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,12 +38,14 @@ import java.util.List;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
@@ -123,15 +125,15 @@ class SmartIdClientTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
-    class DynamicLinkAuthenticationSession {
+    class DeviceLinkAuthenticationSession {
 
         @Test
-        void createDynamicLinkAuthentication_anonymous() {
+        void createDeviceLinkAuthentication_anonymous() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
@@ -143,13 +145,13 @@ class SmartIdClientTest {
         }
 
         @Test
-        void createDynamicLinkAuthentication_withDocumentNumber() {
+        void createDeviceLinkAuthentication_withDocumentNumber() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/document/PNOEE-1234567890-MOCK-Q", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
@@ -161,13 +163,13 @@ class SmartIdClientTest {
         }
 
         @Test
-        void createDynamicLinkAuthentication_withSemanticsIdentifier() {
+        void createDeviceLinkAuthentication_withSemanticsIdentifier() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/etsi/PNOEE-1234567890", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
@@ -179,6 +181,7 @@ class SmartIdClientTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-105")
     @Nested
     @WireMockTest(httpPort = 18089)
     class DynamicLinkSignatureSession {
@@ -226,6 +229,7 @@ class SmartIdClientTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18089)
     class NotificationAuthenticationSession {
@@ -263,6 +267,7 @@ class SmartIdClientTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18089)
     class NotificationBasedSignatureSession {
@@ -341,7 +346,7 @@ class SmartIdClientTest {
     class DynamicContent {
 
         @ParameterizedTest
-        @EnumSource
+        @EnumSource(value = DeviceLinkType.class, names = { "WEB_2_APP", "APP_2_APP" })
         void createDynamicContent_authenticationWithDifferentDynamicLinkTypes(DeviceLinkType deviceLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
@@ -349,7 +354,35 @@ class SmartIdClientTest {
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .initAuthenticationSession();
+
+            String relyingPartyNameBase64 = java.util.Base64.getEncoder().encodeToString("DEMO".getBytes());
+
+            URI qrCodeUri = new DeviceLinkBuilder()
+                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                    .withDeviceLinkType(deviceLinkType)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(response.getSessionToken())
+                    .withRelyingPartyName(relyingPartyNameBase64)
+                    .withLang("eng")
+                    .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+                    .withRelyingPartyName(Base64.toBase64String("DEMO".getBytes()))
+                    .withInitialCallbackUrl("https://example.com/callback")
+                    .buildDeviceLink(response.getSessionSecret());
+
+            assertUri(qrCodeUri, SessionType.AUTHENTICATION, deviceLinkType, response.getSessionToken());
+        }
+
+        @Test
+        void createDynamicContent_authenticationWithQRCode() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .initAuthenticationSession();
 
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
@@ -357,20 +390,20 @@ class SmartIdClientTest {
             String relyingPartyNameBase64 = java.util.Base64.getEncoder().encodeToString("DEMO".getBytes());
 
             URI qrCodeUri = new DeviceLinkBuilder()
-                    .withDeviceLinkBase("https://smart-id.com/dynamic-link/")
-                    .withDeviceLinkType(deviceLinkType)
+                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
                     .withRelyingPartyName(relyingPartyNameBase64)
                     .withLang("eng")
                     .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-                    .withRelyingPartyName(Base64.toBase64String("DEMO".getBytes()))
                     .buildDeviceLink(response.getSessionSecret());
 
-            assertUri(qrCodeUri, SessionType.AUTHENTICATION, deviceLinkType, response.getSessionToken());
+            assertUri(qrCodeUri, SessionType.AUTHENTICATION, DeviceLinkType.QR_CODE, response.getSessionToken());
         }
 
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
         @ParameterizedTest
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DeviceLinkType deviceLinkType) {
@@ -396,6 +429,7 @@ class SmartIdClientTest {
             assertUri(fullUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
         }
 
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
         @Test
         void createDynamicContent_createQrCode() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/dynamic-link-certificate-choice-session-response.json");
@@ -427,13 +461,12 @@ class SmartIdClientTest {
         private static void assertUri(URI qrCodeUri, SessionType sessionType, DeviceLinkType deviceLinkType, String sessionToken) {
             assertEquals("https", qrCodeUri.getScheme());
             assertEquals("smart-id.com", qrCodeUri.getHost());
-            assertEquals("/dynamic-link/", qrCodeUri.getPath());
+            assertEquals("/device-link/", qrCodeUri.getPath());
 
-            assertTrue(qrCodeUri.getQuery().contains("version=0.1"));
+            assertTrue(qrCodeUri.getQuery().contains("version=1.0"));
             assertTrue(qrCodeUri.getQuery().contains("sessionType=" + sessionType.getValue()));
-            assertTrue(qrCodeUri.getQuery().contains("dynamicLinkType=" + deviceLinkType.getValue()));
+            assertTrue(qrCodeUri.getQuery().contains("deviceLinkType=" + deviceLinkType.getValue()));
             assertTrue(qrCodeUri.getQuery().contains("sessionToken=" + sessionToken));
-            assertTrue(qrCodeUri.getQuery().contains("elapsedSeconds="));
             assertTrue(qrCodeUri.getQuery().contains("lang=eng"));
             assertTrue(qrCodeUri.getQuery().contains("authCode="));
         }

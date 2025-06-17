@@ -45,9 +45,6 @@ public class AuthenticationSessionRequest implements Serializable {
 
     private AcspV2SignatureProtocolParameters acspV2SignatureProtocolParameters;
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String nonce;
-
     private String interactions;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,6 +53,7 @@ public class AuthenticationSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Set<String> capabilities;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String initialCallbackURL;
 
     public String getRelyingPartyUUID() {
@@ -92,14 +90,6 @@ public class AuthenticationSessionRequest implements Serializable {
 
     public void setSignatureProtocolParameters(AcspV2SignatureProtocolParameters acspV2SignatureProtocolParameters) {
         this.acspV2SignatureProtocolParameters = acspV2SignatureProtocolParameters;
-    }
-
-    public String getNonce() {
-        return nonce;
-    }
-
-    public void setNonce(String nonce) {
-        this.nonce = nonce;
     }
 
     public String getInteractions() {

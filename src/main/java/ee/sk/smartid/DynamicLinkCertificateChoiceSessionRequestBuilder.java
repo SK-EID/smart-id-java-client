@@ -133,7 +133,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * which can be used by the Relying Party to manage and verify the session independently.
      * <p>
      *
-     * @return DynamicLinkCertificateChoiceSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
+     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
      */
     public DeviceLinkSessionResponse initCertificateChoice() {

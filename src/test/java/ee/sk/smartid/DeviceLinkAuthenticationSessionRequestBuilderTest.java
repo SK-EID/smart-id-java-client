@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.bouncycastle.util.encoders.Base64;
@@ -59,7 +60,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
@@ -67,6 +70,8 @@ import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 
 class DeviceLinkAuthenticationSessionRequestBuilderTest {
+
+    private static final String BASE64_PATTERN = "^[A-Za-z0-9+/]+={0,2}$";
 
     private SmartIdConnector connector;
 
@@ -86,7 +91,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -102,6 +107,8 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             assertNotNull(request.getSignatureProtocolParameters().getRpChallenge());
             assertEquals("rsassa-pss", request.getSignatureProtocolParameters().getSignatureAlgorithm());
             assertNotNull(request.getInteractions());
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
+
             DeviceLinkInteraction[] parsed = parseInteractionsFromBase64(request.getInteractions());
             assertTrue(Stream.of(parsed).anyMatch(i -> i.getType().is("displayTextAndPIN")));
         }
@@ -117,7 +124,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withCertificateLevel(certificateLevel)
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -126,28 +133,6 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedValue, request.getCertificateLevel());
-        }
-
-        @ParameterizedTest
-        @ArgumentsSource(ValidNonceArgumentSourceProvider.class)
-        void initAuthenticationSession_nonce_ok(String nonce) {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class)))
-                    .thenReturn(createDynamicLinkAuthenticationResponse());
-
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
-                    .withNonce(nonce)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .initAuthenticationSession();
-
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
-            verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertEquals(nonce, request.getNonce());
         }
 
         @ParameterizedTest
@@ -160,7 +145,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withSignatureAlgorithm(signatureAlgorithm)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
@@ -170,6 +155,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(signatureAlgorithm.getAlgorithmName(), request.getSignatureProtocolParameters().getSignatureAlgorithm());
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
         }
 
         @Test
@@ -181,7 +167,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
 
@@ -202,7 +188,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .withShareMdClientIpAddress(ipRequested)
                     .initAuthenticationSession();
@@ -213,6 +199,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
             assertNotNull(request.getRequestProperties());
             assertEquals(ipRequested, request.getRequestProperties().getShareMdClientIpAddress());
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
         }
 
         @ParameterizedTest
@@ -224,7 +211,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .withCapabilities(capabilities)
                     .initAuthenticationSession();
@@ -234,6 +221,26 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedCapabilities, request.getCapabilities());
+        }
+
+        @Test
+        void initAuthenticationSession_initialCallbackUrlIsValid_ok() {
+            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+
+            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                    .withRelyingPartyName("DEMO")
+                    .withRpChallenge(generateBase64String("a".repeat(32)))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+                    .withInitialCallbackURL("https://valid.example.com/path")
+                    .initAuthenticationSession();
+
+            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
+            AuthenticationSessionRequest request = requestCaptor.getValue();
+
+            assertEquals("https://valid.example.com/path", request.getInitialCallbackURL());
         }
 
         @ParameterizedTest
@@ -281,7 +288,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(rpChallenge)
-                            .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
@@ -301,21 +308,6 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @ArgumentsSource(InvalidNonceProvider.class)
-        void initAuthenticationSession_nonceOutOfBounds_throwException(String invalidNonce, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
-                            .withNonce(invalidNonce)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
-            assertEquals(expectedException, exception.getMessage());
-        }
-
-        @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<DeviceLinkInteraction> interactions) {
             var exception = assertThrows(SmartIdClientException.class, () ->
@@ -323,10 +315,25 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
                             .withInteractions(interactions)
                             .initAuthenticationSession());
-            assertEquals("Parameter allowedInteractionsOrder must be set", exception.getMessage());
+            assertEquals("Parameter interactions must be set", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @ArgumentsSource(DuplicateInteractionsProvider.class)
+        void initAuthenticationSession_duplicateInteractions_throwException(List<DeviceLinkInteraction> duplicateInteractions) {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRpChallenge(generateBase64String("a".repeat(32)))
+                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                            .withInteractions(duplicateInteractions)
+                            .initAuthenticationSession());
+
+            assertEquals("Duplicate values in interactions are not allowed", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -337,10 +344,72 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
                             .withInteractions(List.of(interaction))
                             .initAuthenticationSession());
             assertEquals(expectedException, exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
+        void initAuthenticationSession_initialCallbackUrlIsInvalid_throwException(String url, String expectedErrorMessage) {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRpChallenge(generateBase64String("a".repeat(32)))
+                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log in")))
+                            .withInitialCallbackURL(url)
+                            .initAuthenticationSession()
+            );
+            assertEquals(expectedErrorMessage, exception.getMessage());
+        }
+
+        @Test
+        void initAuthenticationSession_signatureAlgorithmParametersIsNull_throwException() {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRpChallenge(generateBase64String("a".repeat(32)))
+                            .withHashAlgorithm(null)
+                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+                            .initAuthenticationSession()
+            );
+            assertEquals("Parameter hashAlgorithm must be set", exception.getMessage());
+        }
+
+        @Test
+        void initAuthenticationSession_signatureAlgorithmParametersHashAlgorithmIsNull_throwException() {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRpChallenge(generateBase64String("a".repeat(32)))
+                            .withHashAlgorithm(null)
+                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+                            .initAuthenticationSession()
+            );
+
+            assertEquals("Parameter hashAlgorithm must be set", exception.getMessage());
+        }
+
+        @Test
+        void initAuthenticationSession_bothSemanticsIdentifierAndDocumentNumberSet_throwException() {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                            .withRelyingPartyName("DEMO")
+                            .withRpChallenge(generateBase64String("a".repeat(32)))
+                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+                            .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
+                            .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
+                            .initAuthenticationSession()
+            );
+
+            assertEquals("Only one of semanticsIdentifier or documentNumber may be set", exception.getMessage());
         }
 
         private DeviceLinkInteraction[] parseInteractionsFromBase64(String base64EncodedJson) throws Exception {
@@ -357,7 +426,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID(sessionId);
                 when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
@@ -370,7 +439,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionTokenIsNotPresentInTheResponse_throwException(String sessionToken) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
                 deviceLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 deviceLinkAuthenticationSessionResponse.setSessionToken(sessionToken);
@@ -384,7 +453,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
-            var exception = assertThrows(SmartIdClientException.class, () -> {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
                 var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
                 dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
                 dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
@@ -396,12 +465,29 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             assertEquals("Session secret is missing from the response", exception.getMessage());
         }
 
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initAuthenticationSession_deviceLinkBaseIsMissingOrBlank_throwException(String deviceLinkBaseValue) {
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
+                var response = new DeviceLinkSessionResponse();
+                response.setSessionID("00000000-0000-0000-0000-000000000000");
+                response.setSessionToken(generateBase64String("sessionToken"));
+                response.setSessionSecret(generateBase64String("sessionSecret"));
+                response.setDeviceLinkBase(deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
+
+                when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(response);
+                initAuthentication();
+            });
+
+            assertEquals("deviceLinkBase is missing or empty in the response", exception.getMessage());
+        }
+
         private void initAuthentication() {
             new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                     .initAuthenticationSession();
         }
@@ -416,7 +502,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withRpChallenge(generateBase64String("a".repeat(32)))
-                .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                .withHashAlgorithm(HashAlgorithm.SHA3_512)
                 .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                 .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                 .initAuthenticationSession();
@@ -437,7 +523,8 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withRpChallenge(generateBase64String("a".repeat(32)))
-                .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})                .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+                .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                 .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
                 .initAuthenticationSession();
 
@@ -472,13 +559,6 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
     }
 
-    private static class ValidNonceArgumentSourceProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(null, "a", "a".repeat(30)).map(Arguments::of);
-        }
-    }
-
     private static class CapabilitiesArgumentProvider implements ArgumentsProvider {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
@@ -504,12 +584,15 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
     }
 
-    private static class InvalidNonceProvider implements ArgumentsProvider {
+    private static class DuplicateInteractionsProvider implements ArgumentsProvider {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            var interaction1 = DeviceLinkInteraction.displayTextAndPIN("Log in.");
+            var interaction2 = DeviceLinkInteraction.displayTextAndPIN("Log in.");
+
             return Stream.of(
-                    Arguments.of(Named.of("Empty string as value", ""), "Parameter nonce value has to be at least 1 character long"),
-                    Arguments.of(Named.of("Exceeded char length", "a".repeat(31)), "Nonce cannot be longer that 30 chars")
+                    Arguments.of(List.of(interaction1, interaction1)),
+                    Arguments.of(List.of(interaction1, interaction2))
             );
         }
     }
@@ -526,6 +609,17 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             "displayText200 cannot be null for AllowedInteractionOrder of type CONFIRMATION_MESSAGE"),
                     Arguments.of(Named.of("provided text is longer than allowed 200", DeviceLinkInteraction.confirmationMessage("a".repeat(201))),
                             "displayText200 must not be longer than 200 characters")
+            );
+        }
+    }
+
+    private static class InvalidInitialCallbackUrlArgumentProvider implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of("http://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("https://example.com|test", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("ftp://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
             );
         }
     }

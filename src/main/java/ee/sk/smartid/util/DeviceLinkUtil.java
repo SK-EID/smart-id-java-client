@@ -1,10 +1,10 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,35 +26,25 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 
-public class AcspV2SignatureProtocolParameters implements Serializable {
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
 
-    private String rpChallenge;
-    private String signatureAlgorithm;
-    private SignatureAlgorithmParameters signatureAlgorithmParameters;
+public class DeviceLinkUtil {
 
-    public String getRpChallenge() {
-        return rpChallenge;
-    }
+    private static final ObjectMapper mapper = new ObjectMapper();
 
-    public void setRpChallenge(String rpChallenge) {
-        this.rpChallenge = rpChallenge;
-    }
-
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
-    }
-
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
-    }
-
-    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
-        return signatureAlgorithmParameters;
-    }
-
-    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
-        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
+    public static String encodeToBase64(List<DeviceLinkInteraction> interactions) {
+        try {
+            String json = mapper.writeValueAsString(interactions);
+            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        } catch (JsonProcessingException e) {
+            throw new SmartIdClientException("Unable to encode interactions to base64", e);
+        }
     }
 }

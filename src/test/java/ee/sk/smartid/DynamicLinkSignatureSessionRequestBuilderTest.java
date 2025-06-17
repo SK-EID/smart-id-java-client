@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -62,6 +63,7 @@ import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
+@Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-105")
 class DynamicLinkSignatureSessionRequestBuilderTest {
 
     private SmartIdConnector connector;

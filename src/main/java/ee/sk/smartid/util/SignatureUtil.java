@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
@@ -26,35 +26,22 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
+import ee.sk.smartid.SignableData;
+import ee.sk.smartid.SignableHash;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-public class AcspV2SignatureProtocolParameters implements Serializable {
+public class SignatureUtil {
 
-    private String rpChallenge;
-    private String signatureAlgorithm;
-    private SignatureAlgorithmParameters signatureAlgorithmParameters;
-
-    public String getRpChallenge() {
-        return rpChallenge;
-    }
-
-    public void setRpChallenge(String rpChallenge) {
-        this.rpChallenge = rpChallenge;
-    }
-
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
-    }
-
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
-    }
-
-    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
-        return signatureAlgorithmParameters;
-    }
-
-    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
-        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
+    public static String getDigestToSignBase64(SignableHash signableHash, SignableData signableData) {
+        if (signableHash != null && signableHash.areFieldsFilled()) {
+            return signableHash.getHashInBase64();
+        } else if (signableData != null) {
+            if (signableData.getHashType() == null) {
+                throw new SmartIdClientException("HashType must be set for signableData.");
+            }
+            return signableData.calculateHashInBase64();
+        } else {
+            throw new SmartIdClientException("Either signableHash or signableData must be set.");
+        }
     }
 }

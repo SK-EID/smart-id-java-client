@@ -165,7 +165,7 @@ setTrustStore(trustStore);
 ## Device-link flows
 
 Device-link flows are more secure way to make sure user that started the authentication or signing is in control of the device or in the proximity of the device. 
-More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/device_link_flows.html
+More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/device_link_flows.html
 
 ### Device-link authentication session
 
@@ -184,11 +184,10 @@ More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
-* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
-* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded.
+* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be set when using same device flows.
 
 #### Response parameters
 
@@ -217,7 +216,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters(HashAlgorithm.SHA_512))
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))
@@ -260,8 +259,8 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withSemanticsIdentifier(semanticsIdentifier)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withSignatureAlgorithm("rsassa-pss")
-        .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters(HashAlgorithm.SHA_512))
+        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withRpChallenge(rpChallenge)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
@@ -300,7 +299,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withSignatureProtocol(SignatureProtocol.ACSP_V2)
         .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters(HashAlgorithm.SHA_512))
+        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
             DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ))
@@ -485,22 +484,6 @@ try {
 
 ### Additional dynamic-link session request properties
 
-#### Using nonce to override idempotent behaviour
-
-Authentication is used as an example, nonce can also be used with certificate choice and signature sessions requests by using method `withNonce("randomValue")`.
-```java
-DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
-        .withRandomChallenge(randomChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withAllowedInteractionsOrder(Collections.singletonList(
-            DynamicLinkInteraction.displayTextAndPIN("Log in?")
-        ))
-        // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
-        // set nonce to override idempotent behaviour
-        .withNonce("randomValue")
-        .initAuthenticationSession();
-```
 #### Using request properties to request the IP address of the user's device
 
 For the IP to be returned the service provider (SK) must switch on this option.
@@ -510,7 +493,7 @@ Authentication is used for an example, shareMdClientIpAddress can also be used w
 
 ```java
 DynamicLinkSessionResponse authenticationSessionResponse = client
-        .createDynamicLinkAuthentication()
+        .createDeviceLinkAuthentication()
         .withRandomChallenge(randomChallenge)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withAllowedInteractionsOrder(Collections.singletonList(

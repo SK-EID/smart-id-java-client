@@ -53,8 +53,8 @@ import org.junit.jupiter.api.Test;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.HashType;
-import ee.sk.smartid.SignatureAlgorithmParameters;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationResponse;
@@ -113,7 +113,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     // to use anonymous authentication, do not set semantics identifier or document number
                     .withRpChallenge(rpChallenge)
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
                             // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
@@ -183,7 +183,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withRpChallenge(rpChallenge)
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
@@ -250,7 +250,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     .withDocumentNumber(documentNumber)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withRpChallenge(rpChallenge)
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
@@ -308,7 +308,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     .withDocumentNumber("PNOLT-40504040001-MOCK-Q")
                     .withRpChallenge(rpChallenge)
-                    .withSignatureAlgorithmParameters(new SignatureAlgorithmParameters() {{setHashAlgorithm("SHA-512");}})
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Authorize?")))
                     .initAuthenticationSession();
