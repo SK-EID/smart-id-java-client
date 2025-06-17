@@ -162,6 +162,7 @@ client.
 setTrustStore(trustStore);
 ```
 
+## Device-link flows
 ### Certificate choice by document number
 
 In API v3.1, the flow to initiate a **notification-based certificate choice session using a document number** was removed. Instead, a new, simplified endpoint was introduced.

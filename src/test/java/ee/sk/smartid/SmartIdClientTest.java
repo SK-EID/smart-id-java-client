@@ -216,6 +216,7 @@ class SmartIdClientTest {
         }
     }
 
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18089)
     class CertificateByDocumentNumberRequest {

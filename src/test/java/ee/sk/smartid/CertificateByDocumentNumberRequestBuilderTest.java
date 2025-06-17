@@ -203,7 +203,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
             var builder = createValidRequestParameters();
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateByDocumentNumber);
-            assertEquals("Missing response 'state'", ex.getMessage());
+            assertEquals("Missing response 'certificateState'", ex.getMessage());
         }
 
         @Test
