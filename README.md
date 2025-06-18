@@ -566,15 +566,15 @@ DeviceLinkSessionResponse sessionResponse; // response from the session initiati
 long elapsedSeconds = Duration.between(session.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase(session.getDeviceLinkBase())
+        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(session.getSessionToken())
+        .withSessionToken(sessionResponse.getSessionToken())
         .withElapsedSeconds(elapsedSeconds)
         .withLang("eng")
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withRelyingPartyName("DEMO")
-        .buildDeviceLink(session.getSessionSecret());
+        .buildDeviceLink(sessionResponse.getSessionSecret());
 ```
 
 ##### Overriding default values
@@ -585,14 +585,14 @@ DeviceLinkSessionResponse response; // response from the session initiation quer
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase("https://example.com/device-link") //required: no default value
+        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.APP_2_APP)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(session.getSessionToken())
+        .withSessionToken(sessionResponse.getSessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withInitialCallbackUrl("https://your-app/callback")
-        .buildDeviceLink(session.getSessionSecret());
+        .buildDeviceLink(sessionResponse.getSessionSecret());
 ```
 
 #### Generating QR-code
@@ -611,19 +611,17 @@ DeviceLinkSessionResponse response; // response from the session initiation quer
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase("https://example.com/device-link") //required: no default value
+        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(session.getSessionToken())
+        .withSessionToken(sessionResponse.getSessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-        .buildDeviceLink(session.getSessionSecret());
+        .withElapsedSeconds(elapsedSeconds)
+        .buildDeviceLink(sessionResponse.getSessionSecret());
 
 // Generate QR code image from device link URI
-BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toString(), 610, 610, 4);
-
-// Convert BufferedImage to Data URI
-String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
+String qrCodeDataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
 // Return Data URI to frontend and display the QR-code
 ```
 
@@ -641,18 +639,17 @@ DeviceLinkSessionResponse response; // response from the session initiation quer
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase("https://example.com/device-link") //required: no default value
+        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(session.getSessionToken())
+        .withSessionToken(sessionResponse.getSessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-        .buildDeviceLink(session.getSessionSecret());
+        .withElapsedSeconds(elapsedSeconds)
+        .buildDeviceLink(sessionResponse.getSessionSecret());
 
 // Create QR-code with height and width of 570px and quiet area of 2 modules.
 BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toString(), 570, 570, 2);
-
-// Convert BufferedImage to Data URI
 String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
 // Return Data URI to frontend and display the QR-code
 ```

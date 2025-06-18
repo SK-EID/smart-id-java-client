@@ -158,9 +158,9 @@ public class DeviceLinkBuilder {
     }
 
     /**
-     * Sets the relying party name in Base64 encoding.
+     * Sets the relying party name which will be Base64-encoded using UTF-8.
      *
-     * @param relyingPartyName RP name in Base64
+     * @param relyingPartyName relying party name as plain UTF-8 string
      * @return this builder
      */
     public DeviceLinkBuilder withRelyingPartyName(String relyingPartyName) {
@@ -169,10 +169,10 @@ public class DeviceLinkBuilder {
     }
 
     /**
-     * Sets the brokered relying party name in Base64.
+     * Sets the brokered relying party name which will be Base64-encoded using UTF-8.
      * Leave empty if not acting as a broker.
      *
-     * @param brokeredRpName brokered RP name in Base64
+     * @param brokeredRpName brokered RP name as plain UTF-8 string
      * @return this builder
      */
     public DeviceLinkBuilder withBrokeredRpName(String brokeredRpName) {
@@ -228,7 +228,7 @@ public class DeviceLinkBuilder {
     /**
      * Builds the final Smart-ID device link URI by combining unprotected link and authCode.
      *
-     * @param sessionSecret session secret received from session init
+     * @param sessionSecret session secret received from session initialization response.
      * @return full device link URI with authCode parameter
      */
     public URI buildDeviceLink(String sessionSecret) {

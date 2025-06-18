@@ -347,7 +347,7 @@ class SmartIdClientTest {
 
         @ParameterizedTest
         @EnumSource(value = DeviceLinkType.class, names = { "WEB_2_APP", "APP_2_APP" })
-        void createDynamicContent_authenticationWithDifferentDynamicLinkTypes(DeviceLinkType deviceLinkType) {
+        void createDynamicContent_authenticationWithWeb2AppAndApp2App(DeviceLinkType deviceLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
