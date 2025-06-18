@@ -37,8 +37,9 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
+import ee.sk.smartid.rest.dao.CertificateResponse;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberResult;
 import ee.sk.smartid.util.StringUtil;
 
 public class CertificateByDocumentNumberRequestBuilder {
@@ -110,21 +111,21 @@ public class CertificateByDocumentNumberRequestBuilder {
     /**
      * Builds the request and retrieves the certificate by document number.
      *
-     * @return the response containing the certificate
+     * @return CertificateByDocumentNumberResult containing the certificate level and parsed X509Certificate
      * @throws SmartIdClientException if any required parameters are missing or invalid
      * @throws UnprocessableSmartIdResponseException if the response is not valid
      * @throws DocumentUnusableException if the document is unusable
      */
-    public CertificateByDocumentNumberResponse initCertificateByDocumentNumber() {
+    public CertificateByDocumentNumberResult getCertificateByDocumentNumber() {
         validateRequestParameters();
-        var certificateChoiceSessionRequest = new CertificateChoiceSessionRequest();
-        certificateChoiceSessionRequest.setRelyingPartyUUID(relyingPartyUUID);
-        certificateChoiceSessionRequest.setRelyingPartyName(relyingPartyName);
-        certificateChoiceSessionRequest.setCertificateLevel(certificateLevel.name());
-        CertificateByDocumentNumberResponse response = connector.initCertificateByDocumentNumber(documentNumber, certificateChoiceSessionRequest);
+        var request = new CertificateByDocumentNumberRequest();
+        request.setRelyingPartyUUID(relyingPartyUUID);
+        request.setRelyingPartyName(relyingPartyName);
+        request.setCertificateLevel(certificateLevel.name());
+        CertificateResponse response = connector.getCertificateByDocumentNumber(documentNumber, request);
         validateResponseParameters(response);
 
-        return response;
+        return new CertificateByDocumentNumberResult(response.getCertificateLevel(), CertificateParser.parseX509Certificate(response.getCert().getValue()));
     }
 
     private void validateRequestParameters() {
@@ -142,22 +143,22 @@ public class CertificateByDocumentNumberRequestBuilder {
         }
     }
 
-    private void validateResponseParameters(CertificateByDocumentNumberResponse certificateByDocumentNumberResponse) {
-        if (certificateByDocumentNumberResponse == null) {
+    private void validateResponseParameters(CertificateResponse certificateResponse) {
+        if (certificateResponse == null) {
             logger.error("CertificateByDocumentNumberResponse is null");
             throw new UnprocessableSmartIdResponseException("Certificate certificateByDocumentNumberResponse is null");
         }
-        handleResponseState(certificateByDocumentNumberResponse.getState());
-        validateCertificateLevel(certificateByDocumentNumberResponse.getCertificateLevel());
+        handleResponseState(certificateResponse.getState());
+        validateCertificateLevel(certificateResponse.getCertificateLevel());
 
-        if (certificateByDocumentNumberResponse.getCert() == null || isEmpty(certificateByDocumentNumberResponse.getCert().getValue())) {
+        if (certificateResponse.getCert() == null || isEmpty(certificateResponse.getCert().getValue())) {
             logger.error("Parameter cert.value is missing");
             throw new UnprocessableSmartIdResponseException("Parameter cert.value is missing");
         }
 
-        if (!BASE64_PATTERN.matcher(certificateByDocumentNumberResponse.getCert().getValue()).matches()) {
-            logger.error("Parameter cert.value is not valid Base64");
-            throw new UnprocessableSmartIdResponseException("Parameter cert.value is not valid Base64");
+        if (!BASE64_PATTERN.matcher(certificateResponse.getCert().getValue()).matches()) {
+            logger.error("Parameter cert.value is not a valid Base64-encoded string");
+            throw new UnprocessableSmartIdResponseException("Parameter cert.value is not a valid Base64-encoded string");
         }
     }
 
@@ -165,11 +166,6 @@ public class CertificateByDocumentNumberRequestBuilder {
         if (certificateLevel == null) {
             logger.error("Parameter certificateLevel is missing");
             throw new UnprocessableSmartIdResponseException("Parameter certificateLevel is missing");
-        }
-
-        if (certificateLevel == CertificateLevel.QSCD) {
-            logger.error("Certificate level QSCD is not allowed for this endpoint");
-            throw new UnprocessableSmartIdResponseException("Certificate level QSCD is not allowed for this endpoint");
         }
     }
 
@@ -181,6 +177,10 @@ public class CertificateByDocumentNumberRequestBuilder {
         if (certificateState == CertificateState.DOCUMENT_UNUSABLE) {
             logger.error("Document is unusable");
             throw new DocumentUnusableException();
+        }
+        if (certificateState != CertificateState.OK) {
+            logger.error("Unsupported certificate state: {}", certificateState);
+            throw new UnprocessableSmartIdResponseException("Unsupported certificate state: " + certificateState);
         }
     }
 }

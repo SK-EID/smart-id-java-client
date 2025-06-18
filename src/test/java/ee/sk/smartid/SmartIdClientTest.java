@@ -216,7 +216,6 @@ class SmartIdClientTest {
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18089)
     class CertificateByDocumentNumberRequest {
@@ -228,10 +227,11 @@ class SmartIdClientTest {
             var response = smartIdClient.createCertificateByDocumentNumber()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withCertificateLevel(CertificateLevel.ADVANCED)
-                    .initCertificateByDocumentNumber();
+                    .getCertificateByDocumentNumber();
 
             assertNotNull(response);
-            assertNotNull(response.getCert());
+            assertEquals(CertificateLevel.QUALIFIED, response.certificateLevel());
+            assertNotNull(response.certificate());
         }
     }
 

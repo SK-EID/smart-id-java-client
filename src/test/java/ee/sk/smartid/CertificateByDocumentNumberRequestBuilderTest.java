@@ -29,6 +29,7 @@ package ee.sk.smartid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -39,8 +40,8 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberResponse;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
+import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -66,25 +67,27 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
     @Test
     void initCertificate_ByDocumentNumber_ok() {
-        CertificateByDocumentNumberResponse mockResponse = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED);
-        when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(mockResponse);
+        CertificateResponse mockResponse = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED);
+        when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(mockResponse);
 
-        var response = new CertificateByDocumentNumberRequestBuilder(connector)
+        var result = new CertificateByDocumentNumberRequestBuilder(connector)
                 .withDocumentNumber(DOCUMENT_NUMBER)
                 .withRelyingPartyUUID(RP_UUID)
                 .withRelyingPartyName(RP_NAME)
                 .withCertificateLevel(CertificateLevel.QUALIFIED)
-                .initCertificateByDocumentNumber();
+                .getCertificateByDocumentNumber();
 
-        assertNotNull(response);
-        assertEquals(CertificateState.OK, response.getState());
-        assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
-        assertEquals(CERTIFICATE_BASE64, response.getCert().getValue());
+        assertNotNull(result);
+        assertEquals(CertificateLevel.QUALIFIED, result.certificateLevel());
+        assertNotNull(result.certificate());
 
-        ArgumentCaptor<CertificateChoiceSessionRequest> captor = ArgumentCaptor.forClass(CertificateChoiceSessionRequest.class);
-        verify(connector).initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), captor.capture());
+        String subject = result.certificate().getSubjectX500Principal().getName();
+        assertTrue(subject.contains("TESTNUMBER") || subject.contains("DEMO"), subject);
 
-        CertificateChoiceSessionRequest sentRequest = captor.getValue();
+        ArgumentCaptor<CertificateByDocumentNumberRequest> captor = ArgumentCaptor.forClass(CertificateByDocumentNumberRequest.class);
+        verify(connector).getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), captor.capture());
+
+        CertificateByDocumentNumberRequest sentRequest = captor.getValue();
         assertEquals(RP_UUID, sentRequest.getRelyingPartyUUID());
         assertEquals(RP_NAME, sentRequest.getRelyingPartyName());
         assertEquals("QUALIFIED", sentRequest.getCertificateLevel());
@@ -101,7 +104,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
                     .withRelyingPartyName(RP_NAME)
                     .withDocumentNumber(documentNumber);
 
-            var ex = assertThrows(SmartIdClientException.class, builder::initCertificateByDocumentNumber);
+            var ex = assertThrows(SmartIdClientException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Parameter documentNumber must be set", ex.getMessage());
         }
 
@@ -113,7 +116,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
                     .withRelyingPartyName(RP_NAME)
                     .withRelyingPartyUUID(uuid);
 
-            var ex = assertThrows(SmartIdClientException.class, builder::initCertificateByDocumentNumber);
+            var ex = assertThrows(SmartIdClientException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Parameter relyingPartyUUID must be set", ex.getMessage());
         }
 
@@ -125,7 +128,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
                     .withRelyingPartyUUID(RP_UUID)
                     .withRelyingPartyName(relyingPartyName);
 
-            var ex = assertThrows(SmartIdClientException.class, builder::initCertificateByDocumentNumber);
+            var ex = assertThrows(SmartIdClientException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
         }
     }
@@ -135,12 +138,12 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
         @Test
         void getCertificate_certValueMissing_throwException() {
-            CertificateByDocumentNumberResponse response = createValidResponse(null, CertificateLevel.QUALIFIED);
-            when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(response);
+            CertificateResponse response = createValidResponse(null, CertificateLevel.QUALIFIED);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
             var builder = createValidRequestParameters();
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateByDocumentNumber);
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Parameter cert.value is missing", ex.getMessage());
         }
 
@@ -149,71 +152,60 @@ class CertificateByDocumentNumberRequestBuilderTest {
             var cert = new SessionCertificate();
             cert.setValue("NOT@BASE64!");
 
-            var response = new CertificateByDocumentNumberResponse();
+            var response = new CertificateResponse();
             response.setCert(cert);
             response.setCertificateLevel(CertificateLevel.QUALIFIED);
             response.setState(CertificateState.OK);
 
-            when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(response);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
             var builder = createValidRequestParameters();
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateByDocumentNumber);
-            assertEquals("Parameter cert.value is not valid Base64", ex.getMessage());
-        }
-
-        @Test
-        void getCertificate_certificateLevelQSCD_throwException() {
-            CertificateByDocumentNumberResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QSCD);
-            when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(response);
-
-            var builder = createValidRequestParameters();
-
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateByDocumentNumber);
-            assertEquals("Certificate level QSCD is not allowed for this endpoint", ex.getMessage());
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+            assertEquals("Parameter cert.value is not a valid Base64-encoded string", ex.getMessage());
         }
 
         @Test
         void getCertificate_responseStateIsDocumentUnusable_throwException() {
-            CertificateByDocumentNumberResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED);
+            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED);
             response.setState(CertificateState.DOCUMENT_UNUSABLE);
-            when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(response);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
             var builder = createValidRequestParameters();
 
-            assertThrows(DocumentUnusableException.class, builder::initCertificateByDocumentNumber);
+            assertThrows(DocumentUnusableException.class, builder::getCertificateByDocumentNumber);
         }
 
         @Test
         void getCertificate_responseIsNull_throwException() {
-            when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(null);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(null);
 
             var builder = createValidRequestParameters();
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateByDocumentNumber);
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Certificate certificateByDocumentNumberResponse is null", ex.getMessage());
         }
 
         @Test
         void getCertificate_responseStateMissing_throwException() {
-            CertificateByDocumentNumberResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED);
+            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED);
             response.setState(null);
-            when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(response);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
             var builder = createValidRequestParameters();
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateByDocumentNumber);
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Missing response 'certificateState'", ex.getMessage());
         }
 
         @Test
         void getCertificate_responseCertificateLevelMissing_throwException() {
-            CertificateByDocumentNumberResponse response = createValidResponse(CERTIFICATE_BASE64, null);
-            when(connector.initCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateChoiceSessionRequest.class))).thenReturn(response);
+            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, null);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
             var builder = createValidRequestParameters();
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateByDocumentNumber);
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Parameter certificateLevel is missing", ex.getMessage());
         }
     }
@@ -225,11 +217,11 @@ class CertificateByDocumentNumberRequestBuilderTest {
                 .withRelyingPartyName(RP_NAME);
     }
 
-    private CertificateByDocumentNumberResponse createValidResponse(String certValue, CertificateLevel level) {
+    private CertificateResponse createValidResponse(String certValue, CertificateLevel level) {
         var certificate = new SessionCertificate();
         certificate.setValue(certValue);
 
-        var response = new CertificateByDocumentNumberResponse();
+        var response = new CertificateResponse();
         response.setCert(certificate);
         response.setCertificateLevel(level);
         response.setState(CertificateState.OK);

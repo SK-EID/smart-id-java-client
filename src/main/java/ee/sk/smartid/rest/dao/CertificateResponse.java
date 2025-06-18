@@ -33,7 +33,7 @@ import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.CertificateState;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CertificateByDocumentNumberResponse implements Serializable {
+public class CertificateResponse implements Serializable {
 
     private CertificateState state;
     private SessionCertificate cert;

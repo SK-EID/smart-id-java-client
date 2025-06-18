@@ -125,7 +125,7 @@ public class SmartIdClient {
     /**
      * Creates a new builder for requesting a certificate using document number.
      *
-     * @return builder for initiating a certificate request using document number
+     * @return builder for querying certificate using document number
      */
     public CertificateByDocumentNumberRequestBuilder createCertificateByDocumentNumber() {
         return new CertificateByDocumentNumberRequestBuilder(getSmartIdConnector())

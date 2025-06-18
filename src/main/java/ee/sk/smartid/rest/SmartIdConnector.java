@@ -32,7 +32,8 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberResponse;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
+import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
@@ -80,13 +81,13 @@ public interface SmartIdConnector extends Serializable {
     NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
-     * Initiates a notification based certificate choice request.
+     * Queries signing certificate by document number.
      *
-     * @param request        CertificateChoiceSessionRequest containing necessary parameters
+     * @param request CertificateByDocumentNumberRequest containing necessary parameters
      * @param documentNumber The document number
-     * @return NotificationCertificateChoiceSessionResponse containing sessionID
+     * @return CertificateResponse containing sessionID
      */
-    CertificateByDocumentNumberResponse initCertificateByDocumentNumber(String documentNumber, CertificateChoiceSessionRequest request);
+    CertificateResponse getCertificateByDocumentNumber(String documentNumber, CertificateByDocumentNumberRequest request);
 
     /**
      * Initiates a dynamic link based signature sessions.

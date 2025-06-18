@@ -44,7 +44,8 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberResponse;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
+import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
@@ -200,13 +201,13 @@ public class SmartIdRestConnector implements SmartIdConnector {
         return postNotificationCertificateChoiceRequest(uri, request);
     }
 
-    public CertificateByDocumentNumberResponse initCertificateByDocumentNumber(String documentNumber, CertificateChoiceSessionRequest request) {
+    public CertificateResponse getCertificateByDocumentNumber(String documentNumber, CertificateByDocumentNumberRequest request) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postRequest(uri, request, CertificateByDocumentNumberResponse.class);
+        return postRequest(uri, request, CertificateResponse.class);
     }
 
     @Override
