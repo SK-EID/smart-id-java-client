@@ -21,7 +21,6 @@ This library supports Smart-ID API v3.1.
     * [Logging](#logging)
         *   [Log request payloads](#log-request-payloads)
     * [Setting up SmartIdClient for v3.1](#setting-up-smartidclient-for-v31)
-    * [Certificate choice by document number](#certificate-choice-by-document-number)
     * [Device link flows](#device-link-flows)
         * [Device link authentication session](#device-link-authentication-session)
           * [Examples of authentication session](#examples-of-initiating-a-device-link-authentication-session)
@@ -54,6 +53,7 @@ This library supports Smart-ID API v3.1.
             * [Example of validating certificate session response](#example-of-validating-the-certificate-choice-session-response)
             * [Example of validating the signature](#example-of-validating-the-signature-session-response)
             * [Error handling for session status](#error-handling-for-session-status)
+    * [Certificate choice by document number](#certificate-choice-by-document-number)
     * [Notification-based flows](#notification-based-flows)
         * [Differences between notification-based and dynamic link flows](#differences-between-notification-based-and-dynamic-link-flows)
         * [Notification-based authentication session](#notification-based-authentication-session)
@@ -160,46 +160,6 @@ setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 client.
 
 setTrustStore(trustStore);
-```
-
-## Certificate choice by document number
-
-In API v3.1, the flow to initiate a **notification-based certificate choice session using a document number** was removed. Instead, a new, simplified endpoint was introduced.
-
-### Request Parameters
-The request parameters for the certificate choice by document number request are as follows:
-
-* `relyingPartyUUID`: Required. UUID of the Relying Party.
-* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
-* `certificateLevel`: Level of certificate requested. Possible values are `ADVANCED`, `QUALIFIED` or `QSCD`. Defaults to `QUALIFIED`.
-
-### Response Parameters
-* `state`: Required. Indicates result. Possible values:
-    * `OK`: Certificate found and returned.
-    * `DOCUMENT_UNUSABLE`: user's Smart-ID account is not usable for signing
-* `cert`: Required. Object containing the signing certificate.
-    * `value`: Required. Base64-encoded X.509 certificate (matches pattern `^[a-zA-Z0-9+/]+={0,2}$`)
-* `certificateLevel`: Required. Level of the certificate, Possible values `ADVANCED`or `QUALIFIED`
-
-### Get certificate using document number
-
-RP can directly query the user's signing certificate by document number — no session flow or user interaction required.
-
-#### Usage example in Java
-
-```java
-String documentNumber = "PNOLT-40504040001-MOCK-Q";
-
-CertificateByDocumentNumberResponse certResponse = client
-        .getCertificateByDocumentNumber
-        .withDocumentNumber(documentNumber)
-        .withRelyingPartyUUID(client.getRelyingPartyUUID())
-        .withRelyingPartyName(client.getRelyingPartyName())
-        .withCertificateLevel(CertificateLevel.QUALIFIED)
-        .initCertificateByDocumentNumber();
-
-// certResponse.getCert() contains Base64-encoded certificate
-// certResponse.getCertificateLevel() is either ADVANCED or QUALIFIED
 ```
 
 ## Device-link flows
@@ -858,6 +818,46 @@ The session status response may return various error codes indicating the outcom
 * `USER_REFUSED_VC_CHOICE`: User cancelled verificationCodeChoice screen.
 * `USER_REFUSED_CONFIRMATIONMESSAGE`: User cancelled on confirmationMessage screen.
 * `USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE`: User cancelled on confirmationMessageAndVerificationCodeChoice screen.
+
+## Certificate choice by document number
+
+In API v3.1, the flow to initiate a **notification-based certificate choice session using a document number** was removed. Instead, a new, simplified endpoint was introduced.
+
+### Request Parameters
+The request parameters for the certificate choice by document number request are as follows:
+
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. Possible values are `ADVANCED`, `QUALIFIED` or `QSCD`. Defaults to `QUALIFIED`.
+
+### Response Parameters
+* `state`: Required. Indicates result. Possible values:
+    * `OK`: Certificate found and returned.
+    * `DOCUMENT_UNUSABLE`: user's Smart-ID account is not usable for signing
+* `cert`: Required. Object containing the signing certificate.
+    * `value`: Required. Base64-encoded X.509 certificate (matches pattern `^[a-zA-Z0-9+/]+={0,2}$`)
+* `certificateLevel`: Required. Level of the certificate, Possible values `ADVANCED`or `QUALIFIED`
+
+### Get certificate using document number
+
+RP can directly query the user's signing certificate by document number — no session flow or user interaction required.
+
+#### Usage example in Java
+
+```java
+String documentNumber = "PNOLT-40504040001-MOCK-Q";
+
+CertificateByDocumentNumberResponse certResponse = client
+        .getCertificateByDocumentNumber
+        .withDocumentNumber(documentNumber)
+        .withRelyingPartyUUID(client.getRelyingPartyUUID())
+        .withRelyingPartyName(client.getRelyingPartyName())
+        .withCertificateLevel(CertificateLevel.QUALIFIED)
+        .initCertificateByDocumentNumber();
+
+// certResponse.getCert() contains Base64-encoded certificate
+// certResponse.getCertificateLevel() is either ADVANCED or QUALIFIED
+```
 
 ## Notification-based flows
 

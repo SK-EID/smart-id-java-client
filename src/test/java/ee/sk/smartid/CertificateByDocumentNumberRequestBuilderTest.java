@@ -208,6 +208,17 @@ class CertificateByDocumentNumberRequestBuilderTest {
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Parameter certificateLevel is missing", ex.getMessage());
         }
+
+        @Test
+        void getCertificate_certificateLevelLowerThanRequested_throwException() {
+            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.ADVANCED);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+
+            var builder = createValidRequestParameters();
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+            assertEquals("Certificate level is lower than requested", ex.getMessage());
+        }
     }
 
     private CertificateByDocumentNumberRequestBuilder createValidRequestParameters() {

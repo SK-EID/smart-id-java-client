@@ -167,6 +167,10 @@ public class CertificateByDocumentNumberRequestBuilder {
             logger.error("Parameter certificateLevel is missing");
             throw new UnprocessableSmartIdResponseException("Parameter certificateLevel is missing");
         }
+        if (!certificateLevel.isSameLevelOrHigher(this.certificateLevel)) {
+            logger.error("Certificate level is lower than requested");
+            throw new UnprocessableSmartIdResponseException("Certificate level is lower than requested");
+        }
     }
 
     private void handleResponseState(CertificateState certificateState) {
