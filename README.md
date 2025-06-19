@@ -36,9 +36,9 @@ This library supports Smart-ID API v3.1.
               * [Initiating a dynamic-link signature session using document number](#initiating-a-dynamic-link-signature-session-with-document-number)
         * [Examples of allowed dynamic-link interactions order](#examples-of-allowed-dynamic-link-interactions-order)
         * [Additional request properties](#additional-dynamic-link-session-request-properties)
-        * [Generating QR-code or dynamic link](#generating-qr-code-or-device-link)
-            * [Generating dynamic link ](#generating-device-link)
-            * [Dynamic link parameters](#device-link-parameters)
+        * [Generating QR-code or device link](#generating-qr-code-or-device-link)
+            * [Generating device link ](#generating-device-link)
+            * [Device link parameters](#device-link-parameters)
             * [Overriding default values](#overriding-default-values)
             * [Generating QR-code](#generating-qr-code)
             * [Generate QR-code Data URI](#generate-qr-code-data-uri)
@@ -541,7 +541,7 @@ builder.withAllowedInteractionsOrder(List.of(
 ### Generating QR-code or device link
 
 Documentation to device link and QR-code requirements
-https://sk-eid.github.io/smart-id-documentation/rp-api/3.1_DRAFT/dynamic_link_flows.html
+https://sk-eid.github.io/smart-id-documentation/rp-api/device_link_flows.html
 
 #### Generating device link
 
@@ -580,9 +580,7 @@ URI deviceLink = new DeviceLinkBuilder()
 ##### Overriding default values
 
 ```java
-DeviceLinkSessionResponse response; // response from the session initiation query.
-// Calculate elapsed seconds from response received time
-long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
+DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
         .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
@@ -606,7 +604,7 @@ Generated QR code will have error correction level low.
 ##### Generate QR-code Data URI
 
 ```java
-DeviceLinkSessionResponse response; // response from the session initiation query.
+DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
@@ -634,7 +632,7 @@ Other image size in range 366px to 1159px is also possible. Width and height of 
 The width and height of 1159px produce a QR code with a module size of 19px.
 
 ```java
-DeviceLinkSessionResponse response; // response from the session initiation query.
+DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode

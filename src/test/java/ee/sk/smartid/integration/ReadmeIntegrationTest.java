@@ -319,8 +319,8 @@ public class ReadmeIntegrationTest {
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(response.getSessionToken())
                     .withDigest(rpChallenge)
-                    .withRelyingPartyName(Base64.getEncoder().encodeToString("DEMO".getBytes(StandardCharsets.UTF_8)))
-                    .withBrokeredRpName(Base64.getEncoder().encodeToString("BANK_XYZ".getBytes(StandardCharsets.UTF_8)))
+                    .withRelyingPartyName("DEMO")
+                    .withBrokeredRpName("BANK_XYZ")
                     .withElapsedSeconds(Duration.between(response.getReceivedAt(), Instant.now()).getSeconds())
                     .withLang("est")
                     .buildDeviceLink(response.getSessionSecret());

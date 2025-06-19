@@ -357,18 +357,15 @@ class SmartIdClientTest {
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .initAuthenticationSession();
 
-            String relyingPartyNameBase64 = java.util.Base64.getEncoder().encodeToString("DEMO".getBytes());
-
             URI qrCodeUri = new DeviceLinkBuilder()
-                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                    .withDeviceLinkBase(response.getDeviceLinkBase().toString())
                     .withDeviceLinkType(deviceLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(response.getSessionToken())
-                    .withRelyingPartyName(relyingPartyNameBase64)
+                    .withRelyingPartyName("DEMO")
                     .withLang("eng")
                     .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-                    .withRelyingPartyName(Base64.toBase64String("DEMO".getBytes()))
-                    .withInitialCallbackUrl("https://example.com/callback")
+                    .withInitialCallbackUrl("https://smart-id.com/callback")
                     .buildDeviceLink(response.getSessionSecret());
 
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, deviceLinkType, response.getSessionToken());
@@ -387,15 +384,13 @@ class SmartIdClientTest {
 
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 
-            String relyingPartyNameBase64 = java.util.Base64.getEncoder().encodeToString("DEMO".getBytes());
-
             URI qrCodeUri = new DeviceLinkBuilder()
-                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                    .withDeviceLinkBase(response.getDeviceLinkBase().toString())
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.AUTHENTICATION)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
-                    .withRelyingPartyName(relyingPartyNameBase64)
+                    .withRelyingPartyName("DEMO")
                     .withLang("eng")
                     .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
                     .buildDeviceLink(response.getSessionSecret());
@@ -417,13 +412,13 @@ class SmartIdClientTest {
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 
             URI fullUri = new DeviceLinkBuilder()
-                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                    .withDeviceLinkBase(response.getDeviceLinkBase().toString())
                     .withDeviceLinkType(deviceLinkType)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
                     .withLang("eng")
-                    .withRelyingPartyName(Base64.toBase64String("DEMO".getBytes()))
+                    .withRelyingPartyName("DEMO")
                     .buildDeviceLink(response.getSessionSecret());
 
             assertUri(fullUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
@@ -442,13 +437,13 @@ class SmartIdClientTest {
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 
             URI fullUri = new DeviceLinkBuilder()
-                    .withDeviceLinkBase("https://smart-id.com/device-link/")
+                    .withDeviceLinkBase(response.getDeviceLinkBase().toString())
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
                     .withLang("eng")
-                    .withRelyingPartyName(Base64.toBase64String("DEMO".getBytes()))
+                    .withRelyingPartyName("DEMO")
                     .buildDeviceLink(response.getSessionSecret());
 
             String qrCodeDataUri = QrCodeGenerator.generateDataUri(fullUri.toString());

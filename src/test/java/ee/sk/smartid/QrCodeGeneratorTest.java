@@ -160,7 +160,7 @@ class QrCodeGeneratorTest {
                 .withSessionType(SessionType.AUTHENTICATION)
                 .withSessionToken("rTBfEhy0z4SlqmGHjIW6uQid")
                 .withElapsedSeconds(1L)
-                .withRelyingPartyName(Base64.getEncoder().encodeToString("DEMO".getBytes()))
+                .withRelyingPartyName("DEMO")
                 .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
                 .withLang("ENG");
 
