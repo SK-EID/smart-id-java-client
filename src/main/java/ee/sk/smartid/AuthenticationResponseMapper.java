@@ -27,6 +27,8 @@ package ee.sk.smartid;
  */
 
 import java.security.cert.X509Certificate;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,12 @@ import ee.sk.smartid.util.StringUtil;
 public class AuthenticationResponseMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseMapper.class);
+
+    private static final String USER_CHALLENGE_PATTERN = "^[a-zA-Z0-9-_]{43}$";
+    private static final String BASE64_FORMAT_PATTERN = "^[a-zA-Z0-9+/]+={0,2}$";
+    private static final int MINIMUM_SERVER_RANDOM_LENGTH = 24;
+    private static final int USER_CHALLENGE_LENGTH = 43;
+
 
     /**
      * Maps session status to authentication response
@@ -74,7 +82,7 @@ public class AuthenticationResponseMapper {
 
     private static void validateSessionStatus(SessionStatus sessionStatus) {
         if (sessionStatus == null) {
-            throw new SmartIdClientException("Session status parameter is not provided");
+            throw new SmartIdClientException("Input parameter `sessionsStatus` is not provided");
         }
 
         validateResult(sessionStatus.getResult());
@@ -83,53 +91,149 @@ public class AuthenticationResponseMapper {
         validateCertificate(sessionStatus.getCert());
 
         if (StringUtil.isEmpty(sessionStatus.getInteractionTypeUsed())) {
-            throw new UnprocessableSmartIdResponseException("Interaction flow used parameter is missing in the session status");
+            throw new UnprocessableSmartIdResponseException("Session status field `interactionTypeUsed` is empty");
         }
     }
 
     private static void validateResult(SessionResult sessionResult) {
         if (sessionResult == null) {
-            throw new UnprocessableSmartIdResponseException("Session result parameter is missing");
+            throw new UnprocessableSmartIdResponseException("Session status field `result` is empty");
         }
         String endResult = sessionResult.getEndResult();
         if (StringUtil.isEmpty(endResult)) {
-            throw new UnprocessableSmartIdResponseException("End result parameter is missing in the session result");
+            throw new UnprocessableSmartIdResponseException("Session status field `result.endResult` is empty");
         }
-        if (!"OK".equalsIgnoreCase(endResult)) {
+        if (!"OK".equals(endResult)) {
             ErrorResultHandler.handle(sessionResult);
         }
         if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
-            throw new UnprocessableSmartIdResponseException("Document number parameter is missing in the session result");
+            throw new UnprocessableSmartIdResponseException("Session status field `result.documentNumber` is empty");
         }
     }
 
     private static void validateSignatureProtocol(SessionStatus sessionStatus) {
         if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
-            logger.error("Signature protocol parameter is missing in session status");
-            throw new UnprocessableSmartIdResponseException("Signature protocol parameter is missing in session status");
+            throw new UnprocessableSmartIdResponseException("Session status field `signatureProtocol` is empty");
         }
 
         if (!SignatureProtocol.ACSP_V2.name().equals(sessionStatus.getSignatureProtocol())) {
-            logger.error("Invalid signature protocol in sessions status: {}", sessionStatus.getSignatureProtocol());
-            throw new UnprocessableSmartIdResponseException("Invalid signature protocol in sessions status");
+            logger.error("Invalid `signatureProtocol` in authentication sessions status: {}", sessionStatus.getSignatureProtocol());
+            throw new UnprocessableSmartIdResponseException("Invalid `signatureProtocol` in sessions status");
         }
     }
 
     private static void validateSignature(SessionSignature sessionSignature) {
         if (sessionSignature == null) {
-            throw new UnprocessableSmartIdResponseException("Signature parameter is missing in session status");
+            throw new UnprocessableSmartIdResponseException("Session status field `signature` is missing");
         }
 
+        // TODO - 16.06.25: review groupings
         if (StringUtil.isEmpty(sessionSignature.getValue())) {
-            throw new UnprocessableSmartIdResponseException("Value parameter is missing in signature");
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.value` is empty");
+        }
+        if (!Pattern.matches(BASE64_FORMAT_PATTERN, sessionSignature.getValue())) {
+            logger.error("Session status field `signature.value` is not in Base64-encoded format: {}", sessionSignature.getValue());
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.value` is not in Base64-encoded format");
         }
 
         if (StringUtil.isEmpty(sessionSignature.getServerRandom())) {
-            throw new UnprocessableSmartIdResponseException("Server random parameter is missing in signature");
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.severRandom` is empty");
+        }
+        int serverRandomLength = sessionSignature.getServerRandom().length();
+        if (serverRandomLength < MINIMUM_SERVER_RANDOM_LENGTH) {
+            logger.error("Signature field `serverRandom` is less than required length: {} < {}", serverRandomLength, MINIMUM_SERVER_RANDOM_LENGTH); // TODO - 19.06.25: improve expected to actual
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.serverRandom` is less than required length"); // TODO - 19.06.25: improve wording
+        }
+        if (!Pattern.matches(BASE64_FORMAT_PATTERN, sessionSignature.getServerRandom())) {
+            logger.error("Session status field `signature.serverRandom` is not in Base64-encoded format: {}", sessionSignature.getServerRandom());
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.serverRandom` is not in Base64-encoded format");
+        }
+
+        if (StringUtil.isEmpty(sessionSignature.getUserChallenge())) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.userChallenge` is empty");
+        }
+        int userChallengeLength = sessionSignature.getUserChallenge().length();
+        if (userChallengeLength != USER_CHALLENGE_LENGTH) { // TODO - 20.06.25: is this unnecessary when pattern also checks for length?
+            logger.error("`signature.userChallenge` value has incorrect length in session status: expected {}, got {} ", USER_CHALLENGE_LENGTH, userChallengeLength);
+            throw new UnprocessableSmartIdResponseException("`signature.userChallenge` value has incorrect length in session status");
+        }
+        if (!Pattern.matches(USER_CHALLENGE_PATTERN, sessionSignature.getUserChallenge())) {
+            logger.error("`signature.userChallenge` value in session status is not in the expected Base64-encoded format: {}", sessionSignature.getUserChallenge());
+            throw new UnprocessableSmartIdResponseException("`signature.userChallenge` value in session status is not in the expected Base64-encoded format");
+        }
+
+        if (StringUtil.isEmpty(sessionSignature.getFlowType())) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.flowType` is empty");
+        }
+        if (!FlowType.isSupported(sessionSignature.getFlowType())) {
+            logger.error("Invalid `signature.flowType` in session status: {}", sessionSignature.getFlowType());
+            throw new UnprocessableSmartIdResponseException("Invalid `signature.flowType` in session status");
         }
 
         if (StringUtil.isEmpty(sessionSignature.getSignatureAlgorithm())) {
-            throw new UnprocessableSmartIdResponseException("Signature algorithm parameter is missing in signature");
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithm` is empty");
+        }
+        if (!SignatureAlgorithm.isSupported(sessionSignature.getSignatureAlgorithm())) {
+            logger.error("Invalid `signature.signatureAlgorithm` in the session status: {}", sessionSignature.getSignatureAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithm` in the session status");
+        }
+
+        var signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
+        if (sessionSignature.getSignatureAlgorithmParameters() == null) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters` is missing");
+        }
+        if (StringUtil.isEmpty(signatureAlgorithmParameters.getHashAlgorithm())) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters.hashAlgorithm` is empty");
+        }
+
+        Optional<HashAlgorithm> hashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm());
+        if (hashAlgorithm.isEmpty()) {
+            logger.error("Invalid `signature.signatureAlgorithmParameters.hashAlgorithm` in session status: {}", signatureAlgorithmParameters.getHashAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithmParameters.hashAlgorithm` in session status");
+        }
+
+        var maskGenAlgorithm = signatureAlgorithmParameters.getMaskGenAlgorithm();
+        if (maskGenAlgorithm == null) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm` is missing");
+        }
+        if (StringUtil.isEmpty(maskGenAlgorithm.getAlgorithm())) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm` is empty");
+        }
+        if (!MaskGenAlgorithm.ID_MGF1.getAlgorithmName().equals(maskGenAlgorithm.getAlgorithm())) {
+            logger.error("Invalid `signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status: {}", maskGenAlgorithm.getAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Invalid`signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status");
+        }
+
+        Optional<HashAlgorithm> maskGenHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm());
+        if (maskGenHashAlgorithm.isEmpty()) {
+            logger.error("Invalid `signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in session status: {}",
+                    maskGenAlgorithm.getParameters().getHashAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in empty");
+        }
+        if (hashAlgorithm.get() != maskGenHashAlgorithm.get()) {
+            logger.error("`signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in session status does not match `signature.signatureAlgorithmParameters.hashAlgorithm`: expected {}, got {}",
+                    hashAlgorithm.get().getAlgorithmName(),
+                    maskGenHashAlgorithm.get().getAlgorithmName());
+            throw new UnprocessableSmartIdResponseException("`signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in session status does not match `signature.signatureAlgorithmParameters.hashAlgorithm`");
+        }
+
+        if (signatureAlgorithmParameters.getSaltLength() == null) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.saltLength` is empty");
+        }
+        int octetLength = hashAlgorithm.get().getOctetLength();
+        if (octetLength != signatureAlgorithmParameters.getSaltLength()) {
+            logger.error("Invalid `signature.signatureAlgorithmParameters.saltLength` in session status: expected {}, got {}",
+                    octetLength,
+                    signatureAlgorithmParameters.getSaltLength());
+            throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithmParameters.saltLength` in session status");
+        }
+
+        if (StringUtil.isEmpty(signatureAlgorithmParameters.getTrailerField())) {
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters.trailerField` is empty");
+        }
+        if (!TrailerField.OXBC.getValue().equals(signatureAlgorithmParameters.getTrailerField())) {
+            logger.error("Invalid `signature.signatureAlgorithmParameters.trailerField` in session status: {}", signatureAlgorithmParameters.getTrailerField());
+            throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithmParameters.trailerField` value in session status");
         }
     }
 

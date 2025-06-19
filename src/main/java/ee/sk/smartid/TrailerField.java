@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,23 +26,17 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.util.Arrays;
+public enum TrailerField {
 
-public enum SignatureAlgorithm {
+    OXBC("0xbc");
 
-    RSASSA_PSS("rsassa-pss");
+    private final String value;
 
-    private final String algorithmName;
-
-    SignatureAlgorithm(String algorithmName) {
-        this.algorithmName = algorithmName;
+    TrailerField(String value) {
+        this.value = value;
     }
 
-    public String getAlgorithmName() {
-        return algorithmName;
-    }
-
-    public static boolean isSupported(String signatureAlgorithm) {
-        return Arrays.stream(SignatureAlgorithm.values()).anyMatch(s -> s.getAlgorithmName().equals(signatureAlgorithm));
+    public String getValue() {
+        return value;
     }
 }

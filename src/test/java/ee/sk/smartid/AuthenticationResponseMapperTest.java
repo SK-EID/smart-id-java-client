@@ -36,6 +36,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
@@ -45,9 +46,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithm;
+import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionSignature;
+import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
 class AuthenticationResponseMapperTest {
@@ -57,7 +61,7 @@ class AuthenticationResponseMapperTest {
     @Test
     void from() {
         var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-        var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
+        var sessionSignature = toSessionSignature("rsassa-pss");
         var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
 
@@ -75,68 +79,73 @@ class AuthenticationResponseMapperTest {
     @Test
     void from_sessionStatusNull_throwException() {
         var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(null));
-        assertEquals("Session status parameter is not provided", exception.getMessage());
+        assertEquals("Input parameter `sessionsStatus` is not provided", exception.getMessage());
     }
 
-    @Test
-    void from_sessionResultIsNotPresent_throwException() {
-        var sessionStatus = new SessionStatus();
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Session result parameter is missing", exception.getMessage());
+    @Nested
+    class ValidateResult {
+
+        @Test
+        void from_sessionResultIsNotPresent_throwException() {
+            var sessionStatus = new SessionStatus();
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `result` is empty", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_endResultIsNotPresent_throwException(String endResult) {
+            var sessionResult = new SessionResult();
+            sessionResult.setEndResult(endResult);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `result.endResult` is empty", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
+        void from_endResultIsError_throwException(String endResult, Class<? extends Exception> expectedException) {
+            var sessionResult = new SessionResult();
+            sessionResult.setEndResult(endResult);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+
+            assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
+        }
+
+        @ParameterizedTest
+        @ArgumentsSource(UserRefusedInteractionArgumentsProvider.class)
+        void from_endResultIsUserRefusedInteraction(String interaction, Class<? extends Exception> expectedException) {
+            var sessionResultDetails = new SessionResultDetails();
+            sessionResultDetails.setInteraction(interaction);
+
+            var sessionResult = new SessionResult();
+            sessionResult.setEndResult("USER_REFUSED_INTERACTION");
+            sessionResult.setDetails(sessionResultDetails);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+
+            var exception = assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_documentNumberIsEmpty_throwException(String documentNumber) {
+            var sessionResult = toSessionResult(documentNumber);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `result.documentNumber` is empty", exception.getMessage());
+        }
     }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    void from_endResultIsNotPresent_throwException(String endResult) {
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult(endResult);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("End result parameter is missing in the session result", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @ArgumentsSource(SessionEndResultErrorArgumentsProvider.class)
-    void from_endResultIsError_throwException(String endResult, Class<? extends Exception> expectedException) {
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult(endResult);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-
-        assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
-    }
-
-    @ParameterizedTest
-    @ArgumentsSource(UserRefusedInteractionArgumentsProvider.class)
-    void from_endResultIsUserRefusedInteraction(String interaction, Class<? extends Exception> expectedException) {
-        var sessionResultDetails = new SessionResultDetails();
-        sessionResultDetails.setInteraction(interaction);
-
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("USER_REFUSED_INTERACTION");
-        sessionResult.setDetails(sessionResultDetails);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-
-        var exception = assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    void from_documentNumberIsEmpty_throwException(String documentNumber) {
-        var sessionResult = toSessionResult(documentNumber);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Document number parameter is missing in the session result", exception.getMessage());
-    }
 
     @ParameterizedTest
     @NullAndEmptySource
@@ -148,7 +157,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol(signatureProtocol);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Signature protocol parameter is missing in session status", exception.getMessage());
+        assertEquals("Session status field `signatureProtocol` is empty", exception.getMessage());
     }
 
     @ParameterizedTest
@@ -161,126 +170,659 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setSignatureProtocol(invalidSignatureProtocol);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Invalid signature protocol in sessions status", exception.getMessage());
+        assertEquals("Invalid `signatureProtocol` in sessions status", exception.getMessage());
     }
 
-    @Test
-    void from_signatureIsNotProvided_throwException() {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+    @Nested
+    class ValidateSignature {
 
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
+        @Test
+        void from_signatureIsNotProvided_throwException() {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Signature parameter is missing in session status", exception.getMessage());
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature` is missing", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_signatureValueIsNotProvided_throwException(String signatureValue) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue(signatureValue);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.value` is empty", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"\\|invalidSignatureValue|", "#1234567890"})
+        void from_signatureValueDoesNotMatchThePattern_throwException(String signatureValue) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue(signatureValue);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.value` is not in Base64-encoded format", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_serverRandomIsNotProvided_throwException(String serverRandom) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom(serverRandom);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.severRandom` is empty", exception.getMessage());
+        }
+
+        @Test
+        void from_serverRandomLengthIsLessThanAllowed_throwException() {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom("a".repeat(23));
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.serverRandom` is less than required length", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"\\|YXRsZWFzdDI0Y2hhcmFjdGVycw|", "#YXRsZWFzdDI0Y2hhcmFjdGVycw"})
+        void from_serverRandomValueDoesNotMatchThePattern_throwException(String serverRandom) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom(serverRandom);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.serverRandom` is not in Base64-encoded format", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_userChallengeIsEmpty_throwException(String userChallenge) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom("a".repeat(24));
+            sessionSignature.setUserChallenge(userChallenge);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.userChallenge` is empty", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"lengthIsLess", "lengthIsExceedingTheLimit1234567890123456789"})
+        void from_providedUserChallengeLengthIsIncorrect_throwException(String userChallenge) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom("a".repeat(24));
+            sessionSignature.setUserChallenge(userChallenge);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("`signature.userChallenge` value has incorrect length in session status", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"\\#dXNlcmlzYmVpbmdjaGFsbGVuZ2VkYnl0aGlzdmFsd", "dXNlcmlzYmVpbmdjaGFsbGVuZ2VkYnl0aGlzdmFsdW="})
+        void from_providedUserChallengeDoesNotMatchThePattern_throwException(String userChallenge) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom("a".repeat(24));
+            sessionSignature.setUserChallenge(userChallenge);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("`signature.userChallenge` value in session status is not in the expected Base64-encoded format", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_flowTypeNotProvided_throwException(String flowType) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom("a".repeat(24));
+            sessionSignature.setUserChallenge("a".repeat(43));
+            sessionSignature.setFlowType(flowType);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.flowType` is empty", exception.getMessage());
+        }
+
+        @Test
+        void from_flowTypeNotSupported_throwException() {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom("a".repeat(24));
+            sessionSignature.setUserChallenge("a".repeat(43));
+            sessionSignature.setFlowType("NOT_SUPPORTED_FLOW_TYPE");
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Invalid `signature.flowType` in session status", exception.getMessage());
+        }
+
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_signatureAlgorithmIsNotProvided_throwException(String signatureAlgorithm) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+            var sessionSignature = toSessionSignature(signatureAlgorithm);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Session status field `signature.signatureAlgorithm` is empty", exception.getMessage());
+        }
+
+        @Test
+        void from_signatureAlgorithmIsNotSupported_throwException() {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+            var sessionSignature = new SessionSignature();
+            sessionSignature.setValue("signatureValue");
+            sessionSignature.setServerRandom("a".repeat(24));
+            sessionSignature.setUserChallenge("a".repeat(43));
+            sessionSignature.setFlowType("QR");
+            sessionSignature.setSignatureAlgorithm("InvalidAlgorithm");
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Invalid `signature.signatureAlgorithm` in the session status", exception.getMessage());
+        }
+
+        @Nested
+        class ValidateSignatureAlgorithmParameters {
+
+            @Test
+            void from_signatureAlgorithmParametersAreMissing_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Session status field `signature.signatureAlgorithmParameters` is missing", exception.getMessage());
+            }
+
+            @ParameterizedTest
+            @NullAndEmptySource
+            void from_hashAlgorithmIsMissing_throwException(String hashAlgorithm) {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm(hashAlgorithm);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Session status field `signature.signatureAlgorithmParameters.hashAlgorithm` is empty", exception.getMessage());
+            }
+
+            @Test
+            void from_hashAlgorithmIsInvalid_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA-1");
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Invalid `signature.signatureAlgorithmParameters.hashAlgorithm` in session status", exception.getMessage());
+            }
+
+            @Test
+            void from_masGenAlgorithmIsMissing_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm` is missing", exception.getMessage());
+            }
+
+            @ParameterizedTest
+            @NullAndEmptySource
+            void from_algorithmIsEmptyInMaskGenAlgorithm_throwException(String algorithm) {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA-256");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm(algorithm);
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm` is empty", exception.getMessage());
+            }
+
+            @Test
+            void from_algorithmValueInMaskGenAlgorithmIsInvalid_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA-256");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm("invalid");
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Invalid`signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status", exception.getMessage());
+            }
+
+            @ParameterizedTest
+            @NullAndEmptySource
+            void from_hashAlgorithmInMaskGenAlgorithmIsEmpty_throwException(String hashAlgorithm) {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA-256");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm("id-mgf1");
+
+                var maskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+                maskGenAlgorithmParameters.setHashAlgorithm(hashAlgorithm);
+                maskGenAlgorithm.setParameters(maskGenAlgorithmParameters);
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in empty", exception.getMessage());
+            }
+
+            @Test
+            void from_hashAlgorithmInMaskGenAlgorithmDoesNotMatchSignaturesHashAlgorithm_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm("id-mgf1");
+                var maskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+                maskGenAlgorithmParameters.setHashAlgorithm("SHA-512");
+                maskGenAlgorithm.setParameters(maskGenAlgorithmParameters);
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("`signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in session status does not match `signature.signatureAlgorithmParameters.hashAlgorithm`", exception.getMessage());
+            }
+
+            @Test
+            void from_saltLengthIsMissing_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm("id-mgf1");
+                var maskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+                maskGenAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                maskGenAlgorithm.setParameters(maskGenAlgorithmParameters);
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                signatureAlgorithmParameters.setSaltLength(null);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Session status field `signature.saltLength` is empty", exception.getMessage());
+            }
+
+            @Test
+            void from_saltLengthDoesNotMatchHashAlgorithmOctetLength_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm("id-mgf1");
+                var maskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+                maskGenAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                maskGenAlgorithm.setParameters(maskGenAlgorithmParameters);
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                signatureAlgorithmParameters.setSaltLength(20);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Invalid `signature.signatureAlgorithmParameters.saltLength` in session status", exception.getMessage());
+            }
+
+            @Test
+            void from_trailerFieldIsEmpty_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm("id-mgf1");
+                var maskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+                maskGenAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                maskGenAlgorithm.setParameters(maskGenAlgorithmParameters);
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                signatureAlgorithmParameters.setSaltLength(64);
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Session status field `signature.signatureAlgorithmParameters.trailerField` is empty", exception.getMessage());
+            }
+
+            @Test
+            void from_trailerFieldValueIsInvalid_throwException() {
+                var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+
+                var sessionSignature = new SessionSignature();
+                sessionSignature.setValue("signatureValue");
+                sessionSignature.setServerRandom("a".repeat(24));
+                sessionSignature.setUserChallenge("a".repeat(43));
+                sessionSignature.setFlowType("QR");
+                sessionSignature.setSignatureAlgorithm("rsassa-pss");
+
+                var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+                signatureAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+                maskGenAlgorithm.setAlgorithm("id-mgf1");
+                var maskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+                maskGenAlgorithmParameters.setHashAlgorithm("SHA3-512");
+                maskGenAlgorithm.setParameters(maskGenAlgorithmParameters);
+                signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+                signatureAlgorithmParameters.setSaltLength(64);
+                signatureAlgorithmParameters.setTrailerField("invalid");
+                sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
+                var sessionStatus = new SessionStatus();
+                sessionStatus.setResult(sessionResult);
+                sessionStatus.setSignatureProtocol("ACSP_V2");
+                sessionStatus.setSignature(sessionSignature);
+
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                assertEquals("Invalid `signature.signatureAlgorithmParameters.trailerField` value in session status", exception.getMessage());
+            }
+        }
+    }
+
+    @Nested
+    class ValidateCertificate {
+
+        @Test
+        void from_sessionCertificateIsNotProvided_throwException() {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+            var sessionSignature = toSessionSignature("rsassa-pss");
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Certificate parameter is missing in session status", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_certificateValueIsNotProvided_throwException(String certificateValue) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+            var sessionSignature = toSessionSignature("rsassa-pss");
+
+            var sessionCertificate = new SessionCertificate();
+            sessionCertificate.setValue(certificateValue);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+            sessionStatus.setCert(sessionCertificate);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Value parameter is missing in certificate", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void from_certificateLevelIsNotProvided_throwException(String certificateLevel) {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+            var sessionSignature = toSessionSignature("rsassa-pss");
+            var sessionCertificate = toSessionCertificate("certificateValue", certificateLevel);
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+            sessionStatus.setCert(sessionCertificate);
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertEquals("Certificate level parameter is missing in certificate", exception.getMessage());
+        }
+
+        @Test
+        void from_certificateIsInvalid_throwException() {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+            var sessionSignature = toSessionSignature("rsassa-pss");
+            var sessionCertificate = toSessionCertificate("invalidCertificateValue", "QUALIFIED");
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+            sessionStatus.setCert(sessionCertificate);
+            sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
+
+            var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertTrue(exception.getMessage().startsWith("Failed to parse X509 certificate from"));
+        }
     }
 
     @ParameterizedTest
     @NullAndEmptySource
-    void from_signatureValueIsNotProvided_throwException(String signatureValue) {
+    void from_interactionTypeUsedNotProvided_throwException(String interactionFlowUsed) {
         var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-
-        var sessionSignature = new SessionSignature();
-        sessionSignature.setValue(signatureValue);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
-        sessionStatus.setSignature(sessionSignature);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Value parameter is missing in signature", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    void from_serverRandomIsNotProvided_throwException(String serverRandom) {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-
-        var sessionSignature = new SessionSignature();
-        sessionSignature.setValue("signatureValue");
-        sessionSignature.setServerRandom(serverRandom);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
-        sessionStatus.setSignature(sessionSignature);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Server random parameter is missing in signature", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    void from_signatureAlgorithmIsNotProvided_throwException(String signatureAlgorithm) {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-        var sessionSignature = toSessionSignature(signatureAlgorithm);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
-        sessionStatus.setSignature(sessionSignature);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Signature algorithm parameter is missing in signature", exception.getMessage());
-    }
-
-    @Test
-    void from_sessionCertificateIsNotProvided_throwException() {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-        var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
-        sessionStatus.setSignature(sessionSignature);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Certificate parameter is missing in session status", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    void from_certificateValueIsNotProvided_throwException(String certificateValue) {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-        var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
-
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(certificateValue);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
-        sessionStatus.setSignature(sessionSignature);
-        sessionStatus.setCert(sessionCertificate);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Value parameter is missing in certificate", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    void from_certificateLevelIsNotProvided_throwException(String certificateLevel) {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-        var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
-        var sessionCertificate = toSessionCertificate("certificateValue", certificateLevel);
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
-        sessionStatus.setSignature(sessionSignature);
-        sessionStatus.setCert(sessionCertificate);
-
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Certificate level parameter is missing in certificate", exception.getMessage());
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    void from_interactionFlowUsedNotProvided_throwException(String interactionFlowUsed) {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-        var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
+        var sessionSignature = toSessionSignature("rsassa-pss");
         var sessionCertificate = toSessionCertificate("certificateValue", "QUALIFIED");
 
         var sessionStatus = new SessionStatus();
@@ -291,24 +833,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setInteractionTypeUsed(interactionFlowUsed);
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertEquals("Interaction flow used parameter is missing in the session status", exception.getMessage());
-    }
-
-    @Test
-    void from_certificateIsInvalid_throwException() {
-        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-        var sessionSignature = toSessionSignature("sha512WithRSAEncryption");
-        var sessionCertificate = toSessionCertificate("invalidCertificateValue", "QUALIFIED");
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setSignatureProtocol("ACSP_V2");
-        sessionStatus.setSignature(sessionSignature);
-        sessionStatus.setCert(sessionCertificate);
-        sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
-
-        var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-        assertTrue(exception.getMessage().startsWith("Failed to parse X509 certificate from"));
+        assertEquals("Session status field `interactionTypeUsed` is empty", exception.getMessage());
     }
 
     private static SessionResult toSessionResult(String documentNumber) {
@@ -318,11 +843,28 @@ class AuthenticationResponseMapperTest {
         return sessionResult;
     }
 
-    private static SessionSignature toSessionSignature(String sha512WithRSAEncryption) {
+    private static SessionSignature toSessionSignature(String signatureAlgorithm) {
         var sessionSignature = new SessionSignature();
         sessionSignature.setValue("signatureValue");
-        sessionSignature.setServerRandom("serverRandom");
-        sessionSignature.setSignatureAlgorithm(sha512WithRSAEncryption);
+        sessionSignature.setServerRandom("U2VydmVyUmFuZG9tTW9yZVRoYW4yNENoYXJhY3RlcnM=");
+        sessionSignature.setUserChallenge("dXNlcmlzYmVpbmdjaGFsbGVuZ2VkYnl0aGlzdmFsdWU");
+
+        sessionSignature.setSignatureAlgorithm(signatureAlgorithm);
+        sessionSignature.setFlowType("QR");
+
+        var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+        signatureAlgorithmParameters.setHashAlgorithm("SHA3-512");
+        signatureAlgorithmParameters.setSaltLength(64);
+        signatureAlgorithmParameters.setTrailerField("0xbc");
+
+        var maskGenAlgorithm = new SessionMaskGenAlgorithm();
+        maskGenAlgorithm.setAlgorithm("id-mgf1");
+
+        var sessionMaskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+        sessionMaskGenAlgorithmParameters.setHashAlgorithm("SHA3-512");
+        maskGenAlgorithm.setParameters(sessionMaskGenAlgorithmParameters);
+        signatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+        sessionSignature.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
         return sessionSignature;
     }
 
