@@ -162,18 +162,18 @@ client.
 setTrustStore(trustStore);
 ```
 
-### Certificate choice by document number
+## Certificate choice by document number
 
 In API v3.1, the flow to initiate a **notification-based certificate choice session using a document number** was removed. Instead, a new, simplified endpoint was introduced.
 
-#### Request Parameters
-The request parameters for the notification-based signature session are as follows:
+### Request Parameters
+The request parameters for the certificate choice by document number request are as follows:
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. Possible values are `ADVANCED`, `QUALIFIED` or `QSCD`. Defaults to `QUALIFIED`.
 
-#### Response Parameters
+### Response Parameters
 * `state`: Required. Indicates result. Possible values:
     * `OK`: Certificate found and returned.
     * `DOCUMENT_UNUSABLE`: user's Smart-ID account is not usable for signing
@@ -181,11 +181,11 @@ The request parameters for the notification-based signature session are as follo
     * `value`: Required. Base64-encoded X.509 certificate (matches pattern `^[a-zA-Z0-9+/]+={0,2}$`)
 * `certificateLevel`: Required. Level of the certificate, Possible values `ADVANCED`or `QUALIFIED`
 
-#### Get certificate using document number
+### Get certificate using document number
 
 RP can directly query the user's signing certificate by document number — no session flow or user interaction required.
 
-##### Usage example in Java
+#### Usage example in Java
 
 ```java
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
