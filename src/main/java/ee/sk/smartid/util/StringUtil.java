@@ -36,4 +36,8 @@ public class StringUtil {
         return cs == null || cs.isEmpty();
     }
 
+    public static String orEmpty(String input) {
+        return input == null ? "" : input;
+    }
+
 }

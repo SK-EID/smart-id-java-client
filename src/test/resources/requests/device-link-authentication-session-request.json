@@ -6,7 +6,7 @@
     "rpChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "rsassa-pss",
     "signatureAlgorithmParameters": {
-      "hashAlgorithm": "SHA_512"
+      "hashAlgorithm": "SHA3-512"
     }
   },
   "certificateLevel": "QUALIFIED",

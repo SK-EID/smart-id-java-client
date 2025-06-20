@@ -28,6 +28,8 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum HashAlgorithm implements Serializable {
 
     SHA_256("SHA-256"),
@@ -43,6 +45,7 @@ public enum HashAlgorithm implements Serializable {
         this.value = value;
     }
 
+    @JsonValue
     public String getValue() {
         return value;
     }

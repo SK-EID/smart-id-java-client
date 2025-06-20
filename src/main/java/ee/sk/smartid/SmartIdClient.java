@@ -147,12 +147,14 @@ public class SmartIdClient {
     }
 
     /**
-     * Create builder for generating dynamic link or QR-code
+     * Create builder for generating device link or QR-code
      *
-     * @return DynamicLinkRequestBuilder
+     * @return DeviceLinkBuilder
+     * @throws SmartIdClientException if required parameters are missing or invalid
      */
     public DeviceLinkBuilder createDynamicContent() {
-        return new DeviceLinkBuilder();
+        return new DeviceLinkBuilder()
+                .withRelyingPartyName(relyingPartyName);
     }
 
     /**
