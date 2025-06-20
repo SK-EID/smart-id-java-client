@@ -26,27 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.rest.dao.Interaction;
+import java.io.Serializable;
+import java.util.Set;
 
-import org.bouncycastle.util.encoders.Base64;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+public class SignatureAlgorithmParameters implements Serializable {
 
-public class InteractionUtil {
+    private static final Set<String> SUPPORTED_HASH_ALGORITHMS = Set.of("SHA-256", "SHA-384", "SHA-512", "SHA3-256", "SHA3-384", "SHA3-512");
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private String hashAlgorithm;
 
-    private InteractionUtil() {
+    public String getHashAlgorithm() {
+        return hashAlgorithm;
     }
 
-    public static String encodeInteractionsAsBase64(List<? extends Interaction> interactions) {
-        try {
-            String json = objectMapper.writeValueAsString(interactions);
-            return Base64.toBase64String(json.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to encode interactions to Base64", e);
+    public void setHashAlgorithm(String hashAlgorithm) {
+        if (!SUPPORTED_HASH_ALGORITHMS.contains(hashAlgorithm)) {
+            throw new SmartIdClientException("Unsupported hashAlgorithm: " + hashAlgorithm + ". Supported values: " + SUPPORTED_HASH_ALGORITHMS);
         }
+        this.hashAlgorithm = hashAlgorithm;
     }
 }

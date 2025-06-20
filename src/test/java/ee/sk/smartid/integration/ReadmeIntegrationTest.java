@@ -12,10 +12,10 @@ package ee.sk.smartid.integration;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,12 +33,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -52,8 +54,8 @@ import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.AuthCode;
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationResponse;
 import ee.sk.smartid.AuthenticationResponseMapper;
@@ -103,14 +105,15 @@ public class ReadmeIntegrationTest {
         @Test
         void anonymousAuthentication_withApp2App() {
             // For security reasons a new hash value must be created for each new authentication request
-            String randomChallenge = RpChallengeGenerator.generate();
-            // Store generated randomChallenge only on backend side. Do not expose it to the client side.
+            String rpChallenge = RpChallengeGenerator.generate();
+            // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
             DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
                     .createDeviceLinkAuthentication()
                     // to use anonymous authentication, do not set semantics identifier or document number
-                    .withRpChallenge(randomChallenge)
+                    .withRpChallenge(rpChallenge)
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
                             // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
@@ -128,37 +131,34 @@ public class ReadmeIntegrationTest {
             // Will be used to calculate elapsed time being used in dynamic link and in authCode
             Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-            // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+            // Generate QR-code or device link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
-            // Generate auth code
-            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
-            // Generate dynamic link
-            URI dynamicLink = smartIdClient.createDynamicContent()
-                    .withDeviceLinkType(DeviceLinkType.APP_2_APP) // specify the type of dynamic link
-                    .withSessionType(SessionType.AUTHENTICATION) // specify type of the session the dynamic link is for
-                    .withSessionToken(sessionToken) // provide token from sessions response
-                    .withElapsedSeconds(elapsedSeconds) // calculate elapsed seconds from response received time
-                    .withAuthCode(authCode)
-                    .createUri();
-            // Return dynamic-link to the frontend to be used by the user.
+            // Build the  device link URI (without the authCode parameter)
+            // This base URI will be used for QR code or App2App flows
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase("smartid://")
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(sessionToken)
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withLang("est")
+                    .buildDeviceLink(sessionSecret);
 
-            // Get the session status poller
+            // Use the sessionId from the authentication session response to poll for session status updates
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-            // Get sessionID from current session response and poll for session status
             SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
-
+            // The session can have different states such as RUNNING or COMPLETE.
+            // Check that the session has completed successfully
             assertEquals("COMPLETE", sessionStatus.getState());
 
-            // validate sessions status result and map session status to authentication response
+            // Map the final session status to an authentication response object
             AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
-            // validate certificate value and signature and map it to authentication identity
-            var authenticationResponseValidator = new AuthenticationResponseValidator();
-            // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
+            // Validate the certificate and signature, then map the authentication response to the user's identity
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator().toAuthenticationIdentity(authenticationResponse, rpChallenge);
 
-            // validate certificate value and signature and map it to authentication identity
-            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, randomChallenge);
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
             assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
@@ -175,20 +175,19 @@ public class ReadmeIntegrationTest {
                     "40504040001"); // identifier (according to country and identity type reference)
 
             // For security reasons a new random challenge must be created for each new authentication request
-            String randomChallenge = RpChallengeGenerator.generate();
-            // Store generated randomChallenge only backend side. Do not expose it to the client side.
+            String rpChallenge = RpChallengeGenerator.generate();
+            // Store generated rpChallenge only backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
             DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
                     .createDeviceLinkAuthentication()
                     .withSemanticsIdentifier(semanticsIdentifier)
-                    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-                    .withRpChallenge(randomChallenge)
+                    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withRpChallenge(rpChallenge)
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ))
-                    // we want to get the IP address of the device running Smart-ID app
-                    // for the IP to be returned the service provider (SK) must switch on this option
                     .withShareMdClientIpAddress(true)
                     .initAuthenticationSession();
 
@@ -200,38 +199,38 @@ public class ReadmeIntegrationTest {
             String sessionSecret = authenticationSessionResponse.getSessionSecret();
             Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-            // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
+            // Generate QR-code or device link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
 
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
-            // Generate auth code
-            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
-            // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
-            String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
-                    .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
-                    .withSessionToken(sessionToken) // provide token from sessions response
+            // Build the  device link URI (without the authCode parameter)
+            // This base URI will be used for QR code or App2App flows
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase("smartid://")
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(sessionToken)
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(authCode)
-                    .createQrCodeDataUri();
-            // Display QR-code to the user
+                    .withLang("est")
+                    .buildDeviceLink(sessionSecret);
 
-            // Get the session status poller
+            // Use sessionId to poll for session status updates
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-            // Get sessionID from current session response and poll for session status
             SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+
+            // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
             assertEquals("COMPLETED", sessionStatus.getState());
             assertEquals("OK", sessionStatus.getResult().getEndResult());
 
-            // validate sessions status result and map session status to authentication response
+            // Map the final session status to an authentication response object
             AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
-            // validate certificate value and signature and map it to authentication identity
-            var authenticationResponseValidator = new AuthenticationResponseValidator();
-            // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
 
-            // validate certificate value and signature and map it to authentication identity
-            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, "randomChallenge");
+            // Validate the certificate and signature, then map the authentication response to the user's identity
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator()
+                    .toAuthenticationIdentity(authenticationResponse, rpChallenge);
+
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
             assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
@@ -243,20 +242,19 @@ public class ReadmeIntegrationTest {
             String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
             // For security reasons a new random challenge must be created for each new authentication request
-            String randomChallenge = RpChallengeGenerator.generate();
-            // Store generated randomChallenge only backend side. Do not expose it to the client side.
-            // Used for validating authentication sessions status OK response
+            String rpChallenge = RpChallengeGenerator.generate();
+            // Store generated rpChallenge only on backend side. Do not expose it to the client side.
+            // Used for validating authentication session status OK response
 
             DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
                     .createDeviceLinkAuthentication()
                     .withDocumentNumber(documentNumber)
-                    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-                    .withRpChallenge(randomChallenge)
+                    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withRpChallenge(rpChallenge)
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ))
-                    // we want to get the IP address of the device running Smart-ID app
-                    // for the IP to be returned the service provider (SK) must switch on this option
                     .withShareMdClientIpAddress(true)
                     .initAuthenticationSession();
 
@@ -268,39 +266,34 @@ public class ReadmeIntegrationTest {
             String sessionSecret = authenticationSessionResponse.getSessionSecret();
             Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-            // Generate QR-code or dynamic link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
-
-            // Calculate elapsed seconds from response received time
+            // Generate the base (unprotected) device link URI, which does not yet include the authCode
             long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
-            // Generate auth code
-            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.AUTHENTICATION, elapsedSeconds, sessionSecret);
-            // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
-            String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
-                    .withSessionType(SessionType.AUTHENTICATION) // specify type of the sessions the dynamic link is for
-                    .withSessionToken(sessionToken) // provide token from sessions response
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase("smartid://")
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(sessionToken)
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(authCode)
-                    .createQrCodeDataUri();
-            // Display QR-code to the user
+                    .withLang("est")
+                    .buildDeviceLink(sessionSecret);
 
-            // Get the session status poller
+            // Use sessionId to poll for session status updates
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-            // Get sessionID from current session response and poll for session status
             SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+
+            // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
             assertEquals("COMPLETE", sessionStatus.getState());
-
             assertEquals("OK", sessionStatus.getResult().getEndResult());
-            System.out.println("Session completed with result: " + sessionStatus.getResult().getEndResult());
-            // validate sessions status result and map session status to authentication response
-            AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
-            // validate certificate value and signature and map it to authentication identity
-            var authenticationResponseValidator = new AuthenticationResponseValidator();
-            // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
 
-            // validate certificate value and signature and map it to authentication identity
-            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, "randomChallenge");
+            // Map the final session status to an authentication response object
+            AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
+
+            // Validate the certificate and signature, then map the authentication response to the user's identity
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator()
+                    .toAuthenticationIdentity(authenticationResponse, rpChallenge);
+
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
             assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
@@ -370,15 +363,15 @@ public class ReadmeIntegrationTest {
             // Calculate elapsed seconds from response received time
             long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
             // Generate auth code
-            String authCode = AuthCode.createHash(DeviceLinkType.QR_CODE, SessionType.SIGNATURE, elapsedSeconds, sessionSecret);
-            // Generate dynamic link Data URI (data:image/png;base64,bash64EncodedImageData..)
-            String qrCodeDataUri = smartIdClient.createDynamicContent()
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE) // using other values than QR will result in an error
-                    .withSessionType(SessionType.SIGNATURE) // specify type of the sessions the dynamic link is for
-                    .withSessionToken(sessionToken) // provide token from sessions response
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase("smartid://")
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withSessionType(SessionType.SIGNATURE)
+                    .withSessionToken(sessionToken)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                     .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(authCode)
-                    .createQrCodeDataUri();
+                    .withLang("est")
+                    .buildDeviceLink(sessionSecret);
             // Display QR-code to the user
 
             // Get the session status poller
@@ -406,14 +399,14 @@ public class ReadmeIntegrationTest {
             String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
             // For security reasons a new hash value must be created for each new authentication request
-            String randomChallenge = RpChallengeGenerator.generate();
-            // Store generated randomChallenge only on backend side. Do not expose it to the client side.
+            String rpChallenge = RpChallengeGenerator.generate();
+            // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
             NotificationAuthenticationSessionResponse authenticationSessionResponse = smartIdClient
                     .createNotificationAuthentication()
                     .withDocumentNumber(documentNumber)
-                    .withRandomChallenge(randomChallenge)
+                    .withRandomChallenge(rpChallenge)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withAllowedInteractionsOrder(Collections.singletonList(
                             NotificationInteraction.verificationCodeChoice("Log in?")
@@ -442,7 +435,7 @@ public class ReadmeIntegrationTest {
             // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
 
             // validate certificate value and signature and map it to authentication identity
-            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, randomChallenge);
+            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, rpChallenge);
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
             assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
@@ -459,14 +452,14 @@ public class ReadmeIntegrationTest {
                     "40504040001"); // identifier (according to country and identity type reference)
 
             // For security reasons a new hash value must be created for each new authentication request
-            String randomChallenge = RpChallengeGenerator.generate();
-            // Store generated randomChallenge only on backend side. Do not expose it to the client side.
+            String rpChallenge = RpChallengeGenerator.generate();
+            // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
             NotificationAuthenticationSessionResponse authenticationSessionResponse = smartIdClient
                     .createNotificationAuthentication()
                     .withSemanticsIdentifier(semanticIdentifier)
-                    .withRandomChallenge(randomChallenge)
+                    .withRandomChallenge(rpChallenge)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withAllowedInteractionsOrder(Collections.singletonList(
                             NotificationInteraction.verificationCodeChoice("Log in?")
@@ -495,7 +488,7 @@ public class ReadmeIntegrationTest {
             // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
 
             // validate certificate value and signature and map it to authentication identity
-            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, randomChallenge);
+            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, rpChallenge);
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
             assertEquals("TESTNUMBER", authenticationIdentity.getSurname());

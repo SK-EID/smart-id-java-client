@@ -12,6 +12,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - Removed notification-based certificate choice request with document number.
 
+## [3.1.2] - 2025-06-05
+
+### Changed
+
+- Replaced old dynamic content and authCode generation logic to match Smart-ID v3.1 authCode specification.
+- Introduced a `DeviceLinkBuilder` to generate device-links.
+  - Validates required parameters such as `deviceLinkBase`, `version`, `deviceLinkType`, `sessionType`, `lang`, `elapsedSeconds` and `sessionToken`.
+  - Ensures `elapsedSeconds` is only used for QR_CODE flows.
+  - Moved `deviceLinkBase` to required input (no more default).
+  - Handles both unprotected device-link generation and HMAC-SHA256 based authCode calculation as per specification.
+  - New payload structure includes required and optional fields as per documentation.
+  - `schemeName` is fixed to `"smart-id"`.
+  - Does not store `sessionSecret`, ensures it must be passed to the build method.
+- Removed deprecated dynamic link and QR code generation logic from old builders and helpers.
+
 ## [3.1.1] - 2025-06-02
 
 ### Changed

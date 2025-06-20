@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,6 @@ package ee.sk.smartid;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -50,192 +49,369 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 class DeviceLinkBuilderTest {
 
+    private static final String SESSION_SECRET = Base64.getEncoder().encodeToString("sessionSecret".getBytes(StandardCharsets.UTF_8));
+    private static final String DEVICE_LINK_BASE = "https://smart-id.com/device-link/";
+    private static final String DEVICE_LINK_HOST = "smart-id.com";
+    private static final String SESSION_TOKEN = "token123";
+    private static final String LANGUAGE = "eng";
+    private static final String VERSION_INVALID = "0.9";
+    private static final long ELAPSED_SECONDS = 1L;
+    private static final String CALLBACK_URL = "https://callback.url";
+    private static final String RELYING_PARTY_NAME = "DEMO";
+    private static final String BASE64_DIGEST = "dGVzdC1kaWdlc3Q=";
+    private static final String BROKERED_RP = "QlJP";
+    private static final String BASE64_INTERACTIONS = "SW50ZXJhY3Rpb25z";
+    private static final String AUTH_CODE_PATTERN = "^[A-Za-z0-9_-]{43}$";
+
     @Nested
-    class CreateUri {
+    class CreateUnprotectedUri {
 
         @ParameterizedTest
         @EnumSource
-        void createUri_forDifferentDynamicLinks(DeviceLinkType deviceLinkType) {
-            long elapsedSeconds = 1L;
+        void createUri_validInputs_shouldBuildUri(DeviceLinkType deviceLinkType) {
             URI uri = new DeviceLinkBuilder()
-                    .withBaseUrl("https://smart-id.com/dynamic-link/")
-                    .withVersion("0.1")
-                    .withDeviceLinkType(deviceLinkType)
+                    .withDeviceLinkBase(DEVICE_LINK_BASE)
+                    .withSessionToken(SESSION_TOKEN)
                     .withSessionType(SessionType.AUTHENTICATION)
-                    .withSessionToken("sessionToken")
-                    .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(AuthCode.createHash(deviceLinkType, SessionType.AUTHENTICATION, elapsedSeconds, toBase64("sessionSecret")))
-                    .createUri();
+                    .withDeviceLinkType(deviceLinkType)
+                    .withBrokeredRpName(BROKERED_RP)
+                    .withInteractions(BASE64_INTERACTIONS)
+                    .withLang(LANGUAGE)
+                    .withElapsedSeconds(deviceLinkType == DeviceLinkType.QR_CODE ? ELAPSED_SECONDS : null)
+                    .createUnprotectedUri();
 
-            assertUri(uri, deviceLinkType, SessionType.AUTHENTICATION);
+            assertThat(uri.getHost(), equalTo(DEVICE_LINK_HOST));
         }
 
-        @ParameterizedTest
-        @EnumSource
-        void createUri_withSessionType(SessionType sessionType) {
-            long elapsedSeconds = 1L;
-            URI uri = new DeviceLinkBuilder()
-                    .withBaseUrl("https://smart-id.com/dynamic-link/")
-                    .withVersion("0.1")
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withSessionType(sessionType)
-                    .withSessionToken("sessionToken")
-                    .withElapsedSeconds(elapsedSeconds)
-                    .withAuthCode(AuthCode.createHash(DeviceLinkType.QR_CODE, sessionType, elapsedSeconds, toBase64("sessionSecret")))
-                    .createUri();
-
-            assertUri(uri, DeviceLinkType.QR_CODE, sessionType);
-        }
-
-        @ParameterizedTest
-        @NullAndEmptySource
-        void createUri_baseUrlIsOverriddenToBeEmpty_throwException(String baseUrl) {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
-                            .withBaseUrl(baseUrl)
-                            .createUri());
-            assertEquals("Parameter baseUrl must be set", ex.getMessage());
+        @Test
+        void createUri_invalidVersion_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withVersion(VERSION_INVALID)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
+            assertEquals("Only version 1.0 is allowed", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        void createUri_versionIsOverriddenToBeEmpty_throwException(String version) {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
+        void createUri_missingDeviceLinkBase_throwsException(String base) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(base)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
+            assertEquals("Parameter deviceLinkBase must be set", ex.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void createUri_missingVersion_throwsException(String version) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
                             .withVersion(version)
-                            .createUri());
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
             assertEquals("Parameter version must be set", ex.getMessage());
         }
 
         @Test
-        void createUri_dynamicLinkTypeIsNotProvided_throwException() {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
+        void createUri_missingDeviceLinkType_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
                             .withDeviceLinkType(null)
-                            .createUri());
-            assertEquals("Parameter dynamicLinkType must be set", ex.getMessage());
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
+            assertEquals("Parameter deviceLinkType must be set", ex.getMessage());
         }
 
         @Test
-        void createUri_sessionTypeIsNotProvided_throwException() {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
+        void createUri_missingSessionType_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withSessionType(null)
-                            .createUri());
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
             assertEquals("Parameter sessionType must be set", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        void createUri_sessionTokenIsEmpty_throwException(String sessionToken) {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
-                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        void createUri_missingSessionToken_throwsException(String token) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(token)
                             .withSessionType(SessionType.AUTHENTICATION)
-                            .withSessionToken(sessionToken)
-                            .createUri());
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
             assertEquals("Parameter sessionToken must be set", ex.getMessage());
         }
 
         @Test
-        void createUri_elapsedSecondsNotProvided_throwException() {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
-                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        void createUri_missingElapsedSecondsForQrCode_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
-                            .withSessionToken("sessionToken")
-                            .withElapsedSeconds(null)
-                            .createUri());
-            assertEquals("Parameter elapsedSeconds must be set", ex.getMessage());
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .createUnprotectedUri()
+            );
+            assertEquals("elapsedSeconds must be set for QR_CODE deviceLinkType", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        void createUri_userLanguageIsEmpty_throwException(String userLanguage) {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
-                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        void createUri_missingLang_throwsException(String lang) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
-                            .withSessionToken("sessionToken")
-                            .withElapsedSeconds(1L)
-                            .withUserLanguage(userLanguage)
-                            .createUri());
-            assertEquals("Parameter userLanguage must be set", ex.getMessage());
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(lang)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
+            assertEquals("Parameter lang must be set", ex.getMessage());
         }
 
-        @ParameterizedTest
-        @NullAndEmptySource
-        void createUri_authCodeIsEmpty_throwException(String authCode) {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
-                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        @Test
+        void createUri_elapsedSecondsSetForNonQrCode_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
-                            .withSessionToken("sessionToken")
-                            .withElapsedSeconds(1L)
-                            .withAuthCode(authCode)
-                            .createUri());
-            assertEquals("Parameter authCode must be set", ex.getMessage());
+                            .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
+            assertEquals("elapsedSeconds is only valid for QR_CODE deviceLinkType", ex.getMessage());
         }
     }
 
     @Nested
-    class CreateQrCode {
+    class BuildDeviceLink {
 
         @ParameterizedTest
-        @EnumSource
-        void createQrCode_forDifferentSessionsTypes(SessionType sessionType) {
-            String qrDataUri = new DeviceLinkBuilder()
-                    .withBaseUrl("https://smart-id.com/dynamic-link/")
-                    .withVersion("0.1")
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+        @EnumSource(value = SessionType.class)
+        void buildDeviceLink(SessionType sessionType) {
+            DeviceLinkBuilder builder = new DeviceLinkBuilder()
+                    .withDeviceLinkBase(DEVICE_LINK_BASE)
+                    .withSessionToken(SESSION_TOKEN)
                     .withSessionType(sessionType)
-                    .withSessionToken("sessionToken")
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withBrokeredRpName(BROKERED_RP)
+                    .withInteractions(BASE64_INTERACTIONS)
+                    .withLang(LANGUAGE)
                     .withElapsedSeconds(1L)
-                    .withAuthCode(AuthCode.createHash(DeviceLinkType.QR_CODE, sessionType, 1, toBase64("sessionSecret")))
-                    .createQrCodeDataUri();
+                    .withRelyingPartyName(RELYING_PARTY_NAME);
 
-            String[] qrDataUriParts = qrDataUri.split(",");
-            URI uri = URI.create(QrCodeUtil.extractQrContent(qrDataUriParts[1]).getText());
-            assertUri(uri, DeviceLinkType.QR_CODE, sessionType);
+            if (sessionType != SessionType.CERTIFICATE_CHOICE) {
+                builder.withDigest(BASE64_DIGEST);
+            }
+
+            URI uri = builder.buildDeviceLink(SESSION_SECRET);
+
+            Map<String, String> params = toQueryParamsMap(uri);
+            assertThat(params.get("authCode"), matchesPattern(AUTH_CODE_PATTERN));
+        }
+
+        @Test
+        void buildDeviceLink_missingRelyingPartyName_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withDigest(BASE64_DIGEST)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
+        }
+
+        @Test
+        void buildDeviceLink_missingDigestForAuth_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("digest must be set for AUTH or SIGN flows", ex.getMessage());
+        }
+
+        @Test
+        void buildDeviceLink_qrCodeWithCallback_shouldThrowException() {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withDigest(BASE64_DIGEST)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .withInitialCallbackUrl(CALLBACK_URL)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("initialCallbackUrl must be empty for QR_CODE flow", exception.getMessage());
         }
 
         @ParameterizedTest
-        @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
-        void createQrCode_wrongLinkTypeIsBeingUsed_throwException(DeviceLinkType notSupportedDeviceLinkType) {
-            var ex = assertThrows(SmartIdClientException.class,
-                    () -> new DeviceLinkBuilder()
-                            .withDeviceLinkType(notSupportedDeviceLinkType)
+        @EnumSource(value = DeviceLinkType.class, names = {"APP_2_APP", "WEB_2_APP"})
+        void buildDeviceLink_sameDeviceFlowWithoutCallback_shouldThrowException(DeviceLinkType deviceLinkType) {
+            var exception = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
-                            .withSessionToken("sessionToken")
-                            .withElapsedSeconds(1L)
-                            .withAuthCode("authCode")
-                            .createQrCodeDataUri());
-            assertEquals("Device link type must be QR_CODE", ex.getMessage());
+                            .withDeviceLinkType(deviceLinkType)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withDigest(BASE64_DIGEST)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("initialCallbackUrl must be provided for same-device flows", exception.getMessage());
         }
-    }
 
-    private static void assertUri(URI uri, DeviceLinkType qrCode, SessionType sessionType) {
-        assertThat(uri.getScheme(), equalTo("https"));
-        assertThat(uri.getHost(), equalTo("smart-id.com"));
-        assertThat(uri.getPath(), equalTo("/dynamic-link/"));
+        @Test
+        void buildDeviceLink_withEmptyUnprotectedUri_shouldThrowException() {
+            var builder = new DeviceLinkBuilder() {
+                @Override
+                public URI createUnprotectedUri() {
+                    return URI.create("");
+                }
+            };
 
-        Map<String, String> queryParams = toQueryParamsMap(uri);
-        assertThat(queryParams, hasEntry("version", "0.1"));
-        assertThat(queryParams, hasEntry("dynamicLinkType", qrCode.getValue()));
-        assertThat(queryParams, hasEntry("sessionType", sessionType.getValue()));
-        assertThat(queryParams, hasEntry("sessionToken", "sessionToken"));
-        assertThat(queryParams, hasEntry("elapsedSeconds", "1"));
-        assertThat(queryParams, hasEntry(equalTo("authCode"), matchesPattern("^[A-Za-z0-9_-]+={0,2}$")));
-    }
+            builder
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withBrokeredRpName(BROKERED_RP)
+                    .withInteractions(BASE64_INTERACTIONS)
+                    .withElapsedSeconds(1L)
+                    .withDeviceLinkBase(DEVICE_LINK_BASE)
+                    .withSessionToken(SESSION_TOKEN)
+                    .withLang(LANGUAGE)
+                    .withDigest(BASE64_DIGEST)
+                    .withRelyingPartyName(RELYING_PARTY_NAME);
 
-    private static String toBase64(String data) {
-        return Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
+            var exception = assertThrows(SmartIdClientException.class, () -> builder.buildDeviceLink(SESSION_SECRET));
+            assertEquals("unprotected device-link must not be empty", exception.getMessage());
+        }
+
+        @Test
+        void buildDeviceLink_sameDeviceFlowWithCallback() {
+            URI uri = new DeviceLinkBuilder()
+                    .withDeviceLinkBase(DEVICE_LINK_BASE)
+                    .withSessionToken(SESSION_TOKEN)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                    .withBrokeredRpName(BROKERED_RP)
+                    .withInteractions(BASE64_INTERACTIONS)
+                    .withLang(LANGUAGE)
+                    .withInitialCallbackUrl(CALLBACK_URL)
+                    .withDigest(BASE64_DIGEST)
+                    .withRelyingPartyName(RELYING_PARTY_NAME)
+                    .buildDeviceLink(SESSION_SECRET);
+
+            Map<String, String> params = toQueryParamsMap(uri);
+            assertThat(params.get("authCode"), matchesPattern(AUTH_CODE_PATTERN));
+        }
+
+        @Test
+        void calculateAuthCode_invalidBase64Key_shouldThrowException() {
+            var builder = new DeviceLinkBuilder()
+                    .withDeviceLinkBase(DEVICE_LINK_BASE)
+                    .withSessionToken(SESSION_TOKEN)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withBrokeredRpName(BROKERED_RP)
+                    .withInteractions(BASE64_INTERACTIONS)
+                    .withLang(LANGUAGE)
+                    .withElapsedSeconds(1L)
+                    .withDigest(BASE64_DIGEST)
+                    .withRelyingPartyName(RELYING_PARTY_NAME);
+
+            var exception = assertThrows(SmartIdClientException.class, () -> builder.buildDeviceLink("!!!invalidBase64==="));
+
+            assertEquals("Failed to calculate authCode", exception.getMessage());
+            assertThat(exception.getCause(), org.hamcrest.Matchers.instanceOf(IllegalArgumentException.class));
+        }
+
     }
 
     private static Map<String, String> toQueryParamsMap(URI uri) {
         return Arrays.stream(uri.getQuery().split("&"))
-                .map(param -> param.split("="))
-                .collect(Collectors.toMap(param -> param[0], param -> param[1]));
+                .map(s -> s.split("="))
+                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
     }
 }

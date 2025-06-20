@@ -154,13 +154,17 @@ class QrCodeGeneratorTest {
     }
 
     private static URI createUri() {
-        return new DeviceLinkBuilder()
+        var linkBuilder = new DeviceLinkBuilder()
+                .withDeviceLinkBase("smartid://link")
                 .withDeviceLinkType(DeviceLinkType.QR_CODE)
                 .withSessionType(SessionType.AUTHENTICATION)
                 .withSessionToken("rTBfEhy0z4SlqmGHjIW6uQid")
-                .withAuthCode("Y7jBVqtP_KcY4GyJ0gTK717wZnfRLvondEUjjCRJAsQ")
                 .withElapsedSeconds(1L)
-                .createUri();
+                .withRelyingPartyName("DEMO")
+                .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+                .withLang("ENG");
+
+        return linkBuilder.buildDeviceLink("B98ODiVCebRedSwdTk51zFSaGYyHtY1H2A0ocAi3/Ps=");
     }
 
     private static BufferedImage convertToBufferedImage(String qrDataUri) {
