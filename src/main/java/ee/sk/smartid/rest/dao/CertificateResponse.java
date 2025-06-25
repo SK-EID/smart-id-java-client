@@ -30,20 +30,19 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import ee.sk.smartid.CertificateLevel;
-import ee.sk.smartid.CertificateState;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CertificateResponse implements Serializable {
 
-    private CertificateState state;
+    private String state;
     private SessionCertificate cert;
     private CertificateLevel certificateLevel;
 
-    public CertificateState getState() {
+    public String getState() {
         return state;
     }
 
-    public void setState(CertificateState state) {
+    public void setState(String state) {
         this.state = state;
     }
 

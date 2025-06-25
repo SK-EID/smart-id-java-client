@@ -155,7 +155,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
             var response = new CertificateResponse();
             response.setCert(cert);
             response.setCertificateLevel(CertificateLevel.QUALIFIED);
-            response.setState(CertificateState.OK);
+            response.setState(String.valueOf(CertificateState.OK));
 
             when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
@@ -168,7 +168,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
         @Test
         void getCertificate_responseStateIsDocumentUnusable_throwException() {
             CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED);
-            response.setState(CertificateState.DOCUMENT_UNUSABLE);
+            response.setState(String.valueOf(CertificateState.DOCUMENT_UNUSABLE));
             when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
             var builder = createValidRequestParameters();
@@ -235,7 +235,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
         var response = new CertificateResponse();
         response.setCert(certificate);
         response.setCertificateLevel(level);
-        response.setState(CertificateState.OK);
+        response.setState(String.valueOf(CertificateState.OK));
         return response;
     }
 }

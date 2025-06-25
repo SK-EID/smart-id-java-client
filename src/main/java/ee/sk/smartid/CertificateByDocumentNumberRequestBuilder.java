@@ -173,18 +173,20 @@ public class CertificateByDocumentNumberRequestBuilder {
         }
     }
 
-    private void handleResponseState(CertificateState certificateState) {
-        if (certificateState == null) {
-            logger.error("Response certificateState is missing");
-            throw new UnprocessableSmartIdResponseException("Missing response 'certificateState'");
+    private void handleResponseState(String state) {
+        if (isEmpty(state)) {
+            logger.error("Response state is missing");
+            throw new UnprocessableSmartIdResponseException("Missing response 'state'");
         }
-        if (certificateState == CertificateState.DOCUMENT_UNUSABLE) {
-            logger.error("Document is unusable");
-            throw new DocumentUnusableException();
-        }
-        if (certificateState != CertificateState.OK) {
-            logger.error("Unsupported certificate state: {}", certificateState);
-            throw new UnprocessableSmartIdResponseException("Unsupported certificate state: " + certificateState);
+
+        try {
+            if (CertificateState.valueOf(state) == CertificateState.DOCUMENT_UNUSABLE) {
+                logger.error("Document is unusable");
+                throw new DocumentUnusableException();
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("Unsupported certificate state: {}", state);
+            throw new UnprocessableSmartIdResponseException("Unsupported certificate state: " + state);
         }
     }
 }

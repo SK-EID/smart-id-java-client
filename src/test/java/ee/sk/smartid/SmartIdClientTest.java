@@ -29,6 +29,7 @@ package ee.sk.smartid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -45,6 +46,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
@@ -232,6 +234,19 @@ class SmartIdClientTest {
             assertNotNull(response);
             assertEquals(CertificateLevel.QUALIFIED, response.certificateLevel());
             assertNotNull(response.certificate());
+        }
+
+        @Test
+        void getCertificateByDocumentNumber_withUnknownState_throwsException() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response-unknown-state.json");
+
+            var builder = smartIdClient.createCertificateByDocumentNumber()
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .withCertificateLevel(CertificateLevel.ADVANCED);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+
+            assertTrue(ex.getMessage().contains("Unsupported certificate state"));
         }
     }
 
