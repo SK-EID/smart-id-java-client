@@ -834,7 +834,7 @@ The request parameters for the certificate choice by document number request are
     * `DOCUMENT_UNUSABLE`: user's Smart-ID account is not usable for signing
 * `cert`: Required. Object containing the signing certificate.
     * `value`: Required. Base64-encoded X.509 certificate (matches pattern `^[a-zA-Z0-9+/]+={0,2}$`)
-* `certificateLevel`: Required. Level of the certificate, Possible values `ADVANCED`or `QUALIFIED`
+    * `certificateLevel`: Required. Level of the certificate, Possible values `ADVANCED` or `QUALIFIED`
 
 ### Get certificate using document number
 
@@ -845,16 +845,16 @@ RP can directly query the user's signing certificate by document number — no s
 ```java
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
-CertificateByDocumentNumberResponse certResponse = client
+CertificateByDocumentNumberResult certResponse = client
         .getCertificateByDocumentNumber
         .withDocumentNumber(documentNumber)
         .withRelyingPartyUUID(client.getRelyingPartyUUID())
         .withRelyingPartyName(client.getRelyingPartyName())
         .withCertificateLevel(CertificateLevel.QUALIFIED)
-        .initCertificateByDocumentNumber();
+        .getCertificateByDocumentNumber();
 
-// certResponse.getCert() contains Base64-encoded certificate
-// certResponse.getCertificateLevel() is either ADVANCED or QUALIFIED
+// certResponse.getCertificate(); contains Base64-encoded certificate
+// certResponse.getCertificateLevel(); is either ADVANCED or QUALIFIED
 ```
 
 ## Notification-based flows

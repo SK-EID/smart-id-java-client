@@ -215,10 +215,10 @@ public class DeviceLinkBuilder {
     public URI createUnprotectedUri() {
         validateInputParameters();
         UriBuilder uriBuilder = UriBuilder.fromUri(deviceLinkBase)
-                .queryParam("version", version)
-                .queryParam("sessionToken", sessionToken)
                 .queryParam("deviceLinkType", deviceLinkType.getValue())
+                .queryParam("sessionToken", sessionToken)
                 .queryParam("sessionType", sessionType.getValue())
+                .queryParam("version", version)
                 .queryParam("lang", lang);
 
         addElapsedSecondsIfQrCode(uriBuilder);

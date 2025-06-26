@@ -102,7 +102,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
             assertEquals("DEMO", request.getRelyingPartyName());
             assertEquals("QUALIFIED", request.getCertificateLevel());
-            assertEquals(SignatureProtocol.ACSP_V2, request.getSignatureProtocol());
+            assertEquals(SignatureProtocol.ACSP_V2.name(), request.getSignatureProtocol());
             assertNotNull(request.getSignatureProtocolParameters());
             assertNotNull(request.getSignatureProtocolParameters().getRpChallenge());
             assertEquals("rsassa-pss", request.getSignatureProtocolParameters().getSignatureAlgorithm());

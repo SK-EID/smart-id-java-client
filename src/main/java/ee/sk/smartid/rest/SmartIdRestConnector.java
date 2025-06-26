@@ -207,7 +207,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postRequest(uri, request, CertificateResponse.class);
+        return postCertificateByDocumentNumberRequest(uri, request);
     }
 
     @Override
@@ -338,6 +338,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private NotificationCertificateChoiceSessionResponse postNotificationCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
         try {
             return postRequest(uri, request, NotificationCertificateChoiceSessionResponse.class);
+        } catch (NotFoundException ex) {
+            logger.warn("User account not found for URI {}", uri, ex);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
+        }
+    }
+
+    private CertificateResponse postCertificateByDocumentNumberRequest(URI uri, CertificateByDocumentNumberRequest request) {
+        try {
+            return postRequest(uri, request, CertificateResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI {}", uri, ex);
             throw new UserAccountNotFoundException();

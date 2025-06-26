@@ -29,14 +29,12 @@ package ee.sk.smartid.rest.dao;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import ee.sk.smartid.CertificateLevel;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CertificateResponse implements Serializable {
 
     private String state;
-    private SessionCertificate cert;
-    private CertificateLevel certificateLevel;
+    private CertificateInfo cert;
 
     public String getState() {
         return state;
@@ -46,19 +44,11 @@ public class CertificateResponse implements Serializable {
         this.state = state;
     }
 
-    public SessionCertificate getCert() {
+    public CertificateInfo getCert() {
         return cert;
     }
 
-    public void setCert(SessionCertificate cert) {
+    public void setCert(CertificateInfo cert) {
         this.cert = cert;
-    }
-
-    public CertificateLevel getCertificateLevel() {
-        return certificateLevel;
-    }
-
-    public void setCertificateLevel(CertificateLevel certificateLevel) {
-        this.certificateLevel = certificateLevel;
     }
 }

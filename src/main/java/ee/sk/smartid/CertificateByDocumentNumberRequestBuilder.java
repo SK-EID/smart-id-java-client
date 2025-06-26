@@ -125,7 +125,7 @@ public class CertificateByDocumentNumberRequestBuilder {
         CertificateResponse response = connector.getCertificateByDocumentNumber(documentNumber, request);
         validateResponseParameters(response);
 
-        return new CertificateByDocumentNumberResult(response.getCertificateLevel(), CertificateParser.parseX509Certificate(response.getCert().getValue()));
+        return new CertificateByDocumentNumberResult(CertificateLevel.valueOf(response.getCert().getCertificateLevel()), CertificateParser.parseX509Certificate(response.getCert().getValue()));
     }
 
     private void validateRequestParameters() {
@@ -149,7 +149,7 @@ public class CertificateByDocumentNumberRequestBuilder {
             throw new UnprocessableSmartIdResponseException("Certificate certificateByDocumentNumberResponse is null");
         }
         handleResponseState(certificateResponse.getState());
-        validateCertificateLevel(certificateResponse.getCertificateLevel());
+        validateCertificateLevel(certificateResponse.getCert().getCertificateLevel());
 
         if (certificateResponse.getCert() == null || isEmpty(certificateResponse.getCert().getValue())) {
             logger.error("Parameter cert.value is missing");
@@ -162,14 +162,21 @@ public class CertificateByDocumentNumberRequestBuilder {
         }
     }
 
-    private void validateCertificateLevel(CertificateLevel certificateLevel) {
-        if (certificateLevel == null) {
+    private void validateCertificateLevel(String certificateLevel) {
+        if (StringUtil.isEmpty(certificateLevel)) {
             logger.error("Parameter certificateLevel is missing");
             throw new UnprocessableSmartIdResponseException("Parameter certificateLevel is missing");
         }
-        if (!certificateLevel.isSameLevelOrHigher(this.certificateLevel)) {
-            logger.error("Certificate level is lower than requested");
-            throw new UnprocessableSmartIdResponseException("Certificate level is lower than requested");
+
+        try {
+            CertificateLevel level = CertificateLevel.valueOf(certificateLevel);
+            if (!level.isSameLevelOrHigher(this.certificateLevel)) {
+                logger.error("Certificate level is lower than requested");
+                throw new UnprocessableSmartIdResponseException("Certificate level is lower than requested");
+            }
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid certificateLevel: {}", certificateLevel);
+            throw new UnprocessableSmartIdResponseException("Invalid certificateLevel: " + certificateLevel);
         }
     }
 

@@ -30,13 +30,13 @@ import java.io.Serializable;
 
 public class SignatureAlgorithmParameters implements Serializable {
 
-    private HashAlgorithm hashAlgorithm;
+    private String hashAlgorithm;
 
-    public HashAlgorithm getHashAlgorithm() {
+    public String getHashAlgorithm() {
         return hashAlgorithm;
     }
 
-    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
+    public void setHashAlgorithm(String hashAlgorithm) {
         this.hashAlgorithm = hashAlgorithm;
     }
 }

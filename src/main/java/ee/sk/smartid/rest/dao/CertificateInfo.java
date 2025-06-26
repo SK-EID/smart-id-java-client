@@ -28,26 +28,20 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-public class CertificateByDocumentNumberRequest implements Serializable {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-    private String relyingPartyUUID;
-    private String relyingPartyName;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CertificateInfo implements Serializable {
+
+    private String value;
     private String certificateLevel;
 
-    public String getRelyingPartyUUID() {
-        return relyingPartyUUID;
+    public String getValue() {
+        return value;
     }
 
-    public void setRelyingPartyUUID(String relyingPartyUUID) {
-        this.relyingPartyUUID = relyingPartyUUID;
-    }
-
-    public String getRelyingPartyName() {
-        return relyingPartyName;
-    }
-
-    public void setRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyName = relyingPartyName;
+    public void setValue(String value) {
+        this.value = value;
     }
 
     public String getCertificateLevel() {

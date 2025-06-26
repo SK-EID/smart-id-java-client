@@ -970,7 +970,7 @@ class SmartIdRestConnectorTest {
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
         var algorithmParameters = new SignatureAlgorithmParameters();
-        algorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512);
+        algorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512.getValue());
         signatureProtocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
 
         DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Log in?");

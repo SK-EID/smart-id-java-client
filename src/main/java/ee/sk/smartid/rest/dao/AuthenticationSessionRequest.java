@@ -41,7 +41,7 @@ public class AuthenticationSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String certificateLevel;
 
-    private final SignatureProtocol signatureProtocol = SignatureProtocol.ACSP_V2;
+    private final String signatureProtocol = SignatureProtocol.ACSP_V2.name();
 
     private AcspV2SignatureProtocolParameters acspV2SignatureProtocolParameters;
 
@@ -80,7 +80,7 @@ public class AuthenticationSessionRequest implements Serializable {
         this.certificateLevel = certificateLevel;
     }
 
-    public SignatureProtocol getSignatureProtocol() {
+    public String getSignatureProtocol() {
         return signatureProtocol;
     }
 
