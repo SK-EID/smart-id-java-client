@@ -43,7 +43,7 @@ import jakarta.ws.rs.core.UriBuilder;
 public class DeviceLinkBuilder {
 
     private static final String ALLOWED_VERSION = "1.0";
-    private static final String SCHEME_NAME = "smart-id";
+    private static final String SCHEME_NAME = "smart-id-demo";
 
     private String deviceLinkBase;
     private String version = ALLOWED_VERSION;
@@ -164,7 +164,7 @@ public class DeviceLinkBuilder {
      * @return this builder
      */
     public DeviceLinkBuilder withRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyNameBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(relyingPartyName.getBytes(StandardCharsets.UTF_8));
+        this.relyingPartyNameBase64 = Base64.getEncoder().encodeToString(relyingPartyName.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
@@ -176,7 +176,7 @@ public class DeviceLinkBuilder {
      * @return this builder
      */
     public DeviceLinkBuilder withBrokeredRpName(String brokeredRpName) {
-        this.brokeredRpNameBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8));
+        this.brokeredRpNameBase64 = Base64.getEncoder().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
@@ -214,14 +214,11 @@ public class DeviceLinkBuilder {
      */
     public URI createUnprotectedUri() {
         validateInputParameters();
-        UriBuilder uriBuilder = UriBuilder.fromUri(deviceLinkBase)
-                .queryParam("deviceLinkType", deviceLinkType.getValue())
-                .queryParam("sessionToken", sessionToken)
-                .queryParam("sessionType", sessionType.getValue())
-                .queryParam("version", version)
-                .queryParam("lang", lang);
-
+        UriBuilder uriBuilder = UriBuilder.fromUri(deviceLinkBase).queryParam("deviceLinkType", deviceLinkType.getValue());
         addElapsedSecondsIfQrCode(uriBuilder);
+        uriBuilder.queryParam("sessionToken", sessionToken).queryParam("sessionType", sessionType.getValue())
+                .queryParam("version", version).queryParam("lang", lang);
+
         return uriBuilder.build();
     }
 
