@@ -549,6 +549,7 @@ Device link can be generated for 3 use cases: QR-code, web link to Smart-ID app,
 
 ##### Device link parameters
 
+* `schemeName` : Controls which Smart-ID environment is targeted. Default value is `smart-id`. Use `smart-id-demo` in demo environment.
 * `deviceLinkBase`: Value of `deviceLinkBase` returned in session-init response.
 * `version`: Version of the dynamic link. Only allowed value is `"1.0"`.
 * `deviceLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
@@ -583,6 +584,7 @@ URI deviceLink = new DeviceLinkBuilder()
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
+        .withSchemeName("smart-id-demo") // override default scheme name to use demo environment
         .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.APP_2_APP)
         .withSessionType(SessionType.AUTHENTICATION)

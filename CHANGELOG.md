@@ -13,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Moved `deviceLinkBase` to required input (no more default).
   - Handles both unprotected device-link generation and HMAC-SHA256 based authCode calculation as per specification.
   - New payload structure includes required and optional fields as per documentation.
-  - `schemeName` is fixed to `"smart-id"`.
+  - `schemeName` is now configurable (defaults to `"smart-id"`); use `"smart-id-demo"` in demo environments.
   - Does not store `sessionSecret`, ensures it must be passed to the build method.
 - Removed deprecated dynamic link and QR code generation logic from old builders and helpers.
 

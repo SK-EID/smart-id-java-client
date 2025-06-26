@@ -43,8 +43,8 @@ import jakarta.ws.rs.core.UriBuilder;
 public class DeviceLinkBuilder {
 
     private static final String ALLOWED_VERSION = "1.0";
-    private static final String SCHEME_NAME = "smart-id";
 
+    private String schemeName = "smart-id";
     private String deviceLinkBase;
     private String version = ALLOWED_VERSION;
     private DeviceLinkType deviceLinkType;
@@ -58,6 +58,23 @@ public class DeviceLinkBuilder {
     private String brokeredRpNameBase64;
     private String interactions;
     private String initialCallbackUrl;
+
+    /**
+     * Sets the scheme name for the device link.
+     * <p>
+     * Default is `smart-id`. Use `smart-id-demo` for demo environment.
+     <p>
+     * See <a href="https://sk-eid.github.io/smart-id-documentation/environments.html#_demo">
+     * Smart-ID environment documentation
+     * </a>.
+     *
+     * @param schemeName the scheme name to be used in the device link
+     * @return this builder
+     */
+    public DeviceLinkBuilder withSchemeName(String schemeName) {
+        this.schemeName = schemeName;
+        return this;
+    }
 
     /**
      * Sets the base URI to which all query parameters will be appended to form the full Smart-ID device link.
@@ -164,7 +181,7 @@ public class DeviceLinkBuilder {
      * @return this builder
      */
     public DeviceLinkBuilder withRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyNameBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(relyingPartyName.getBytes(StandardCharsets.UTF_8));
+        this.relyingPartyNameBase64 = Base64.getEncoder().encodeToString(relyingPartyName.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
@@ -176,7 +193,7 @@ public class DeviceLinkBuilder {
      * @return this builder
      */
     public DeviceLinkBuilder withBrokeredRpName(String brokeredRpName) {
-        this.brokeredRpNameBase64 = Base64.getUrlEncoder().withoutPadding().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8));
+        this.brokeredRpNameBase64 = Base64.getEncoder().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8));
         return this;
     }
 
@@ -214,14 +231,10 @@ public class DeviceLinkBuilder {
      */
     public URI createUnprotectedUri() {
         validateInputParameters();
-        UriBuilder uriBuilder = UriBuilder.fromUri(deviceLinkBase)
-                .queryParam("version", version)
-                .queryParam("sessionToken", sessionToken)
-                .queryParam("deviceLinkType", deviceLinkType.getValue())
-                .queryParam("sessionType", sessionType.getValue())
-                .queryParam("lang", lang);
-
+        UriBuilder uriBuilder = UriBuilder.fromUri(deviceLinkBase).queryParam("deviceLinkType", deviceLinkType.getValue());
         addElapsedSecondsIfQrCode(uriBuilder);
+        uriBuilder.queryParam("sessionToken", sessionToken).queryParam("sessionType", sessionType.getValue())
+                  .queryParam("version", version).queryParam("lang", lang);
         return uriBuilder.build();
     }
 
@@ -255,7 +268,7 @@ public class DeviceLinkBuilder {
 
     private String buildPayload(String unprotectedLink) {
         return String.join("|",
-                SCHEME_NAME,
+                schemeName,
                 getSignatureProtocolForSession(),
                 StringUtil.orEmpty(digest),
                 relyingPartyNameBase64,
