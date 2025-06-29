@@ -42,10 +42,10 @@ import org.junit.jupiter.api.Test;
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.InteractionUtil;
-import ee.sk.smartid.SmartIdDemoIntegrationTest;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SignatureAlgorithm;
+import ee.sk.smartid.SignatureProtocol;
+import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
@@ -53,12 +53,15 @@ import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
 @Disabled("Relying party demo account not yet available for v3")
@@ -125,16 +128,20 @@ class SmartIdRestIntegrationTest {
             }
 
             private static AuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
-                var request = new AuthenticationSessionRequest();
-                request.setRelyingPartyUUID(RELYING_PARTY_UUID);
-                request.setRelyingPartyName(RELYING_PARTY_NAME);
+                var signatureParameters = new AcspV2SignatureProtocolParameters(
+                        RpChallengeGenerator.generate(),
+                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
 
-                var signatureParameters = new AcspV2SignatureProtocolParameters();
-                signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-                signatureParameters.setRpChallenge(RpChallengeGenerator.generate());
-                request.setSignatureProtocolParameters(signatureParameters);
-                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))));
-                return request;
+                return new AuthenticationSessionRequest(RELYING_PARTY_UUID,
+                        RELYING_PARTY_NAME,
+                        "QUALIFIED",
+                        SignatureProtocol.ACSP_V2,
+                        signatureParameters,
+                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                        null,
+                        null,
+                        null);
             }
         }
 
@@ -233,23 +240,21 @@ class SmartIdRestIntegrationTest {
             }
 
             private static AuthenticationSessionRequest toAuthenticationRequest() {
-                var request = new AuthenticationSessionRequest();
-                request.setRelyingPartyUUID(RELYING_PARTY_UUID);
-                request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setCertificateLevel("QUALIFIED");
+                var signatureParameters = new AcspV2SignatureProtocolParameters(
+                        RpChallengeGenerator.generate(),
+                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
 
-                String randomChallenge = RpChallengeGenerator.generate();
-                var signatureParameters = new AcspV2SignatureProtocolParameters();
-                signatureParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-                signatureParameters.setRpChallenge(randomChallenge);
-                request.setSignatureProtocolParameters(signatureParameters);
-
-                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))));
-
-                var requestProperties = new RequestProperties();
-                requestProperties.setShareMdClientIpAddress(true);
-                request.setRequestProperties(requestProperties);
-                return request;
+                return new AuthenticationSessionRequest(RELYING_PARTY_UUID,
+                        RELYING_PARTY_NAME,
+                        "QUALIFIED",
+                        SignatureProtocol.ACSP_V2,
+                        signatureParameters,
+                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                        new RequestProperties(true),
+                        null,
+                        null
+                );
             }
         }
 

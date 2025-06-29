@@ -192,7 +192,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertNotNull(capturedRequest.getRequestProperties());
-        assertTrue(capturedRequest.getRequestProperties().getShareMdClientIpAddress());
+        assertTrue(capturedRequest.getRequestProperties().shareMdClientIpAddress());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 

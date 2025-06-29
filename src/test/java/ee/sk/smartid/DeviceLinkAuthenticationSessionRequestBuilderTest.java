@@ -99,17 +99,17 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
-            assertEquals("DEMO", request.getRelyingPartyName());
-            assertEquals("QUALIFIED", request.getCertificateLevel());
-            assertEquals(SignatureProtocol.ACSP_V2.name(), request.getSignatureProtocol());
-            assertNotNull(request.getSignatureProtocolParameters());
-            assertNotNull(request.getSignatureProtocolParameters().getRpChallenge());
-            assertEquals("rsassa-pss", request.getSignatureProtocolParameters().getSignatureAlgorithm());
-            assertNotNull(request.getInteractions());
-            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
+            assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
+            assertEquals("DEMO", request.relyingPartyName());
+            assertEquals("QUALIFIED", request.certificateLevel());
+            assertEquals(SignatureProtocol.ACSP_V2, request.signatureProtocol());
+            assertNotNull(request.signatureProtocolParameters());
+            assertNotNull(request.signatureProtocolParameters().rpChallenge());
+            assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
+            assertNotNull(request.interactions());
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.signatureProtocolParameters().rpChallenge()));
 
-            DeviceLinkInteraction[] parsed = parseInteractionsFromBase64(request.getInteractions());
+            DeviceLinkInteraction[] parsed = parseInteractionsFromBase64(request.interactions());
             assertTrue(Stream.of(parsed).anyMatch(i -> i.getType().is("displayTextAndPIN")));
         }
 
@@ -132,7 +132,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(expectedValue, request.getCertificateLevel());
+            assertEquals(expectedValue, request.certificateLevel());
         }
 
         @ParameterizedTest
@@ -154,8 +154,8 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(signatureAlgorithm.getAlgorithmName(), request.getSignatureProtocolParameters().getSignatureAlgorithm());
-            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
+            assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.signatureProtocolParameters().rpChallenge()));
         }
 
         @Test
@@ -175,7 +175,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertNull(request.getRequestProperties());
+            assertNull(request.requestProperties());
         }
 
         @ParameterizedTest
@@ -197,9 +197,9 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertNotNull(request.getRequestProperties());
-            assertEquals(ipRequested, request.getRequestProperties().getShareMdClientIpAddress());
-            assertTrue(Pattern.matches(BASE64_PATTERN, request.getSignatureProtocolParameters().getRpChallenge()));
+            assertNotNull(request.requestProperties());
+            assertEquals(ipRequested, request.requestProperties().shareMdClientIpAddress());
+            assertTrue(Pattern.matches(BASE64_PATTERN, request.signatureProtocolParameters().rpChallenge()));
         }
 
         @ParameterizedTest
@@ -220,7 +220,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(expectedCapabilities, request.getCapabilities());
+            assertEquals(expectedCapabilities, request.capabilities());
         }
 
         @Test
@@ -240,7 +240,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals("https://valid.example.com/path", request.getInitialCallbackURL());
+            assertEquals("https://valid.example.com/path", request.initialCallbackURL());
         }
 
         @ParameterizedTest

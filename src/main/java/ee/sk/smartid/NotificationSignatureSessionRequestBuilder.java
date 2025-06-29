@@ -263,8 +263,7 @@ public class NotificationSignatureSessionRequestBuilder {
         request.setInteractions(NotificationUtil.encodeToBase64(allowedInteractionsOrder));
 
         if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties();
-            requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
+            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
         }
 

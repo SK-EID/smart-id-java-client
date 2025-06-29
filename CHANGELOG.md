@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
   - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
   - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
+- Updated AuthenticationSessionRequest and related classes to records.
 
 ## [3.1.5] - 2025-06-30
 

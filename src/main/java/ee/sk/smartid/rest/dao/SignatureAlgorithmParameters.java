@@ -28,15 +28,5 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-public class SignatureAlgorithmParameters implements Serializable {
-
-    private String hashAlgorithm;
-
-    public String getHashAlgorithm() {
-        return hashAlgorithm;
-    }
-
-    public void setHashAlgorithm(String hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
-    }
+public record SignatureAlgorithmParameters(String hashAlgorithm) implements Serializable {
 }

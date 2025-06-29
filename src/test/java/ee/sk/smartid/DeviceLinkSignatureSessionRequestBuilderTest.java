@@ -178,8 +178,8 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertNotNull(capturedRequest.getRequestProperties());
-        assertTrue(capturedRequest.getRequestProperties().getShareMdClientIpAddress());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
+        assertTrue(capturedRequest.getRequestProperties().shareMdClientIpAddress());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
     }
 
     @Test

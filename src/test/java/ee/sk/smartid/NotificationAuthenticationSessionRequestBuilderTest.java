@@ -92,12 +92,12 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals("00000000-0000-0000-0000-000000000000", request.getRelyingPartyUUID());
-            assertEquals("DEMO", request.getRelyingPartyName());
-            assertEquals(SignatureProtocol.ACSP_V2.name(), request.getSignatureProtocol());
-            assertNotNull(request.getSignatureProtocolParameters());
-            assertEquals("rsassa-pss", request.getSignatureProtocolParameters().getSignatureAlgorithm());
-            assertNotNull(request.getInteractions());
+            assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
+            assertEquals("DEMO", request.relyingPartyName());
+            assertEquals(SignatureProtocol.ACSP_V2, request.signatureProtocol());
+            assertNotNull(request.signatureProtocolParameters());
+            assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
+            assertNotNull(request.interactions());
         }
 
         @ParameterizedTest
@@ -118,7 +118,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(expectedValue, request.getCertificateLevel());
+            assertEquals(expectedValue, request.certificateLevel());
         }
 
         @ParameterizedTest
@@ -139,7 +139,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(signatureAlgorithm.getAlgorithmName(), request.getSignatureProtocolParameters().getSignatureAlgorithm());
+            assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
         }
 
         @ParameterizedTest
@@ -160,8 +160,8 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertNotNull(request.getRequestProperties());
-            assertEquals(ipRequested, request.getRequestProperties().getShareMdClientIpAddress());
+            assertNotNull(request.requestProperties());
+            assertEquals(ipRequested, request.requestProperties().shareMdClientIpAddress());
         }
 
         @ParameterizedTest
@@ -182,7 +182,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(expectedCapabilities, request.getCapabilities());
+            assertEquals(expectedCapabilities, request.capabilities());
         }
 
         @Test

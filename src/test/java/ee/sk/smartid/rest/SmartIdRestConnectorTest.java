@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
 import java.time.Instant;
@@ -56,6 +57,7 @@ import org.junit.jupiter.api.Test;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.InteractionUtil;
+import ee.sk.smartid.SignatureProtocol;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
@@ -702,13 +704,17 @@ class SmartIdRestConnectorTest {
         @Test
         void getCertificateByDocumentNumber_userAccountNotFound_throwsException() {
             SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json");
-            assertThrows(UserAccountNotFoundException.class, () -> {connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());});
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
+            });
         }
 
         @Test
         void getCertificateByDocumentNumber_requestUnauthorized_throwsException() {
             SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json");
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());});
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
+            });
         }
     }
 
@@ -1061,40 +1067,41 @@ class SmartIdRestConnectorTest {
     }
 
     private static AuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
-        var dynamicLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
-        dynamicLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        dynamicLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
-        dynamicLinkAuthenticationSessionRequest.setCertificateLevel("QUALIFIED");
+        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(
+                Base64.toBase64String("a".repeat(32).getBytes()),
+                "rsassa-pss",
+                new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
 
-        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
-        signatureProtocolParameters.setRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
-        signatureProtocolParameters.setSignatureAlgorithm("rsassa-pss");
-        dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
-
-        var algorithmParameters = new SignatureAlgorithmParameters();
-        algorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512.getValue());
-        signatureProtocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
-
-        DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Log in?");
-        dynamicLinkAuthenticationSessionRequest.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
-
-        return dynamicLinkAuthenticationSessionRequest;
+        return new AuthenticationSessionRequest(
+                "00000000-0000-0000-0000-000000000000",
+                "DEMO",
+                "QUALIFIED",
+                SignatureProtocol.ACSP_V2,
+                signatureProtocolParameters,
+                InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                null,
+                null,
+                null
+        );
     }
 
     private static AuthenticationSessionRequest toNotificationAuthenticationSessionRequest() {
-        var deviceLinkAuthenticationSessionRequest = new AuthenticationSessionRequest();
-        deviceLinkAuthenticationSessionRequest.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        deviceLinkAuthenticationSessionRequest.setRelyingPartyName("DEMO");
+        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(
+                Base64.toBase64String("a".repeat(32).getBytes()),
+                "rsassa-pss",
+                new SignatureAlgorithmParameters("SHA-512"));
 
-        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
-        signatureProtocolParameters.setRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()));
-        signatureProtocolParameters.setSignatureAlgorithm("rsassa-pss");
-        deviceLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
-
-        NotificationInteraction interaction = NotificationInteraction.verificationCodeChoice("Verify the code");
-        deviceLinkAuthenticationSessionRequest.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
-
-        return deviceLinkAuthenticationSessionRequest;
+        return new AuthenticationSessionRequest(
+                "00000000-0000-0000-0000-000000000000",
+                "DEMO",
+                "QUALIFIED",
+                SignatureProtocol.ACSP_V2,
+                signatureProtocolParameters,
+                InteractionUtil.encodeInteractionsAsBase64(List.of(NotificationInteraction.verificationCodeChoice("Verify the code"))),
+                null,
+                null,
+                null
+        );
     }
 
     private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {

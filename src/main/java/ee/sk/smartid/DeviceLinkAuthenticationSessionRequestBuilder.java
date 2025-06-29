@@ -239,7 +239,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * </ul>
      *
      * @return init session response
-     * @throws SmartIdClientException if request parameters are invalid
+     * @throws SmartIdClientException                if request parameters are invalid
      * @throws UnprocessableSmartIdResponseException if the response is missing required fields
      */
     public DeviceLinkSessionResponse initAuthenticationSession() {
@@ -319,32 +319,21 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     private AuthenticationSessionRequest createAuthenticationRequest() {
-        var request = new AuthenticationSessionRequest();
-        request.setRelyingPartyUUID(relyingPartyUUID);
-        request.setRelyingPartyName(relyingPartyName);
+        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(rpChallenge,
+                signatureAlgorithm.getAlgorithmName(),
+                new SignatureAlgorithmParameters(this.hashAlgorithm.getValue()));
 
-        if (certificateLevel != null) {
-            request.setCertificateLevel(certificateLevel.name());
-        }
-        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
-        signatureProtocolParameters.setRpChallenge(rpChallenge);
-        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
-
-        var signatureAlgorithmParameters = new SignatureAlgorithmParameters();
-        signatureAlgorithmParameters.setHashAlgorithm(this.hashAlgorithm.getValue());
-        signatureProtocolParameters.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
-
-        request.setSignatureProtocolParameters(signatureProtocolParameters);
-        request.setInteractions(DeviceLinkUtil.encodeToBase64(interactions));
-
-        if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties();
-            requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
-            request.setRequestProperties(requestProperties);
-        }
-        request.setCapabilities(capabilities);
-        request.setInitialCallbackURL(initialCallbackURL);
-        return request;
+        return new AuthenticationSessionRequest(
+                relyingPartyUUID,
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
+                SignatureProtocol.ACSP_V2,
+                signatureProtocolParameters,
+                DeviceLinkUtil.encodeToBase64(interactions),
+                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
+                capabilities,
+                initialCallbackURL
+        );
     }
 
     private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkAuthenticationSessionResponse) {
