@@ -27,6 +27,7 @@ package ee.sk.smartid;
  */
 
 import java.util.Arrays;
+import java.util.Optional;
 
 public enum SignatureAlgorithm {
 
@@ -42,7 +43,10 @@ public enum SignatureAlgorithm {
         return algorithmName;
     }
 
-    public static boolean isSupported(String signatureAlgorithm) {
-        return Arrays.stream(SignatureAlgorithm.values()).anyMatch(s -> s.getAlgorithmName().equals(signatureAlgorithm));
+    public static Optional<SignatureAlgorithm> fromString(String signatureAlgorithm) {
+        return Arrays
+                .stream(SignatureAlgorithm.values())
+                .filter(s -> s.getAlgorithmName().equals(signatureAlgorithm))
+                .findFirst();
     }
 }

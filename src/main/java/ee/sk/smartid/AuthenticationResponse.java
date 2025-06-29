@@ -41,14 +41,21 @@ public class AuthenticationResponse {
 
     private String endResult;
     private String serverRandom;
-    private HashType hashType;
+    private String userChallenge;
+    private String relyingPartyName;
+    private SignatureAlgorithm signatureAlgorithm;
     private String signatureValueInBase64;
-    private String algorithmName;
+    private HashAlgorithm hashAlgorithm;
     private X509Certificate certificate;
     private AuthenticationCertificateLevel certificateLevel;
     private String documentNumber;
-    private String interactionFlowUsed;
+    private String interactionTypeUsed;
+    private FlowType flowType;
     private String deviceIpAddress;
+    private MaskGenAlgorithm maskGenAlgorithm;
+    private HashAlgorithm maskHashAlgorithm;
+    private int saltLength;
+    private TrailerField trailerField;
 
     public String getEndResult() {
         return endResult;
@@ -80,12 +87,12 @@ public class AuthenticationResponse {
         }
     }
 
-    public String getAlgorithmName() {
-        return algorithmName;
+    public SignatureAlgorithm getSignatureAlgorithm() {
+        return signatureAlgorithm;
     }
 
-    public void setAlgorithmName(String algorithmName) {
-        this.algorithmName = algorithmName;
+    public void setSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
     }
 
     public X509Certificate getCertificate() {
@@ -104,14 +111,6 @@ public class AuthenticationResponse {
         this.certificateLevel = certificateLevel;
     }
 
-    public HashType getHashType() {
-        return hashType;
-    }
-
-    public void setHashType(HashType hashType) {
-        this.hashType = hashType;
-    }
-
     public String getDocumentNumber() {
         return documentNumber;
     }
@@ -120,12 +119,12 @@ public class AuthenticationResponse {
         this.documentNumber = documentNumber;
     }
 
-    public String getInteractionFlowUsed() {
-        return interactionFlowUsed;
+    public String getInteractionTypeUsed() {
+        return interactionTypeUsed;
     }
 
-    public void setInteractionFlowUsed(String interactionFlowUsed) {
-        this.interactionFlowUsed = interactionFlowUsed;
+    public void setInteractionTypeUsed(String interactionTypeUsed) {
+        this.interactionTypeUsed = interactionTypeUsed;
     }
 
     public String getDeviceIpAddress() {
@@ -142,5 +141,69 @@ public class AuthenticationResponse {
 
     public void setServerRandom(String serverRandom) {
         this.serverRandom = serverRandom;
+    }
+
+    public String getUserChallenge() {
+        return userChallenge;
+    }
+
+    public void setUserChallenge(String userChallenge) {
+        this.userChallenge = userChallenge;
+    }
+
+    public String getRelyingPartyName() {
+        return relyingPartyName;
+    }
+
+    public void setRelyingPartyName(String relyingPartyName) {
+        this.relyingPartyName = relyingPartyName;
+    }
+
+    public FlowType getFlowType() {
+        return flowType;
+    }
+
+    public void setFlowType(FlowType flowType) {
+        this.flowType = flowType;
+    }
+
+    public HashAlgorithm getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
+    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+    }
+
+    public MaskGenAlgorithm getMaskGenAlgorithm() {
+        return maskGenAlgorithm;
+    }
+
+    public void setMaskGenAlgorithm(MaskGenAlgorithm maskGenAlgorithm) {
+        this.maskGenAlgorithm = maskGenAlgorithm;
+    }
+
+    public HashAlgorithm getMaskHashAlgorithm() {
+        return maskHashAlgorithm;
+    }
+
+    public void setMaskHashAlgorithm(HashAlgorithm maskHashAlgorithm) {
+        this.maskHashAlgorithm = maskHashAlgorithm;
+    }
+
+    public int getSaltLength() {
+        return saltLength;
+    }
+
+    public void setSaltLength(int saltLength) {
+        this.saltLength = saltLength;
+    }
+
+    public TrailerField getTrailerField() {
+        return trailerField;
+    }
+
+    public void setTrailerField(TrailerField trailerField) {
+        this.trailerField = trailerField;
     }
 }

@@ -26,17 +26,35 @@ package ee.sk.smartid;
  * #L%
  */
 
+import java.util.Arrays;
+import java.util.Optional;
+
+/**
+ * TrailerField represents the value used in the trailer field of the Smart-ID authentication response and value necessary for generating the signature.
+ */
 public enum TrailerField {
 
-    OXBC("0xbc");
+    OXBC("0xbc", 1);
 
     private final String value;
+    private final int pssSpecValue;
 
-    TrailerField(String value) {
+    TrailerField(String value, int pssSpecValue) {
         this.value = value;
+        this.pssSpecValue = pssSpecValue;
     }
 
     public String getValue() {
         return value;
+    }
+
+    public int getPssSpecValue(){
+        return pssSpecValue;
+    }
+
+    public static Optional<TrailerField> fromString(String trailerField) {
+        return Arrays.stream(TrailerField.values())
+                .filter(field -> field.getValue().equals(trailerField))
+                .findFirst();
     }
 }

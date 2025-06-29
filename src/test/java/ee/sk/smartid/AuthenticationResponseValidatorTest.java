@@ -36,15 +36,30 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
+import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.SessionCertificate;
+import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithm;
+import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithmParameters;
+import ee.sk.smartid.rest.dao.SessionResult;
+import ee.sk.smartid.rest.dao.SessionSignature;
+import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
+import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 
 class AuthenticationResponseValidatorTest {
 
@@ -60,26 +75,13 @@ class AuthenticationResponseValidatorTest {
         authenticationResponseValidator = new AuthenticationResponseValidator(new X509Certificate[]{toX509Certificate(CA_CERT)});
     }
 
-    @Disabled("Do not have necessary test data to make this work.")
+    @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
     @Test
-    void toAuthenticationIdentity() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-        deviceLinkAuthenticationResponse.setEndResult("OK");
-
-        deviceLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
-        deviceLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
-        deviceLinkAuthenticationResponse.setHashType(HashType.SHA512);
-        deviceLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
-
-        // TODO - 04.12.24: if device-link authentication can be completed with test number then replace these values
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
-        deviceLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
-
-        AuthenticationIdentity authenticationIdentity =
-                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest");
+    void validate() {
+        String rpChallenge = "";
+        SessionStatus sessionStatus = new SessionStatus();
+        AuthenticationSessionRequest authenticationSessionRequest = toAuthenticationSessionRequest("QUALIFIED");
+        AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo", null);
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
@@ -88,28 +90,16 @@ class AuthenticationResponseValidatorTest {
         assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
     }
 
-    @Disabled("Do not have necessary test data to make this work.")
+    @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
     @Test
-    void toAuthenticationIdentity_certificateLevelHigherThanRequested_ok() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-        deviceLinkAuthenticationResponse.setEndResult("OK");
+    void validate_certificateLevelHigherThanRequested_ok() {
+        SessionStatus sessionStatus = new SessionStatus();
+        SessionCertificate cert = new SessionCertificate();
+        cert.setCertificateLevel("QUALIFIED");
+        sessionStatus.setCert(cert);
 
-        deviceLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
-        deviceLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
-        deviceLinkAuthenticationResponse.setHashType(HashType.SHA512);
-        deviceLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
-
-        // TODO - 04.12.24: if device-link authentication can be completed with test number then replace these values
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
-        deviceLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
-
-        AuthenticationIdentity authenticationIdentity =
-                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse,
-                        AuthenticationCertificateLevel.ADVANCED,
-                        "rpChallengeFromTestUserAuthRequest");
+        var authenticationSessionRequest = toAuthenticationSessionRequest("ADVANCED");
+        AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo", null);
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
@@ -118,188 +108,131 @@ class AuthenticationResponseValidatorTest {
         assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
     }
 
-    @Disabled("Do not have necessary test data to make this work.")
-    @Test
-    void toAuthenticationIdentity_requestedCertificateLevelIsSetToNull_doNotValidateCertificateLevel_ok() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-        deviceLinkAuthenticationResponse.setEndResult("OK");
+    @Nested
+    class ValidateInputs {
 
-        deviceLinkAuthenticationResponse.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
-        deviceLinkAuthenticationResponse.setInteractionFlowUsed("displayTextAndPIN");
-        deviceLinkAuthenticationResponse.setHashType(HashType.SHA512);
-        deviceLinkAuthenticationResponse.setDeviceIpAddress("0.0.0.0");
+        @Test
+        void validate_sessionStatusNotProvided_throwException() {
+            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(null, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+            assertEquals("`sessionStatus` is not provided", ex.getMessage());
+        }
 
-        // TODO - 04.12.24: if device-link authentication can be completed with test number then replace these values
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64("signatureValueFromTestUserAuthResponse");
-        deviceLinkAuthenticationResponse.setServerRandom("serverRandomFromTestUserAuthResponse");
+        @Test
+        void validate_authenticationSessionRequestIsNotProvided_throwException() {
+            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), null, "smart-id-demo", null));
+            assertEquals("`authenticationSessionRequest` is not provided", ex.getMessage());
+        }
 
-        AuthenticationIdentity authenticationIdentity =
-                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse,
-                        null,
-                        "rpChallengeFromTestUserAuthRequest");
-
-        assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-        assertEquals("OK", authenticationIdentity.getGivenName());
-        assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-        assertEquals("EE", authenticationIdentity.getCountry());
-        assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
+        @ParameterizedTest
+        @NullAndEmptySource
+        void validate_emptySchemaNameIsProvided_throwException(String schemaName) {
+            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), schemaName, null));
+            assertEquals("`schemaName` is not provided", ex.getMessage());
+        }
     }
 
     @Test
-    void toAuthenticationIdentity_certificateHasMatchingIssuerDnAndInvalidSignature_throwsException() {
-        var validator = new AuthenticationResponseValidator(new X509Certificate[]{toX509Certificate(CA_CERT)});
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureData"));
-        deviceLinkAuthenticationResponse.setServerRandom("serverRandom");
-        deviceLinkAuthenticationResponse.setEndResult("OK");
-
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class,
-                () -> validator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallenge"));
-
-        assertEquals("Signature verification failed", ex.getMessage());
+    void validate_sessionStatusResultIsNotProvided_throwException() {
+        var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+        assertEquals("Session status field `result` is empty", ex.getMessage());
     }
 
-    @Test
-    void toAuthenticationIdentity_certificateHasMatchingKeyButDifferentDN_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("validSignatureForFakeCert"));
-        deviceLinkAuthenticationResponse.setServerRandom("serverRandom");
-        deviceLinkAuthenticationResponse.setEndResult("OK");
+    @Nested
+    class ValidateSessionStatusCertificate {
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () ->
-                authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallenge"));
+        @Test
+        void validate_certificateExpired_throwException() {
+            var sessionStatus = toSessionsStatus(EXPIRED_CERT, "QUALIFIED", "");
 
-        assertEquals("Signer's certificate is not trusted", exception.getMessage());
+            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+
+            assertEquals("Signer's certificate is not valid", ex.getMessage());
+        }
+
+        @Test
+        void validate_certificateIsNotTrusted_throwException() {
+            var sessionStatus = toSessionsStatus(UNTRUSTED_CERT, "QUALIFIED", "");
+
+            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+
+            assertEquals("Signer's certificate is not trusted", ex.getMessage());
+        }
+
+        @Test
+        void validate_certificateLevelLowerThanRequested_throwException() {
+            var sessionStatus = toSessionsStatus(AUTH_CERT, "ADVANCED", "");
+
+            var ex = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+
+            assertEquals("Signer's certificate is below requested certificate level", ex.getMessage());
+        }
     }
 
-    @Test
-    void toAuthenticationIdentity_deviceLinkAuthenticationResponseIsMissing_throwException() {
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(null, null));
+    @Nested
+    class ValidateSignature {
 
-        assertEquals("Device link authentication response is not provided", exception.getMessage());
+        @Test
+        void validate_invalidSignature_throwException() {
+            var sessionStatus = toSessionsStatus(AUTH_CERT, "QUALIFIED", toBase64("invalidSignature"));
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+
+            assertEquals("Signature verification failed", ex.getMessage());
+        }
+
     }
 
-    @Test
-    void toAuthenticationIdentity_rpChallengeIsNotProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, AuthenticationCertificateLevel.QUALIFIED, null));
+    private static SessionStatus toSessionsStatus(String certificateValue, String certificateLevel, String signatureValue) {
+        var result = new SessionResult();
+        result.setEndResult("OK");
+        result.setDocumentNumber("PNOEE-1234567890-MOCK-Q");
 
-        assertEquals("RP challenge is not provided", exception.getMessage());
+        var sessionMaskGenAlgorithmParameters = new SessionMaskGenAlgorithmParameters();
+        sessionMaskGenAlgorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512.getAlgorithmName());
+
+        SessionMaskGenAlgorithm maskGenAlgorithm = new SessionMaskGenAlgorithm();
+        maskGenAlgorithm.setAlgorithm(MaskGenAlgorithm.ID_MGF1.getAlgorithmName());
+        maskGenAlgorithm.setParameters(sessionMaskGenAlgorithmParameters);
+
+        var sessionSignatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
+        sessionSignatureAlgorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512.getAlgorithmName());
+        sessionSignatureAlgorithmParameters.setTrailerField(TrailerField.OXBC.getValue());
+        sessionSignatureAlgorithmParameters.setSaltLength(HashAlgorithm.SHA3_512.getOctetLength());
+        sessionSignatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
+
+        var signature = new SessionSignature();
+        signature.setServerRandom(toBase64("a".repeat(43)));
+        signature.setUserChallenge("TLSjYRH2oYw8tW2bq0it0IUb7WIFkCLgF8NTc7-4Zq4");
+        signature.setValue(toBase64("signatureValue"));
+        signature.setFlowType(FlowType.QR.getDescription());
+        signature.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
+        signature.setSignatureAlgorithmParameters(sessionSignatureAlgorithmParameters);
+
+        var cert = new SessionCertificate();
+        cert.setValue(getEncodedCertificateData(certificateValue));
+        cert.setCertificateLevel(certificateLevel);
+
+        var sessionStatus = new SessionStatus();
+        sessionStatus.setState("COMPLETE");
+        sessionStatus.setResult(result);
+        sessionStatus.setSignatureProtocol(SignatureProtocol.ACSP_V2.name());
+        sessionStatus.setSignature(signature);
+        sessionStatus.setCert(cert);
+        sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
+        return sessionStatus;
     }
 
-    @Test
-    void toAuthenticationIdentity_certificateValueIsNotProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Certificate is not provided", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_expiredCertificateProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(EXPIRED_CERT));
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Signer's certificate is not valid", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_certificateIsNotTrusted_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(UNTRUSTED_CERT));
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Signer's certificate is not trusted", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_certificateLevelIsNotProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(null);
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Certificate level is not provided", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_certificateLevelIsLowerThanRequested_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.ADVANCED);
-        var exception = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Signer's certificate is below requested certificate level", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_algorithmNameIsNotProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Algorithm name is not provided", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_signatureValueIsNotProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Signature value is not provided", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_invalidAlgorithmNameIsProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName("invalidAlgorithmName");
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureValue"));
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Invalid signature algorithm was provided", exception.getMessage());
-    }
-
-    @Test
-    void toAuthenticationIdentity_invalidSignatureValueIsProvided_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("invalidSignatureValue"));
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Signature verification failed", exception.getMessage());
-    }
-
-    @Disabled("Do not have necessary test data to make this work.")
-    @Test
-    void toAuthenticationIdentity_signatureDoesNotMatch_throwException() {
-        var deviceLinkAuthenticationResponse = new AuthenticationResponse();
-        deviceLinkAuthenticationResponse.setCertificate(toX509Certificate(AUTH_CERT));
-        deviceLinkAuthenticationResponse.setCertificateLevel(AuthenticationCertificateLevel.QUALIFIED);
-        deviceLinkAuthenticationResponse.setAlgorithmName("sha256WithRSA");
-        deviceLinkAuthenticationResponse.setSignatureValueInBase64(toBase64("bXhY5CO3gxQ2hxnuQm0Lm/4fXoFPogy4LwS6d0aUu9sZjCfNV5n6IUse45UYLhvmfK4NW5QarlYRTEqIYxlVQ0UMFm6WXQA5AHeOu/JoxKQDnbSeH8Y9FADOnqYXbPWz0W4aFVo0JFoMPO2JrwjC3rFrfded0EkD76vrazzwZxWNkWskC3jJq2Dgu3tsuDdv+Q4moNJYamADQtxYc7a16GNUEklo/ZlUS1pFanDplWTIwGaJd+ZWCvqPrz7cr+PObYfv4NsSN1QBij+eYDS+o6pTK/Ba/ve9AmdR4zS7dv/i1paSmGx3kbm/N0fNn+gelgPv8poOat1TGadT5FLEXWdytDW6I7S+d80xiInPHwKeXI4G4DL+F6zdRw8zWvR6ziXHIkxh/LnioRnoKxOiQZbQbrws2exjyFAS2HkX5UHugPfOkK0YSrJHVpwkOarDAvj7RoOHTFxLd/6FKbugDTG+0tIY4W6RROENePjZW+1eJIOkivO7/iHv3Qi6iIPhW9fB7XUDEtOdmmSrnheU6S9lvKnFYoW3Wcjy12bpK9QoaIzUykzQpO6maOxGr7nQv20AdM6y0vI16Y/8GIEqrGf9V/XVvv5SZFX3BPT3sAsBj0C18imfyyqhU33y1Gr/xMAc0Qbf4Cs92SLczY5yzd1BKGeM3ajaSaHRZbtjRdfiP7xyedyVyWF8COOHVfZb4cXwdpIbtXFkWNcYrfSnhLsRenhIrbKmiDsPRRZCZW8tpDWhr7ge2KY8wb1SbOa38WiNXTjNJAuviZ4ZmUOl5y4CrESdPXN7x7qH+jmfzxUSvBFYaSY2ey46ShHr9zQj7kz3NajIztGK7//sMnQsXuToUnSc5H0XwEwVUT6kSS6ZVYe58quDOgD47Dtj8wczXx081LSXAJXJ75XfxcwJhNn78oHVOR6EqTjOmRLlqj12Bw0WjhzIaut4wQdx0eTXGLqwn6b3RrVoVuwhJ2kwkURe0WDoKa7AWqYZBCHjGlgB3fNEBCNdKLw5ji+0C0jO"));
-        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.toAuthenticationIdentity(deviceLinkAuthenticationResponse, "rpChallengeFromTestUserAuthRequest"));
-
-        assertEquals("Failed to verify validity of signature returned by Smart-ID", exception.getMessage());
+    private static AuthenticationSessionRequest toAuthenticationSessionRequest(String certificateLevel) {
+        return new AuthenticationSessionRequest(
+                "00000000-0000-0000-0000-000000000001",
+                "DEMO",
+                certificateLevel,
+                SignatureProtocol.ACSP_V2,
+                new AcspV2SignatureProtocolParameters("rpChallenge", SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
+                InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                null,
+                null,
+                null);
     }
 
     private X509Certificate toX509Certificate(String certificate) {
@@ -313,5 +246,15 @@ class AuthenticationResponseValidatorTest {
 
     private static String toBase64(String data) {
         return Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String getEncodedCertificateData(String certificate) {
+        return certificate.replace("-----BEGIN CERTIFICATE-----", "")
+                .replace("-----END CERTIFICATE-----", "")
+                .replace("\n", "");
+    }
+
+    private static String toUrlSafeBase64(String data) {
+        return Base64.getUrlEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
     }
 }

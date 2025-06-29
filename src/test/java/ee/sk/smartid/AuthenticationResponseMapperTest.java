@@ -72,7 +72,7 @@ class AuthenticationResponseMapperTest {
         assertEquals(toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
         assertEquals(AuthenticationCertificateLevel.QUALIFIED, authenticationResponse.getCertificateLevel());
         assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
-        assertEquals("displayTextAndPIN", authenticationResponse.getInteractionFlowUsed());
+        assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
         assertEquals("0.0.0.0", authenticationResponse.getDeviceIpAddress());
     }
 
@@ -555,7 +555,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignature(sessionSignature);
 
                 var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
-                assertEquals("Invalid`signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status", exception.getMessage());
+                assertEquals("Invalid `signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status", exception.getMessage());
             }
 
             @ParameterizedTest

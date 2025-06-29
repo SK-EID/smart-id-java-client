@@ -53,7 +53,6 @@ public class AuthenticationResponseMapper {
     private static final int MINIMUM_SERVER_RANDOM_LENGTH = 24;
     private static final int USER_CHALLENGE_LENGTH = 43;
 
-
     /**
      * Maps session status to authentication response
      *
@@ -69,14 +68,32 @@ public class AuthenticationResponseMapper {
 
         var authenticationResponse = new AuthenticationResponse();
         authenticationResponse.setEndResult(sessionResult.getEndResult());
+        authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
+        authenticationResponse.setServerRandom(sessionSignature.getServerRandom());
+        authenticationResponse.setUserChallenge(sessionSignature.getUserChallenge());
+        authenticationResponse.setFlowType(FlowType.valueOf(sessionSignature.getFlowType()));
+
         authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        authenticationResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
+        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()).orElse(null);
+        authenticationResponse.setSignatureAlgorithm(signatureAlgorithm);
+
+        var signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
+        var hashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null);
+        authenticationResponse.setHashAlgorithm(hashAlgorithm);
+        MaskGenAlgorithm maskGenAlgorithm = MaskGenAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getAlgorithm()).orElse(null);
+        authenticationResponse.setMaskGenAlgorithm(maskGenAlgorithm);
+        var maskGenHashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null);
+        authenticationResponse.setMaskHashAlgorithm(maskGenHashAlgorithm);
+        authenticationResponse.setSaltLength(signatureAlgorithmParameters.getSaltLength());
+        TrailerField trailerField = TrailerField.fromString(signatureAlgorithmParameters.getTrailerField()).orElse(null);
+        authenticationResponse.setTrailerField(trailerField);
+
         authenticationResponse.setCertificate(toCertificate(sessionCertificate));
         authenticationResponse.setCertificateLevel(toAuthenticationCertificateLevel(sessionCertificate));
-        authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-        authenticationResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
+
+        authenticationResponse.setInteractionTypeUsed(sessionStatus.getInteractionTypeUsed());
         authenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
-        authenticationResponse.setServerRandom(sessionSignature.getServerRandom());
+
         return authenticationResponse;
     }
 
@@ -127,7 +144,6 @@ public class AuthenticationResponseMapper {
             throw new UnprocessableSmartIdResponseException("Session status field `signature` is missing");
         }
 
-        // TODO - 16.06.25: review groupings
         if (StringUtil.isEmpty(sessionSignature.getValue())) {
             throw new UnprocessableSmartIdResponseException("Session status field `signature.value` is empty");
         }
@@ -141,8 +157,8 @@ public class AuthenticationResponseMapper {
         }
         int serverRandomLength = sessionSignature.getServerRandom().length();
         if (serverRandomLength < MINIMUM_SERVER_RANDOM_LENGTH) {
-            logger.error("Signature field `serverRandom` is less than required length: {} < {}", serverRandomLength, MINIMUM_SERVER_RANDOM_LENGTH); // TODO - 19.06.25: improve expected to actual
-            throw new UnprocessableSmartIdResponseException("Session status field `signature.serverRandom` is less than required length"); // TODO - 19.06.25: improve wording
+            logger.error("Signature field `serverRandom` is less than required length: expected {} < {}", serverRandomLength, MINIMUM_SERVER_RANDOM_LENGTH);
+            throw new UnprocessableSmartIdResponseException("Session status field `signature.serverRandom` is less than required length");
         }
         if (!Pattern.matches(BASE64_FORMAT_PATTERN, sessionSignature.getServerRandom())) {
             logger.error("Session status field `signature.serverRandom` is not in Base64-encoded format: {}", sessionSignature.getServerRandom());
@@ -173,11 +189,16 @@ public class AuthenticationResponseMapper {
         if (StringUtil.isEmpty(sessionSignature.getSignatureAlgorithm())) {
             throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithm` is empty");
         }
-        if (!SignatureAlgorithm.isSupported(sessionSignature.getSignatureAlgorithm())) {
+        Optional<SignatureAlgorithm> signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
+        if (signatureAlgorithm.isEmpty()) {
             logger.error("Invalid `signature.signatureAlgorithm` in the session status: {}", sessionSignature.getSignatureAlgorithm());
             throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithm` in the session status");
         }
 
+        validateSignatureAlgorithmParameters(sessionSignature);
+    }
+
+    private static void validateSignatureAlgorithmParameters(SessionSignature sessionSignature) {
         var signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
         if (sessionSignature.getSignatureAlgorithmParameters() == null) {
             throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters` is missing");
@@ -201,7 +222,7 @@ public class AuthenticationResponseMapper {
         }
         if (!MaskGenAlgorithm.ID_MGF1.getAlgorithmName().equals(maskGenAlgorithm.getAlgorithm())) {
             logger.error("Invalid `signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status: {}", maskGenAlgorithm.getAlgorithm());
-            throw new UnprocessableSmartIdResponseException("Invalid`signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status");
+            throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status");
         }
 
         Optional<HashAlgorithm> maskGenHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm());

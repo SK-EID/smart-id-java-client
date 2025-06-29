@@ -33,15 +33,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.PSSParameterSpec;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
@@ -56,6 +61,8 @@ import org.slf4j.Logger;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -105,70 +112,62 @@ public class AuthenticationResponseValidator {
     }
 
     /**
-     * Maps the Smart-ID authentication response {@link AuthenticationResponse} to {@link AuthenticationIdentity}
+     * Validates the authentication session status and converts it to {@link AuthenticationIdentity}.
      * <p>
-     * Uses {@link AuthenticationCertificateLevel#QUALIFIED} as the request certificate level
+     * This method sets brokeredRpName value to null
      *
-     * @param authenticationResponse Smart-ID authentication response
-     * @return authentication identity
+     * @param sessionStatus                the session status
+     * @param authenticationSessionRequest the authentication session request
+     * @param schemaName                   the schema name
+     * @return the authentication identity
      */
-    public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse, String rpChallenge) {
-        return toAuthenticationIdentity(authenticationResponse, AuthenticationCertificateLevel.QUALIFIED, rpChallenge);
+    public AuthenticationIdentity validate(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
+        return validate(sessionStatus, authenticationSessionRequest, schemaName, null);
     }
 
     /**
-     * Maps the Smart-ID authentication response {@link AuthenticationResponse} to {@link AuthenticationIdentity}
+     * Validates the authentication session status and converts it to {@link AuthenticationIdentity}.
      *
-     * @param authenticationResponse    Smart-ID authentication response
-     * @param requestedCertificateLevel Certificate level used in the authentication session request
-     * @param rpChallenge           Generate string used in the authentication session request
-     * @return authentication identity
+     * @param sessionStatus                the session status
+     * @param authenticationSessionRequest the authentication session request
+     * @param schemaName                   the schema name
+     * @return the authentication identity
      */
-    public AuthenticationIdentity toAuthenticationIdentity(AuthenticationResponse authenticationResponse,
-                                                           AuthenticationCertificateLevel requestedCertificateLevel,
-                                                           String rpChallenge) {
-        validateInputs(authenticationResponse, rpChallenge);
-        validateCertificate(authenticationResponse, requestedCertificateLevel);
-        validateSignature(authenticationResponse, rpChallenge);
+    public AuthenticationIdentity validate(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName, String brokeredRpName) {
+        if (sessionStatus == null) {
+            throw new SmartIdClientException("`sessionStatus` is not provided");
+        }
+        if (authenticationSessionRequest == null){
+            throw new SmartIdClientException("`authenticationSessionRequest` is not provided");
+        }
+        if (StringUtil.isEmpty(schemaName)) {
+            throw new SmartIdClientException("`schemaName` is not provided");
+        }
+        AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
+        validateCertificate(authenticationResponse, AuthenticationCertificateLevel.valueOf(authenticationSessionRequest.certificateLevel()));
+        validateSignature(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
         return AuthenticationIdentityMapper.from(authenticationResponse.getCertificate());
     }
 
-    private void validateInputs(AuthenticationResponse authenticationResponse, String rpChallenge) {
-        if (authenticationResponse == null) {
-            throw new SmartIdClientException("Device link authentication response is not provided");
-        }
-        if (StringUtil.isEmpty(rpChallenge)) {
-            throw new SmartIdClientException("RP challenge is not provided");
-        }
-    }
-
     private void validateCertificate(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        if (authenticationResponse.getCertificate() == null) {
-            throw new SmartIdClientException("Certificate is not provided");
-        }
         validateCertificateNotExpired(authenticationResponse.getCertificate());
         validateCertificateIsTrusted(authenticationResponse.getCertificate());
         validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
     }
 
-    private void validateSignature(AuthenticationResponse authenticationResponse, String rpChallenge) {
-        if (StringUtil.isEmpty(authenticationResponse.getAlgorithmName())) {
-            throw new SmartIdClientException("Algorithm name is not provided");
-        }
-        if (StringUtil.isEmpty(authenticationResponse.getSignatureValueInBase64())) {
-            throw new SmartIdClientException("Signature value is not provided");
-        }
+    private void validateSignature(AuthenticationResponse authenticationResponse,
+                                   AuthenticationSessionRequest authenticationSessionRequest,
+                                   String schemaName,
+                                   String brokeredRpName) {
         try {
-            Signature signature = getSignature(authenticationResponse);
-            signature.initVerify(authenticationResponse.getCertificate().getPublicKey());
-            String data = createSignatureData(authenticationResponse, rpChallenge);
-            signature.update(data.getBytes(StandardCharsets.UTF_8));
+            Signature result = getSignature(authenticationResponse);
+            result.initVerify(authenticationResponse.getCertificate().getPublicKey());
+            result.update(constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName));
             byte[] signedHash = authenticationResponse.getSignatureValue();
-            if (!signature.verify(signedHash)) {
+            if (!result.verify(signedHash)) {
                 throw new UnprocessableSmartIdResponseException("Failed to verify validity of signature returned by Smart-ID");
             }
         } catch (GeneralSecurityException ex) {
-            logger.error("Signature verification failed");
             throw new UnprocessableSmartIdResponseException("Signature verification failed", ex);
         }
     }
@@ -236,16 +235,6 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private static Signature getSignature(AuthenticationResponse authenticationResponse) throws NoSuchAlgorithmException {
-        String algorithm = authenticationResponse.getAlgorithmName().replace("Encryption", "");
-        try {
-            return Signature.getInstance(algorithm);
-        } catch (NoSuchAlgorithmException ex) {
-            logger.error("Invalid signature algorithm was provided: {}", algorithm);
-            throw new UnprocessableSmartIdResponseException("Invalid signature algorithm was provided", ex);
-        }
-    }
-
     private static void validateCertificateNotExpired(X509Certificate certificate) {
         try {
             certificate.checkValidity();
@@ -254,10 +243,51 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private static String createSignatureData(AuthenticationResponse authenticationResponse, String rpChallenge) {
-        return String.format("%s;%s;%s", SignatureProtocol.ACSP_V2.name(),
+    private static Signature getSignature(AuthenticationResponse authenticationResponse) {
+        try {
+            var params = new PSSParameterSpec(authenticationResponse.getHashAlgorithm().getAlgorithmName(),
+                    authenticationResponse.getMaskGenAlgorithm().getMgfName(),
+                    new MGF1ParameterSpec(authenticationResponse.getMaskHashAlgorithm().getAlgorithmName()),
+                    authenticationResponse.getSaltLength(),
+                    authenticationResponse.getTrailerField().getPssSpecValue());
+            var signature = Signature.getInstance(authenticationResponse.getSignatureAlgorithm().getAlgorithmName());
+            signature.setParameter(params);
+            return signature;
+        } catch (NoSuchAlgorithmException ex) {
+            logger.error("Invalid signature algorithm was provided: {}", authenticationResponse.getSignatureAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Invalid signature algorithm was provided", ex);
+        } catch (InvalidAlgorithmParameterException ex) {
+            throw new UnprocessableSmartIdResponseException("Invalid signature algorithm parameters were provided", ex);
+        }
+    }
+
+    private byte[] constructPayload(AuthenticationResponse authenticationResponse, AuthenticationSessionRequest authenticationSessionRequest, String schemaName, String brokeredRpName) {
+        String[] payloadParts = {
+                schemaName,
+                SignatureProtocol.ACSP_V2.name(),
                 authenticationResponse.getServerRandom(),
-                rpChallenge);
+                authenticationSessionRequest.signatureProtocolParameters().rpChallenge(),
+                StringUtil.orEmpty(authenticationResponse.getUserChallenge()),
+                Base64.getEncoder().encodeToString(authenticationSessionRequest.relyingPartyName().getBytes(StandardCharsets.UTF_8)),
+                StringUtil.isEmpty(brokeredRpName) ? "" : Base64.getEncoder().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8)),
+                Base64.getEncoder().encodeToString(calculateDigest(authenticationSessionRequest.interactions())),
+                authenticationResponse.getInteractionTypeUsed(),
+                StringUtil.orEmpty(authenticationSessionRequest.initialCallbackURL()),
+                authenticationResponse.getFlowType().getDescription()
+        };
+        return String
+                .join("|", payloadParts)
+                .getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static byte[] calculateDigest(String value) {
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.update(value.getBytes(StandardCharsets.UTF_8));
+            return messageDigest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private record CertDnDetails(String country, String organization, String commonName) {

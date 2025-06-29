@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,17 +26,35 @@ package ee.sk.smartid;
  * #L%
  */
 
+import java.util.Arrays;
+import java.util.Optional;
+
+/**
+ * Represents mask algorithm in the response and the value used in recrating the signature.
+ */
 public enum MaskGenAlgorithm {
 
-    ID_MGF1("id-mgf1");
+    ID_MGF1("id-mgf1", "MGF1");
 
     private final String algorithmName;
+    private final String mgfName;
 
-    MaskGenAlgorithm(String algorithmName) {
+    MaskGenAlgorithm(String algorithmName, String mgfName) {
         this.algorithmName = algorithmName;
+        this.mgfName = mgfName;
     }
 
     public String getAlgorithmName() {
         return algorithmName;
+    }
+
+    public String getMgfName() {
+        return mgfName;
+    }
+
+    public static Optional<MaskGenAlgorithm> fromString(String input) {
+        return Arrays.stream(MaskGenAlgorithm.values())
+                .filter(algorithm -> algorithm.getAlgorithmName().equals(input))
+                .findFirst();
     }
 }

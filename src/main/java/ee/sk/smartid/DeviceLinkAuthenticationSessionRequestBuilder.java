@@ -71,6 +71,8 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private String documentNumber;
     private String initialCallbackURL;
 
+    private AuthenticationSessionRequest authenticationSessionRequest;
+
     /**
      * Constructs a new DeviceLinkAuthenticationSessionRequestBuilder with the given Smart-ID connector
      *
@@ -247,7 +249,21 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         AuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
         DeviceLinkSessionResponse deviceLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(deviceLinkAuthenticationSessionResponse);
+        this.authenticationSessionRequest = authenticationRequest;
         return deviceLinkAuthenticationSessionResponse;
+    }
+
+    /**
+     * Returns the authentication session request created during the initialization
+     *
+     * @return the authentication session request
+     * @throws SmartIdClientException when session is not yet initialized and method is called
+     */
+    public AuthenticationSessionRequest getAuthenticationSessionRequest() {
+        if (authenticationSessionRequest == null) {
+            throw new SmartIdClientException("Authentication session request has not been initialized yet");
+        }
+        return authenticationSessionRequest;
     }
 
     private DeviceLinkSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
