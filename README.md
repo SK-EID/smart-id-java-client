@@ -53,7 +53,7 @@ This library supports Smart-ID API v3.1.
             * [Example of validating certificate session response](#example-of-validating-the-certificate-choice-session-response)
             * [Example of validating the signature](#example-of-validating-the-signature-session-response)
             * [Error handling for session status](#error-handling-for-session-status)
-    * [Certificate choice by document number](#certificate-choice-by-document-number)
+    * [Certificate by document number](#certificate-by-document-number)
     * [Notification-based flows](#notification-based-flows)
         * [Differences between notification-based and dynamic link flows](#differences-between-notification-based-and-dynamic-link-flows)
         * [Notification-based authentication session](#notification-based-authentication-session)
@@ -817,12 +817,12 @@ The session status response may return various error codes indicating the outcom
 * `USER_REFUSED_CONFIRMATIONMESSAGE`: User cancelled on confirmationMessage screen.
 * `USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE`: User cancelled on confirmationMessageAndVerificationCodeChoice screen.
 
-## Certificate choice by document number
+## Certificate by document number
 
 In API v3.1, the flow to initiate a **notification-based certificate choice session using a document number** was removed. Instead, a new, simplified endpoint was introduced.
 
 ### Request Parameters
-The request parameters for the certificate choice by document number request are as follows:
+The request parameters for the certificate by document number request are as follows:
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
