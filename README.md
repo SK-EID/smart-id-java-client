@@ -846,7 +846,7 @@ RP can directly query the user's signing certificate by document number — no s
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
 CertificateByDocumentNumberResult certResponse = client
-        .getCertificateByDocumentNumber
+        .createCertificateByDocumentNumber
         .withDocumentNumber(documentNumber)
         .withRelyingPartyUUID(client.getRelyingPartyUUID())
         .withRelyingPartyName(client.getRelyingPartyName())

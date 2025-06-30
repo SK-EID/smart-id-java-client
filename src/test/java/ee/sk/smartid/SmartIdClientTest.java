@@ -226,7 +226,7 @@ class SmartIdClientTest {
         void createCertificateRequest_withDocumentNumber() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response.json");
 
-            var response = smartIdClient.createCertificateByDocumentNumber()
+            CertificateByDocumentNumberResult response = smartIdClient.createCertificateByDocumentNumber()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .getCertificateByDocumentNumber();
@@ -240,7 +240,7 @@ class SmartIdClientTest {
         void getCertificateByDocumentNumber_withUnknownState_throwsException() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response-unknown-state.json");
 
-            var builder = smartIdClient.createCertificateByDocumentNumber()
+            CertificateByDocumentNumberRequestBuilder builder = smartIdClient.createCertificateByDocumentNumber()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withCertificateLevel(CertificateLevel.ADVANCED);
 
@@ -419,7 +419,7 @@ class SmartIdClientTest {
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, DeviceLinkType.QR_CODE, response.getSessionToken());
         }
 
-        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
         @ParameterizedTest
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DeviceLinkType deviceLinkType) {
@@ -445,7 +445,7 @@ class SmartIdClientTest {
             assertUri(fullUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
         }
 
-        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
         @Test
         void createDynamicContent_createQrCode() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/dynamic-link-certificate-choice-session-response.json");

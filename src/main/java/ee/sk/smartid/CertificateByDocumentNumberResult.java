@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -27,8 +27,6 @@ package ee.sk.smartid.rest.dao;
  */
 
 import java.security.cert.X509Certificate;
-
-import ee.sk.smartid.CertificateLevel;
 
 public record CertificateByDocumentNumberResult(CertificateLevel certificateLevel, X509Certificate certificate) {
 }

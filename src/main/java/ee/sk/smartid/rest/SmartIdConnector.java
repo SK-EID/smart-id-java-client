@@ -85,7 +85,7 @@ public interface SmartIdConnector extends Serializable {
      *
      * @param request CertificateByDocumentNumberRequest containing necessary parameters
      * @param documentNumber The document number
-     * @return CertificateResponse containing sessionID
+     * @return CertificateResponse containing response state and certificate information.
      */
     CertificateResponse getCertificateByDocumentNumber(String documentNumber, CertificateByDocumentNumberRequest request);
 

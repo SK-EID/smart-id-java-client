@@ -39,7 +39,6 @@ import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberResult;
 import ee.sk.smartid.util.StringUtil;
 
 public class CertificateByDocumentNumberRequestBuilder {
