@@ -62,11 +62,7 @@ public class DeviceLinkBuilder {
     /**
      * Sets the scheme name for the device link.
      * <p>
-     * Default is `smart-id`. Use `smart-id-demo` for demo environment.
-     <p>
-     * See <a href="https://sk-eid.github.io/smart-id-documentation/environments.html#_demo">
-     * Smart-ID environment documentation
-     * </a>.
+     * Default is `smart-id`.
      *
      * @param schemeName the scheme name to be used in the device link
      * @return this builder
@@ -299,6 +295,9 @@ public class DeviceLinkBuilder {
     }
 
     private void validateInputParameters() {
+        if (StringUtil.isEmpty(schemeName)) {
+            throw new SmartIdClientException("Parameter schemeName must be set");
+        }
         if (StringUtil.isEmpty(deviceLinkBase)) {
             throw new SmartIdClientException("Parameter deviceLinkBase must be set");
         }

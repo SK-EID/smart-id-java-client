@@ -68,6 +68,24 @@ class DeviceLinkBuilderTest {
     class CreateUnprotectedUri {
 
         @ParameterizedTest
+        @NullAndEmptySource
+        void createUri_missingSchemeName_shouldThrowException(String scheme) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withSchemeName(scheme)
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withVersion("1.0")
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .createUnprotectedUri()
+            );
+            assertEquals("Parameter schemeName must be set", ex.getMessage());
+        }
+
+        @ParameterizedTest
         @EnumSource
         void createUri_validInputs_shouldBuildUri(DeviceLinkType deviceLinkType) {
             URI uri = new DeviceLinkBuilder()
