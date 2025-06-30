@@ -295,9 +295,6 @@ public class DeviceLinkBuilder {
     }
 
     private void validateInputParameters() {
-        if (StringUtil.isEmpty(schemeName)) {
-            throw new SmartIdClientException("Parameter schemeName must be set");
-        }
         if (StringUtil.isEmpty(deviceLinkBase)) {
             throw new SmartIdClientException("Parameter deviceLinkBase must be set");
         }
@@ -325,6 +322,9 @@ public class DeviceLinkBuilder {
     }
 
     private void validateAuthCodeParams(String unprotectedLink) {
+        if (StringUtil.isEmpty(schemeName)) {
+            throw new SmartIdClientException("Parameter schemeName must be set");
+        }
         if (StringUtil.isEmpty(relyingPartyNameBase64)) {
             throw new SmartIdClientException("Parameter relyingPartyName must be set");
         }

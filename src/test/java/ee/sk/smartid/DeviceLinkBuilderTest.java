@@ -68,24 +68,6 @@ class DeviceLinkBuilderTest {
     class CreateUnprotectedUri {
 
         @ParameterizedTest
-        @NullAndEmptySource
-        void createUri_missingSchemeName_shouldThrowException(String scheme) {
-            var ex = assertThrows(SmartIdClientException.class, () ->
-                    new DeviceLinkBuilder()
-                            .withSchemeName(scheme)
-                            .withDeviceLinkBase(DEVICE_LINK_BASE)
-                            .withVersion("1.0")
-                            .withSessionToken(SESSION_TOKEN)
-                            .withSessionType(SessionType.AUTHENTICATION)
-                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                            .withLang(LANGUAGE)
-                            .withElapsedSeconds(ELAPSED_SECONDS)
-                            .createUnprotectedUri()
-            );
-            assertEquals("Parameter schemeName must be set", ex.getMessage());
-        }
-
-        @ParameterizedTest
         @EnumSource
         void createUri_validInputs_shouldBuildUri(DeviceLinkType deviceLinkType) {
             URI uri = new DeviceLinkBuilder()
@@ -304,6 +286,25 @@ class DeviceLinkBuilderTest {
             ).get("authCode");
 
             assertThat(authCode, matchesPattern(AUTH_CODE_PATTERN));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void buildDeviceLink_missingSchemeName_throwsException(String scheme) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withSchemeName(scheme)
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .withDigest(BASE64_DIGEST)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter schemeName must be set", ex.getMessage());
         }
 
         @Test
