@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
@@ -26,25 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.io.Serializable;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.NotificationInteraction;
 
-public class SignatureAlgorithmParameters implements Serializable {
+public class NotificationUtil {
 
-    private static final Set<String> SUPPORTED_HASH_ALGORITHMS = Set.of("SHA-256", "SHA-384", "SHA-512", "SHA3-256", "SHA3-384", "SHA3-512");
+    private static final ObjectMapper mapper = new ObjectMapper();
 
-    private String hashAlgorithm;
-
-    public String getHashAlgorithm() {
-        return hashAlgorithm;
-    }
-
-    public void setHashAlgorithm(String hashAlgorithm) {
-        if (!SUPPORTED_HASH_ALGORITHMS.contains(hashAlgorithm)) {
-            throw new SmartIdClientException("Unsupported hashAlgorithm: " + hashAlgorithm + ". Supported values: " + SUPPORTED_HASH_ALGORITHMS);
+    public static String encodeToBase64(List<NotificationInteraction> interactions) {
+        try {
+            String json = mapper.writeValueAsString(interactions);
+            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        } catch (JsonProcessingException e) {
+            throw new SmartIdClientException("Unable to encode interactions to base64", e);
         }
-        this.hashAlgorithm = hashAlgorithm;
     }
 }

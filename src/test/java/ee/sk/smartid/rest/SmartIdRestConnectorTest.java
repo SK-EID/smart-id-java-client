@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -659,9 +660,9 @@ class SmartIdRestConnectorTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
-    class DynamicLinkSignatureTests {
+    class DeviceLinkSignatureTests {
 
-        private static final String SIGNATURE_WITH_PERSON_CODE_PATH = "/signature/dynamic-link/etsi/PNOEE-31111111111";
+        private static final String SIGNATURE_WITH_PERSON_CODE_PATH = "/signature/device-link/etsi/PNOEE-31111111111";
 
         private SmartIdRestConnector connector;
 
@@ -672,57 +673,59 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initDynamicLinkSignature_withSemanticsIdentifier_successful() {
-            stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "responses/dynamic-link-signature-session-response.json");
+        void initDeviceLinkSignature_withSemanticsIdentifier_successful() {
+            stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "responses/device-link-signature-session-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            DeviceLinkSessionResponse response = connector.initDynamicLinkSignature(request, semanticsIdentifier);
+            DeviceLinkSessionResponse response = connector.initDeviceLinkSignature(request, semanticsIdentifier);
 
             assertNotNull(response);
             assertEquals("test-session-id", response.getSessionID());
             assertEquals("test-session-token", response.getSessionToken());
             assertEquals("test-session-secret", response.getSessionSecret());
+            assertEquals(URI.create("https://smart-id.com/device-link/"), response.getDeviceLinkBase());
         }
 
         @Test
-        void initDynamicLinkSignature_withDocumentNumber_successful() {
-            stubPostRequestWithResponse("/signature/dynamic-link/document/PNOEE-31111111111-MOCK-Q", "responses/dynamic-link-signature-session-response.json");
+        void initDeviceLinkSignature_withDocumentNumber_successful() {
+            stubPostRequestWithResponse("/signature/device-link/document/PNOEE-31111111111-MOCK-Q", "responses/device-link-signature-session-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             String documentNumber = "PNOEE-31111111111-MOCK-Q";
 
-            DeviceLinkSessionResponse response = connector.initDynamicLinkSignature(request, documentNumber);
+            DeviceLinkSessionResponse response = connector.initDeviceLinkSignature(request, documentNumber);
 
             assertNotNull(response);
             assertEquals("test-session-id", response.getSessionID());
             assertEquals("test-session-token", response.getSessionToken());
             assertEquals("test-session-secret", response.getSessionSecret());
+            assertEquals(URI.create("https://smart-id.com/device-link/"), response.getDeviceLinkBase());
         }
 
         @Test
-        void initDynamicLinkSignature_userAccountNotFound() {
+        void initDeviceLinkSignature_userAccountNotFound() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 404);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            assertThrows(UserAccountNotFoundException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
         }
 
         @Test
-        void initDynamicLinkSignature_relyingPartyNoPermission() {
+        void initDeviceLinkSignature_relyingPartyNoPermission() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 403);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
         }
 
         @Test
-        void initDynamicLinkSignature_invalidRequest() {
+        void initDeviceLinkSignature_invalidRequest() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 400);
 
             SignatureSessionRequest request = new SignatureSessionRequest();
@@ -730,61 +733,61 @@ class SmartIdRestConnectorTest {
             request.setRelyingPartyName("");
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
         }
 
         @Test
-        void initDynamicLinkSignature_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
+        void initDeviceLinkSignature_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 401);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
 
-            assertEquals("Request is unauthorized for URI http://localhost:18089/signature/dynamic-link/etsi/PNOEE-31111111111", exception.getMessage());
+            assertEquals("Request is unauthorized for URI http://localhost:18089/signature/device-link/etsi/PNOEE-31111111111", exception.getMessage());
         }
 
         @Test
-        void initDynamicLinkSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+        void initDeviceLinkSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 471);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
         }
 
         @Test
-        void initDynamicLinkSignature_throwsPersonShouldViewSmartIdPortalException() {
+        void initDeviceLinkSignature_throwsPersonShouldViewSmartIdPortalException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 472);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
         }
 
         @Test
-        void initDynamicLinkSignature_throwsSmartIdClientException() {
+        void initDeviceLinkSignature_throwsSmartIdClientException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 480);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
 
             assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
         }
 
         @Test
-        void initDynamicLinkSignature_throwsServerMaintenanceException() {
+        void initDeviceLinkSignature_throwsServerMaintenanceException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 580);
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            assertThrows(ServerMaintenanceException.class, () -> connector.initDynamicLinkSignature(request, semanticsIdentifier));
+            assertThrows(ServerMaintenanceException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
         }
     }
 
@@ -1060,11 +1063,13 @@ class SmartIdRestConnectorTest {
 
         var protocolParameters = new RawDigestSignatureProtocolParameters();
         protocolParameters.setDigest("base64-encoded-digest");
-        protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
+        protocolParameters.setSignatureAlgorithm("rsassa-pss");
+        protocolParameters.setSignatureAlgorithm("SHA3-512");
 
         request.setSignatureProtocolParameters(protocolParameters);
 
-        request.setAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign the document")));
+        DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Sign the document");
+        request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
 
         return request;
     }
@@ -1076,10 +1081,13 @@ class SmartIdRestConnectorTest {
 
         var protocolParameters = new RawDigestSignatureProtocolParameters();
         protocolParameters.setDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==");
+        protocolParameters.setSignatureAlgorithm("rsassa-pss");
         protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
 
         request.setSignatureProtocolParameters(protocolParameters);
-        request.setAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")));
+
+        DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Verify the code");
+        request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
 
         return request;
     }

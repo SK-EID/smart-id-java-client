@@ -27,7 +27,6 @@ package ee.sk.smartid.rest.dao;
  */
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -41,7 +40,7 @@ public class SignatureSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private String certificateLevel;
 
-    private final SignatureProtocol signatureProtocol = SignatureProtocol.RAW_DIGEST_SIGNATURE;
+    private final String signatureProtocol = SignatureProtocol.RAW_DIGEST_SIGNATURE.name();
 
     private RawDigestSignatureProtocolParameters signatureProtocolParameters;
 
@@ -52,10 +51,13 @@ public class SignatureSessionRequest implements Serializable {
     private Set<String> capabilities;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<? extends Interaction> allowedInteractionsOrder;
+    private String interactions;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String initialCallbackURL;
 
     public String getRelyingPartyUUID() {
         return relyingPartyUUID;
@@ -81,7 +83,7 @@ public class SignatureSessionRequest implements Serializable {
         this.certificateLevel = certificateLevel;
     }
 
-    public SignatureProtocol getSignatureProtocol() {
+    public String getSignatureProtocol() {
         return signatureProtocol;
     }
 
@@ -109,12 +111,12 @@ public class SignatureSessionRequest implements Serializable {
         this.capabilities = capabilities;
     }
 
-    public List<? extends Interaction> getAllowedInteractionsOrder() {
-        return allowedInteractionsOrder;
+    public String getInteractions() {
+        return interactions;
     }
 
-    public void setAllowedInteractionsOrder(List<? extends Interaction> allowedInteractionsOrder) {
-        this.allowedInteractionsOrder = allowedInteractionsOrder;
+    public void setInteractions(String interactions) {
+        this.interactions = interactions;
     }
 
     public RequestProperties getRequestProperties() {
@@ -123,5 +125,13 @@ public class SignatureSessionRequest implements Serializable {
 
     public void setRequestProperties(RequestProperties requestProperties) {
         this.requestProperties = requestProperties;
+    }
+
+    public String getInitialCallbackURL() {
+        return initialCallbackURL;
+    }
+
+    public void setInitialCallbackURL(String initialCallbackURL) {
+        this.initialCallbackURL = initialCallbackURL;
     }
 }

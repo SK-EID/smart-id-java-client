@@ -4,12 +4,10 @@
   "signatureProtocol": "RAW_DIGEST_SIGNATURE",
   "signatureProtocolParameters": {
     "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
-    "signatureAlgorithm": "sha512WithRSAEncryption"
-  },
-  "interactions": [
-    {
-      "type": "displayTextAndPIN",
-      "displayText60": "Sign document?"
+    "signatureAlgorithm": "rsassa-pss",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA3-512"
     }
-  ]
+  },
+  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IlNpZ24gZG9jdW1lbnQ/In1d"
 }

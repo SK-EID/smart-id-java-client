@@ -34,7 +34,10 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.util.DeviceLinkUtil;
 import ee.sk.smartid.util.SignatureUtil;
 import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
@@ -45,9 +48,10 @@ import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
-public class DynamicLinkSignatureSessionRequestBuilder {
+public class DeviceLinkSignatureSessionRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicLinkSignatureSessionRequestBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(DeviceLinkSignatureSessionRequestBuilder.class);
+    private static final String INITIAL_CALLBACK_URL_PATTERN = "^https://[^|]+$";
 
     private final SmartIdConnector connector;
 
@@ -58,11 +62,13 @@ public class DynamicLinkSignatureSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private List<DeviceLinkInteraction> allowedInteractionsOrder;
+    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
+    private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
-    private SignatureAlgorithm signatureAlgorithm;
+    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
     private SignableData signableData;
     private SignableHash signableHash;
+    private String initialCallbackURL;
     private boolean certificateChoiceMade;
 
     /**
@@ -70,7 +76,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      *
      * @param connector the connector
      */
-    public DynamicLinkSignatureSessionRequestBuilder(SmartIdConnector connector) {
+    public DeviceLinkSignatureSessionRequestBuilder(SmartIdConnector connector) {
         this.connector = connector;
     }
 
@@ -80,7 +86,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param relyingPartyUUID the relying party UUID
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
+    public DeviceLinkSignatureSessionRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
         this.relyingPartyUUID = relyingPartyUUID;
         return this;
     }
@@ -91,7 +97,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param relyingPartyName the relying party name
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
+    public DeviceLinkSignatureSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
         this.relyingPartyName = relyingPartyName;
         return this;
     }
@@ -102,7 +108,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param documentNumber the document number
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withDocumentNumber(String documentNumber) {
+    public DeviceLinkSignatureSessionRequestBuilder withDocumentNumber(String documentNumber) {
         this.documentNumber = documentNumber;
         return this;
     }
@@ -113,7 +119,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param semanticsIdentifier the semantics identifier
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
+    public DeviceLinkSignatureSessionRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
         this.semanticsIdentifier = semanticsIdentifier;
         return this;
     }
@@ -124,7 +130,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param certificateLevel the certificate level
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
+    public DeviceLinkSignatureSessionRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
         return this;
     }
@@ -135,7 +141,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param nonce the nonce
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withNonce(String nonce) {
+    public DeviceLinkSignatureSessionRequestBuilder withNonce(String nonce) {
         this.nonce = nonce;
         return this;
     }
@@ -146,19 +152,31 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param capabilities the capabilities
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withCapabilities(String... capabilities) {
+    public DeviceLinkSignatureSessionRequestBuilder withCapabilities(String... capabilities) {
         this.capabilities = Set.of(capabilities);
+        return this;
+    }
+
+    /**
+     * Sets the hash algorithm to be used for signature creation.
+     * By default, SHA3-512 is used.
+     *
+     * @param hashAlgorithm the hash algorithm to use
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withHashAlgorithm(HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
         return this;
     }
 
     /**
      * Sets the allowed interactions order.
      *
-     * @param allowedInteractionsOrder the allowed interactions order
+     * @param interactions the allowed interactions order
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<DeviceLinkInteraction> allowedInteractionsOrder) {
-        this.allowedInteractionsOrder = allowedInteractionsOrder;
+    public DeviceLinkSignatureSessionRequestBuilder withInteractions(List<DeviceLinkInteraction> interactions) {
+        this.interactions = interactions;
         return this;
     }
 
@@ -168,7 +186,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public DeviceLinkSignatureSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }
@@ -179,7 +197,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param signatureAlgorithm the signature algorithm
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+    public DeviceLinkSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
         return this;
     }
@@ -193,7 +211,7 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param signableData the data to be signed
      * @return this builder instance
      */
-    public DynamicLinkSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
+    public DeviceLinkSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
         this.signableData = signableData;
         return this;
     }
@@ -207,8 +225,21 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param signableHash the hash data to be signed
      * @return this builder
      */
-    public DynamicLinkSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
+    public DeviceLinkSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
         this.signableHash = signableHash;
+        return this;
+    }
+
+    /**
+     * Sets the initial callback URL.
+     * <p>
+     * This URL is used to redirect the user after the signature session is completed.
+     *
+     * @param initialCallbackURL the initial callback URL
+     * @return this builder instance
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withInitialCallbackURL(String initialCallbackURL) {
+        this.initialCallbackURL = initialCallbackURL;
         return this;
     }
 
@@ -221,13 +252,13 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * @param certificateChoiceMade indicates if certificate choice has been made
      * @return this builder instance
      */
-    public DynamicLinkSignatureSessionRequestBuilder withCertificateChoiceMade(boolean certificateChoiceMade) {
+    public DeviceLinkSignatureSessionRequestBuilder withCertificateChoiceMade(boolean certificateChoiceMade) {
         this.certificateChoiceMade = certificateChoiceMade;
         return this;
     }
 
     /**
-     * Sends the signature request and initiates a dynamic link-based signature session.
+     * Sends the signature request and initiates a device link-based signature session.
      * <p>
      * There are two supported ways to start the signature session:
      * <ul>
@@ -236,21 +267,23 @@ public class DynamicLinkSignatureSessionRequestBuilder {
      * </ul>
      *
      * @return a {@link DeviceLinkSessionResponse} containing session details such as
-     * session ID, session token, and session secret.
+     * session ID, session token, session secret and device link base URL.
+     *  @throws SmartIdClientException if request parameters are invalid
+     *  @throws UnprocessableSmartIdResponseException if the response is missing required fields
      */
     public DeviceLinkSessionResponse initSignatureSession() {
         validateParameters();
         SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
-        DeviceLinkSessionResponse dynamicLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
-        validateResponseParameters(dynamicLinkSignatureSessionResponse);
-        return dynamicLinkSignatureSessionResponse;
+        DeviceLinkSessionResponse deviceLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
+        validateResponseParameters(deviceLinkSignatureSessionResponse);
+        return deviceLinkSignatureSessionResponse;
     }
 
     private DeviceLinkSessionResponse initSignatureSession(SignatureSessionRequest request) {
         if (documentNumber != null) {
-            return connector.initDynamicLinkSignature(request, documentNumber);
+            return connector.initDeviceLinkSignature(request, documentNumber);
         } else if (semanticsIdentifier != null) {
-            return connector.initDynamicLinkSignature(request, semanticsIdentifier);
+            return connector.initDeviceLinkSignature(request, semanticsIdentifier);
         } else {
             throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.");
         }
@@ -270,9 +303,15 @@ public class DynamicLinkSignatureSessionRequestBuilder {
             signatureProtocolParameters.setDigest(SignatureUtil.getDigestToSignBase64(signableHash, signableData));
         }
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
+
+        var signatureAlgorithmParameters = new SignatureAlgorithmParameters();
+        signatureAlgorithmParameters.setHashAlgorithm(hashAlgorithm.getValue());
+        signatureProtocolParameters.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
+
         request.setSignatureProtocolParameters(signatureProtocolParameters);
+
         request.setNonce(nonce);
-        request.setAllowedInteractionsOrder(allowedInteractionsOrder);
+        request.setInteractions(DeviceLinkUtil.encodeToBase64(interactions));
 
         if (this.shareMdClientIpAddress != null) {
             var requestProperties = new RequestProperties();
@@ -290,9 +329,10 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         if (relyingPartyName == null || relyingPartyName.isEmpty()) {
             throw new SmartIdClientException("Relying Party Name must be set.");
         }
-        validateAllowedInteractions();
+        validateInteractions();
+        validateInitialCallbackURL();
 
-        if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
+        if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
             throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
         }
         if (certificateChoiceMade) {
@@ -300,11 +340,19 @@ public class DynamicLinkSignatureSessionRequestBuilder {
         }
     }
 
-    private void validateAllowedInteractions() {
-        if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
-            throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
+    private void validateInteractions() {
+        if (interactions == null || interactions.isEmpty()) {
+            logger.error("Parameter interactions must be set and contain at least one interaction.");
+            throw new SmartIdClientException("Parameter interactions must be set and contain at least one interaction.");
         }
-        allowedInteractionsOrder.forEach(Interaction::validate);
+        validateNoDuplicateInteractions();
+        interactions.forEach(DeviceLinkInteraction::validate);
+    }
+
+    private void validateInitialCallbackURL() {
+        if (!StringUtil.isEmpty(initialCallbackURL) && !initialCallbackURL.matches(INITIAL_CALLBACK_URL_PATTERN)) {
+            throw new SmartIdClientException("initialCallbackURL must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+        }
     }
 
     private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkSignatureSessionResponse) {
@@ -322,9 +370,16 @@ public class DynamicLinkSignatureSessionRequestBuilder {
             logger.error("Session secret is missing from the response");
             throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
         }
-        if (deviceLinkSignatureSessionResponse.getDeviceLinkBase() == null) {
-            throw new SmartIdClientException("deviceLinkBase is missing from the response");
+        if (deviceLinkSignatureSessionResponse.getDeviceLinkBase() == null || deviceLinkSignatureSessionResponse.getDeviceLinkBase().toString().isBlank()) {
+            logger.error("deviceLinkBase is missing or empty in the response");
+            throw new UnprocessableSmartIdResponseException("deviceLinkBase is missing from the response");
         }
+    }
 
+    private void validateNoDuplicateInteractions() {
+        if (interactions.stream().map(Interaction::getType).distinct().count() != interactions.size()) {
+            logger.error("Duplicate values found in interactions");
+            throw new SmartIdClientException("Duplicate values in interactions are not allowed");
+        }
     }
 }

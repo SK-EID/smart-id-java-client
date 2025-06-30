@@ -30,10 +30,10 @@ This library supports Smart-ID API v3.1.
         * [Dynamic link certificate choice session](#dynamic-link-certificate-choice-session)
             * [Examples of initiating a dynamic-link certificate choice session](#examples-of-initiating-a-dynamic-link-certificate-choice-session)
               * [Initiating dynamic-link certificate choice](#initiating-an-anonymous-certificate-choice-session)
-        * [Dynamic-link signature session](#dynamic-link-signature-session)
-          * [Examples of initiating a dynamic-link signature session](#examples-of-initiating-a-notification-based-signature-session)
-              * [Initiating a dynamic-link signature session using semantics identifier](#initiating-a-dynamic-link-signature-session-with-semantics-identifier)
-              * [Initiating a dynamic-link signature session using document number](#initiating-a-dynamic-link-signature-session-with-document-number)
+        * [Device-link signature session](#device-link-signature-session)
+          * [Examples of initiating a device-link signature session](#examples-of-initiating-a-notification-based-signature-session)
+              * [Initiating a device-link signature session using semantics identifier](#initiating-a-device-link-signature-session-with-semantics-identifier)
+              * [Initiating a device-link signature session using document number](#initiating-a-device-link-signature-session-with-document-number)
         * [Examples of allowed dynamic-link interactions order](#examples-of-allowed-dynamic-link-interactions-order)
         * [Additional request properties](#additional-dynamic-link-session-request-properties)
         * [Generating QR-code or device link](#generating-qr-code-or-device-link)
@@ -362,11 +362,11 @@ Instant responseReceivedAt = certificateChoice.getReceivedAt();
 Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-device-link) to see how to generate QR-code or dynamic link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-### Dynamic-link signature session
+### Device-link signature session
 
 #### Request Parameters
 
-The request parameters for the dynamic-link signature session are as follows:
+The request parameters for the device-link signature session are as follows:
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
@@ -374,27 +374,31 @@ The request parameters for the dynamic-link signature session are as follows:
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
 * `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-* `allowedInteractionsOrder`: Required. An array of objects defining the allowed interactions in order of preference.
+    * `signatureAlgorithm`: Required. Signature algorithm name. Only supported value is `rsassa-pss`
+    * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
+        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+* `interactions`: Required. Base64-encoded JSON string of an array of interaction objects.
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
+* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains a |, it must be percent-encoded. Should be used for same-device flow.
 * `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
-* `requestProperties`: requestProperties:
+* `requestProperties`:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
 
 #### Response Parameters
 
-The response from a successful dynamic-link signature session creation contains the following parameters:
+The response from a successful device-link signature session creation contains the following parameters:
 
 * `sessionID`: A string that can be used to request the session status result.
 * `sessionToken`: Unique random value that will be used to connect this signature attempt between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+* `deviceLinkBase`: Required. Base URI used to form the device link or QR code.
 
-#### Examples of initiating a dynamic-link signature session
+#### Examples of initiating a device-link signature session
 
-##### Initiating a dynamic-link signature session with semantics identifier
+##### Initiating a device-link signature session with semantics identifier
 
 ```java
 // Create the signable data
@@ -408,13 +412,15 @@ var semanticsIdentifier = new SemanticsIdentifier(
     "40504040001"
 );
 
-// Initiate the dynamic-link signature
-DynamicLinkSessionResponse signatureResponse = client.createDynamicLinkSignature()
+// Initiate the device-link signature
+DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withSemanticsIdentifier(semanticsIdentifier)
-    .withAllowedInteractionsOrder(List.of(
-            DynamicLinkInteraction.displayTextAndPIN("Please sign the document")))
+    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+    .withInitialCallbackURL("https://example.com/callback")
     .initSignatureSession();
 
 // Process the signature response
@@ -423,14 +429,15 @@ String sessionToken = signatureResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = signatureResponse.getSessionSecret();
 Instant receivedAt = signatureResponse.getReceivedAt();
+String deviceLinkBase = signatureResponse.getDeviceLinkBase();
 
-// Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret, receivedAt and deviceLinkBase provided in the signatureResponse
 // Start querying sessions status
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-device-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-##### Initiating a dynamic-link signature session with document number
+##### Initiating a device-link signature session with document number
 
 ```java
 // Create the signable data
@@ -440,13 +447,15 @@ signableData.setHashType(HashType.SHA256);
 // Specify the document number
 String documentNumber = "PNOEE-40504040001-MOCK-Q";
 
-// Build the dynamic-link signature request
-DynamicLinkSessionResponse signatureResponse = client.createDynamicLinkSignature()
+// Build the device-link signature request
+DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withDocumentNumber(documentNumber)
-    .withAllowedInteractionsOrder(List.of(
-            DynamicLinkInteraction.displayTextAndPIN("Please sign the document")))
+    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+    .withInitialCallbackURL("https://example.com/callback")
     .initSignatureSession();
 
 // Process the signature response
@@ -456,11 +465,12 @@ String sessionToken = signatureResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = signatureResponse.getSessionSecret();
 Instant receivedAt = signatureResponse.getReceivedAt();
+String deviceLinkBase = signatureResponse.getDeviceLinkBase();
 
-// Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureResponse
+// Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret, receivedAt and deviceLinkBase provided in the signatureResponse
 // Start querying sessions status
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-device-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Error Handling

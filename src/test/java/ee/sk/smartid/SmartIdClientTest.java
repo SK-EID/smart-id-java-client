@@ -170,50 +170,55 @@ class SmartIdClientTest {
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-105")
     @Nested
     @WireMockTest(httpPort = 18089)
-    class DynamicLinkSignatureSession {
+    class DeviceLinkSignatureSession {
 
         @Test
-        void createDynamicLinkSignature_withDocumentNumber() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/document/PNOEE-1234567890-MOCK-Q", "requests/device-link-signature-request.json", "responses/dynamic-link-signature-session-response.json");
+        void createDeviceLinkSignature_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/device-link/document/PNOEE-1234567890-MOCK-Q", "requests/device-link-signature-request.json", "responses/device-link-signature-session-response.json");
 
             var signableHash = new SignableHash();
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
             signableHash.setHashType(HashType.SHA512);
 
-            DeviceLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)
+                    .withInitialCallbackURL("https://example.com/callback")
                     .initSignatureSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getDeviceLinkBase());
             assertNotNull(response.getReceivedAt());
         }
 
         @Test
-        void createDynamicLinkSignature_withSemanticsIdentifier() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/dynamic-link/etsi/PNOEE-1234567890", "requests/device-link-signature-request.json", "responses/dynamic-link-signature-session-response.json");
+        void createDeviceLinkSignature_withSemanticsIdentifier() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/device-link/etsi/PNOEE-1234567890", "requests/device-link-signature-request.json", "responses/device-link-signature-session-response.json");
 
             var signableHash = new SignableHash();
             signableHash.setHashInBase64(Base64.toBase64String("a".repeat(32).getBytes()));
             signableHash.setHashType(HashType.SHA512);
 
-            DeviceLinkSessionResponse response = smartIdClient.createDynamicLinkSignature()
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)
+                    .withInitialCallbackURL("https://example.com/callback")
                     .initSignatureSession();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getDeviceLinkBase());
             assertNotNull(response.getReceivedAt());
         }
     }
