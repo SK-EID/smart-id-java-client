@@ -379,6 +379,7 @@ class SmartIdClientTest {
                     .initAuthenticationSession();
 
             URI qrCodeUri = new DeviceLinkBuilder()
+                    .withSchemeName("smart-id-demo")
                     .withDeviceLinkBase(response.getDeviceLinkBase().toString())
                     .withDeviceLinkType(deviceLinkType)
                     .withSessionType(SessionType.AUTHENTICATION)
@@ -406,6 +407,7 @@ class SmartIdClientTest {
             long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
 
             URI qrCodeUri = new DeviceLinkBuilder()
+                    .withSchemeName("smart-id-demo")
                     .withDeviceLinkBase(response.getDeviceLinkBase().toString())
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.AUTHENTICATION)

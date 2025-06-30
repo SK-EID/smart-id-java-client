@@ -50,6 +50,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 class DeviceLinkBuilderTest {
 
     private static final String SESSION_SECRET = Base64.getEncoder().encodeToString("sessionSecret".getBytes(StandardCharsets.UTF_8));
+    private static final String DEMO_SCHEMA_NAME = "smart-id-demo";
     private static final String DEVICE_LINK_BASE = "https://smart-id.com/device-link/";
     private static final String DEVICE_LINK_HOST = "smart-id.com";
     private static final String SESSION_TOKEN = "token123";
@@ -269,6 +270,44 @@ class DeviceLinkBuilderTest {
         }
 
         @Test
+        void buildDeviceLink_withCustomSchemeName() {
+            String authCode = toQueryParamsMap(
+                    new DeviceLinkBuilder()
+                            .withSchemeName(DEMO_SCHEMA_NAME)
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withDigest(BASE64_DIGEST)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            ).get("authCode");
+
+            assertThat(authCode, matchesPattern(AUTH_CODE_PATTERN));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void buildDeviceLink_missingSchemeName_throwsException(String scheme) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withSchemeName(scheme)
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(ELAPSED_SECONDS)
+                            .withDigest(BASE64_DIGEST)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter schemeName must be set", ex.getMessage());
+        }
+
+        @Test
         void buildDeviceLink_missingRelyingPartyName_throwsException() {
             var ex = assertThrows(SmartIdClientException.class, () ->
                     new DeviceLinkBuilder()
@@ -406,7 +445,6 @@ class DeviceLinkBuilderTest {
             assertEquals("Failed to calculate authCode", exception.getMessage());
             assertThat(exception.getCause(), org.hamcrest.Matchers.instanceOf(IllegalArgumentException.class));
         }
-
     }
 
     private static Map<String, String> toQueryParamsMap(URI uri) {
