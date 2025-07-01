@@ -319,6 +319,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
             request.setRequestProperties(requestProperties);
         }
         request.setCapabilities(capabilities);
+        request.setInitialCallbackURL(initialCallbackURL);
         return request;
     }
 
