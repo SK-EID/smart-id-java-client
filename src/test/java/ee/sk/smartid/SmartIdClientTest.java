@@ -29,6 +29,7 @@ package ee.sk.smartid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
@@ -45,6 +46,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
@@ -104,19 +106,6 @@ class SmartIdClientTest {
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                    .initCertificateChoice();
-
-            assertNotNull(response.getSessionID());
-        }
-
-        @Test
-        void createNotificationCertificateChoice_withDocumentNumber() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/notification/document/PNOEE-1234567890-MOCK-Q", "requests/certificate-choice-session-request.json", "responses/notification-certificate-choice-session-response.json");
-
-            NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
-                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                    .withCertificateLevel(CertificateLevel.ADVANCED)
-                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .initCertificateChoice();
 
             assertNotNull(response.getSessionID());
@@ -226,6 +215,38 @@ class SmartIdClientTest {
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
             assertNotNull(response.getReceivedAt());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class CertificateByDocumentNumberRequest {
+
+        @Test
+        void createCertificateRequest_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response.json");
+
+            CertificateByDocumentNumberResult response = smartIdClient.createCertificateByDocumentNumber()
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .getCertificateByDocumentNumber();
+
+            assertNotNull(response);
+            assertEquals(CertificateLevel.QUALIFIED, response.certificateLevel());
+            assertNotNull(response.certificate());
+        }
+
+        @Test
+        void getCertificateByDocumentNumber_withUnknownState_throwsException() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response-unknown-state.json");
+
+            CertificateByDocumentNumberRequestBuilder builder = smartIdClient.createCertificateByDocumentNumber()
+                    .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
+                    .withCertificateLevel(CertificateLevel.ADVANCED);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+
+            assertTrue(ex.getMessage().contains("Unsupported certificate state"));
         }
     }
 
@@ -400,7 +421,7 @@ class SmartIdClientTest {
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, DeviceLinkType.QR_CODE, response.getSessionToken());
         }
 
-        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
         @ParameterizedTest
         @EnumSource
         void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DeviceLinkType deviceLinkType) {
@@ -426,7 +447,7 @@ class SmartIdClientTest {
             assertUri(fullUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
         }
 
-        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
+        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
         @Test
         void createDynamicContent_createQrCode() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/dynamic-link-certificate-choice-session-response.json");

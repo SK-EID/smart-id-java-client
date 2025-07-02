@@ -266,17 +266,6 @@ class SmartIdRestIntegrationTest {
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
             }
-
-            @Test
-            void initNotificationCertificateChoice_withDocumentNumber() {
-                var request = new CertificateChoiceSessionRequest();
-                request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setRelyingPartyUUID(RELYING_PARTY_UUID);
-
-                NotificationCertificateChoiceSessionResponse sessionResponse = smartIdConnector.initNotificationCertificateChoice(request, "PNOEE-40504040001-MOCK-Q");
-
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
-            }
         }
 
         @Nested

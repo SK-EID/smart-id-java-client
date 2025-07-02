@@ -51,7 +51,6 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     private String nonce;
     private Set<String> capabilities;
     private Boolean shareMdClientIpAddress;
-    private String documentNumber;
     private SemanticsIdentifier semanticsIdentifier;
 
     /**
@@ -130,19 +129,6 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     }
 
     /**
-     * Sets the document number
-     * <p>
-     * Setting this value will make the notification session request use the document number
-     *
-     * @param documentNumber the document number
-     * @return this builder
-     */
-    public NotificationCertificateChoiceSessionRequestBuilder withDocumentNumber(String documentNumber) {
-        this.documentNumber = documentNumber;
-        return this;
-    }
-
-    /**
      * Sets the semantics identifier
      * <p>
      * Setting this value will make the notification session request use the semantics identifier
@@ -161,7 +147,6 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
      * There are 2 supported ways to start authentication session:
      * <ul>
      *     <li>with semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
-     *     <li>with document number by using {@link #withDocumentNumber(String)} </li>
      * </ul>
      *
      * @return init session response
@@ -175,13 +160,10 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     }
 
     private NotificationCertificateChoiceSessionResponse initCertificateChoiceSession(CertificateChoiceSessionRequest request) {
-        if (semanticsIdentifier != null) {
-            return connector.initNotificationCertificateChoice(request, semanticsIdentifier);
-        } else if (documentNumber != null) {
-            return connector.initNotificationCertificateChoice(request, documentNumber);
-        } else {
-            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set.");
+        if (semanticsIdentifier == null) {
+            throw new SmartIdClientException("SemanticsIdentifier must be set.");
         }
+        return connector.initNotificationCertificateChoice(request, semanticsIdentifier);
     }
 
     private void validateRequestParameters() {

@@ -28,15 +28,33 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-public class SignatureAlgorithmParameters implements Serializable {
+public class CertificateByDocumentNumberRequest implements Serializable {
 
-    private String hashAlgorithm;
+    private String relyingPartyUUID;
+    private String relyingPartyName;
+    private String certificateLevel;
 
-    public String getHashAlgorithm() {
-        return hashAlgorithm;
+    public String getRelyingPartyUUID() {
+        return relyingPartyUUID;
     }
 
-    public void setHashAlgorithm(String hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
+    public void setRelyingPartyUUID(String relyingPartyUUID) {
+        this.relyingPartyUUID = relyingPartyUUID;
+    }
+
+    public String getRelyingPartyName() {
+        return relyingPartyName;
+    }
+
+    public void setRelyingPartyName(String relyingPartyName) {
+        this.relyingPartyName = relyingPartyName;
+    }
+
+    public String getCertificateLevel() {
+        return certificateLevel;
+    }
+
+    public void setCertificateLevel(String certificateLevel) {
+        this.certificateLevel = certificateLevel;
     }
 }

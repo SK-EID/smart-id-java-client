@@ -53,6 +53,7 @@ This library supports Smart-ID API v3.1.
             * [Example of validating certificate session response](#example-of-validating-the-certificate-choice-session-response)
             * [Example of validating the signature](#example-of-validating-the-signature-session-response)
             * [Error handling for session status](#error-handling-for-session-status)
+    * [Certificate by document number](#certificate-by-document-number)
     * [Notification-based flows](#notification-based-flows)
         * [Differences between notification-based and dynamic link flows](#differences-between-notification-based-and-dynamic-link-flows)
         * [Notification-based authentication session](#notification-based-authentication-session)
@@ -62,7 +63,6 @@ This library supports Smart-ID API v3.1.
         * [Notification-based certificate choice session](#notification-based-certificate-choice-session)
           * [Examples of initiating notification certificate choice session](#examples-of-initiating-a-notification-based-certificate-choice-session)
               * [Initiating notification-based certificate choice with semantics identifier](#initiating-a-notification-based-certificate-choice-session-using-semantics-identifier)
-              * [Initiating notification certificate choice with document number](#initiating-a-notification-based-authentication-session-with-document-number)
         * [Notification-based signature session](#notification-based-signature-session)
           * [Examples of initiating notification-based signature session](#examples-of-initiating-a-notification-based-signature-session)
               * [Initiating a notification-based signature session with semantics identifier](#initiating-a-notification-based-signature-session-with-semantics-identifier)
@@ -822,6 +822,46 @@ The session status response may return various error codes indicating the outcom
 * `USER_REFUSED_CONFIRMATIONMESSAGE`: User cancelled on confirmationMessage screen.
 * `USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE`: User cancelled on confirmationMessageAndVerificationCodeChoice screen.
 
+## Certificate by document number
+
+In API v3.1, the flow to initiate a **notification-based certificate choice session using a document number** was removed. Instead, a new, simplified endpoint was introduced.
+
+### Request Parameters
+The request parameters for the certificate by document number request are as follows:
+
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. Possible values are `ADVANCED`, `QUALIFIED` or `QSCD`. Defaults to `QUALIFIED`.
+
+### Response Parameters
+* `state`: Required. Indicates result. Possible values:
+    * `OK`: Certificate found and returned.
+    * `DOCUMENT_UNUSABLE`: user's Smart-ID account is not usable for signing
+* `cert`: Required. Object containing the signing certificate.
+    * `value`: Required. Base64-encoded X.509 certificate (matches pattern `^[a-zA-Z0-9+/]+={0,2}$`)
+    * `certificateLevel`: Required. Level of the certificate, Possible values `ADVANCED` or `QUALIFIED`
+
+### Get certificate using document number
+
+RP can directly query the user's signing certificate by document number — no session flow or user interaction required.
+
+#### Usage example in Java
+
+```java
+String documentNumber = "PNOLT-40504040001-MOCK-Q";
+
+CertificateByDocumentNumberResult certResponse = client
+        .createCertificateByDocumentNumber
+        .withDocumentNumber(documentNumber)
+        .withRelyingPartyUUID(client.getRelyingPartyUUID())
+        .withRelyingPartyName(client.getRelyingPartyName())
+        .withCertificateLevel(CertificateLevel.QUALIFIED)
+        .getCertificateByDocumentNumber();
+
+// certResponse.getCertificate(); contains Base64-encoded certificate
+// certResponse.getCertificateLevel(); is either ADVANCED or QUALIFIED
+```
+
 ## Notification-based flows
 
 ### Differences between notification-based and dynamic-link flows
@@ -956,22 +996,6 @@ NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = 
         .withSemanticsIdentifier(semanticsIdentifier)
         .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
         .initCertificateChoice();
-
-String sessionId = certificateChoiceSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
-```
-Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
-
-##### Initiating a notification-based certificate choice session using document number
-
-```java
-String documentNumber = "PNOLT-30303039914-MOCK-Q";
-
-NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
-    .createNotificationCertificateChoice()
-    .withDocumentNumber(documentNumber)
-    .withCertificateLevel(CertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-    .initCertificateChoice();
 
 String sessionId = certificateChoiceSessionResponse.getSessionID();
 // SessionID is used to query sessions status later

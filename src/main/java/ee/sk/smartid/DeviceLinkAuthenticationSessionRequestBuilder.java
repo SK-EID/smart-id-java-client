@@ -331,7 +331,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
 
         var signatureAlgorithmParameters = new SignatureAlgorithmParameters();
-        signatureAlgorithmParameters.setHashAlgorithm(this.hashAlgorithm);
+        signatureAlgorithmParameters.setHashAlgorithm(this.hashAlgorithm.getValue());
         signatureProtocolParameters.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
 
         request.setSignatureProtocolParameters(signatureProtocolParameters);

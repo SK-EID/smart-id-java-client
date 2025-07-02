@@ -44,6 +44,8 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
+import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
@@ -78,7 +80,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
     private static final String CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH = "/certificatechoice/dynamic-link/anonymous";
     private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH = "/certificatechoice/notification/etsi";
-    private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_DOCUMENT_NUMBER_PATH = "/certificatechoice/notification/document";
+
+    private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/";
 
     private static final String DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH = "/signature/dynamic-link/etsi";
     private static final String DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/dynamic-link/document";
@@ -92,6 +95,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private static final String NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/notification/etsi";
     private static final String NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/notification/document";
+
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -197,14 +201,13 @@ public class SmartIdRestConnector implements SmartIdConnector {
         return postNotificationCertificateChoiceRequest(uri, request);
     }
 
-    @Override
-    public NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, String documentNumber) {
+    public CertificateResponse getCertificateByDocumentNumber(String documentNumber, CertificateByDocumentNumberRequest request) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(NOTIFICATION_CERTIFICATE_CHOICE_WITH_DOCUMENT_NUMBER_PATH)
+                .path(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postNotificationCertificateChoiceRequest(uri, request);
+        return postCertificateByDocumentNumberRequest(uri, request);
     }
 
     @Override
@@ -335,6 +338,18 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private NotificationCertificateChoiceSessionResponse postNotificationCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
         try {
             return postRequest(uri, request, NotificationCertificateChoiceSessionResponse.class);
+        } catch (NotFoundException ex) {
+            logger.warn("User account not found for URI {}", uri, ex);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
+        }
+    }
+
+    private CertificateResponse postCertificateByDocumentNumberRequest(URI uri, CertificateByDocumentNumberRequest request) {
+        try {
+            return postRequest(uri, request, CertificateResponse.class);
         } catch (NotFoundException ex) {
             logger.warn("User account not found for URI {}", uri, ex);
             throw new UserAccountNotFoundException();

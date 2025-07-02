@@ -123,6 +123,17 @@ public class SmartIdClient {
     }
 
     /**
+     * Creates a new builder for requesting a certificate using document number.
+     *
+     * @return builder for querying certificate using document number
+     */
+    public CertificateByDocumentNumberRequestBuilder createCertificateByDocumentNumber() {
+        return new CertificateByDocumentNumberRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
+    }
+
+    /**
      * Creates a new builder for creating a new notification signature session request
      *
      * @return builder for creating a new notification signature session request

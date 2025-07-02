@@ -64,7 +64,9 @@ import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalExceptio
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.HashAlgorithm;
@@ -459,7 +461,7 @@ class SmartIdRestConnectorTest {
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-98")
+    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
     @Nested
     @WireMockTest(httpPort = 18089)
     class DynamicLinkCertificateChoiceTests {
@@ -617,46 +619,41 @@ class SmartIdRestConnectorTest {
     }
 
     @Nested
-    @WireMockTest(httpPort = 18089)
-    class DocumentNumberNotificationCertificateChoiceTests {
+    @WireMockTest(httpPort = 18086)
+    class CertificateByDocumentNumberTests {
 
-        private static final String CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH = "/certificatechoice/notification/document/PNOEE-48010010101-MOCK-Q";
+        private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/PNOEE-30303039914-MOCK-Q";
 
         private SmartIdRestConnector connector;
 
         @BeforeEach
-        public void setUp() {
-            WireMock.configureFor("localhost", 18089);
-            connector = new SmartIdRestConnector("http://localhost:18089");
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18086");
         }
 
         @Test
-        void initCertificateChoice_withDocumentNumber_successful() {
-            stubPostRequestWithResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "responses/notification-certificate-choice-session-response.json");
+        void getCertificateByDocumentNumber_successful() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response.json");
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            String documentNumber = "PNOEE-48010010101-MOCK-Q";
-
-            NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, documentNumber);
+            CertificateResponse response = connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
 
             assertNotNull(response);
-            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
+            assertEquals("OK", response.getState());
+            assertNotNull(response.getCert());
+            assertEquals("QUALIFIED", response.getCert().getCertificateLevel());
+            assertThat(response.getCert().getValue(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30"));
         }
 
         @Test
-        void initNotificationAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "requests/certificate-choice-session-request.json");
-                connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), "PNOEE-48010010101-MOCK-Q");
-            });
+        void getCertificateByDocumentNumber_userAccountNotFound_throwsException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json");
+            assertThrows(UserAccountNotFoundException.class, () -> {connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());});
         }
 
         @Test
-        void initNotificationAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_DOCUMENT_NR_PATH, "requests/certificate-choice-session-request.json");
-                connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), "PNOEE-48010010101-MOCK-Q");
-            });
+        void getCertificateByDocumentNumber_requestUnauthorized_throwsException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json");
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());});
         }
     }
 
@@ -1014,7 +1011,7 @@ class SmartIdRestConnectorTest {
         dynamicLinkAuthenticationSessionRequest.setSignatureProtocolParameters(signatureProtocolParameters);
 
         var algorithmParameters = new SignatureAlgorithmParameters();
-        algorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512);
+        algorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512.getValue());
         signatureProtocolParameters.setSignatureAlgorithmParameters(algorithmParameters);
 
         DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Log in?");
@@ -1045,6 +1042,14 @@ class SmartIdRestConnectorTest {
         request.setRelyingPartyName("DEMO");
         request.setCertificateLevel("ADVANCED");
         request.setNonce("cmFuZG9tTm9uY2U=");
+        return request;
+    }
+
+    private static CertificateByDocumentNumberRequest toCertificateByDocumentNumberRequest() {
+        var request = new CertificateByDocumentNumberRequest();
+        request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        request.setRelyingPartyName("DEMO");
+        request.setCertificateLevel("ADVANCED");
         return request;
     }
 

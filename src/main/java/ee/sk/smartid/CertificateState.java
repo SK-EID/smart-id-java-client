@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,17 +26,8 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-
-public class SignatureAlgorithmParameters implements Serializable {
-
-    private String hashAlgorithm;
-
-    public String getHashAlgorithm() {
-        return hashAlgorithm;
-    }
-
-    public void setHashAlgorithm(String hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
-    }
+public enum CertificateState {
+    OK,
+    DOCUMENT_UNUSABLE
 }
+

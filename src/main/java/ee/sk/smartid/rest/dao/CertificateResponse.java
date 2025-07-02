@@ -28,15 +28,27 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-public class SignatureAlgorithmParameters implements Serializable {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-    private String hashAlgorithm;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CertificateResponse implements Serializable {
 
-    public String getHashAlgorithm() {
-        return hashAlgorithm;
+    private String state;
+    private CertificateInfo cert;
+
+    public String getState() {
+        return state;
     }
 
-    public void setHashAlgorithm(String hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public CertificateInfo getCert() {
+        return cert;
+    }
+
+    public void setCert(CertificateInfo cert) {
+        this.cert = cert;
     }
 }
