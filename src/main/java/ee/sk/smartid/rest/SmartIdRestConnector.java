@@ -96,7 +96,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final String NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/notification/etsi";
     private static final String NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/notification/document";
 
-
     private final String endpointUrl;
     private transient Configuration clientConfig;
     private transient Client configuredClient;
