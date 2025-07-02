@@ -80,8 +80,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                 .withHashAlgorithm(HashAlgorithm.SHA3_512)
                 .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()))
-                .withInitialCallbackURL("https://example.com/callback")
-                .withCertificateChoiceMade(false);
+                .withInitialCallbackURL("https://example.com/callback");
     }
 
     @Test
@@ -245,27 +244,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
     }
 
-    @ParameterizedTest
-    @EnumSource(HashType.class)
-    void initSignatureSession_withHashType_overridesExplicitSignatureAlgorithm(HashType hashType) {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(hashType);
-        builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
-
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
-
-        DeviceLinkSessionResponse signature = builder.initSignatureSession();
-        assertNotNull(signature);
-
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
-        verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
-
-        assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
-        assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
-    }
-
     @Test
     void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
         var signableData = new SignableData("Test data".getBytes());
@@ -304,14 +282,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("HashType must be set for signableData.", ex.getMessage());
-        }
-
-        @Test
-        void initSignatureSession_whenCertificateChoiceMade() {
-            builder.withCertificateChoiceMade(true);
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Certificate choice was made before using this method. Cannot proceed with signature request.", ex.getMessage());
         }
 
         @Test

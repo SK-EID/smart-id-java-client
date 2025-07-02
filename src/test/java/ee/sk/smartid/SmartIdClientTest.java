@@ -123,7 +123,6 @@ class SmartIdClientTest {
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
@@ -141,7 +140,6 @@ class SmartIdClientTest {
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
@@ -159,7 +157,6 @@ class SmartIdClientTest {
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
@@ -184,7 +181,6 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)
@@ -208,7 +204,6 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)

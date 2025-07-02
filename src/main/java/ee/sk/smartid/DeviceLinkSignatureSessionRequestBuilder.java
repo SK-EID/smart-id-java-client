@@ -69,7 +69,6 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private SignableData signableData;
     private SignableHash signableHash;
     private String initialCallbackURL;
-    private boolean certificateChoiceMade;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -170,9 +169,9 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     /**
-     * Sets the allowed interactions order.
+     * Sets the interactions for device-link signature.
      *
-     * @param interactions the allowed interactions order
+     * @param interactions the interactions
      * @return this builder
      */
     public DeviceLinkSignatureSessionRequestBuilder withInteractions(List<DeviceLinkInteraction> interactions) {
@@ -240,20 +239,6 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      */
     public DeviceLinkSignatureSessionRequestBuilder withInitialCallbackURL(String initialCallbackURL) {
         this.initialCallbackURL = initialCallbackURL;
-        return this;
-    }
-
-    /**
-     * Marks whether a certificate choice has been made.
-     * <p>
-     * This method allows specifying if a certificate selection was made prior to initiating this signing session.
-     * Once set to true, the signing request can proceed without further certificate selection.
-     *
-     * @param certificateChoiceMade indicates if certificate choice has been made
-     * @return this builder instance
-     */
-    public DeviceLinkSignatureSessionRequestBuilder withCertificateChoiceMade(boolean certificateChoiceMade) {
-        this.certificateChoiceMade = certificateChoiceMade;
         return this;
     }
 
@@ -335,9 +320,6 @@ public class DeviceLinkSignatureSessionRequestBuilder {
 
         if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
             throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
-        }
-        if (certificateChoiceMade) {
-            throw new SmartIdClientException("Certificate choice was made before using this method. Cannot proceed with signature request.");
         }
     }
 
