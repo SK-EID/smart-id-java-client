@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [3.1.5] - 2025-06-30
+
+- Renamed dynamic-link signature to device-link signature.
+- Updated signature endpoints to use /device-link/ paths.
+- Replaced signature algorithm list with fixed `rsassa-pss`.
+- Added required `signatureAlgorithmParameters.hashAlgorithm` field with validation.
+- Converted interaction list to Base64 string and ensured no duplicates.
+- Added `initialCallbackURL` field with regex validation.
+- Added `deviceLinkBase` to session response.
+
 ## [3.1.3] - 2025-06-13
 
 ### Added

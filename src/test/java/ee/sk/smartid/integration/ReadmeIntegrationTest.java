@@ -339,13 +339,13 @@ public class ReadmeIntegrationTest {
                     "40504040001"); // identifier (according to country and identity type reference)
 
             // Build the dynamic link signature request
-            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDynamicLinkSignature()
+            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
                     .withRelyingPartyUUID(smartIdClient.getRelyingPartyUUID())
                     .withRelyingPartyName(smartIdClient.getRelyingPartyName())
                     .withCertificateLevel(CertificateLevel.QUALIFIED)
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
-                    .withAllowedInteractionsOrder(List.of(
+                    .withInteractions(List.of(
                             DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                     .initSignatureSession();
 

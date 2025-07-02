@@ -90,22 +90,22 @@ public interface SmartIdConnector extends Serializable {
     CertificateResponse getCertificateByDocumentNumber(String documentNumber, CertificateByDocumentNumberRequest request);
 
     /**
-     * Initiates a dynamic link based signature sessions.
+     * Initiates a device link based signature sessions.
      *
      * @param request             SignatureSessionRequest containing necessary parameters for the signature session
      * @param semanticsIdentifier The semantics identifier
-     * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
+     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
      */
-    DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+    DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
-     * Initiates a dynamic link based signature sessions.
+     * Initiates a device link based signature sessions.
      *
      * @param request        SignatureSessionRequest containing necessary parameters for the signature session
      * @param documentNumber The document number
-     * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
+     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
      */
-    DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber);
+    DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, String documentNumber);
 
     /**
      * Initiates a notification-based signature session using a semantics identifier.

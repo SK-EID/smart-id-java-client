@@ -112,12 +112,12 @@ public class SmartIdClient {
     }
 
     /**
-     * Creates a new builder for creating a new dynamic link signature session request
+     * Creates a new builder for creating a new device link signature session request
      *
-     * @return builder for creating a new dynamic link signature session request
+     * @return builder for creating a new device link signature session request
      */
-    public DynamicLinkSignatureSessionRequestBuilder createDynamicLinkSignature() {
-        return new DynamicLinkSignatureSessionRequestBuilder(getSmartIdConnector())
+    public DeviceLinkSignatureSessionRequestBuilder createDeviceLinkSignature() {
+        return new DeviceLinkSignatureSessionRequestBuilder(getSmartIdConnector())
                 .withRelyingPartyUUID(relyingPartyUUID)
                 .withRelyingPartyName(relyingPartyName);
     }

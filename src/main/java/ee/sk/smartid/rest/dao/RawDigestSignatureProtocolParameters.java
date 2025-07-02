@@ -32,6 +32,7 @@ public class RawDigestSignatureProtocolParameters implements Serializable {
 
     private String digest;
     private String signatureAlgorithm;
+    private SignatureAlgorithmParameters signatureAlgorithmParameters;
 
     public String getDigest() {
         return digest;
@@ -47,5 +48,13 @@ public class RawDigestSignatureProtocolParameters implements Serializable {
 
     public void setSignatureAlgorithm(String signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
+    }
+
+    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
+        return signatureAlgorithmParameters;
+    }
+
+    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
+        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
     }
 }

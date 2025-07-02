@@ -161,11 +161,11 @@ class SmartIdRestIntegrationTest {
         class Signature {
 
             @Test
-            void initDynamicLinkSignature_withSemanticIdentifier() {
+            void initDeviceLinkSignature_withSemanticIdentifier() {
                 var request = new SignatureSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")));
+                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))));
 
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
                 signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
@@ -173,7 +173,7 @@ class SmartIdRestIntegrationTest {
                 signatureProtocolParameters.setDigest(digest);
                 request.setSignatureProtocolParameters(signatureProtocolParameters);
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
@@ -182,11 +182,11 @@ class SmartIdRestIntegrationTest {
             }
 
             @Test
-            void initDynamicLinkSignature_withDocumentNumber() {
+            void initDeviceLinkSignature_withDocumentNumber() {
                 var request = new SignatureSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setAllowedInteractionsOrder(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")));
+                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))));
 
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
                 signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
@@ -194,7 +194,7 @@ class SmartIdRestIntegrationTest {
                 signatureProtocolParameters.setDigest(digest);
                 request.setSignatureProtocolParameters(signatureProtocolParameters);
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
@@ -304,7 +304,7 @@ class SmartIdRestIntegrationTest {
                 signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
                 signatureProtocolParameters.setDigest(digest);
                 request.setSignatureProtocolParameters(signatureProtocolParameters);
-                request.setAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Sign it!")));
+                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))));
                 return request;
             }
         }

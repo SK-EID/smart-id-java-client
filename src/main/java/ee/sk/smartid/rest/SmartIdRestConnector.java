@@ -83,8 +83,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/";
 
-    private static final String DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH = "/signature/dynamic-link/etsi";
-    private static final String DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/dynamic-link/document";
+    private static final String DEVICE_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH = "/signature/device-link/etsi";
+    private static final String DEVICE_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/device-link/document";
 
     private static final String NOTIFICATION_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH = "/signature/notification/etsi";
     private static final String NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "/signature/notification/document";
@@ -95,7 +95,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     private static final String NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH = "authentication/notification/etsi";
     private static final String NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH = "authentication/notification/document";
-
 
     private final String endpointUrl;
     private transient Configuration clientConfig;
@@ -211,23 +210,23 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
+    public DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
+                .path(DEVICE_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postDynamicLinkSignatureRequest(uri, request);
+        return postDeviceLinkSignatureRequest(uri, request);
     }
 
     @Override
-    public DeviceLinkSessionResponse initDynamicLinkSignature(SignatureSessionRequest request, String documentNumber) {
+    public DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, String documentNumber) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(DYNAMIC_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
+                .path(DEVICE_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postDynamicLinkSignatureRequest(uri, request);
+        return postDeviceLinkSignatureRequest(uri, request);
     }
 
     public NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
@@ -359,7 +358,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DeviceLinkSessionResponse postDynamicLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
+    private DeviceLinkSessionResponse postDeviceLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
         try {
             return postRequest(uri, request, DeviceLinkSessionResponse.class);
         } catch (NotFoundException ex) {
