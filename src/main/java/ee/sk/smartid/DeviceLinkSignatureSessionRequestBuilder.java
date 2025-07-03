@@ -62,7 +62,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
+    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA_512;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
