@@ -739,42 +739,54 @@ It's important to validate the session status response to ensure that the return
 
 #### Example of validating the authentication sessions response:
 
+##### Authentication response validator setup
+
+###### Setup TrustedCACertStore
+
 ```java
+import java.security.cert.TrustAnchor;
+
+// Option 1 - initialize certificate store with default locations for trust anchor truststore and for intermediate CA certificates
+TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+
+// Option 2 - initialize certificate store with custom locations for trust anchor truststore and for intermediate CA certificates
+TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder()
+        .withTrustAnchorTruststorePath("path/to/trustAnchorTruststore.jks")
+        .withTrustAnchorTruststorePassword("password")
+        .withIntermediateCAStorePath("path/to/intermediateCAStore.jks")
+        .withIntermediateCAStorePassword("password")
+        .build();
+
+
+// Option 3 - Provide trust anchors and intermediate CA certificates directly
+Set<TrustAnchor> trustAnchors;
+List<X509Certificate> intermediateCACertificates;
+TrustedCACertStore trustedCACertStore = new DefaultTrustedCACertStore()
+        .withTrustAnchors(trustAnchors)
+        .withIntermediateCACertificates(intermediateCACertificates)
+        .build();
+```
+
+###### Setup AuthenticationResponseValidator
+```java
+TrustedCACertStore trustedCACertStore;
+AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(trustedCACertStore);
+```
+
+###### Validate sessions status
+```java
+AuthenticationSessionRequest authenticationSessionRequest;
 DyanmicLinkSessionResponse sessionResponse;
+
 // get sessions result
 SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.getSessionID(), 10000);
 
 // validate sessions state is completed
-if ("COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
-    // validate sessions status result and map session status to authentication response
-    AuthenticationResponse response = AuthenticationResponseMapper.from(sessionStatus);
-    // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
-    
-    // validate certificate value and signature and map it to authentication identity, uses certificate level QUALIFIED as default.
-    AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.toAuthenticationIdentity(response, "randomChallenge");
+if("COMPLETE".equals(sessionStatus.getState())){
+    // validate the session status response with authentication session request
+    AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest);
 }
 ```
-
-##### Authentication response validator setup
-
-````java
-// init authentication response validator with trusted certificates
-// there are 4 different ways to initialize the validator
-// 1. use default values `trusted_certificates.jks` with password `changeit`
-AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator();
-
-// 2. provide your own path to truststore and truststore password
-AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(truststorePath, truststorePassword);
-
-// 3. read trusted certificate yourself and provide it to the validator
-X509Certificate[] trustedCertificates = findTrustedCertificates();
-AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(trustedCertificates);
-
-// 4. init authentication response validator with the empty array and add trusted certificates
-AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(new X509Certificate[0]);
-X509Certificate certificate = getTrustedCertificate();
-authenticationResponseValidator.addTrustedCACertificate(certificate);
-````
 
 #### Example of validating the certificate choice session response:
 

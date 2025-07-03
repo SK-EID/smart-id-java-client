@@ -6,12 +6,9 @@ Some classes could also be used in v3 and for those classes the package did not 
 
 # Migrating from Smart-ID v2 to Smart-ID v3 API
 
-For Smart-ID v3 API replace `ee.sk.smartid.v2.SmartIdClient` with `ee.sk.smartid.SmartIdClient`.
-
 ## Migrating authentication
 
-To migrate from Smart-ID v2 to Smart-ID v3 authentication you need to change the following:
-`ee.sk.smartid.SmartIdClient` provides methods `createDeviceLinkAuthentication()` and `createNotificationAuthentication()` to create session request builders.
+Smart-ID v3 authentication offers new methods to construct builders  `createDeviceLinkAuthentication()` and `createNotificationAuthentication()` to create authentication session request builders.
 It is recommended to start using device-link authentication flows from Smart-ID API v3 as these are more secure.
 
 ### Overview of V2 authentication flow
@@ -31,8 +28,8 @@ It is recommended to start using device-link authentication flows from Smart-ID 
 3. Replace showing verification code with showing device link or QR-code. Recommended to use device link for same device and QR-code for cross-device authentication.
    - [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
 4. Querying session status can be done in parallel while displaying device content. Check out [session status poller](README.md#example-of-using-session-status-poller-to-query-final-sessions-status). `ee.sk.smartid.SmartIdClient` provides method `getSessionsStatusPoller()` to get version specific session status poller.
-5. When session status state is `COMPLETE` polling will be stopped and [response should be checked](README.md#example-of-validating-the-authentication-sessions-response) with `AuthenticationResponseMapper`, that will validate required fields and will also handler errors. `AuthenticationResponse` will be returned when everything is ok.
-6. Finally use `ee.sk.smartid.AuthenticationResponseValidator` to validate the certificate and the signature in the response. If everything is ok `AuthenticationIdentity` will be returned. AuthenticationIdentity is same as used for V2.
+5. When session status state is `COMPLETE` polling will be stopped and [response should be checked](README.md#example-of-validating-the-authentication-sessions-response) with `AuthenticationResponseValidator`. It will validate required fields, certificate and signature value in sessions status, and it will also handler errors.
+6. If everything is ok `AuthenticationIdentity` will be returned. AuthenticationIdentity is same as used for V2.
 
 ## Migrating signing
 

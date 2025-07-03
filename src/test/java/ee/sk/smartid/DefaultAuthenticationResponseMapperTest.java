@@ -36,6 +36,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,9 +55,16 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
-class AuthenticationResponseMapperTest {
+class DefaultAuthenticationResponseMapperTest {
 
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
+
+    private AuthenticationResponseMapper authenticationResponseMapper;
+
+    @BeforeEach
+    void setUp() {
+        authenticationResponseMapper = DefaultAuthenticationResponseMapper.getInstance();
+    }
 
     @Test
     void from() {
@@ -65,7 +73,7 @@ class AuthenticationResponseMapperTest {
         var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
 
-        AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
+        AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
 
         assertEquals("OK", authenticationResponse.getEndResult());
         assertEquals("signatureValue", authenticationResponse.getSignatureValueInBase64());
@@ -78,7 +86,7 @@ class AuthenticationResponseMapperTest {
 
     @Test
     void from_sessionStatusNull_throwException() {
-        var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(null));
+        var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseMapper.from(null));
         assertEquals("Input parameter `sessionsStatus` is not provided", exception.getMessage());
     }
 
@@ -88,7 +96,7 @@ class AuthenticationResponseMapperTest {
         @Test
         void from_sessionResultIsNotPresent_throwException() {
             var sessionStatus = new SessionStatus();
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `result` is empty", exception.getMessage());
         }
 
@@ -101,7 +109,7 @@ class AuthenticationResponseMapperTest {
             var sessionStatus = new SessionStatus();
             sessionStatus.setResult(sessionResult);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `result.endResult` is empty", exception.getMessage());
         }
 
@@ -114,7 +122,7 @@ class AuthenticationResponseMapperTest {
             var sessionStatus = new SessionStatus();
             sessionStatus.setResult(sessionResult);
 
-            assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
+            assertThrows(expectedException, () -> authenticationResponseMapper.from(sessionStatus));
         }
 
         @ParameterizedTest
@@ -130,7 +138,7 @@ class AuthenticationResponseMapperTest {
             var sessionStatus = new SessionStatus();
             sessionStatus.setResult(sessionResult);
 
-            var exception = assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(expectedException, () -> authenticationResponseMapper.from(sessionStatus));
         }
 
         @ParameterizedTest
@@ -141,7 +149,7 @@ class AuthenticationResponseMapperTest {
             var sessionStatus = new SessionStatus();
             sessionStatus.setResult(sessionResult);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `result.documentNumber` is empty", exception.getMessage());
         }
     }
@@ -156,7 +164,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setSignatureProtocol(signatureProtocol);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
         assertEquals("Session status field `signatureProtocol` is empty", exception.getMessage());
     }
 
@@ -169,7 +177,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setSignatureProtocol(invalidSignatureProtocol);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
         assertEquals("Invalid `signatureProtocol` in sessions status", exception.getMessage());
     }
 
@@ -184,7 +192,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setResult(sessionResult);
             sessionStatus.setSignatureProtocol("ACSP_V2");
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature` is missing", exception.getMessage());
         }
 
@@ -201,7 +209,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.value` is empty", exception.getMessage());
         }
 
@@ -218,7 +226,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.value` is not in Base64-encoded format", exception.getMessage());
         }
 
@@ -236,7 +244,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.severRandom` is empty", exception.getMessage());
         }
 
@@ -253,7 +261,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.serverRandom` is less than required length", exception.getMessage());
         }
 
@@ -271,7 +279,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.serverRandom` is not in Base64-encoded format", exception.getMessage());
         }
 
@@ -290,7 +298,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.userChallenge` is empty", exception.getMessage());
         }
 
@@ -309,7 +317,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("`signature.userChallenge` value has incorrect length in session status", exception.getMessage());
         }
 
@@ -328,7 +336,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("`signature.userChallenge` value in session status is not in the expected Base64-encoded format", exception.getMessage());
         }
 
@@ -348,7 +356,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.flowType` is empty", exception.getMessage());
         }
 
@@ -367,7 +375,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Invalid `signature.flowType` in session status", exception.getMessage());
         }
 
@@ -383,7 +391,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Session status field `signature.signatureAlgorithm` is empty", exception.getMessage());
         }
 
@@ -403,7 +411,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Invalid `signature.signatureAlgorithm` in the session status", exception.getMessage());
         }
 
@@ -426,7 +434,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Session status field `signature.signatureAlgorithmParameters` is missing", exception.getMessage());
             }
 
@@ -451,7 +459,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Session status field `signature.signatureAlgorithmParameters.hashAlgorithm` is empty", exception.getMessage());
             }
 
@@ -475,7 +483,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Invalid `signature.signatureAlgorithmParameters.hashAlgorithm` in session status", exception.getMessage());
             }
 
@@ -499,7 +507,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm` is missing", exception.getMessage());
             }
 
@@ -527,7 +535,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm` is empty", exception.getMessage());
             }
 
@@ -554,7 +562,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Invalid `signature.signatureAlgorithmParameters.maskGenAlgorithm` in session status", exception.getMessage());
             }
 
@@ -586,7 +594,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Session status field `signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in empty", exception.getMessage());
             }
 
@@ -616,7 +624,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("`signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm` in session status does not match `signature.signatureAlgorithmParameters.hashAlgorithm`", exception.getMessage());
             }
 
@@ -647,7 +655,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Session status field `signature.saltLength` is empty", exception.getMessage());
             }
 
@@ -678,7 +686,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Invalid `signature.signatureAlgorithmParameters.saltLength` in session status", exception.getMessage());
             }
 
@@ -709,7 +717,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Session status field `signature.signatureAlgorithmParameters.trailerField` is empty", exception.getMessage());
             }
 
@@ -741,7 +749,7 @@ class AuthenticationResponseMapperTest {
                 sessionStatus.setSignatureProtocol("ACSP_V2");
                 sessionStatus.setSignature(sessionSignature);
 
-                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+                var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
                 assertEquals("Invalid `signature.signatureAlgorithmParameters.trailerField` value in session status", exception.getMessage());
             }
         }
@@ -760,7 +768,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignatureProtocol("ACSP_V2");
             sessionStatus.setSignature(sessionSignature);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Certificate parameter is missing in session status", exception.getMessage());
         }
 
@@ -779,7 +787,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignature(sessionSignature);
             sessionStatus.setCert(sessionCertificate);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Value parameter is missing in certificate", exception.getMessage());
         }
 
@@ -796,7 +804,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setSignature(sessionSignature);
             sessionStatus.setCert(sessionCertificate);
 
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertEquals("Certificate level parameter is missing in certificate", exception.getMessage());
         }
 
@@ -813,7 +821,7 @@ class AuthenticationResponseMapperTest {
             sessionStatus.setCert(sessionCertificate);
             sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
 
-            var exception = assertThrows(SmartIdClientException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+            var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertTrue(exception.getMessage().startsWith("Failed to parse X509 certificate from"));
         }
     }
@@ -832,7 +840,7 @@ class AuthenticationResponseMapperTest {
         sessionStatus.setCert(sessionCertificate);
         sessionStatus.setInteractionTypeUsed(interactionFlowUsed);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
         assertEquals("Session status field `interactionTypeUsed` is empty", exception.getMessage());
     }
 

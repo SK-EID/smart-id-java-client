@@ -26,36 +26,32 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static java.util.Arrays.asList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
-import java.security.cert.CertificateException;
+import java.security.cert.CertPathBuilder;
+import java.security.cert.CertPathBuilderException;
+import java.security.cert.CertStore;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.CollectionCertStoreParameters;
+import java.security.cert.PKIXBuilderParameters;
+import java.security.cert.PKIXCertPathBuilderResult;
+import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PSSParameterSpec;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Objects;
+import java.util.Set;
 
-import javax.naming.InvalidNameException;
-import javax.naming.ldap.LdapName;
-import javax.naming.ldap.Rdn;
-import javax.security.auth.x500.X500Principal;
-
+import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
@@ -63,6 +59,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.util.CertificateAttributeUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -72,43 +69,23 @@ public class AuthenticationResponseValidator {
 
     private static final Logger logger = getLogger(AuthenticationResponseValidator.class);
 
-    private final List<X509Certificate> trustedCACertificates = new ArrayList<>();
+    private static final Set<String> ALLOWED_AUTHENTICATION_EXTENDED_KEY_USAGE = Set.of("1.3.6.1.5. 5.7.3.2", "1.3.6.1.4.1.62306.5.7.0");
+
+    private final TrustedCACertStore trustedCaCertStore;
+    private final AuthenticationResponseMapper authenticationResponseMapper;
 
     /**
-     * Initializes the mapper with trusted CA certificates from a keystore.
-     * <p>
-     * Uses default values to initialize the keystore.
+     * Initializes the validator with a {@link TrustedCACertStore}.
+     *
+     * @param trustedCaCertStore the store containing trusted CA certificates
      */
-    public AuthenticationResponseValidator() {
-        initializeTrustedCACertificatesFromKeyStore("/trusted_certificates.jks", "changeit");
+    public AuthenticationResponseValidator(TrustedCACertStore trustedCaCertStore) {
+        this(trustedCaCertStore, DefaultAuthenticationResponseMapper.getInstance());
     }
 
-    /**
-     * Initializes the mapper with trusted CA certificates from a keystore.
-     *
-     * @param truststorePath     path to the keystore
-     * @param truststorePassword password for the keystore
-     */
-    public AuthenticationResponseValidator(String truststorePath, String truststorePassword) {
-        initializeTrustedCACertificatesFromKeyStore(truststorePath, truststorePassword);
-    }
-
-    /**
-     * Initializes the mapper with trusted CA certificates from the input
-     *
-     * @param trustedCertificates trusted CA certificates
-     */
-    public AuthenticationResponseValidator(X509Certificate[] trustedCertificates) {
-        trustedCACertificates.addAll(asList(trustedCertificates));
-    }
-
-    /**
-     * Adds a trusted CA certificate to the mapper
-     *
-     * @param certificate trusted CA certificate
-     */
-    public void addTrustedCACertificate(X509Certificate certificate) {
-        trustedCACertificates.add(certificate);
+    public AuthenticationResponseValidator(TrustedCACertStore trustedCaCertStore, AuthenticationResponseMapper authenticationResponseMapper) {
+        this.trustedCaCertStore = trustedCaCertStore;
+        this.authenticationResponseMapper = authenticationResponseMapper;
     }
 
     /**
@@ -131,28 +108,54 @@ public class AuthenticationResponseValidator {
      * @param sessionStatus                the session status
      * @param authenticationSessionRequest the authentication session request
      * @param schemaName                   the schema name
+     * @param brokeredRpName               the brokered relying party name
      * @return the authentication identity
      */
     public AuthenticationIdentity validate(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName, String brokeredRpName) {
-        if (sessionStatus == null) {
-            throw new SmartIdClientException("`sessionStatus` is not provided");
-        }
-        if (authenticationSessionRequest == null){
-            throw new SmartIdClientException("`authenticationSessionRequest` is not provided");
-        }
-        if (StringUtil.isEmpty(schemaName)) {
-            throw new SmartIdClientException("`schemaName` is not provided");
-        }
-        AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
+        validateInputs(sessionStatus, authenticationSessionRequest, schemaName);
+        AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
         validateCertificate(authenticationResponse, AuthenticationCertificateLevel.valueOf(authenticationSessionRequest.certificateLevel()));
         validateSignature(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
         return AuthenticationIdentityMapper.from(authenticationResponse.getCertificate());
     }
 
+    private static void validateInputs(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
+        if (sessionStatus == null) {
+            throw new SmartIdClientException("`sessionStatus` is not provided");
+        }
+        if (authenticationSessionRequest == null) {
+            throw new SmartIdClientException("`authenticationSessionRequest` is not provided");
+        }
+        if (StringUtil.isEmpty(schemaName)) {
+            throw new SmartIdClientException("`schemaName` is not provided");
+        }
+    }
+
     private void validateCertificate(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        validateCertificateNotExpired(authenticationResponse.getCertificate());
-        validateCertificateIsTrusted(authenticationResponse.getCertificate());
+        validateCertificateIsCurrentlyValid(authenticationResponse.getCertificate());
+        validateCertificateChain(authenticationResponse);
+        validateCertificatePurpose(authenticationResponse);
         validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
+    }
+
+    private void validateCertificatePurpose(AuthenticationResponse authenticationResponse) {
+        X509Certificate certificate = authenticationResponse.getCertificate();
+        try {
+            List<String> extendedKeyUsage = certificate.getExtendedKeyUsage();
+            if (extendedKeyUsage == null || extendedKeyUsage.stream().noneMatch(ALLOWED_AUTHENTICATION_EXTENDED_KEY_USAGE::contains)) {
+                logger.debug("Certificate `{}` does not have extended key usage for authentication.", certificate.getSubjectX500Principal());
+                throw new UnprocessableSmartIdResponseException("Provide certificate cannot be used for authentication.");
+            }
+
+            boolean[] keyUsage = certificate.getKeyUsage();
+            // 0 - digitalSignature, 2 - keyEncipherment, 3 - dataEncipherment
+            if (keyUsage == null || !(keyUsage[0] || keyUsage[2] && keyUsage[3])) {
+                logger.debug("Certificate `{}` has invalid values for key usage.", certificate.getSubjectX500Principal());
+                throw new UnprocessableSmartIdResponseException("Provide certificate cannot be used for authentication.");
+            }
+        } catch (CertificateParsingException ex) {
+            throw new UnprocessableSmartIdResponseException("Cannot get extended key usage", ex);
+        }
     }
 
     private void validateSignature(AuthenticationResponse authenticationResponse,
@@ -184,62 +187,37 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private void validateCertificateIsTrusted(X509Certificate responseCertificate) {
-        CertDnDetails issuerDn = CertDnDetails.from(responseCertificate.getIssuerX500Principal());
+    private void validateCertificateChain(AuthenticationResponse authenticationResponse) {
+        try {
+            PKIXBuilderParameters params = new PKIXBuilderParameters(trustedCaCertStore.getTrustAnchors(), new X509CertSelector() {{
+                setCertificate(authenticationResponse.getCertificate());
+            }});
+            CertStore intermediateStore = CertStore.getInstance("Collection", new CollectionCertStoreParameters(trustedCaCertStore.getTrustedCACertificates()));
+            params.addCertStore(intermediateStore);
+            params.setRevocationEnabled(trustedCaCertStore.isOcspEnabled());
+            CertPathBuilder builder = CertPathBuilder.getInstance("PKIX");
+            PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult) builder.build(params);
 
-        for (X509Certificate trustedCACertificate : trustedCACertificates) {
-            logger.debug("Verifying signer's certificate '{}' against CA certificate '{}'",
-                    responseCertificate.getSubjectX500Principal(),
-                    trustedCACertificate.getSubjectX500Principal());
-
-            CertDnDetails caCertDn = CertDnDetails.from(trustedCACertificate.getSubjectX500Principal());
-
-            if (!CertDnDetails.equal(issuerDn, caCertDn)) {
-                logger.debug("Skipped trusted CA certificate '{}', no match with signer's certificate issuer '{}'",
-                        trustedCACertificate.getSubjectX500Principal(),
-                        responseCertificate.getIssuerX500Principal());
-                continue;
+            if (logger.isDebugEnabled()) {
+                X509Certificate leaf = (X509Certificate) result.getCertPath().getCertificates().get(0);
+                X509Certificate intermediate = (X509Certificate) result.getCertPath().getCertificates().get(1);
+                X509Certificate trustedCert = result.getTrustAnchor().getTrustedCert();
+                logger.debug("Leaf: {}, Intermediate: {}, Trusted CA: {}",
+                        CertificateAttributeUtil.getAttributeValue(leaf.getSubjectX500Principal().getName(), BCStyle.CN),
+                        CertificateAttributeUtil.getAttributeValue(intermediate.getSubjectX500Principal().getName(), BCStyle.CN),
+                        CertificateAttributeUtil.getAttributeValue(trustedCert.getSubjectX500Principal().getName(), BCStyle.CN));
             }
-
-            try {
-                responseCertificate.verify(trustedCACertificate.getPublicKey());
-                logger.info("Certificate verification passed for '{}' against CA certificate '{}'",
-                        responseCertificate.getSubjectX500Principal(),
-                        trustedCACertificate.getSubjectX500Principal());
-                return;
-            } catch (GeneralSecurityException ex) {
-                logger.debug("Error verifying signer's certificate: {} against CA certificate: {}",
-                        responseCertificate.getSubjectX500Principal(),
-                        trustedCACertificate.getSubjectX500Principal(), ex);
-            }
-        }
-
-        logger.error("No suitable trusted CA certificate found: '{}'. Ensure that this CA certificate is present in the trusted CA certificate list",
-                responseCertificate.getIssuerX500Principal());
-        throw new UnprocessableSmartIdResponseException("Signer's certificate is not trusted");
-    }
-
-    private void initializeTrustedCACertificatesFromKeyStore(String truststorePath, String truststorePassword) {
-        try (InputStream is = AuthenticationResponseValidator.class.getResourceAsStream(truststorePath)) {
-            KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keystore.load(is, truststorePassword.toCharArray());
-            Enumeration<String> aliases = keystore.aliases();
-            while (aliases.hasMoreElements()) {
-                String alias = aliases.nextElement();
-                X509Certificate certificate = (X509Certificate) keystore.getCertificate(alias);
-                addTrustedCACertificate(certificate);
-            }
-        } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
-            logger.error("Error initializing trusted CA certificates", e);
-            throw new SmartIdClientException("Error initializing trusted CA certificates", e);
+        } catch (InvalidAlgorithmParameterException | CertPathBuilderException | NoSuchAlgorithmException ex) {
+            throw new UnprocessableSmartIdResponseException("Failed to validate certificate chain", ex);
         }
     }
 
-    private static void validateCertificateNotExpired(X509Certificate certificate) {
+    private static void validateCertificateIsCurrentlyValid(X509Certificate certificate) {
         try {
             certificate.checkValidity();
         } catch (CertificateExpiredException | CertificateNotYetValidException ex) {
-            throw new UnprocessableSmartIdResponseException("Signer's certificate is not valid", ex);
+            logger.error("Authentication certificate is expired or not yet valid: {}", certificate.getSubjectX500Principal(), ex);
+            throw new UnprocessableSmartIdResponseException("Authentication certificate is invalid", ex);
         }
     }
 
@@ -261,7 +239,10 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private byte[] constructPayload(AuthenticationResponse authenticationResponse, AuthenticationSessionRequest authenticationSessionRequest, String schemaName, String brokeredRpName) {
+    private byte[] constructPayload(AuthenticationResponse authenticationResponse,
+                                    AuthenticationSessionRequest authenticationSessionRequest,
+                                    String schemaName,
+                                    String brokeredRpName) {
         String[] payloadParts = {
                 schemaName,
                 SignatureProtocol.ACSP_V2.name(),
@@ -287,41 +268,6 @@ public class AuthenticationResponseValidator {
             return messageDigest.digest();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private record CertDnDetails(String country, String organization, String commonName) {
-
-        private static CertDnDetails from(X500Principal principal) {
-            String country = null;
-            String organization = null;
-            String commonName = null;
-
-            LdapName ldapName;
-            try {
-                ldapName = new LdapName(principal.getName());
-            } catch (InvalidNameException e) {
-                String errorMessage = "Error getting certificate distinguished name";
-                logger.error(errorMessage, e);
-                throw new SmartIdClientException(errorMessage, e);
-            }
-
-            for (Rdn rdn : ldapName.getRdns()) {
-                if ("C".equalsIgnoreCase(rdn.getType())) {
-                    country = rdn.getValue().toString();
-                } else if ("O".equalsIgnoreCase(rdn.getType())) {
-                    organization = rdn.getValue().toString();
-                } else if ("CN".equalsIgnoreCase(rdn.getType())) {
-                    commonName = rdn.getValue().toString();
-                }
-            }
-            return new CertDnDetails(country, organization, commonName);
-        }
-
-        private static boolean equal(CertDnDetails first, CertDnDetails second) {
-            return Objects.equals(first.country, second.country) &&
-                    Objects.equals(first.organization, second.organization) &&
-                    Objects.equals(first.commonName, second.commonName);
         }
     }
 }

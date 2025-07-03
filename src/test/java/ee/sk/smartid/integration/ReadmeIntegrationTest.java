@@ -50,32 +50,35 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.DeviceLinkType;
-import ee.sk.smartid.HashType;
-import ee.sk.smartid.SmartIdDemoIntegrationTest;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.AuthenticationCertificateLevel;
-import ee.sk.smartid.AuthenticationResponse;
-import ee.sk.smartid.AuthenticationResponseMapper;
+import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateChoiceResponse;
 import ee.sk.smartid.CertificateChoiceResponseMapper;
 import ee.sk.smartid.CertificateLevel;
+import ee.sk.smartid.DefaultTrustedCACertStore;
+import ee.sk.smartid.DeviceLinkAuthenticationSessionRequestBuilder;
+import ee.sk.smartid.DeviceLinkType;
+import ee.sk.smartid.FileTrustedCAStoreBuilder;
+import ee.sk.smartid.HashType;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
 import ee.sk.smartid.SignatureResponse;
 import ee.sk.smartid.SignatureResponseMapper;
 import ee.sk.smartid.SmartIdClient;
+import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.TrustedCACertStore;
 import ee.sk.smartid.rest.SessionStatusPoller;
+import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
 
@@ -109,7 +112,7 @@ public class ReadmeIntegrationTest {
             // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
-            DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
+            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
                     .createDeviceLinkAuthentication()
                     // to use anonymous authentication, do not set semantics identifier or document number
                     .withRpChallenge(rpChallenge)
@@ -118,8 +121,8 @@ public class ReadmeIntegrationTest {
                     .withInteractions(Collections.singletonList(
                             // before the user can enter PIN. If user selects wrong verification code then the operation will fail.
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
-                    ))
-                    .initAuthenticationSession();
+                    ));
+            DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
             String sessionId = authenticationSessionResponse.getSessionID();
             // SessionID is used to query sessions status later
@@ -154,16 +157,14 @@ public class ReadmeIntegrationTest {
             // Check that the session has completed successfully
             assertEquals("COMPLETE", sessionStatus.getState());
 
-            // Map the final session status to an authentication response object
-            AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
             // Validate the certificate and signature, then map the authentication response to the user's identity
-            // TODO - 29.06.25: fix this
-//            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator().toAuthenticationIdentity(authenticationResponse, rpChallenge);
-//
-//            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-//            assertEquals("OK", authenticationIdentity.getGivenName());
-//            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-//            assertEquals("LT", authenticationIdentity.getCountry());
+            TrustedCACertStore build = new FileTrustedCAStoreBuilder().build();
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(build).validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
+
+            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+            assertEquals("OK", authenticationIdentity.getGivenName());
+            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+            assertEquals("LT", authenticationIdentity.getCountry());
         }
 
         @Test
@@ -180,7 +181,7 @@ public class ReadmeIntegrationTest {
             // Store generated rpChallenge only backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
-            DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
+            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
                     .createDeviceLinkAuthentication()
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
@@ -189,8 +190,11 @@ public class ReadmeIntegrationTest {
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ))
-                    .withShareMdClientIpAddress(true)
-                    .initAuthenticationSession();
+                    .withShareMdClientIpAddress(true);
+            DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+
+            // Store the authentication sessions request for validations later on
+            AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
             String sessionId = authenticationSessionResponse.getSessionID();
             // SessionID is used to query sessions status later
@@ -225,18 +229,16 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETED", sessionStatus.getState());
             assertEquals("OK", sessionStatus.getResult().getEndResult());
 
-            // Map the final session status to an authentication response object
-            AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
-
-            // Validate the certificate and signature, then map the authentication response to the user's identity
-            // TODO - 29.06.25: fix this
-//            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator()
-//                    .toAuthenticationIdentity(authenticationResponse, rpChallenge);
+            // Validate the response and return user's identity
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder()
+                    .withOcspEnabled(false)
+                    .build())
+                    .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 //
-//            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-//            assertEquals("OK", authenticationIdentity.getGivenName());
-//            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-//            assertEquals("EE", authenticationIdentity.getCountry());
+            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+            assertEquals("OK", authenticationIdentity.getGivenName());
+            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+            assertEquals("EE", authenticationIdentity.getCountry());
         }
 
         @Test
@@ -248,7 +250,7 @@ public class ReadmeIntegrationTest {
             // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication session status OK response
 
-            DeviceLinkSessionResponse authenticationSessionResponse = smartIdClient
+            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
                     .createDeviceLinkAuthentication()
                     .withDocumentNumber(documentNumber)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
@@ -257,8 +259,10 @@ public class ReadmeIntegrationTest {
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ))
-                    .withShareMdClientIpAddress(true)
-                    .initAuthenticationSession();
+                    .withShareMdClientIpAddress(true);
+            DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+            // Get AuthenticationSessionRequset after the request is made and store for validations
+            AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
             String sessionId = authenticationSessionResponse.getSessionID();
             // SessionID is used to query sessions status later
@@ -289,18 +293,119 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", sessionStatus.getState());
             assertEquals("OK", sessionStatus.getResult().getEndResult());
 
-            // Map the final session status to an authentication response object
-            AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
-
             // Validate the certificate and signature, then map the authentication response to the user's identity
-            // TODO - 29.06.25: fix this
-//            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator()
-//                    .toAuthenticationIdentity(authenticationResponse, rpChallenge);
-//
-//            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-//            assertEquals("OK", authenticationIdentity.getGivenName());
-//            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-//            assertEquals("EE", authenticationIdentity.getCountry());
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder()
+                    .withOcspEnabled(false).build())
+                    .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+
+            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+            assertEquals("OK", authenticationIdentity.getGivenName());
+            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+            assertEquals("EE", authenticationIdentity.getCountry());
+        }
+
+        @Test
+        void authentication_withBrokeredRpName() {
+            String rpChallenge = RpChallengeGenerator.generate();
+
+            DeviceLinkSessionResponse response = smartIdClient
+                    .createDeviceLinkAuthentication()
+                    .withDocumentNumber("PNOLT-40504040001-MOCK-Q")
+                    .withRpChallenge(rpChallenge)
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Authorize?")))
+                    .initAuthenticationSession();
+
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase("smartid://")
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(response.getSessionToken())
+                    .withDigest(rpChallenge)
+                    .withRelyingPartyName("DEMO")
+                    .withBrokeredRpName("BANK_XYZ")
+                    .withElapsedSeconds(Duration.between(response.getReceivedAt(), Instant.now()).getSeconds())
+                    .withLang("est")
+                    .buildDeviceLink(response.getSessionSecret());
+
+            assertNotNull(deviceLink);
+        }
+
+        @Test
+        void signature_withDocumentNumber() {
+            String documentNumber = "PNOLT-40504040001-MOCK-Q";
+
+            NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
+                    .createNotificationCertificateChoice()
+                    .withDocumentNumber(documentNumber)
+                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+                    .initCertificateChoice();
+
+            String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
+            // SessionID is used to query sessions status later
+
+            // Get the session status poller
+            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+
+            // Querying the sessions status
+            SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+            CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
+
+            // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
+
+            // Create the signable data
+            var signableData = new SignableData("dataToSign".getBytes());
+            signableData.setHashType(HashType.SHA512);
+
+            // Build the dynamic link signature request
+            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDynamicLinkSignature()
+                    .withRelyingPartyUUID(smartIdClient.getRelyingPartyUUID())
+                    .withRelyingPartyName(smartIdClient.getRelyingPartyName())
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withSignableData(signableData)
+                    .withDocumentNumber(documentNumber)
+                    .withAllowedInteractionsOrder(List.of(
+                            DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                    .initSignatureSession();
+
+            // Process the signature response
+            String signatureSessionId = signatureSessionResponse.getSessionID();
+            String sessionToken = signatureSessionResponse.getSessionToken();
+            // Store sessionSecret only on backend side. Do not expose it to the client side.
+            String sessionSecret = signatureSessionResponse.getSessionSecret();
+            Instant receivedAt = signatureSessionResponse.getReceivedAt();
+
+            // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
+            // Start querying sessions status
+
+            // Calculate elapsed seconds from response received time
+            long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
+            // Generate auth code
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase("smartid://")
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withSessionType(SessionType.SIGNATURE)
+                    .withSessionToken(sessionToken)
+                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withLang("est")
+                    .buildDeviceLink(sessionSecret);
+
+            // Get the session status poller
+            poller = smartIdClient.getSessionStatusPoller();
+            // Get signatureSessionId from current session response and poll for session status
+            SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
+            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+            assertEquals("COMPLETE", signatureSessionStatus.getState());
+
+            SignatureResponse signatureResponse = SignatureResponseMapper.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            assertEquals("OK", signatureResponse.getEndResult());
+            assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
+            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
+            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+            assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
+            assertNotNull(signatureResponse.getCertificate());
         }
 
         @Test
@@ -431,19 +536,14 @@ public class ReadmeIntegrationTest {
             assertEquals(documentNumber, sessionStatus.getResult().getDocumentNumber());
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
-            // validate sessions status result and map session status to authentication response
-            AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
-            // validate certificate value and signature and map it to authentication identity
-            var authenticationResponseValidator = new AuthenticationResponseValidator();
-            // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
+            // validate the sessions status and return user's identity
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder().build())
+                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes
 
-            // validate certificate value and signature and map it to authentication identity
-            // TODO - 29.06.25: fix this
-//            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, rpChallenge);
-//            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-//            assertEquals("OK", authenticationIdentity.getGivenName());
-//            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-//            assertEquals("LT", authenticationIdentity.getCountry());
+            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+            assertEquals("OK", authenticationIdentity.getGivenName());
+            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+            assertEquals("LT", authenticationIdentity.getCountry());
         }
 
         @Test
@@ -485,19 +585,13 @@ public class ReadmeIntegrationTest {
             assertEquals("PNOLT-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
-            // validate sessions status result and map session status to authentication response
-            AuthenticationResponse authenticationResponse = AuthenticationResponseMapper.from(sessionStatus);
-            // validate certificate value and signature and map it to authentication identity
-            var authenticationResponseValidator = new AuthenticationResponseValidator();
-            // if sessions end result is something else than OK then exception will be thrown, otherwise continue to next step
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder().build())
+                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes
 
-            // validate certificate value and signature and map it to authentication identity
-            // TODO - 29.06.25: fix this
-//            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.toAuthenticationIdentity(authenticationResponse, rpChallenge);
-//            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-//            assertEquals("OK", authenticationIdentity.getGivenName());
-//            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-//            assertEquals("LT", authenticationIdentity.getCountry());
+            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+            assertEquals("OK", authenticationIdentity.getGivenName());
+            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+            assertEquals("LT", authenticationIdentity.getCountry());
         }
 
         @Test

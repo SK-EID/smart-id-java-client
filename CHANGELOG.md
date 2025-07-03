@@ -6,11 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Updates to session status response
-  - Updated USER_REFUSED_INTERACTION responses and updated error handling for these cases.
-  - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
-  - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
-  - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
+    - Updated USER_REFUSED_INTERACTION responses and updated error handling for these cases.
+    - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
+    - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
+    - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
 - Updated AuthenticationSessionRequest and related classes to records.
+- Refactored loading of trusted CA certificates from AuthenticationResponseValidator to their own class `DefaultTrustedCACertStore`.
+    - Created to builder-classes for loading trusted CA certificates
+        - `FileTrustedCACertStoreBuilder` for loading trust anchors and intermediate CA certificates from truststore
+        - `DefaultTrustedCACertStoreBuilder` for creating DefaultTrustedCACertStore with preloaded certificates, also validates provided certificates
+- Refactored AuthenticationResponseMapper to be used as singleton instead of static class and added it as dependency for AuthenticationResponseValidator
+- Update AuthenticationResponseValidator
+  - update signature value validation
+  - added additional certificate validations (validate certificate chain and certificate purpose)
 
 ## [3.1.5] - 2025-06-30
 

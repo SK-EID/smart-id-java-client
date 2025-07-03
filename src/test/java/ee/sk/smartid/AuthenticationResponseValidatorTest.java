@@ -72,7 +72,8 @@ class AuthenticationResponseValidatorTest {
 
     @BeforeEach
     void setUp() {
-        authenticationResponseValidator = new AuthenticationResponseValidator(new X509Certificate[]{toX509Certificate(CA_CERT)});
+        TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().withOcspEnabled(false).build();
+        authenticationResponseValidator = new AuthenticationResponseValidator(trustedCaCertStore);
     }
 
     @Disabled("Can make this work when TEST numbers will be available in the DEMO env")

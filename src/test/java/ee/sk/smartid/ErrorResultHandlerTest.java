@@ -76,7 +76,7 @@ class ErrorResultHandlerTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () ->  ErrorResultHandler.handle(sessionStatus.getResult()));
         assertEquals("Details for refused interaction are missing", exception.getMessage());
     }
 
@@ -93,7 +93,7 @@ class ErrorResultHandlerTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> ErrorResultHandler.handle(sessionStatus.getResult()));
         assertEquals("Details for refused interaction are missing", exception.getMessage());
     }
 
@@ -109,7 +109,7 @@ class ErrorResultHandlerTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> AuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> ErrorResultHandler.handle(sessionStatus.getResult()));
         assertEquals("Unexpected interaction type: invalid interaction", exception.getMessage());
     }
 
@@ -126,6 +126,6 @@ class ErrorResultHandlerTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(expectedException, () -> AuthenticationResponseMapper.from(sessionStatus));
+        var exception = assertThrows(expectedException, () -> ErrorResultHandler.handle(sessionStatus.getResult()));
     }
 }
