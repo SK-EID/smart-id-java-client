@@ -44,7 +44,6 @@ class DefaultTrustedCAStoreBuilderTest {
                 .build();
     }
 
-
     private X509Certificate toX509Certificate(String certificate) {
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");

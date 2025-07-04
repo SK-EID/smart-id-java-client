@@ -31,7 +31,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.cert.CertPathBuilder;
@@ -70,6 +69,9 @@ public class AuthenticationResponseValidator {
     private static final Logger logger = getLogger(AuthenticationResponseValidator.class);
 
     private static final Set<String> ALLOWED_AUTHENTICATION_EXTENDED_KEY_USAGE = Set.of("1.3.6.1.5. 5.7.3.2", "1.3.6.1.4.1.62306.5.7.0");
+    private static final int INDEX_OF_DIGITAL_SIGNATURE_VALUE = 0;
+    private static final int INDEX_OF_KEY_ENCIPHERMENT_VALUE = 2;
+    private static final int INDEX_OF_DATA_ENCIPHERMENT_VALUE = 3;
 
     private final TrustedCACertStore trustedCaCertStore;
     private final AuthenticationResponseMapper authenticationResponseMapper;
@@ -83,6 +85,12 @@ public class AuthenticationResponseValidator {
         this(trustedCaCertStore, DefaultAuthenticationResponseMapper.getInstance());
     }
 
+    /**
+     * Initializes the validator with a {@link TrustedCACertStore} and a custom {@link AuthenticationResponseMapper}.
+     *
+     * @param trustedCaCertStore          the store containing trusted CA certificates
+     * @param authenticationResponseMapper the mapper to convert session status to authentication response
+     */
     public AuthenticationResponseValidator(TrustedCACertStore trustedCaCertStore, AuthenticationResponseMapper authenticationResponseMapper) {
         this.trustedCaCertStore = trustedCaCertStore;
         this.authenticationResponseMapper = authenticationResponseMapper;
@@ -144,17 +152,27 @@ public class AuthenticationResponseValidator {
             List<String> extendedKeyUsage = certificate.getExtendedKeyUsage();
             if (extendedKeyUsage == null || extendedKeyUsage.stream().noneMatch(ALLOWED_AUTHENTICATION_EXTENDED_KEY_USAGE::contains)) {
                 logger.debug("Certificate `{}` does not have extended key usage for authentication.", certificate.getSubjectX500Principal());
-                throw new UnprocessableSmartIdResponseException("Provide certificate cannot be used for authentication.");
+                throw new UnprocessableSmartIdResponseException("Provided certificate cannot be used for authentication");
             }
 
             boolean[] keyUsage = certificate.getKeyUsage();
-            // 0 - digitalSignature, 2 - keyEncipherment, 3 - dataEncipherment
-            if (keyUsage == null || !(keyUsage[0] || keyUsage[2] && keyUsage[3])) {
+            if (keyUsage == null
+                    || !(keyUsage[INDEX_OF_DIGITAL_SIGNATURE_VALUE]
+                    || keyUsage[INDEX_OF_KEY_ENCIPHERMENT_VALUE] && keyUsage[INDEX_OF_DATA_ENCIPHERMENT_VALUE])) {
                 logger.debug("Certificate `{}` has invalid values for key usage.", certificate.getSubjectX500Principal());
-                throw new UnprocessableSmartIdResponseException("Provide certificate cannot be used for authentication.");
+                throw new UnprocessableSmartIdResponseException("Provided certificate cannot be used for authentication");
             }
         } catch (CertificateParsingException ex) {
-            throw new UnprocessableSmartIdResponseException("Cannot get extended key usage", ex);
+            throw new UnprocessableSmartIdResponseException("Authentication certificate is incorrect", ex);
+        }
+    }
+
+    private void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
+        if (authenticationResponse.getCertificateLevel() == null) {
+            throw new SmartIdClientException("Certificate level is not provided");
+        }
+        if (!authenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
+            throw new CertificateLevelMismatchException();
         }
     }
 
@@ -168,23 +186,34 @@ public class AuthenticationResponseValidator {
             result.update(constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName));
             byte[] signedHash = authenticationResponse.getSignatureValue();
             if (!result.verify(signedHash)) {
-                throw new UnprocessableSmartIdResponseException("Failed to verify validity of signature returned by Smart-ID");
+                logger.error("Signature value does not match the calculated signature for authentication response");
+                throw new UnprocessableSmartIdResponseException("Failed to verify validity of authentication signature returned by Smart-ID");
             }
         } catch (GeneralSecurityException ex) {
-            throw new UnprocessableSmartIdResponseException("Signature verification failed", ex);
+            throw new UnprocessableSmartIdResponseException("Authentication signature validation failed", ex);
         }
     }
 
-    private void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        if (requestedCertificateLevel == null) {
-            return;
-        }
-        if (authenticationResponse.getCertificateLevel() == null) {
-            throw new SmartIdClientException("Certificate level is not provided");
-        }
-        if (!authenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
-            throw new CertificateLevelMismatchException();
-        }
+    private byte[] constructPayload(AuthenticationResponse authenticationResponse,
+                                    AuthenticationSessionRequest authenticationSessionRequest,
+                                    String schemaName,
+                                    String brokeredRpName) {
+        String[] payload = {
+                schemaName,
+                SignatureProtocol.ACSP_V2.name(),
+                authenticationResponse.getServerRandom(),
+                authenticationSessionRequest.signatureProtocolParameters().rpChallenge(),
+                StringUtil.orEmpty(authenticationResponse.getUserChallenge()),
+                Base64.getEncoder().encodeToString(authenticationSessionRequest.relyingPartyName().getBytes(StandardCharsets.UTF_8)),
+                StringUtil.isEmpty(brokeredRpName) ? "" : Base64.getEncoder().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8)),
+                Base64.getEncoder().encodeToString(calculateInteractionsDigest(authenticationSessionRequest)),
+                authenticationResponse.getInteractionTypeUsed(),
+                StringUtil.orEmpty(authenticationSessionRequest.initialCallbackURL()),
+                authenticationResponse.getFlowType().getDescription()
+        };
+        return String
+                .join("|", payload)
+                .getBytes(StandardCharsets.UTF_8);
     }
 
     private void validateCertificateChain(AuthenticationResponse authenticationResponse) {
@@ -208,7 +237,7 @@ public class AuthenticationResponseValidator {
                         CertificateAttributeUtil.getAttributeValue(trustedCert.getSubjectX500Principal().getName(), BCStyle.CN));
             }
         } catch (InvalidAlgorithmParameterException | CertPathBuilderException | NoSuchAlgorithmException ex) {
-            throw new UnprocessableSmartIdResponseException("Failed to validate certificate chain", ex);
+            throw new UnprocessableSmartIdResponseException("Authentication certificate chain validation failed", ex);
         }
     }
 
@@ -239,35 +268,7 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private byte[] constructPayload(AuthenticationResponse authenticationResponse,
-                                    AuthenticationSessionRequest authenticationSessionRequest,
-                                    String schemaName,
-                                    String brokeredRpName) {
-        String[] payloadParts = {
-                schemaName,
-                SignatureProtocol.ACSP_V2.name(),
-                authenticationResponse.getServerRandom(),
-                authenticationSessionRequest.signatureProtocolParameters().rpChallenge(),
-                StringUtil.orEmpty(authenticationResponse.getUserChallenge()),
-                Base64.getEncoder().encodeToString(authenticationSessionRequest.relyingPartyName().getBytes(StandardCharsets.UTF_8)),
-                StringUtil.isEmpty(brokeredRpName) ? "" : Base64.getEncoder().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8)),
-                Base64.getEncoder().encodeToString(calculateDigest(authenticationSessionRequest.interactions())),
-                authenticationResponse.getInteractionTypeUsed(),
-                StringUtil.orEmpty(authenticationSessionRequest.initialCallbackURL()),
-                authenticationResponse.getFlowType().getDescription()
-        };
-        return String
-                .join("|", payloadParts)
-                .getBytes(StandardCharsets.UTF_8);
-    }
-
-    private static byte[] calculateDigest(String value) {
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-            messageDigest.update(value.getBytes(StandardCharsets.UTF_8));
-            return messageDigest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+    private static byte[] calculateInteractionsDigest(AuthenticationSessionRequest authenticationSessionRequest) {
+        return DigestCalculator.calculateDigest(authenticationSessionRequest.interactions().getBytes(StandardCharsets.UTF_8), HashType.SHA256);
     }
 }

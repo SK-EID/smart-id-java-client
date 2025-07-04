@@ -303,25 +303,6 @@ class DefaultAuthenticationResponseMapperTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"lengthIsLess", "lengthIsExceedingTheLimit1234567890123456789"})
-        void from_providedUserChallengeLengthIsIncorrect_throwException(String userChallenge) {
-            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
-
-            var sessionSignature = new SessionSignature();
-            sessionSignature.setValue("signatureValue");
-            sessionSignature.setServerRandom("a".repeat(24));
-            sessionSignature.setUserChallenge(userChallenge);
-
-            var sessionStatus = new SessionStatus();
-            sessionStatus.setResult(sessionResult);
-            sessionStatus.setSignatureProtocol("ACSP_V2");
-            sessionStatus.setSignature(sessionSignature);
-
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
-            assertEquals("`signature.userChallenge` value has incorrect length in session status", exception.getMessage());
-        }
-
-        @ParameterizedTest
         @ValueSource(strings = {"\\#dXNlcmlzYmVpbmdjaGFsbGVuZ2VkYnl0aGlzdmFsd", "dXNlcmlzYmVpbmdjaGFsbGVuZ2VkYnl0aGlzdmFsdW="})
         void from_providedUserChallengeDoesNotMatchThePattern_throwException(String userChallenge) {
             var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");

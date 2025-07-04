@@ -178,11 +178,6 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
         if (StringUtil.isEmpty(sessionSignature.getUserChallenge())) {
             throw new UnprocessableSmartIdResponseException("Session status field `signature.userChallenge` is empty");
         }
-        int userChallengeLength = sessionSignature.getUserChallenge().length();
-        if (userChallengeLength != USER_CHALLENGE_LENGTH) { // TODO - 20.06.25: is this unnecessary when pattern also checks for length?
-            logger.error("`signature.userChallenge` value has incorrect length in session status: expected {}, got {} ", USER_CHALLENGE_LENGTH, userChallengeLength);
-            throw new UnprocessableSmartIdResponseException("`signature.userChallenge` value has incorrect length in session status");
-        }
         if (!Pattern.matches(USER_CHALLENGE_PATTERN, sessionSignature.getUserChallenge())) {
             logger.error("`signature.userChallenge` value in session status is not in the expected Base64-encoded format: {}", sessionSignature.getUserChallenge());
             throw new UnprocessableSmartIdResponseException("`signature.userChallenge` value in session status is not in the expected Base64-encoded format");

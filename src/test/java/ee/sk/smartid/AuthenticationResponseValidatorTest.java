@@ -67,6 +67,7 @@ class AuthenticationResponseValidatorTest {
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
     private static final String EXPIRED_CERT = FileUtil.readFileToString("test-certs/expired-cert.pem.crt");
     private static final String UNTRUSTED_CERT = FileUtil.readFileToString("test-certs/other-auth-cert.pem.crt");
+    private static final String SIGN_CERT = FileUtil.readFileToString("test-certs/sign-cert-40504040001.pem.crt");
 
     private AuthenticationResponseValidator authenticationResponseValidator;
 
@@ -147,40 +148,49 @@ class AuthenticationResponseValidatorTest {
 
             var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
 
-            assertEquals("Signer's certificate is not valid", ex.getMessage());
+            assertEquals("Authentication certificate is invalid", ex.getMessage());
         }
 
         @Test
         void validate_certificateIsNotTrusted_throwException() {
             var sessionStatus = toSessionsStatus(UNTRUSTED_CERT, "QUALIFIED", "");
 
-            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
-            assertEquals("Signer's certificate is not trusted", ex.getMessage());
+            assertEquals("Authentication certificate chain validation failed", ex.getMessage());
         }
 
         @Test
         void validate_certificateLevelLowerThanRequested_throwException() {
             var sessionStatus = toSessionsStatus(AUTH_CERT, "ADVANCED", "");
 
-            var ex = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+            var ex = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
             assertEquals("Signer's certificate is below requested certificate level", ex.getMessage());
         }
+
+        @Test
+        void validate_certificateCannotBeForAuthentication_throwException() {
+            var sessionStatus = toSessionsStatus(SIGN_CERT, "QUALIFIED", "");
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
+
+            assertEquals("Provided certificate cannot be used for authentication", ex.getMessage());
+        }
+
     }
 
     @Nested
-    class ValidateSignature {
+    class ValidateAuthenticationSignature {
 
         @Test
         void validate_invalidSignature_throwException() {
             var sessionStatus = toSessionsStatus(AUTH_CERT, "QUALIFIED", toBase64("invalidSignature"));
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
-            assertEquals("Signature verification failed", ex.getMessage());
+            assertEquals("Authentication signature validation failed", ex.getMessage());
         }
-
     }
 
     private static SessionStatus toSessionsStatus(String certificateValue, String certificateLevel, String signatureValue) {

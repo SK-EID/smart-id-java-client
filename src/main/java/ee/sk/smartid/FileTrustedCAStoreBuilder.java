@@ -104,7 +104,7 @@ public class FileTrustedCAStoreBuilder implements DefaultTrustedCACertStore.Buil
     /**
      * Builds a new TrustedCAStoreImpl instance with the specified configuration.
      *
-     * @return a new TrustedCAStoreImpl instancess
+     * @return a new TrustedCAStoreImpl instances
      */
     @Override
     public DefaultTrustedCACertStore build() {

@@ -538,7 +538,7 @@ public class ReadmeIntegrationTest {
 
             // validate the sessions status and return user's identity
             AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder().build())
-                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes
+                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: authentication request will be fixed with notification-based authentication changes
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
