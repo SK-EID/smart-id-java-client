@@ -114,7 +114,7 @@ public class FileTrustedCAStoreBuilder implements DefaultTrustedCACertStore.Buil
             throw new UnsupportedOperationException("OCSP validation does not work yet, will be implemented later");
         }
         Set<TrustAnchor> trustAnchors = loadTrustAnchors();
-        List<X509Certificate> trustedCACertificates = loadValidatedCACertificates(trustAnchors);
+        List<X509Certificate> trustedCACertificates = loadValidatedIntermediateCACertificates(trustAnchors);
         return new DefaultTrustedCACertStore(trustAnchors, trustedCACertificates, ocspEnabled);
     }
 
@@ -134,18 +134,19 @@ public class FileTrustedCAStoreBuilder implements DefaultTrustedCACertStore.Buil
                 String alias = aliases.nextElement();
                 X509Certificate certificate = (X509Certificate) keystore.getCertificate(alias);
                 certificate.verify(certificate.getPublicKey());
+                certificate.checkValidity();
                 trustAnchors.add(new TrustAnchor(certificate, null));
             }
             return trustAnchors;
         } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
             logger.error("Error initializing trust anchor certificate", e);
-            throw new SmartIdClientException("Error initializing trusted CA certificates", e);
+            throw new SmartIdClientException("Error initializing trust anchor certificate", e);
         } catch (SignatureException | InvalidKeyException | NoSuchProviderException ex) {
-            throw new SmartIdClientException("Failed to verify turst anchor certificate", ex);
+            throw new SmartIdClientException("Failed to verify trust anchor certificate", ex);
         }
     }
 
-    private List<X509Certificate> loadValidatedCACertificates(Set<TrustAnchor> trustAnchors) {
+    private List<X509Certificate> loadValidatedIntermediateCACertificates(Set<TrustAnchor> trustAnchors) {
         if (StringUtil.isEmpty(intermediateCATruststorePath)) {
             throw new SmartIdClientException("Intermediate CA certificate truststore path must be set");
         }
@@ -160,13 +161,14 @@ public class FileTrustedCAStoreBuilder implements DefaultTrustedCACertStore.Buil
             while (aliases.hasMoreElements()) {
                 String alias = aliases.nextElement();
                 X509Certificate certificate = (X509Certificate) keystore.getCertificate(alias);
+                certificate.checkValidity();
                 validateCertificate(trustAnchors, certificate);
                 trustedCACertificates.add(certificate);
             }
             return trustedCACertificates;
         } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
-            logger.error("Error initializing trusted CA certificates", e);
-            throw new SmartIdClientException("Error initializing trusted CA certificates", e);
+            logger.error("Error initializing intermediate CA certificates", e);
+            throw new SmartIdClientException("Error initializing intermediate CA certificates", e);
         }
     }
 

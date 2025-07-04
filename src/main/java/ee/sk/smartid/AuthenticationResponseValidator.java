@@ -68,7 +68,7 @@ public class AuthenticationResponseValidator {
 
     private static final Logger logger = getLogger(AuthenticationResponseValidator.class);
 
-    private static final Set<String> ALLOWED_AUTHENTICATION_EXTENDED_KEY_USAGE = Set.of("1.3.6.1.5. 5.7.3.2", "1.3.6.1.4.1.62306.5.7.0");
+    private static final Set<String> ALLOWED_AUTHENTICATION_EXTENDED_KEY_USAGE = Set.of("1.3.6.1.5.5.7.3.2", "1.3.6.1.4.1.62306.5.7.0");
     private static final int INDEX_OF_DIGITAL_SIGNATURE_VALUE = 0;
     private static final int INDEX_OF_KEY_ENCIPHERMENT_VALUE = 2;
     private static final int INDEX_OF_DATA_ENCIPHERMENT_VALUE = 3;
