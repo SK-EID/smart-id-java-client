@@ -231,7 +231,7 @@ public class AuthenticationResponseValidator {
                 X509Certificate leaf = (X509Certificate) result.getCertPath().getCertificates().get(0);
                 X509Certificate intermediate = (X509Certificate) result.getCertPath().getCertificates().get(1);
                 X509Certificate trustedCert = result.getTrustAnchor().getTrustedCert();
-                logger.debug("Leaf: {}, Intermediate: {}, Trusted CA: {}",
+                logger.debug("Leaf: {}, Intermediate: {}, Trust anchor: {}",
                         CertificateAttributeUtil.getAttributeValue(leaf.getSubjectX500Principal().getName(), BCStyle.CN),
                         CertificateAttributeUtil.getAttributeValue(intermediate.getSubjectX500Principal().getName(), BCStyle.CN),
                         CertificateAttributeUtil.getAttributeValue(trustedCert.getSubjectX500Principal().getName(), BCStyle.CN));
