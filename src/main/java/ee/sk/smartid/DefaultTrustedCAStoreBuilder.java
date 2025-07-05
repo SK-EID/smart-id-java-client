@@ -13,8 +13,6 @@ import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Set;
 
-import javax.naming.InvalidNameException;
-
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,13 +119,13 @@ public class DefaultTrustedCAStoreBuilder implements DefaultTrustedCACertStore.B
             var result = (PKIXCertPathValidatorResult) certPathValidator.validate(certPath, pkixParameters);
             var trustedCert = result.getTrustAnchor().getTrustedCert();
             logger.debug("Certificate '{}' was trusted by '{}'", getCNValue(x509Certificates), getCNValue(trustedCert));
-        } catch (GeneralSecurityException | InvalidNameException ex) {
+        } catch (GeneralSecurityException ex) {
             logger.error("Validation of '{}' failed", x509Certificates.getSubjectX500Principal(), ex);
             throw new SmartIdClientException("Validating intermediate CA failed", ex);
         }
     }
 
-    private String getCNValue(X509Certificate certificate) throws InvalidNameException {
+    private String getCNValue(X509Certificate certificate) {
         String subjectDN = certificate.getSubjectX500Principal().getName();
         return CertificateAttributeUtil.getAttributeValue(subjectDN, BCStyle.CN).orElse(null);
     }

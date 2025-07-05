@@ -76,7 +76,7 @@ class ErrorResultHandlerTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () ->  ErrorResultHandler.handle(sessionStatus.getResult()));
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> ErrorResultHandler.handle(sessionStatus.getResult()));
         assertEquals("Details for refused interaction are missing", exception.getMessage());
     }
 
@@ -126,6 +126,6 @@ class ErrorResultHandlerTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var exception = assertThrows(expectedException, () -> ErrorResultHandler.handle(sessionStatus.getResult()));
+        assertThrows(expectedException, () -> ErrorResultHandler.handle(sessionStatus.getResult()));
     }
 }

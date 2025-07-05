@@ -34,19 +34,18 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.util.DeviceLinkUtil;
-import ee.sk.smartid.util.NotificationUtil;
-import ee.sk.smartid.util.SignatureUtil;
-import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
+import ee.sk.smartid.util.NotificationUtil;
+import ee.sk.smartid.util.SignatureUtil;
+import ee.sk.smartid.util.StringUtil;
 
 public class NotificationSignatureSessionRequestBuilder {
 

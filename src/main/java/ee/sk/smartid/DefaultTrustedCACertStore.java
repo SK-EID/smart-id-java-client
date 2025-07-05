@@ -55,6 +55,6 @@ public class DefaultTrustedCACertStore implements TrustedCACertStore {
          *
          * @return a new TrustedCAStoreImpl instance
          */
-        DefaultTrustedCACertStore build();
+        TrustedCACertStore build();
     }
 }

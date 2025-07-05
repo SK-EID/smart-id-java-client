@@ -98,7 +98,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), eq(semanticsIdentifier));
 
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, requestCaptor.getValue().getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), requestCaptor.getValue().getSignatureProtocol());
     }
 
     @Test
@@ -118,7 +118,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), eq(documentNumber));
 
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, requestCaptor.getValue().getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), requestCaptor.getValue().getSignatureProtocol());
     }
 
     @ParameterizedTest
@@ -137,7 +137,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         SignatureSessionRequest request = requestCaptor.getValue();
 
         assertEquals(expectedValue, request.getCertificateLevel());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, request.getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), request.getSignatureProtocol());
     }
 
     @ParameterizedTest
@@ -156,7 +156,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         SignatureSessionRequest request = requestCaptor.getValue();
 
         assertEquals(nonce, request.getNonce());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, request.getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), request.getSignatureProtocol());
     }
 
     @Test
@@ -193,7 +193,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertNotNull(capturedRequest.getRequestProperties());
         assertTrue(capturedRequest.getRequestProperties().shareMdClientIpAddress());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
     }
 
     @Disabled("Signature algorithm has changed")
@@ -216,7 +216,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString("Test hash".getBytes()), capturedRequest.getSignatureProtocolParameters().getDigest());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
     }
 
     @ParameterizedTest
@@ -235,7 +235,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertEquals(expectedCapabilities, capturedRequest.getCapabilities());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
     }
 
     @ParameterizedTest
@@ -256,7 +256,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.getSignatureProtocolParameters().getSignatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.getSignatureProtocolParameters().getDigest());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
     }
 
     @Test

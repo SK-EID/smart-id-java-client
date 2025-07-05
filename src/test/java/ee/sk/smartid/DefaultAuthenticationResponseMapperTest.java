@@ -138,7 +138,7 @@ class DefaultAuthenticationResponseMapperTest {
             var sessionStatus = new SessionStatus();
             sessionStatus.setResult(sessionResult);
 
-            var exception = assertThrows(expectedException, () -> authenticationResponseMapper.from(sessionStatus));
+            assertThrows(expectedException, () -> authenticationResponseMapper.from(sessionStatus));
         }
 
         @ParameterizedTest

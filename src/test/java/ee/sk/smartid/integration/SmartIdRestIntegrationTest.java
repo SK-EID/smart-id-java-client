@@ -56,7 +56,6 @@ import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
@@ -84,9 +83,9 @@ class SmartIdRestIntegrationTest {
         smartIdConnector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v3/");
     }
 
-    @Disabled("Demo account for dynamic-link requests not yet available")
+    @Disabled("Demo accounts for device link requests not yet available")
     @Nested
-    class DynamicLink {
+    class DeviceLink {
 
         @Nested
         class Authentication {

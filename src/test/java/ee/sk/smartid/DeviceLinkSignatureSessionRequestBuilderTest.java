@@ -57,11 +57,11 @@ import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
 class DeviceLinkSignatureSessionRequestBuilderTest {
@@ -179,7 +179,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertNotNull(capturedRequest.getRequestProperties());
         assertTrue(capturedRequest.getRequestProperties().shareMdClientIpAddress());
-        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE, capturedRequest.getSignatureProtocol());
+        assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.getSignatureProtocol());
     }
 
     @Test

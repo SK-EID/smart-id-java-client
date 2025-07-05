@@ -53,7 +53,6 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
     private static final String USER_CHALLENGE_PATTERN = "^[a-zA-Z0-9-_]{43}$";
     private static final String BASE64_FORMAT_PATTERN = "^[a-zA-Z0-9+/]+={0,2}$";
     private static final int MINIMUM_SERVER_RANDOM_LENGTH = 24;
-    private static final int USER_CHALLENGE_LENGTH = 43;
 
     public static AuthenticationResponseMapper getInstance() {
         if (instance == null) {

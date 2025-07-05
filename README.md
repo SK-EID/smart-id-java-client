@@ -26,7 +26,7 @@ This library supports Smart-ID API v3.1.
           * [Examples of authentication session](#examples-of-initiating-a-device-link-authentication-session)
             * [Initiating an anonymous authentication session](#initiating-an-anonymous-authentication-session)
             * [Initiating a dynamic-link authentication session with semantics identifier](#initiating-a-device-link-authentication-session-with-semantics-identifier)
-            * [Initiating a dynamic-link authentication session with document number](#initiating-a-dynamic-link-authentication-session-with-document-number)
+            * [Initiating a dynamic-link authentication session with document number](#initiating-a-device-link-authentication-session-with-document-number)
         * [Dynamic link certificate choice session](#dynamic-link-certificate-choice-session)
             * [Examples of initiating a dynamic-link certificate choice session](#examples-of-initiating-a-dynamic-link-certificate-choice-session)
               * [Initiating dynamic-link certificate choice](#initiating-an-anonymous-certificate-choice-session)
@@ -34,8 +34,8 @@ This library supports Smart-ID API v3.1.
           * [Examples of initiating a device-link signature session](#examples-of-initiating-a-device-link-signature-session)
               * [Initiating a device-link signature session using semantics identifier](#initiating-a-device-link-signature-session-with-semantics-identifier)
               * [Initiating a device-link signature session using document number](#initiating-a-device-link-signature-session-with-document-number)
-        * [Examples of allowed dynamic-link interactions order](#examples-of-allowed-dynamic-link-interactions-order)
-        * [Additional request properties](#additional-dynamic-link-session-request-properties)
+        * [Examples of allowed device-link interaction](#examples-of-device-link-interactions)
+        * [Additional request properties](#additional-device-link-session-request-properties)
         * [Generating QR-code or device link](#generating-qr-code-or-device-link)
             * [Generating device link ](#generating-device-link)
             * [Device link parameters](#device-link-parameters)
@@ -139,27 +139,15 @@ logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 ## Setting up SmartIdClient for v3.1
 
 ```java 
-import ee.sk.smartid.SmartIdClient;
-
 InputStream is = SmartIdClient.class.getResourceAsStream("demo_server_trusted_ssl_certs.jks");
 KeyStore trustStore = KeyStore.getInstance("JKS");
-trustStore.
+trustStore.load(is, "changeit".toCharArray());
 
-load(is, "changeit".toCharArray());
-
-var client = new SmartIdClient();
-client.
-
-setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-client.
-
-setRelyingPartyName("DEMO");
-client.
-
-setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
-client.
-
-setTrustStore(trustStore);
+var smartIdClient = new SmartIdClient();
+client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+client.setRelyingPartyName("DEMO");
+client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+client.setTrustStore(trustStore);
 ```
 
 ## Device-link flows
@@ -209,30 +197,35 @@ String rpChallenge = RpChallengeGenerator.generate();
 // Store generated rpChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-DeviceLinkSessionResponse authenticationSessionResponse = client
+// Setup builder
+DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         // to use anonymous authentication, do not set semantics identifier or document number
         .withRpChallenge(rpChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
-        ))
-        .initAuthenticationSession();
+        ));
 
+// Init authentication session
+DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+
+// Get authentication session request used for starting the authentication session and use it later to validate sessions status response
+AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+// Use sessionID to start polling for session status
 String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
 
+// Following values are used for generating device link or QR-code
 String sessionToken = authenticationSessionResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = authenticationSessionResponse.getSessionSecret();
-String deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+// Will be used to calculate elapsed time being used in QR-code
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-// Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
-// Start querying sessions status
+// Next steps:
+// - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// - Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
@@ -254,30 +247,34 @@ String rpChallenge = RpChallengeGenerator.generate();
 // Store generated randomChallenge only backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-DeviceLinkSessionResponse authenticationSessionResponse = client
+DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         .withSemanticsIdentifier(semanticsIdentifier)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withRpChallenge(rpChallenge)
         .withInteractions(Collections.singletonList(
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
-        ))
-        .initAuthenticationSession();
+        ));
 
+// Init authentication session
+DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+
+// Get authentication session request used for starting the authentication session and use it later to validate sessions status response
+AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+// Use sessionID to start polling for session status
 String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
 
+// Following values are used for generating device link or QR-code
 String sessionToken = authenticationSessionResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = authenticationSessionResponse.getSessionSecret();
-String deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+// Will be used to calculate elapsed time being used in QR-code
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-// Generate QR-code or device link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
-// Start querying sessions status
+// Next steps:
+// - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// - Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
@@ -292,30 +289,34 @@ String rpChallenge = RpChallengeGenerator.generate();
 // Store generated randomChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating OK authentication sessions status response
 
-DeviceLinkSessionResponse authenticationSessionResponse = client
+DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         .withDocumentNumber(documentNumber)
         .withRpChallenge(rpChallenge)
-        .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withSignatureProtocol(SignatureProtocol.ACSP_V2)
-        .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-        .withHashAlgorithm(HashAlgorithm.SHA_512)
         .withInteractions(Collections.singletonList(
             DeviceLinkInteraction.displayTextAndPIN("Log in?")
-        ))
-        .initAuthenticationSession();
+        ));
 
+// Init authentication session
+DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+
+// Get authentication session request used for starting the authentication session and use it later to validate sessions status response
+AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+// Use sessionID to start polling for session status
 String sessionId = authenticationSessionResponse.getSessionID();
-// SessionID is used to query sessions status later
 
+// Following values are used for generating device link or QR-code
 String sessionToken = authenticationSessionResponse.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = authenticationSessionResponse.getSessionSecret();
-String deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+// Will be used to calculate elapsed time being used in QR-code
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-// Generate QR-code or device link to be displayed to the user using sessionToken and sessionSecret provided in the authenticationResponse
-// Start querying sessions status
+// Next steps:
+// - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// - Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
@@ -417,9 +418,9 @@ DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withSemanticsIdentifier(semanticsIdentifier)
-    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+    .withHashAlgorithm(HashAlgorithm.SHA_256)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-    .withInitialCallbackURL("https://example.com/callback")
+    .withInitialCallbackURL("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initSignatureSession();
 
 // Process the signature response
@@ -447,13 +448,12 @@ signableData.setHashType(HashType.SHA256);
 String documentNumber = "PNOEE-40504040001-MOCK-Q";
 
 // Build the device-link signature request
-DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
+DeviceLinkSessionResponse signatureResponse = smartIdClient.createDeviceLinkSignature()
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withDocumentNumber(documentNumber)
-    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+    .withHashAlgorithm(HashAlgorithm.SHA_256)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-    .withInitialCallbackURL("https://example.com/callback")
     .initSignatureSession();
 
 // Process the signature response
@@ -490,7 +490,7 @@ try {
 }
 ```
 
-### Additional dynamic-link session request properties
+### Additional device-link session request properties
 
 #### Using request properties to request the IP address of the user's device
 
@@ -504,7 +504,7 @@ DynamicLinkSessionResponse authenticationSessionResponse = client
         .createDeviceLinkAuthentication()
         .withRandomChallenge(randomChallenge)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
-        .withAllowedInteractionsOrder(Collections.singletonList(
+        .withInteractions(Collections.singletonList(
             DynamicLinkInteraction.displayTextAndPIN("Log in?")
         ))
         // setting property to request the IP-address of the user's device
@@ -512,7 +512,8 @@ DynamicLinkSessionResponse authenticationSessionResponse = client
         .initAuthenticationSession();
 ```
 
-### Examples of allowed dynamic-link interactions order
+### Examples of device link interactions
+Todo: needs to be updated
 
 An app can support different interaction types, and a Relying Party can specify the preferred interactions with or without fallback options.
 For dynamic link flows, the available interaction types are limited to displayTextAndPIN and confirmationMessage. 
@@ -524,25 +525,25 @@ Below are examples of allowedInteractionsOrder elements specifically for dynamic
 Example 1: `confirmationMessage` with Fallback to `displayTextAndPIN`
 Description: The RP's first choice is `confirmationMessage`; if not available, then fall back to `displayTextAndPIN`.
 ```java
-builder.withAllowedInteractionsOrder(List.of(
-    DynamicLinkInteraction.confirmationMessage("Up to 200 characters of text here.."),
-    DynamicLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
+builder.withInteractions(List.of(
+    DeviceLinkInteraction.confirmationMessage("Up to 200 characters of text here.."),
+    DeviceLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
 ))
 ```
 
 Example 2: `displayTextAndPIN` Only
 Description: Use `displayTextAndPIN` interaction only.
 ```java
-builder.withAllowedInteractionsOrder(List.of(
-        DynamicLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
+builder.withInteractions(List.of(
+        DeviceLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
 ));
 ```
 
 Example 3: `confirmationMessage` Only (No Fallback)
 Description: Insist on `confirmationMessage`; if not available, then fail.
 ```java
-builder.withAllowedInteractionsOrder(List.of(
-        DynamicLinkInteraction.confirmationMessage("Up to 200 characters of text here..")
+builder.withInteractions(List.of(
+        DeviceLinkInteraction.confirmationMessage("Up to 200 characters of text here..")
 ));
 ```
 
@@ -585,7 +586,6 @@ URI deviceLink = new DeviceLinkBuilder()
         .withElapsedSeconds(elapsedSeconds)
         .withLang("eng")
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-        .withRelyingPartyName("DEMO")
         .buildDeviceLink(sessionResponse.getSessionSecret());
 ```
 
@@ -677,6 +677,7 @@ The session status response includes various fields depending on whether the ses
 * `state`: RUNNING or COMPLETE
 * `result.endResult`: Outcome of the session (e.g., OK, USER_REFUSED, TIMEOUT)
 * `result.documentNumber`: Document number returned when `endResult` is `OK`. Can be used in further signature and authentication requests to target the same device.
+* `result.details`: Contains additional info when user refused interaction
 * `signatureProtocol`: Either ACSP_V2 (for authentication) or RAW_DIGEST_SIGNATURE (for signature)
 * `signature`: Contains the following fields based on the signatureProtocol used:
    * For `ACSP_V2`: value, serverRandom, userChallenge, flowType, signatureAlgorithm, signatureAlgorithmParameters,
@@ -744,8 +745,6 @@ It's important to validate the session status response to ensure that the return
 ###### Setup TrustedCACertStore
 
 ```java
-import java.security.cert.TrustAnchor;
-
 // Option 1 - initialize certificate store with default locations for trust anchor truststore and for intermediate CA certificates
 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
 
@@ -774,17 +773,18 @@ AuthenticationResponseValidator authenticationResponseValidator = new Authentica
 ```
 
 ###### Validate sessions status
+
 ```java
 AuthenticationSessionRequest authenticationSessionRequest;
-DyanmicLinkSessionResponse sessionResponse;
+DeviceLinkSessionResponse sessionResponse;
 
 // get sessions result
-SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.getSessionID(), 10000);
+SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.getSessionID());
 
 // validate sessions state is completed
 if("COMPLETE".equals(sessionStatus.getState())){
-    // validate the session status response with authentication session request
-    AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest);
+    // validate the session status response with authentication session request and return authentication identity
+    AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 }
 ```
 
@@ -875,16 +875,13 @@ RP can directly query the user's signing certificate by document number — no s
 ```java
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
-CertificateByDocumentNumberResult certResponse = client
-        .createCertificateByDocumentNumber
+CertificateByDocumentNumberResult certResponse = smartIdClient
+        .createCertificateByDocumentNumber()
         .withDocumentNumber(documentNumber)
-        .withRelyingPartyUUID(client.getRelyingPartyUUID())
-        .withRelyingPartyName(client.getRelyingPartyName())
-        .withCertificateLevel(CertificateLevel.QUALIFIED)
         .getCertificateByDocumentNumber();
 
-// certResponse.getCertificate(); contains Base64-encoded certificate
-// certResponse.getCertificateLevel(); is either ADVANCED or QUALIFIED
+// certResponse.certificate(); contains Base64-encoded certificate
+// certResponse.certificateLevel(); is either ADVANCED or QUALIFIED
 ```
 
 ## Notification-based flows
@@ -1247,6 +1244,10 @@ Exception Categories
   These exceptions arise during validation or parsing operations within the library.
   * `CertificateParsingException` Thrown when the X.509 certificate cannot be parsed.
   * `SignatureValidationException` Thrown when signature validation fails due to mismatched algorithms or corrupted data.
+* Server side exceptions
+  * `ProtocolFailureException` Thrown when the Smart-ID API received invalid data such (f.e wrong data in generate device link)
+  * `ExpectedLinkedSessionException` Thrown when the Relying Party did not configure linked signature session to follow anonymous device-link certificate choice session.
+  * `SmartIdServerException` Thrown when the Smart-ID terminates the process due to a server-side error.
 
 ## Network connection configuration of the client
 

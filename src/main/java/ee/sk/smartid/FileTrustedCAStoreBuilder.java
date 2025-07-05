@@ -23,8 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.naming.InvalidNameException;
-
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,7 +105,7 @@ public class FileTrustedCAStoreBuilder implements DefaultTrustedCACertStore.Buil
      * @return a new TrustedCAStoreImpl instances
      */
     @Override
-    public DefaultTrustedCACertStore build() {
+    public TrustedCACertStore build() {
         if (!ocspEnabled) {
             logger.warn("TrustedCAStore will be initialized with OCSP check disabled. This is not recommended for production use as it may lead to security vulnerabilities.");
         } else {
@@ -182,13 +180,13 @@ public class FileTrustedCAStoreBuilder implements DefaultTrustedCACertStore.Buil
             var result = (PKIXCertPathValidatorResult) certPathValidator.validate(certPath, pkixParameters);
             var trustedCert = result.getTrustAnchor().getTrustedCert();
             logger.debug("Certificate '{}' was trusted by '{}'", getCNValue(x509Certificates), getCNValue(trustedCert));
-        } catch (GeneralSecurityException | InvalidNameException ex) {
+        } catch (GeneralSecurityException ex) {
             logger.debug("Validation of '{}' failed", x509Certificates.getSubjectX500Principal(), ex);
             throw new SmartIdClientException("Validating intermediate CA failed", ex);
         }
     }
 
-    private String getCNValue(X509Certificate certificate) throws InvalidNameException {
+    private String getCNValue(X509Certificate certificate) {
         String subjectDN = certificate.getSubjectX500Principal().getName();
         return CertificateAttributeUtil.getAttributeValue(subjectDN, BCStyle.CN).orElse(null);
     }
