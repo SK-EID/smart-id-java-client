@@ -418,7 +418,7 @@ DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withSemanticsIdentifier(semanticsIdentifier)
-    .withHashAlgorithm(HashAlgorithm.SHA_256)
+    .withHashAlgorithm(HashAlgorithm.SHA_512)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
     .withInitialCallbackURL("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initSignatureSession();
@@ -452,7 +452,7 @@ DeviceLinkSessionResponse signatureResponse = smartIdClient.createDeviceLinkSign
     .withCertificateLevel(CertificateLevel.QSCD)
     .withSignableData(signableData)
     .withDocumentNumber(documentNumber)
-    .withHashAlgorithm(HashAlgorithm.SHA_256)
+    .withHashAlgorithm(HashAlgorithm.SHA_512)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
     .initSignatureSession();
 

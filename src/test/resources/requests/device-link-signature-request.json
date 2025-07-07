@@ -6,7 +6,7 @@
     "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "rsassa-pss",
     "signatureAlgorithmParameters": {
-      "hashAlgorithm": "SHA3-512"
+      "hashAlgorithm": "SHA-512"
     }
   },
   "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IlNpZ24gZG9jdW1lbnQ/In1d"
