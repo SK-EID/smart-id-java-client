@@ -38,8 +38,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
@@ -47,7 +45,10 @@ import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.VerificationCode;
+import ee.sk.smartid.util.StringUtil;
 
 /**
  * Class for building a notification authentication session request
@@ -61,7 +62,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private String relyingPartyUUID;
     private String relyingPartyName;
     private AuthenticationCertificateLevel certificateLevel;
-    private String randomChallenge;
+    private String rpChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
     private String nonce;
     private List<NotificationInteraction> interactions;
@@ -121,7 +122,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @return this builder
      */
     public NotificationAuthenticationSessionRequestBuilder withRandomChallenge(String randomChallenge) {
-        this.randomChallenge = randomChallenge;
+        this.rpChallenge = randomChallenge;
         return this;
     }
 
@@ -250,7 +251,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     private void validateSignatureParameters() {
-        if (StringUtil.isEmpty(randomChallenge)) {
+        if (StringUtil.isEmpty(rpChallenge)) {
             logger.error("Parameter randomChallenge must be set");
             throw new SmartIdClientException("Parameter randomChallenge must be set");
         }
@@ -268,7 +269,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private byte[] getDecodedRandomChallenge() {
         Base64.Decoder decoder = Base64.getDecoder();
         try {
-            return decoder.decode(randomChallenge);
+            return decoder.decode(rpChallenge);
         } catch (IllegalArgumentException e) {
             logger.error("Parameter randomChallenge is not a valid Base64 encoded string");
             throw new SmartIdClientException("Parameter randomChallenge is not a valid Base64 encoded string");
@@ -298,27 +299,21 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     private AuthenticationSessionRequest createAuthenticationRequest() {
-        var request = new AuthenticationSessionRequest();
-        request.setRelyingPartyUUID(relyingPartyUUID);
-        request.setRelyingPartyName(relyingPartyName);
+        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(rpChallenge,
+                signatureAlgorithm.getAlgorithmName(),
+                new SignatureAlgorithmParameters("SHA-512"));
 
-        if (certificateLevel != null) {
-            request.setCertificateLevel(certificateLevel.name());
-        }
-
-        var signatureProtocolParameters = new AcspV2SignatureProtocolParameters();
-        signatureProtocolParameters.setRpChallenge(randomChallenge);
-        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
-        request.setSignatureProtocolParameters(signatureProtocolParameters);
-        request.setInteractions(encodeInteractionsToBase64(interactions));
-
-        if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties();
-            requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
-            request.setRequestProperties(requestProperties);
-        }
-        request.setCapabilities(capabilities);
-        return request;
+        return new AuthenticationSessionRequest(
+                relyingPartyUUID,
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
+                SignatureProtocol.ACSP_V2,
+                signatureProtocolParameters,
+                encodeInteractionsToBase64(interactions),
+                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
+                capabilities,
+                nonce
+        );
     }
 
     private void validateResponseParameters(NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse) {

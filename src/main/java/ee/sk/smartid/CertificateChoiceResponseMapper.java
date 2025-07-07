@@ -33,10 +33,10 @@ import java.security.cert.X509Certificate;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
-import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.util.StringUtil;
 
 /**
  * Validates and maps the received session status to certificate choice response
@@ -71,7 +71,7 @@ public class CertificateChoiceResponseMapper {
         certificateChoiceResponse.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
         certificateChoiceResponse.setCertificate(certificate);
         certificateChoiceResponse.setCertificateLevel(CertificateLevel.valueOf(sessionStatus.getCert().getCertificateLevel()));
-        certificateChoiceResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        certificateChoiceResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
         certificateChoiceResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
         return certificateChoiceResponse;
     }
@@ -87,18 +87,15 @@ public class CertificateChoiceResponseMapper {
         if (sessionResult == null) {
             throw new UnprocessableSmartIdResponseException("Session result parameter is missing");
         }
-        validateEndResult(sessionResult.getEndResult());
-        if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
-            throw new UnprocessableSmartIdResponseException("Document number parameter is missing in the session result");
-        }
-    }
-
-    private static void validateEndResult(String endResult) {
+        String endResult = sessionResult.getEndResult();
         if (StringUtil.isEmpty(endResult)) {
             throw new UnprocessableSmartIdResponseException("End result parameter is missing in the session result");
         }
         if (!"OK".equalsIgnoreCase(endResult)) {
-            ErrorResultHandler.handle(endResult);
+            ErrorResultHandler.handle(sessionResult);
+        }
+        if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
+            throw new UnprocessableSmartIdResponseException("Document number parameter is missing in the session result");
         }
     }
 

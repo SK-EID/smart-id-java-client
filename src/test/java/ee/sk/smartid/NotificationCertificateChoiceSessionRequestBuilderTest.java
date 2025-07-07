@@ -173,7 +173,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             CertificateChoiceSessionRequest request = requestCaptor.getValue();
 
             assertNotNull(request.getRequestProperties());
-            assertEquals(ipRequested, request.getRequestProperties().getShareMdClientIpAddress());
+            assertEquals(ipRequested, request.getRequestProperties().shareMdClientIpAddress());
         }
 
         @ParameterizedTest

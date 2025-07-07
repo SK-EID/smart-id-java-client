@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,11 +40,11 @@ import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.util.StringUtil;
 
 public class SignatureResponseMapper {
 
@@ -78,7 +78,7 @@ public class SignatureResponseMapper {
         signatureResponse.setRequestedCertificateLevel(requestedCertificateLevel);
         signatureResponse.setCertificateLevel(certificate.getCertificateLevel());
         signatureResponse.setDocumentNumber(sessionResult.getDocumentNumber());
-        signatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionFlowUsed());
+        signatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
         signatureResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
 
         return signatureResponse;
@@ -121,13 +121,9 @@ public class SignatureResponseMapper {
                 throw new UnprocessableSmartIdResponseException("Document number is missing in the session result");
             }
 
-            if (StringUtil.isEmpty(sessionStatus.getInteractionFlowUsed())) {
+            if (StringUtil.isEmpty(sessionStatus.getInteractionTypeUsed())) {
                 logger.error("InteractionFlowUsed is missing in the session status");
                 throw new UnprocessableSmartIdResponseException("InteractionFlowUsed is missing in the session status");
-            }
-
-            if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
-                throw new UnprocessableSmartIdResponseException("Signature protocol is missing in session status");
             }
 
             if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
@@ -137,7 +133,7 @@ public class SignatureResponseMapper {
             validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
             validateSignature(sessionStatus);
         } else {
-            ErrorResultHandler.handle(endResult);
+            ErrorResultHandler.handle(sessionResult);
         }
     }
 

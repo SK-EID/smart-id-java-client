@@ -35,7 +35,10 @@ public class SessionSignature implements Serializable {
 
     private String value;
     private String serverRandom;
+    private String userChallenge;
+    private String flowType;
     private String signatureAlgorithm;
+    private SessionSignatureAlgorithmParameters signatureAlgorithmParameters;
 
     public String getValue() {
         return value;
@@ -53,6 +56,22 @@ public class SessionSignature implements Serializable {
         this.serverRandom = serverRandom;
     }
 
+    public String getUserChallenge() {
+        return userChallenge;
+    }
+
+    public void setUserChallenge(String userChallenge) {
+        this.userChallenge = userChallenge;
+    }
+
+    public String getFlowType() {
+        return flowType;
+    }
+
+    public void setFlowType(String flowType) {
+        this.flowType = flowType;
+    }
+
     public String getSignatureAlgorithm() {
         return signatureAlgorithm;
     }
@@ -61,4 +80,12 @@ public class SessionSignature implements Serializable {
         this.signatureAlgorithm = signatureAlgorithm;
     }
 
+
+    public SessionSignatureAlgorithmParameters getSignatureAlgorithmParameters() {
+        return signatureAlgorithmParameters;
+    }
+
+    public void setSignatureAlgorithmParameters(SessionSignatureAlgorithmParameters signatureAlgorithmParameters) {
+        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
+    }
 }

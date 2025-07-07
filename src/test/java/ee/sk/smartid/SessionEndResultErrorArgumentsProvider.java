@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,16 +32,15 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.ExpectedLinkedSessionException;
+import ee.sk.smartid.exception.permanent.ProtocolFailureException;
+import ee.sk.smartid.exception.permanent.SmartIdServerException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
-import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
-import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 
 public class SessionEndResultErrorArgumentsProvider implements ArgumentsProvider {
@@ -55,11 +54,10 @@ public class SessionEndResultErrorArgumentsProvider implements ArgumentsProvider
                 Arguments.of("WRONG_VC", UserSelectedWrongVerificationCodeException.class),
                 Arguments.of("REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP", RequiredInteractionNotSupportedByAppException.class),
                 Arguments.of("USER_REFUSED_CERT_CHOICE", UserRefusedCertChoiceException.class),
-                Arguments.of("USER_REFUSED_DISPLAYTEXTANDPIN", UserRefusedDisplayTextAndPinException.class),
-                Arguments.of("USER_REFUSED_VC_CHOICE", UserRefusedVerificationChoiceException.class),
-                Arguments.of("USER_REFUSED_CONFIRMATIONMESSAGE", UserRefusedConfirmationMessageException.class),
-                Arguments.of("USER_REFUSED_CONFIRMATIONMESSAGE_WITH_VC_CHOICE", UserRefusedConfirmationMessageWithVerificationChoiceException.class),
-                Arguments.of("UNKNOWN_RESULT", SmartIdClientException.class)
+                Arguments.of("PROTOCOL_FAILURE", ProtocolFailureException.class),
+                Arguments.of("EXPECTED_LINKED_SESSION", ExpectedLinkedSessionException.class),
+                Arguments.of("SERVER_ERROR", SmartIdServerException.class),
+                Arguments.of("UNKNOWN_RESULT", UnprocessableSmartIdResponseException.class)
         );
     }
 }

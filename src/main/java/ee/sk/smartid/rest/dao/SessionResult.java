@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,22 +33,31 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionResult implements Serializable {
 
-  private String endResult;
-  private String documentNumber;
+    private String endResult;
+    private String documentNumber;
+    private SessionResultDetails details;
 
-  public String getEndResult() {
-    return endResult;
-  }
+    public String getEndResult() {
+        return endResult;
+    }
 
-  public void setEndResult(String endResult) {
-    this.endResult = endResult;
-  }
+    public void setEndResult(String endResult) {
+        this.endResult = endResult;
+    }
 
-  public String getDocumentNumber() {
-    return documentNumber;
-  }
+    public String getDocumentNumber() {
+        return documentNumber;
+    }
 
-  public void setDocumentNumber(String documentNumber) {
-    this.documentNumber = documentNumber;
-  }
+    public void setDocumentNumber(String documentNumber) {
+        this.documentNumber = documentNumber;
+    }
+
+    public SessionResultDetails getDetails() {
+        return details;
+    }
+
+    public void setDetails(SessionResultDetails details) {
+        this.details = details;
+    }
 }

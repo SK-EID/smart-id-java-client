@@ -34,19 +34,19 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.util.DeviceLinkUtil;
-import ee.sk.smartid.util.SignatureUtil;
-import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.util.DeviceLinkUtil;
+import ee.sk.smartid.util.SignatureUtil;
+import ee.sk.smartid.util.StringUtil;
 
 public class DeviceLinkSignatureSessionRequestBuilder {
 
@@ -253,8 +253,8 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      *
      * @return a {@link DeviceLinkSessionResponse} containing session details such as
      * session ID, session token, session secret and device link base URL.
-     *  @throws SmartIdClientException if request parameters are invalid
-     *  @throws UnprocessableSmartIdResponseException if the response is missing required fields
+     * @throws SmartIdClientException if request parameters are invalid
+     * @throws UnprocessableSmartIdResponseException if the response is missing required fields
      */
     public DeviceLinkSessionResponse initSignatureSession() {
         validateParameters();
@@ -289,8 +289,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         }
         signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
 
-        var signatureAlgorithmParameters = new SignatureAlgorithmParameters();
-        signatureAlgorithmParameters.setHashAlgorithm(hashAlgorithm.getValue());
+        var signatureAlgorithmParameters = new SignatureAlgorithmParameters(hashAlgorithm.getValue());
         signatureProtocolParameters.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
 
         request.setSignatureProtocolParameters(signatureProtocolParameters);
@@ -299,8 +298,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         request.setInteractions(DeviceLinkUtil.encodeToBase64(interactions));
 
         if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties();
-            requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
+            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
         }
         request.setCapabilities(capabilities);

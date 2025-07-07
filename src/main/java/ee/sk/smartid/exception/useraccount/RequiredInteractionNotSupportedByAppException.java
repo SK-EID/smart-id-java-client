@@ -12,10 +12,10 @@ package ee.sk.smartid.exception.useraccount;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,7 +31,7 @@ import ee.sk.smartid.exception.UserAccountException;
 public class RequiredInteractionNotSupportedByAppException extends UserAccountException {
 
     public RequiredInteractionNotSupportedByAppException() {
-        super("User app version does not support any of the allowedInteractionsOrder interactions.");
+        super("User app version does not support any of the provided interactions.");
     }
 
 }

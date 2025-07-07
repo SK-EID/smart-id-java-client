@@ -32,95 +32,13 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ee.sk.smartid.SignatureProtocol;
 
-public class AuthenticationSessionRequest implements Serializable {
-
-    private String relyingPartyUUID;
-
-    private String relyingPartyName;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String certificateLevel;
-
-    private final String signatureProtocol = SignatureProtocol.ACSP_V2.name();
-
-    private AcspV2SignatureProtocolParameters acspV2SignatureProtocolParameters;
-
-    private String interactions;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private RequestProperties requestProperties;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Set<String> capabilities;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String initialCallbackURL;
-
-    public String getRelyingPartyUUID() {
-        return relyingPartyUUID;
-    }
-
-    public void setRelyingPartyUUID(String relyingPartyUUID) {
-        this.relyingPartyUUID = relyingPartyUUID;
-    }
-
-    public String getRelyingPartyName() {
-        return relyingPartyName;
-    }
-
-    public void setRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyName = relyingPartyName;
-    }
-
-    public String getCertificateLevel() {
-        return certificateLevel;
-    }
-
-    public void setCertificateLevel(String certificateLevel) {
-        this.certificateLevel = certificateLevel;
-    }
-
-    public String getSignatureProtocol() {
-        return signatureProtocol;
-    }
-
-    public AcspV2SignatureProtocolParameters getSignatureProtocolParameters() {
-        return acspV2SignatureProtocolParameters;
-    }
-
-    public void setSignatureProtocolParameters(AcspV2SignatureProtocolParameters acspV2SignatureProtocolParameters) {
-        this.acspV2SignatureProtocolParameters = acspV2SignatureProtocolParameters;
-    }
-
-    public String getInteractions() {
-        return interactions;
-
-    }
-    public void setInteractions(String interactions) {
-        this.interactions = interactions;
-    }
-
-    public RequestProperties getRequestProperties() {
-        return requestProperties;
-    }
-
-    public void setRequestProperties(RequestProperties requestProperties) {
-        this.requestProperties = requestProperties;
-    }
-
-    public Set<String> getCapabilities() {
-        return capabilities;
-    }
-
-    public void setCapabilities(Set<String> capabilities) {
-        this.capabilities = capabilities;
-    }
-
-    public String getInitialCallbackURL() {
-        return initialCallbackURL;
-    }
-
-    public void setInitialCallbackURL(String initialCallbackURL) {
-        this.initialCallbackURL = initialCallbackURL;
-    }
+public record AuthenticationSessionRequest(String relyingPartyUUID,
+                                           String relyingPartyName,
+                                           @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,
+                                           SignatureProtocol signatureProtocol,
+                                           AcspV2SignatureProtocolParameters signatureProtocolParameters,
+                                           String interactions,
+                                           @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
+                                           @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
+                                           @JsonInclude(JsonInclude.Include.NON_NULL) String initialCallbackURL) implements Serializable {
 }

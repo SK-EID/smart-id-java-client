@@ -190,8 +190,7 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
         request.setNonce(nonce);
 
         if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties();
-            requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
+            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
         }
 

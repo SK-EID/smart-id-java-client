@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,6 +25,9 @@ package ee.sk.smartid;
  * THE SOFTWARE.
  * #L%
  */
+
+import java.util.Arrays;
+import java.util.Optional;
 
 public enum SignatureAlgorithm {
 
@@ -38,5 +41,12 @@ public enum SignatureAlgorithm {
 
     public String getAlgorithmName() {
         return algorithmName;
+    }
+
+    public static Optional<SignatureAlgorithm> fromString(String signatureAlgorithm) {
+        return Arrays
+                .stream(SignatureAlgorithm.values())
+                .filter(s -> s.getAlgorithmName().equals(signatureAlgorithm))
+                .findFirst();
     }
 }

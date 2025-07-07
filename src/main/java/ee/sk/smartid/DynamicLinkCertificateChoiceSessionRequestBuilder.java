@@ -173,9 +173,8 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
         request.setNonce(nonce);
         request.setCapabilities(capabilities);
 
-        var requestProperties = new RequestProperties();
-        requestProperties.setShareMdClientIpAddress(this.shareMdClientIpAddress);
-        if (requestProperties.hasProperties()) {
+        if (this.shareMdClientIpAddress != null) {
+            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
         }
 

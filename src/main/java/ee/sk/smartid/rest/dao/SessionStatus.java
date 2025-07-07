@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,6 +27,7 @@ package ee.sk.smartid.rest.dao;
  */
 
 import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -38,7 +39,7 @@ public class SessionStatus implements Serializable {
     private SessionSignature signature;
     private SessionCertificate cert;
     private String[] ignoredProperties;
-    private String interactionFlowUsed;
+    private String interactionTypeUsed;
     private String deviceIpAddress;
 
     public String getState() {
@@ -89,12 +90,12 @@ public class SessionStatus implements Serializable {
         this.ignoredProperties = ignoredProperties;
     }
 
-    public String getInteractionFlowUsed() {
-        return interactionFlowUsed;
+    public String getInteractionTypeUsed() {
+        return interactionTypeUsed;
     }
 
-    public void setInteractionFlowUsed(String interactionFlowUsed) {
-        this.interactionFlowUsed = interactionFlowUsed;
+    public void setInteractionTypeUsed(String interactionTypeUsed) {
+        this.interactionTypeUsed = interactionTypeUsed;
     }
 
     public String getDeviceIpAddress() {
