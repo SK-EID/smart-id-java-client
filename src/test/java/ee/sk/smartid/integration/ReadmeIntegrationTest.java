@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -65,12 +64,11 @@ import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.FileTrustedCAStoreBuilder;
 import ee.sk.smartid.HashType;
 import ee.sk.smartid.QrCodeGenerator;
-import ee.sk.smartid.QrCodeUtil;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
 import ee.sk.smartid.SignatureResponse;
-import ee.sk.smartid.SignatureResponseMapper;
+import ee.sk.smartid.SignatureResponseValidator;
 import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
@@ -85,7 +83,6 @@ import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-
 
 @Disabled("Replace relying party UUID and name with your own values in setup")
 @SmartIdDemoIntegrationTest
@@ -381,7 +378,10 @@ public class ReadmeIntegrationTest {
             // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-            SignatureResponse signatureResponse = SignatureResponseMapper.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
+            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
+            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
@@ -470,7 +470,10 @@ public class ReadmeIntegrationTest {
             // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-            SignatureResponse signatureResponse = SignatureResponseMapper.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
+            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
+            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
@@ -667,7 +670,10 @@ public class ReadmeIntegrationTest {
             // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-            SignatureResponse signatureResponse = SignatureResponseMapper.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
+            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
+            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOEE-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());

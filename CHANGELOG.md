@@ -2,23 +2,24 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [3.1.3] - 2025-07-05
+## [3.1.6] - 2025-07-08
 
-### Changed
-- Updates to session status response
-    - Updated USER_REFUSED_INTERACTION responses and updated error handling for these cases.
-    - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
-    - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
-    - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
-- Updated AuthenticationSessionRequest and related classes to records.
-- Refactored loading of trusted CA certificates from AuthenticationResponseValidator to their own class `DefaultTrustedCACertStore`.
-    - Created to builder-classes for loading trusted CA certificates
-        - `FileTrustedCACertStoreBuilder` for loading trust anchors and intermediate CA certificates from truststore
-        - `DefaultTrustedCACertStoreBuilder` for creating DefaultTrustedCACertStore with preloaded certificates, also validates provided certificates
-- Refactored AuthenticationResponseMapper to be used as singleton instead of static class and added it as dependency for AuthenticationResponseValidator
-- Update AuthenticationResponseValidator
-  - update signature value validation
-  - added additional certificate validations (validate certificate chain and certificate purpose)
+### Added
+- Session-status (signature)
+  - `signature.value` must match `^[A-Za-z0-9+/]+={0,2}$`.
+  - Allowed `flowType`: QR · App2App · Web2App · Notification.
+  - Fixed `signatureAlgorithm` to `rsassa-pss`.
+  - `signatureAlgorithmParameters`
+    - `hashAlgorithm`: `SHA-256/384/512, SHA3-256/384/512`.
+    - `maskGenAlgorithm.algorithm`: `id-mgf1` & its `hashAlgorithm` must equal the main hash.
+    - `saltLength`: 32 / 48 / 64 bytes to match chosen hash.
+    - `trailerField`: `0xbc`.
+
+- Certificate
+  - Must be a Smart-ID *signature* certificate:
+    - `CertificatePolicies (2.5.29.32)` contain either `qualified``1.3.6.1.4.1.10015.17.2`, `0.4.0.194112.1.2`or `non-qualified``1.3.6.1.4.1.10015.17.1`, `0.4.0.2042.1.1`.
+    - `KeyUsage (2.5.29.15)` – NonRepudiation bit set.
+    - `QC-Statement (1.3.6.1.5.5.7.1.3)` contains `0.4.0.1862.1.6.1`.
 
 ## [3.1.5] - 2025-06-30
 
@@ -29,6 +30,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Converted interaction list to Base64 string and ensured no duplicates.
 - Added `initialCallbackURL` field with regex validation.
 - Added `deviceLinkBase` to session response.
+
+## [3.1.4] - 2025-07-05
+
+### Changed
+- Updates to session status response
+  - Updated USER_REFUSED_INTERACTION responses and updated error handling for these cases.
+  - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
+  - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
+  - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
+- Updated AuthenticationSessionRequest and related classes to records.
+- Refactored loading of trusted CA certificates from AuthenticationResponseValidator to their own class `DefaultTrustedCACertStore`.
+  - Created to builder-classes for loading trusted CA certificates
+    - `FileTrustedCACertStoreBuilder` for loading trust anchors and intermediate CA certificates from truststore
+    - `DefaultTrustedCACertStoreBuilder` for creating DefaultTrustedCACertStore with preloaded certificates, also validates provided certificates
+- Refactored AuthenticationResponseMapper to be used as singleton instead of static class and added it as dependency for AuthenticationResponseValidator
+- Update AuthenticationResponseValidator
+  - update signature value validation
+  - added additional certificate validations (validate certificate chain and certificate purpose)
 
 ## [3.1.3] - 2025-06-13
 
