@@ -809,8 +809,16 @@ try {
     
 ```java
 try {
+    // Get the session status response
+    TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder()
+            .withOcspEnabled(false)
+            .build();
+
+    // Initialize the validator with the CA store
+    SignatureResponseValidator validator = new SignatureResponseValidator(trustedCACertStore);
+    
     // Validate and map the session status. If the sessions end result is other than OK, then an exception will be thrown.
-    SignatureResponse signatureResponse = SignatureResponseMapper.from(sessionStatus, "QUALIFIED");
+    SignatureResponse signatureResponse = validator.from(sessionStatus, "QUALIFIED");
 
     // Process the response (e.g., save to database or pass to another system)
     handleSignatureResponse(signatureResponse);

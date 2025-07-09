@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,6 +37,13 @@ public class SignatureResponse implements Serializable {
     private String endResult;
     private String signatureValueInBase64;
     private String algorithmName;
+    private SignatureAlgorithm signatureAlgorithm;
+    private HashAlgorithm hashAlgorithm;
+    private MaskGenAlgorithm maskGenAlgorithm;
+    private HashAlgorithm maskHashAlgorithm;
+    private int saltLength;
+    private TrailerField trailerField;
+    private FlowType flowType;
     private X509Certificate certificate;
     private String requestedCertificateLevel;
     private String certificateLevel;
@@ -75,6 +82,62 @@ public class SignatureResponse implements Serializable {
 
     public void setAlgorithmName(String algorithmName) {
         this.algorithmName = algorithmName;
+    }
+
+    public SignatureAlgorithm getSignatureAlgorithm() {
+        return signatureAlgorithm;
+    }
+
+    public void setSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
+    }
+
+    public HashAlgorithm getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
+    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+    }
+
+    public MaskGenAlgorithm getMaskGenAlgorithm() {
+        return maskGenAlgorithm;
+    }
+
+    public void setMaskGenAlgorithm(MaskGenAlgorithm maskGenAlgorithm) {
+        this.maskGenAlgorithm = maskGenAlgorithm;
+    }
+
+    public HashAlgorithm getMaskHashAlgorithm() {
+        return maskHashAlgorithm;
+    }
+
+    public void setMaskHashAlgorithm(HashAlgorithm maskHashAlgorithm) {
+        this.maskHashAlgorithm = maskHashAlgorithm;
+    }
+
+    public int getSaltLength() {
+        return saltLength;
+    }
+
+    public void setSaltLength(int saltLength) {
+        this.saltLength = saltLength;
+    }
+
+    public TrailerField getTrailerField() {
+        return trailerField;
+    }
+
+    public void setTrailerField(TrailerField trailerField) {
+        this.trailerField = trailerField;
+    }
+
+    public FlowType getFlowType() {
+        return flowType;
+    }
+
+    public void setFlowType(FlowType flowType) {
+        this.flowType = flowType;
     }
 
     public X509Certificate getCertificate() {
