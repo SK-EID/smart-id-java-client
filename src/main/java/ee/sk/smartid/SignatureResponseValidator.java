@@ -69,6 +69,7 @@ import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
+//TODO: review this class for possible refactoring and improvements - 2025-07-08
 public class SignatureResponseValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(SignatureResponseValidator.class);
@@ -113,18 +114,18 @@ public class SignatureResponseValidator {
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate certificate = sessionStatus.getCert();
 
-        SignatureAlgorithm sigAlg = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()).orElse(null);
-        HashAlgorithm hash = HashAlgorithm.fromString(sessionSignature.getSignatureAlgorithmParameters().getHashAlgorithm()).orElse(null);
-        SessionMaskGenAlgorithm mgf = sessionSignature.getSignatureAlgorithmParameters().getMaskGenAlgorithm();
-        HashAlgorithm mgfHash = HashAlgorithm.fromString(mgf.getParameters().getHashAlgorithm()).orElse(null);
+        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()).orElse(null);
+        HashAlgorithm hashAlgorithm = HashAlgorithm.fromString(sessionSignature.getSignatureAlgorithmParameters().getHashAlgorithm()).orElse(null);
+        SessionMaskGenAlgorithm maskGenAlgorithm = sessionSignature.getSignatureAlgorithmParameters().getMaskGenAlgorithm();
+        HashAlgorithm maskGenHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm()).orElse(null);
 
         var signatureResponse = new SignatureResponse();
         signatureResponse.setEndResult(sessionResult.getEndResult());
         signatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        signatureResponse.setSignatureAlgorithm(sigAlg);
-        signatureResponse.setHashAlgorithm(hash);
+        signatureResponse.setSignatureAlgorithm(signatureAlgorithm);
+        signatureResponse.setHashAlgorithm(hashAlgorithm);
         signatureResponse.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
-        signatureResponse.setMaskHashAlgorithm(mgfHash);
+        signatureResponse.setMaskHashAlgorithm(maskGenHashAlgorithm);
         signatureResponse.setSaltLength(sessionSignature.getSignatureAlgorithmParameters().getSaltLength());
         signatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
         signatureResponse.setTrailerField(TrailerField.OXBC);
@@ -200,14 +201,14 @@ public class SignatureResponseValidator {
             throw new UnprocessableSmartIdResponseException("Certificate level is missing in certificate");
         }
 
-        X509Certificate cert = parseAndCheckCertificate(sessionCertificate.getValue());
+        X509Certificate certificate = parseAndCheckCertificate(sessionCertificate.getValue());
 
         if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
             throw new CertificateLevelMismatchException();
         }
 
-        validateCertificatePoliciesAndPurpose(cert);
-        validateCertificateChain(cert);
+        validateCertificatePoliciesAndPurpose(certificate);
+        validateCertificateChain(certificate);
     }
 
     private static X509Certificate parseAndCheckCertificate(String certBase64) {
@@ -221,12 +222,12 @@ public class SignatureResponseValidator {
         return certificate;
     }
 
-    public void validateCertificateChain(X509Certificate leaf) {
+    public void validateCertificateChain(X509Certificate certificate) {
         try {
-            var selector = new X509CertSelector();
-            selector.setCertificate(leaf);
+            var x509CertSelector = new X509CertSelector();
+            x509CertSelector.setCertificate(certificate);
 
-            var params = new PKIXBuilderParameters(trustedCaCertStore.getTrustAnchors(), selector);
+            var params = new PKIXBuilderParameters(trustedCaCertStore.getTrustAnchors(), x509CertSelector);
 
             CertStore intermediates = CertStore.getInstance("Collection", new CollectionCertStoreParameters(trustedCaCertStore.getTrustedCACertificates()));
             params.addCertStore(intermediates);
@@ -267,9 +268,9 @@ public class SignatureResponseValidator {
         }
     }
 
-    private static Set<String> getPolicyOids(X509Certificate cert) {
+    private static Set<String> getPolicyOids(X509Certificate certificate) {
         Set<String> result = new HashSet<>();
-        byte[] extensionValue = cert.getExtensionValue("2.5.29.32");
+        byte[] extensionValue = certificate.getExtensionValue("2.5.29.32");
         if (extensionValue == null) return result;
         try (ASN1InputStream ais1 = new ASN1InputStream(extensionValue)) {
             ASN1OctetString octet = (ASN1OctetString) ais1.readObject();
@@ -297,8 +298,8 @@ public class SignatureResponseValidator {
                     if (QC_STATEMENT_OID.equals(st.getStatementId().getId())) return true;
                 }
             }
-        } catch (Exception e) {
-            logger.debug("Unable to parse QCStatements", e);
+        } catch (Exception ex) {
+            logger.debug("Unable to parse QCStatements", ex);
         }
         return false;
     }
