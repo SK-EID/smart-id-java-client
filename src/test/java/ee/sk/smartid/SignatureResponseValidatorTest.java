@@ -172,6 +172,16 @@ class SignatureResponseValidatorTest {
             var ex = assertThrows(CertificateLevelMismatchException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
             assertEquals("Signer's certificate is below requested certificate level", ex.getMessage());
         }
+
+        @Test
+        void from_qcStatementRequiredButMissing() {
+            var validatorWithQcRequired = new SignatureResponseValidator(new FileTrustedCAStoreBuilder().withOcspEnabled(false).build(), true);
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validatorWithQcRequired.from(sessionStatus, "QUALIFIED"));
+
+            assertEquals("QCStatement 0.4.0.1862.1.6.1 missing", ex.getMessage());
+        }
     }
 
     @Nested
@@ -262,9 +272,7 @@ class SignatureResponseValidatorTest {
 
         @Test
         void from_sessionStatusNull() {
-
             var ex = assertThrows(SmartIdClientException.class, () -> signatureResponseValidator.from(null, "QUALIFIED"));
-
             assertEquals("Session status was not provided", ex.getMessage());
         }
 

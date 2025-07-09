@@ -211,18 +211,25 @@ public class SignatureResponseValidator {
         validateCertificateChain(certificate);
     }
 
-    private static X509Certificate parseAndCheckCertificate(String certBase64) {
-        X509Certificate certificate = CertificateParser.parseX509Certificate(certBase64);
-        try {
-            certificate.checkValidity();
-        } catch (CertificateExpiredException | CertificateNotYetValidException ex) {
-            logger.error("Signature certificate is expired or not yet valid: {}", certificate.getSubjectX500Principal(), ex);
-            throw new UnprocessableSmartIdResponseException("Signature certificate is invalid", ex);
+    private void validateCertificatePoliciesAndPurpose(X509Certificate cert) {
+        Set<String> oids = getPolicyOids(cert);
+        boolean hasAllQualified = oids.containsAll(QUALIFIED_POLICY_OIDS);
+        boolean hasAllNonQual = oids.containsAll(NONQUALIFIED_POLICY_OIDS);
+        if (!hasAllQualified && !hasAllNonQual) {
+            throw new UnprocessableSmartIdResponseException("CertificatePolicies missing required Smart-ID OIDs");
         }
-        return certificate;
+
+        boolean[] keyUsage = cert.getKeyUsage();
+        if (keyUsage == null || keyUsage.length < 2 || !keyUsage[KEYUSAGE_NON_REPUDIATION_INDEX]) {
+            throw new UnprocessableSmartIdResponseException("KeyUsage must contain NonRepudiation");
+        }
+
+        if (qcStatementRequired && !containsQcStatement(cert)) {
+            throw new UnprocessableSmartIdResponseException("QCStatement 0.4.0.1862.1.6.1 missing");
+        }
     }
 
-    public void validateCertificateChain(X509Certificate certificate) {
+    private void validateCertificateChain(X509Certificate certificate) {
         try {
             var x509CertSelector = new X509CertSelector();
             x509CertSelector.setCertificate(certificate);
@@ -243,29 +250,22 @@ public class SignatureResponseValidator {
         }
     }
 
+    private static X509Certificate parseAndCheckCertificate(String certBase64) {
+        X509Certificate certificate = CertificateParser.parseX509Certificate(certBase64);
+        try {
+            certificate.checkValidity();
+        } catch (CertificateExpiredException | CertificateNotYetValidException ex) {
+            logger.error("Signature certificate is expired or not yet valid: {}", certificate.getSubjectX500Principal(), ex);
+            throw new UnprocessableSmartIdResponseException("Signature certificate is invalid", ex);
+        }
+        return certificate;
+    }
+
     private static boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
         CertificateLevel requestedLevel = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
         CertificateLevel returnedLevel = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
 
         return returnedLevel.isSameLevelOrHigher(requestedLevel);
-    }
-
-    private void validateCertificatePoliciesAndPurpose(X509Certificate cert) {
-        Set<String> oids = getPolicyOids(cert);
-        boolean hasAllQualified = oids.containsAll(QUALIFIED_POLICY_OIDS);
-        boolean hasAllNonQual = oids.containsAll(NONQUALIFIED_POLICY_OIDS);
-        if (!hasAllQualified && !hasAllNonQual) {
-            throw new UnprocessableSmartIdResponseException("CertificatePolicies missing required Smart-ID OIDs");
-        }
-
-        boolean[] keyUsage = cert.getKeyUsage();
-        if (keyUsage == null || keyUsage.length < 2 || !keyUsage[KEYUSAGE_NON_REPUDIATION_INDEX]) {
-            throw new UnprocessableSmartIdResponseException("KeyUsage must contain NonRepudiation");
-        }
-
-        if (qcStatementRequired && !containsQcStatement(cert)) {
-            throw new UnprocessableSmartIdResponseException("QCStatement 0.4.0.1862.1.6.1 missing");
-        }
     }
 
     private static Set<String> getPolicyOids(X509Certificate certificate) {
@@ -323,7 +323,7 @@ public class SignatureResponseValidator {
         validateSignatureValue(signature.getValue());
         validateSignatureAlgorithmName(signature.getSignatureAlgorithm());
         validateFlowType(signature.getFlowType());
-        validateSignatureAlgorithmIsRSASSAPSS(signature.getSignatureAlgorithm());
+        validateSignatureAlgorithm(signature.getSignatureAlgorithm());
         validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
 
         logger.info("RAW_DIGEST_SIGNATURE fields successfully validated.");
@@ -360,7 +360,7 @@ public class SignatureResponseValidator {
         }
     }
 
-    private static void validateSignatureAlgorithmIsRSASSAPSS(String algorithm) {
+    private static void validateSignatureAlgorithm(String algorithm) {
         SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm).orElse(null);
         if (signatureAlgorithm != SignatureAlgorithm.RSASSA_PSS) {
             throw new UnprocessableSmartIdResponseException("signatureAlgorithm must be rsassa-pss");
@@ -368,7 +368,6 @@ public class SignatureResponseValidator {
     }
 
     private static void validateSignatureAlgorithmParameters(SessionSignatureAlgorithmParameters sessionSignatureAlgorithmParameters) {
-
         if (sessionSignatureAlgorithmParameters == null) {
             throw new UnprocessableSmartIdResponseException("SignatureAlgorithmParameters is missing");
         }
