@@ -64,12 +64,12 @@ public interface SmartIdConnector extends Serializable {
     void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
 
     /**
-     * Initiates a dynamic link based certificate choice request.
+     * Initiates a device link based certificate choice request.
      *
      * @param request CertificateChoiceSessionRequest containing necessary parameters
-     * @return DynamicLinkSessionResponse containing sessionID, sessionToken, and sessionSecret
+     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
      */
-    DeviceLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request);
+    DeviceLinkSessionResponse initDeviceLinkCertificateChoice(CertificateChoiceSessionRequest request);
 
     /**
      * Initiates a notification based certificate choice request.

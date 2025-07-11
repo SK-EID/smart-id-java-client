@@ -34,9 +34,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -45,25 +53,26 @@ import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 
-class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
+class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
 
     private SmartIdConnector connector;
-    private DynamicLinkCertificateChoiceSessionRequestBuilder builderService;
+    private DeviceLinkCertificateChoiceSessionRequestBuilder builderService;
 
     @BeforeEach
     void setUp() {
         connector = mock(SmartIdConnector.class);
 
-        builderService = new DynamicLinkCertificateChoiceSessionRequestBuilder(connector)
+        builderService = new DeviceLinkCertificateChoiceSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
                 .withCertificateLevel(CertificateLevel.QUALIFIED)
-                .withNonce("1234567890");
+                .withNonce("1234567890")
+                .withInitialCallbackURL("https://example.com/callback");
     }
 
     @Test
     void initiateCertificateChoice() {
-        when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
+        when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
@@ -71,14 +80,15 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         assertEquals("test-session-id", result.getSessionID());
         assertEquals("test-session-token", result.getSessionToken());
         assertEquals("test-session-secret", result.getSessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
 
-        verify(connector).initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
+        verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
 
     @Test
     void initiateCertificateChoice_nullRequestProperties() {
         builderService.withShareMdClientIpAddress(false);
-        when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
+        when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
@@ -86,25 +96,26 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         assertEquals("test-session-id", result.getSessionID());
         assertEquals("test-session-token", result.getSessionToken());
         assertEquals("test-session-secret", result.getSessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
 
-        verify(connector).initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
+        verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
 
     @Test
     void initiateCertificateChoice_missingCertificateLevel() {
         builderService.withCertificateLevel(null);
-        when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
+        when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
-        verify(connector).initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
+        verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
 
     @Test
     void initiateCertificateChoice_withValidCapabilities() {
         builderService.withCapabilities("ADVANCED", "QUALIFIED");
-        when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
+        when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
@@ -112,14 +123,15 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         assertEquals("test-session-id", result.getSessionID());
         assertEquals("test-session-token", result.getSessionToken());
         assertEquals("test-session-secret", result.getSessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
 
-        verify(connector).initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
+        verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
 
     @Test
     void initiateCertificateChoice_nullCapabilities() {
         builderService.withCapabilities();
-        when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
+        when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
@@ -127,8 +139,9 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         assertEquals("test-session-id", result.getSessionID());
         assertEquals("test-session-token", result.getSessionToken());
         assertEquals("test-session-secret", result.getSessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
 
-        verify(connector).initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
+        verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
 
     @Nested
@@ -136,10 +149,10 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
 
         @Test
         void initiateCertificateChoice_whenResponseIsNull() {
-            when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(null);
+            when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(null);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Dynamic link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("Device link certificate choice session failed: invalid response received.", ex.getMessage());
         }
 
         @Test
@@ -147,15 +160,15 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
             var responseWithNullSessionID = new DeviceLinkSessionResponse();
             responseWithNullSessionID.setSessionToken("test-session-token");
             responseWithNullSessionID.setSessionSecret("test-session-secret");
-            when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(responseWithNullSessionID);
+            when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(responseWithNullSessionID);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Dynamic link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("Device link certificate choice session failed: invalid response received.", ex.getMessage());
         }
 
         @Test
         void initiateCertificateChoice_userAccountNotFound() {
-            when(connector.initDynamicLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenThrow(new UserAccountNotFoundException());
+            when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenThrow(new UserAccountNotFoundException());
 
             var ex = assertThrows(UserAccountNotFoundException.class, () -> builderService.initCertificateChoice());
             assertEquals(UserAccountNotFoundException.class, ex.getClass());
@@ -192,6 +205,30 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initCertificateChoice());
             assertEquals("Nonce must be between 1 and 30 characters", ex.getMessage());
         }
+
+        @Test
+        void initiateCertificateChoice_withoutInitialCallbackURL() {
+            builderService.withInitialCallbackURL(null);
+            when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
+
+            DeviceLinkSessionResponse result = builderService.initCertificateChoice();
+
+            assertNotNull(result);
+            verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
+        }
+
+        @ParameterizedTest
+        @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
+        void initCertificateChoice_initialCallbackUrlIsInvalid_throwException(String url, String expectedErrorMessage) {
+            var builder = new DeviceLinkCertificateChoiceSessionRequestBuilder(connector)
+                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                    .withRelyingPartyName("DEMO")
+                    .withNonce("123456")
+                    .withInitialCallbackURL(url);
+
+            var exception = assertThrows(SmartIdClientException.class, builder::initCertificateChoice);
+            assertEquals(expectedErrorMessage, exception.getMessage());
+        }
     }
 
     private static DeviceLinkSessionResponse mockCertificateChoiceResponse() {
@@ -199,6 +236,18 @@ class DynamicLinkCertificateChoiceSessionRequestBuilderTest {
         response.setSessionID("test-session-id");
         response.setSessionToken("test-session-token");
         response.setSessionSecret("test-session-secret");
+        response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
         return response;
+    }
+
+    private static class InvalidInitialCallbackUrlArgumentProvider implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of("http://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("https://example.com|test", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("ftp://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
+            );
+        }
     }
 }

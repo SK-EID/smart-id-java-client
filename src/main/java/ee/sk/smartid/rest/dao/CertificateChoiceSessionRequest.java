@@ -48,6 +48,9 @@ public class CertificateChoiceSessionRequest implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private RequestProperties requestProperties;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String initialCallbackURL;
+
     public String getRelyingPartyUUID() {
         return relyingPartyUUID;
     }
@@ -94,5 +97,13 @@ public class CertificateChoiceSessionRequest implements Serializable {
 
     public void setRequestProperties(RequestProperties requestProperties) {
         this.requestProperties = requestProperties;
+    }
+
+    public String getInitialCallbackURL() {
+        return initialCallbackURL;
+    }
+
+    public void setInitialCallbackURL(String initialCallbackURL) {
+        this.initialCallbackURL = initialCallbackURL;
     }
 }

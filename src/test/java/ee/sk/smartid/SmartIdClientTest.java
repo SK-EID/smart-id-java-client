@@ -74,22 +74,24 @@ class SmartIdClientTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
-    class DynamicLinkCertificateChoiceSession {
+    class DeviceLinkCertificateChoiceSession {
 
         @Test
-        void createDynamicLinkCertificateChoice() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/dynamic-link/anonymous", "requests/certificate-choice-session-request.json", "responses/dynamic-link-certificate-choice-session-response.json");
+        void createDeviceLinkCertificateChoice() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 
-            DeviceLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .withInitialCallbackURL("https://smart-id.com/device-link/")
                     .initCertificateChoice();
 
             assertNotNull(response.getSessionID());
             assertNotNull(response.getSessionToken());
             assertNotNull(response.getSessionSecret());
+            assertNotNull(response.getDeviceLinkBase());
             assertNotNull(response.getReceivedAt());
         }
     }
@@ -421,13 +423,11 @@ class SmartIdClientTest {
             assertUri(qrCodeUri, SessionType.AUTHENTICATION, DeviceLinkType.QR_CODE, response.getSessionToken());
         }
 
-        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
-        @ParameterizedTest
-        @EnumSource
-        void createDynamicContent_certificateChoiceWithDifferentDynamicLinkTypes(DeviceLinkType deviceLinkType) {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/dynamic-link-certificate-choice-session-response.json");
+        @Test
+        void createDynamicContent_certificateChoiceWithWithQRCode() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 
-            DeviceLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initCertificateChoice();
@@ -436,7 +436,7 @@ class SmartIdClientTest {
 
             URI fullUri = new DeviceLinkBuilder()
                     .withDeviceLinkBase(response.getDeviceLinkBase().toString())
-                    .withDeviceLinkType(deviceLinkType)
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(response.getSessionToken())
                     .withElapsedSeconds(elapsedSeconds)
@@ -444,15 +444,37 @@ class SmartIdClientTest {
                     .withRelyingPartyName("DEMO")
                     .buildDeviceLink(response.getSessionSecret());
 
+            assertUri(fullUri, SessionType.CERTIFICATE_CHOICE, DeviceLinkType.QR_CODE, response.getSessionToken());
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = DeviceLinkType.class, names = { "WEB_2_APP", "APP_2_APP" })
+        void createDynamicContent_certificateChoiceWithWithWeb2AppAndApp2App(DeviceLinkType deviceLinkType) {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .initCertificateChoice();
+
+            URI fullUri = new DeviceLinkBuilder()
+                    .withDeviceLinkBase(response.getDeviceLinkBase().toString())
+                    .withDeviceLinkType(deviceLinkType)
+                    .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                    .withSessionToken(response.getSessionToken())
+                    .withLang("eng")
+                    .withRelyingPartyName("DEMO")
+                    .withInitialCallbackUrl("https://smart-id.com/callback")
+                    .buildDeviceLink(response.getSessionSecret());
+
             assertUri(fullUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.getSessionToken());
         }
 
-        @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
         @Test
         void createDynamicContent_createQrCode() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/dynamic-link-certificate-choice-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 
-            DeviceLinkSessionResponse response = smartIdClient.createDynamicLinkCertificateRequest()
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
                     .initCertificateChoice();
