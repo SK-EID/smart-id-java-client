@@ -85,7 +85,7 @@ class SmartIdClientTest {
                     .withRelyingPartyName("DEMO")
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
                     .withCertificateLevel(CertificateLevel.ADVANCED)
-                    .withInitialCallbackURL("https://smart-id.com/device-link/")
+                    .withInitialCallbackUrl("https://smart-id.com/device-link/")
                     .initCertificateChoice();
 
             assertNotNull(response.getSessionID());
@@ -186,7 +186,7 @@ class SmartIdClientTest {
                     .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)
-                    .withInitialCallbackURL("https://example.com/callback")
+                    .withInitialCallbackUrl("https://example.com/callback")
                     .initSignatureSession();
 
             assertNotNull(response.getSessionID());
@@ -209,7 +209,7 @@ class SmartIdClientTest {
                     .withHashAlgorithm(HashAlgorithm.SHA_512)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
                     .withSignableHash(signableHash)
-                    .withInitialCallbackURL("https://example.com/callback")
+                    .withInitialCallbackUrl("https://example.com/callback")
                     .initSignatureSession();
 
             assertNotNull(response.getSessionID());

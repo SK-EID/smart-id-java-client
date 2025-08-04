@@ -68,7 +68,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
     private SignableData signableData;
     private SignableHash signableHash;
-    private String initialCallbackURL;
+    private String initialCallbackUrl;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -234,11 +234,11 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      * <p>
      * This URL is used to redirect the user after the signature session is completed.
      *
-     * @param initialCallbackURL the initial callback URL
+     * @param initialCallbackUrl the initial callback URL
      * @return this builder instance
      */
-    public DeviceLinkSignatureSessionRequestBuilder withInitialCallbackURL(String initialCallbackURL) {
-        this.initialCallbackURL = initialCallbackURL;
+    public DeviceLinkSignatureSessionRequestBuilder withInitialCallbackUrl(String initialCallbackUrl) {
+        this.initialCallbackUrl = initialCallbackUrl;
         return this;
     }
 
@@ -302,7 +302,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
             request.setRequestProperties(requestProperties);
         }
         request.setCapabilities(capabilities);
-        request.setInitialCallbackURL(initialCallbackURL);
+        request.setInitialCallbackUrl(initialCallbackUrl);
         return request;
     }
 
@@ -314,7 +314,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
             throw new SmartIdClientException("Relying Party Name must be set.");
         }
         validateInteractions();
-        validateInitialCallbackURL();
+        validateInitialCallbackUrl();
 
         if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
             throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
@@ -330,9 +330,9 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         interactions.forEach(DeviceLinkInteraction::validate);
     }
 
-    private void validateInitialCallbackURL() {
-        if (!StringUtil.isEmpty(initialCallbackURL) && !initialCallbackURL.matches(INITIAL_CALLBACK_URL_PATTERN)) {
-            throw new SmartIdClientException("initialCallbackURL must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+    private void validateInitialCallbackUrl() {
+        if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
+            throw new SmartIdClientException("initialCallbackUrl must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
         }
     }
 

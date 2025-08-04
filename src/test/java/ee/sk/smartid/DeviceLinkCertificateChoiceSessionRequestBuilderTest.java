@@ -67,7 +67,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
                 .withRelyingPartyName("DEMO")
                 .withCertificateLevel(CertificateLevel.QUALIFIED)
                 .withNonce("1234567890")
-                .withInitialCallbackURL("https://example.com/callback");
+                .withInitialCallbackUrl("https://example.com/callback");
     }
 
     @Test
@@ -246,8 +246,8 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         }
 
         @Test
-        void initiateCertificateChoice_withoutInitialCallbackURL() {
-            builderService.withInitialCallbackURL(null);
+        void initiateCertificateChoice_withoutInitialCallbackUrl() {
+            builderService.withInitialCallbackUrl(null);
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
             DeviceLinkSessionResponse result = builderService.initCertificateChoice();
@@ -274,7 +274,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withNonce("123456")
-                    .withInitialCallbackURL(url);
+                    .withInitialCallbackUrl(url);
 
             var exception = assertThrows(SmartIdClientException.class, builder::initCertificateChoice);
             assertEquals(expectedErrorMessage, exception.getMessage());
@@ -294,9 +294,9 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of("http://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("https://example.com|test", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("ftp://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
+                    Arguments.of("http://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("https://example.com|test", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("ftp://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
             );
         }
     }

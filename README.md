@@ -175,7 +175,7 @@ More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
-* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be set when using same device flows.
+* `initialCallbackUrl`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be set when using same device flows.
 
 #### Response parameters
 
@@ -335,7 +335,7 @@ The certificate choice session must be followed by a linked notification-based s
 * `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency. 
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
 * `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
-* `initialCallbackURL` : Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be used for same-device flow.
+* `initialCallbackUrl` : Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be used for same-device flow.
 
 #### Response parameters
 
@@ -352,7 +352,7 @@ DeviceLinkSessionResponse certificateChoice = client.createDeviceLinkCertificate
     .withRelyingPartyUUID(client.getRelyingPartyUUID())
     .withRelyingPartyName(client.getRelyingPartyName())
     .withCertificateLevel(CertificateLevel.QUALIFIED)
-    .withInitialCallbackURL("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
+    .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initiateCertificateChoice();
 
 String sessionId = certificateChoice.getSessionID();
@@ -386,7 +386,7 @@ The request parameters for the device-link signature session are as follows:
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
-* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains a |, it must be percent-encoded. Should be used for same-device flow.
+* `initialCallbackUrl`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains a |, it must be percent-encoded. Should be used for same-device flow.
 * `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
 * `requestProperties`:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
@@ -424,7 +424,7 @@ DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withSemanticsIdentifier(semanticsIdentifier)
     .withHashAlgorithm(HashAlgorithm.SHA_512)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-    .withInitialCallbackURL("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
+    .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initSignatureSession();
 
 // Process the signature response

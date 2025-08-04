@@ -233,14 +233,14 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     .withRpChallenge(generateBase64String("a".repeat(32)))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .withInitialCallbackURL("https://valid.example.com/path")
+                    .withInitialCallbackUrl("https://valid.example.com/path")
                     .initAuthenticationSession();
 
             ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             AuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals("https://valid.example.com/path", request.initialCallbackURL());
+            assertEquals("https://valid.example.com/path", request.initialCallbackUrl());
         }
 
         @ParameterizedTest
@@ -360,7 +360,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withRpChallenge(generateBase64String("a".repeat(32)))
                             .withHashAlgorithm(HashAlgorithm.SHA3_512)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log in")))
-                            .withInitialCallbackURL(url)
+                            .withInitialCallbackUrl(url)
                             .initAuthenticationSession()
             );
             assertEquals(expectedErrorMessage, exception.getMessage());
@@ -617,9 +617,9 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of("http://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("https://example.com|test", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("ftp://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
+                    Arguments.of("http://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("https://example.com|test", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("ftp://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
             );
         }
     }

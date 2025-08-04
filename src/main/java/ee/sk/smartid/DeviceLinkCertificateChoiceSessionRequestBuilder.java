@@ -53,7 +53,7 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
     private String nonce;
     private Set<String> capabilities;
     private Boolean shareMdClientIpAddress;
-    private String initialCallbackURL;
+    private String initialCallbackUrl;
 
     /**
      * Constructs a new DeviceLinkCertificateRequestBuilder with the given Smart-ID connector
@@ -134,11 +134,11 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
      * Sets the initial callback URL for the device link session.
      * This URL is used to redirect the user after the session is initialized.
      *
-     * @param initialCallbackURL the initial callback URL
+     * @param initialCallbackUrl the initial callback URL
      * @return this builder
      */
-    public DeviceLinkCertificateChoiceSessionRequestBuilder withInitialCallbackURL(String initialCallbackURL) {
-        this.initialCallbackURL = initialCallbackURL;
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withInitialCallbackUrl(String initialCallbackUrl) {
+        this.initialCallbackUrl = initialCallbackUrl;
         return this;
     }
 
@@ -176,7 +176,7 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
         if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
             throw new SmartIdClientException("Nonce must be between 1 and 30 characters");
         }
-        validateInitialCallbackURL();
+        validateInitialCallbackUrl();
     }
 
     private CertificateChoiceSessionRequest createCertificateRequest() {
@@ -195,14 +195,14 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
             var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
         }
-        request.setInitialCallbackURL(initialCallbackURL);
+        request.setInitialCallbackUrl(initialCallbackUrl);
 
         return request;
     }
 
-    private void validateInitialCallbackURL() {
-        if (!StringUtil.isEmpty(initialCallbackURL) && !initialCallbackURL.matches(INITIAL_CALLBACK_URL_PATTERN)) {
-            throw new SmartIdClientException("initialCallbackURL must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+    private void validateInitialCallbackUrl() {
+        if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
+            throw new SmartIdClientException("initialCallbackUrl must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
         }
     }
 }
