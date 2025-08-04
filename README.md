@@ -322,10 +322,10 @@ Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) t
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Device-link certificate choice session
-!!!Device-link Certificate Choice session Cannot be used at the moment!!!
 
 The Smart-ID API v3.1 introduces device-link certificate choice session. This allows more secure way of initiating signing. 
 Scanning QR-code or clicking on device link will prove that the certificates of the device being used for signing is in the proximity where the signing was initiated.
+The certificate choice session must be followed by a linked notification-based signature session.
 
 #### Request Parameters
 

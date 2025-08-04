@@ -150,19 +150,21 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
      *
      * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
+     * @throws UnprocessableSmartIdResponseException if the response is missing required fields.
      */
     public DeviceLinkSessionResponse initCertificateChoice() {
-        validateParameters();
+        validateRequestParameters();
         CertificateChoiceSessionRequest request = createCertificateRequest();
         DeviceLinkSessionResponse response = connector.initDeviceLinkCertificateChoice(request);
 
-        if (response == null || response.getSessionID() == null) {
+        if (response == null || response.getSessionID() == null || response.getSessionToken() == null ||
+                response.getSessionSecret() == null || response.getDeviceLinkBase() == null) {
             throw new UnprocessableSmartIdResponseException("Device link certificate choice session failed: invalid response received.");
         }
         return response;
     }
 
-    private void validateParameters() {
+    private void validateRequestParameters() {
         if (isEmpty(relyingPartyUUID)) {
             logger.error("Parameter relyingPartyUUID must be set");
             throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
