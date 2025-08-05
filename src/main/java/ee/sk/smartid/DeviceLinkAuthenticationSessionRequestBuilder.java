@@ -69,7 +69,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private Set<String> capabilities;
     private SemanticsIdentifier semanticsIdentifier;
     private String documentNumber;
-    private String initialCallbackURL;
+    private String initialCallbackUrl;
 
     private AuthenticationSessionRequest authenticationSessionRequest;
 
@@ -222,11 +222,11 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * <p>
      * The callback URL should be set when using same device flows (like Web2App or App2App).
      *
-     * @param initialCallbackURL the initial callback URL
+     * @param initialCallbackUrl the initial callback URL
      * @return this builder
      */
-    public DeviceLinkAuthenticationSessionRequestBuilder withInitialCallbackURL(String initialCallbackURL) {
-        this.initialCallbackURL = initialCallbackURL;
+    public DeviceLinkAuthenticationSessionRequestBuilder withInitialCallbackUrl(String initialCallbackUrl) {
+        this.initialCallbackUrl = initialCallbackUrl;
         return this;
     }
 
@@ -291,7 +291,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         }
         validateSignatureParameters();
         validateInteractions();
-        validateInitialCallbackURL();
+        validateInitialCallbackUrl();
     }
 
     private void validateSignatureParameters() {
@@ -328,9 +328,9 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         interactions.forEach(DeviceLinkInteraction::validate);
     }
 
-    private void validateInitialCallbackURL() {
-        if (!StringUtil.isEmpty(initialCallbackURL) && !initialCallbackURL.matches(INITIAL_CALLBACK_URL_PATTERN)) {
-            throw new SmartIdClientException("initialCallbackURL must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+    private void validateInitialCallbackUrl() {
+        if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
+            throw new SmartIdClientException("initialCallbackUrl must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
         }
     }
 
@@ -348,7 +348,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
                 DeviceLinkUtil.encodeToBase64(interactions),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 capabilities,
-                initialCallbackURL
+                initialCallbackUrl
         );
     }
 

@@ -39,10 +39,12 @@ import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.util.StringUtil;
 
-public class DynamicLinkCertificateChoiceSessionRequestBuilder {
+public class DeviceLinkCertificateChoiceSessionRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(DynamicLinkCertificateChoiceSessionRequestBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(DeviceLinkCertificateChoiceSessionRequestBuilder.class);
+    private static final String INITIAL_CALLBACK_URL_PATTERN = "^https://[^|]+$";
 
     private final SmartIdConnector connector;
     private String relyingPartyUUID;
@@ -51,13 +53,14 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
     private String nonce;
     private Set<String> capabilities;
     private Boolean shareMdClientIpAddress;
+    private String initialCallbackUrl;
 
     /**
-     * Constructs a new DynamicLinkCertificateRequestBuilder with the given Smart-ID connector
+     * Constructs a new DeviceLinkCertificateRequestBuilder with the given Smart-ID connector
      *
      * @param connector the Smart-ID connector
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder(SmartIdConnector connector) {
+    public DeviceLinkCertificateChoiceSessionRequestBuilder(SmartIdConnector connector) {
         this.connector = connector;
     }
 
@@ -67,7 +70,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @param relyingPartyUUID the relying party UUID
      * @return this builder
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
         this.relyingPartyUUID = relyingPartyUUID;
         return this;
     }
@@ -78,7 +81,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @param relyingPartyName the relying party name
      * @return this builder
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
         this.relyingPartyName = relyingPartyName;
         return this;
     }
@@ -89,7 +92,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @param certificateLevel the certificate level
      * @return this builder
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
         return this;
     }
@@ -100,7 +103,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @param nonce the nonce
      * @return this builder
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder withNonce(String nonce) {
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withNonce(String nonce) {
         this.nonce = nonce;
         return this;
     }
@@ -111,7 +114,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @param capabilities the capabilities
      * @return this builder
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder withCapabilities(String... capabilities) {
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withCapabilities(String... capabilities) {
         this.capabilities = Set.of(capabilities);
         return this;
     }
@@ -122,32 +125,42 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
      * @param shareMdClientIpAddress whether to share the Mobile device IP address
      * @return this builder
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
         this.shareMdClientIpAddress = shareMdClientIpAddress;
         return this;
     }
 
     /**
-     * Starts a dynamic link-based certificate choice session and returns the session response.
-     * This response includes essential values such as sessionID, sessionToken, and sessionSecret,
+     * Sets the initial callback URL for the device link session.
+     * This URL is used to redirect the user after the session is initialized.
+     *
+     * @param initialCallbackUrl the initial callback URL
+     * @return this builder
+     */
+    public DeviceLinkCertificateChoiceSessionRequestBuilder withInitialCallbackUrl(String initialCallbackUrl) {
+        this.initialCallbackUrl = initialCallbackUrl;
+        return this;
+    }
+
+    /**
+     * Starts a device link-based certificate choice session and returns the session response.
+     * This response includes essential values such as sessionID, sessionToken, sessionSecret and deviceLinkBase URL,
      * which can be used by the Relying Party to manage and verify the session independently.
      * <p>
      *
-     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, and sessionSecret for further session management.
+     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL for further session management.
      * @throws SmartIdClientException if the response is invalid or missing necessary session data.
+     * @throws UnprocessableSmartIdResponseException if the response is missing required fields.
      */
     public DeviceLinkSessionResponse initCertificateChoice() {
-        validateParameters();
-        CertificateChoiceSessionRequest request = createCertificateRequest();
-        DeviceLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
-
-        if (response == null || response.getSessionID() == null) {
-            throw new UnprocessableSmartIdResponseException("Dynamic link certificate choice session failed: invalid response received.");
-        }
-        return response;
+        validateRequestParameters();
+        CertificateChoiceSessionRequest certificateChoiceSessionRequest = createCertificateRequest();
+        DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse = connector.initDeviceLinkCertificateChoice(certificateChoiceSessionRequest);
+        validateResponseParameters(deviceLinkCertificateChoiceSessionResponse);
+        return deviceLinkCertificateChoiceSessionResponse;
     }
 
-    private void validateParameters() {
+    private void validateRequestParameters() {
         if (isEmpty(relyingPartyUUID)) {
             logger.error("Parameter relyingPartyUUID must be set");
             throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
@@ -159,6 +172,7 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
         if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
             throw new SmartIdClientException("Nonce must be between 1 and 30 characters");
         }
+        validateInitialCallbackUrl();
     }
 
     private CertificateChoiceSessionRequest createCertificateRequest() {
@@ -177,7 +191,36 @@ public class DynamicLinkCertificateChoiceSessionRequestBuilder {
             var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
             request.setRequestProperties(requestProperties);
         }
+        request.setInitialCallbackUrl(initialCallbackUrl);
 
         return request;
+    }
+
+    private void validateInitialCallbackUrl() {
+        if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
+            throw new SmartIdClientException("initialCallbackUrl must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+        }
+    }
+
+    private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse) {
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionID())) {
+            logger.error("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
+        }
+
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionToken())) {
+            logger.error("Session token is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session token is missing from the response");
+        }
+
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionSecret())) {
+            logger.error("Session secret is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
+        }
+
+        if (deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase() == null || deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase().toString().isBlank()) {
+            logger.error("deviceLinkBase is missing or empty in the response");
+            throw new UnprocessableSmartIdResponseException("deviceLinkBase is missing or empty in the response");
+        }
     }
 }

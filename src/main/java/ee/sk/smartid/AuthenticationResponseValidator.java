@@ -208,7 +208,7 @@ public class AuthenticationResponseValidator {
                 StringUtil.isEmpty(brokeredRpName) ? "" : Base64.getEncoder().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8)),
                 Base64.getEncoder().encodeToString(calculateInteractionsDigest(authenticationSessionRequest)),
                 authenticationResponse.getInteractionTypeUsed(),
-                StringUtil.orEmpty(authenticationSessionRequest.initialCallbackURL()),
+                StringUtil.orEmpty(authenticationSessionRequest.initialCallbackUrl()),
                 authenticationResponse.getFlowType().getDescription()
         };
         return String

@@ -120,7 +120,7 @@ public class ReadmeIntegrationTest {
                     .createDeviceLinkAuthentication()
                     // to use anonymous authentication, do not set semantics identifier or document number
                     .withRpChallenge(rpChallenge)
-                    .withInitialCallbackURL("https://example.com/callback")
+                    .withInitialCallbackUrl("https://example.com/callback")
                     .withInteractions(Collections.singletonList(
                             DeviceLinkInteraction.displayTextAndPIN("Log in?")
                     ));

@@ -80,7 +80,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                 .withHashAlgorithm(HashAlgorithm.SHA_512)
                 .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()))
-                .withInitialCallbackURL("https://example.com/callback");
+                .withInitialCallbackUrl("https://example.com/callback");
     }
 
     @Test
@@ -314,7 +314,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                             .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                             .withHashAlgorithm(HashAlgorithm.SHA_512)
                             .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")))
-                            .withInitialCallbackURL(url)
+                            .withInitialCallbackUrl(url)
                             .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                             .initSignatureSession()
             );
@@ -490,9 +490,9 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of("http://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("https://example.com|test", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("ftp://example.com", "initialCallbackURL must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
+                    Arguments.of("http://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("https://example.com|test", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("ftp://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
             );
         }
     }

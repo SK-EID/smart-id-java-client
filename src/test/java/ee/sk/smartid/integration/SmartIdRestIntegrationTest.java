@@ -144,21 +144,21 @@ class SmartIdRestIntegrationTest {
             }
         }
 
-        @Disabled("Endpoint not yet available")
         @Nested
         class CertificateChoice {
 
             @Test
-            void initDynamicLinkCertificateChoice() {
+            void initDeviceLinkCertificateChoice() {
                 var request = new CertificateChoiceSessionRequest();
                 request.setRelyingPartyUUID(RELYING_PARTY_UUID);
                 request.setRelyingPartyName(RELYING_PARTY_NAME);
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDynamicLinkCertificateChoice(request);
+                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkCertificateChoice(request);
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.getSessionID()));
                 assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.getSessionToken()));
                 assertTrue(Pattern.matches(SESSION_SECRET_PATTERN, sessionsResponse.getSessionSecret()));
+                assertNotNull(sessionsResponse.getDeviceLinkBase());
                 assertNotNull(sessionsResponse.getReceivedAt());
             }
         }

@@ -72,8 +72,8 @@ public class SmartIdClient {
      *
      * @return a builder for creating a new device link certificate choice session request
      */
-    public DynamicLinkCertificateChoiceSessionRequestBuilder createDynamicLinkCertificateRequest() {
-        return new DynamicLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector())
+    public DeviceLinkCertificateChoiceSessionRequestBuilder createDeviceLinkCertificateRequest() {
+        return new DeviceLinkCertificateChoiceSessionRequestBuilder(getSmartIdConnector())
                 .withRelyingPartyUUID(relyingPartyUUID)
                 .withRelyingPartyName(relyingPartyName);
     }

@@ -27,9 +27,9 @@ This library supports Smart-ID API v3.1.
             * [Initiating an anonymous authentication session](#initiating-an-anonymous-authentication-session)
             * [Initiating a dynamic-link authentication session with semantics identifier](#initiating-a-device-link-authentication-session-with-semantics-identifier)
             * [Initiating a dynamic-link authentication session with document number](#initiating-a-device-link-authentication-session-with-document-number)
-        * [Dynamic link certificate choice session](#dynamic-link-certificate-choice-session)
-            * [Examples of initiating a dynamic-link certificate choice session](#examples-of-initiating-a-dynamic-link-certificate-choice-session)
-              * [Initiating dynamic-link certificate choice](#initiating-an-anonymous-certificate-choice-session)
+        * [Device link certificate choice session](#device-link-certificate-choice-session)
+            * [Examples of initiating a device-link certificate choice session](#examples-of-initiating-a-device-link-certificate-choice-session)
+              * [Initiating device-link certificate choice](#initiating-an-anonymous-certificate-choice-session)
         * [Device-link signature session](#device-link-signature-session)
           * [Examples of initiating a device-link signature session](#examples-of-initiating-a-device-link-signature-session)
               * [Initiating a device-link signature session using semantics identifier](#initiating-a-device-link-signature-session-with-semantics-identifier)
@@ -175,7 +175,7 @@ More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
-* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be set when using same device flows.
+* `initialCallbackUrl`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be set when using same device flows.
 
 #### Response parameters
 
@@ -321,11 +321,11 @@ Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
-### Dynamic-link certificate choice session
-!!!Dynamic-link Certificate Choice session Cannot be used at the moment!!!
+### Device-link certificate choice session
 
-The Smart-ID API v3.1 introduces dynamic-link certificate choice session. This allows more secure way of initiating signing. 
-Scanning QR-code or clicking on dynamic link will prove that the certificates of the device being used for signing is in the proximity where the signing was initiated.
+The Smart-ID API v3.1 introduces device-link certificate choice session. This allows more secure way of initiating signing. 
+Scanning QR-code or clicking on device link will prove that the certificates of the device being used for signing is in the proximity where the signing was initiated.
+The certificate choice session must be followed by a linked notification-based signature session.
 
 #### Request Parameters
 
@@ -335,21 +335,24 @@ Scanning QR-code or clicking on dynamic link will prove that the certificates of
 * `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency. 
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
 * `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
+* `initialCallbackUrl` : Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be used for same-device flow.
 
 #### Response parameters
 
 * `sessionID`: A string that can be used to request the session status result.
 * `sessionToken`: Unique random value that will be used to connect created session between the relevant parties (RP, RP-API, mobile app).
 * `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+* `deviceLinkBase`: Required. Base URI used to form the device link or QR code.
 
-#### Examples of initiating a dynamic-link certificate choice session
+#### Examples of initiating a device-link certificate choice session
 
 ##### Initiating an anonymous certificate choice session
 ```java
-DynamicLinkSessionResponse certificateChoice = client.createDynamicLinkCertificateRequest()
+DeviceLinkSessionResponse certificateChoice = client.createDeviceLinkCertificateRequest()
     .withRelyingPartyUUID(client.getRelyingPartyUUID())
     .withRelyingPartyName(client.getRelyingPartyName())
     .withCertificateLevel(CertificateLevel.QUALIFIED)
+    .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initiateCertificateChoice();
 
 String sessionId = certificateChoice.getSessionID();
@@ -358,9 +361,10 @@ String sessionId = certificateChoice.getSessionID();
 String sessionToken = certificateChoice.getSessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
 String sessionSecret = certificateChoice.getSessionSecret();
+String deviceLinkBase = certificateChoice.getDeviceLinkBase();
 Instant responseReceivedAt = certificateChoice.getReceivedAt();
 ```
-Jump to [Generate QR-code and dynamic link](#generating-qr-code-or-device-link) to see how to generate QR-code or dynamic link from the response.
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Device-link signature session
@@ -382,7 +386,7 @@ The request parameters for the device-link signature session are as follows:
     * Each interaction object includes:
         * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
-* `initialCallbackURL`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains a |, it must be percent-encoded. Should be used for same-device flow.
+* `initialCallbackUrl`: Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains a |, it must be percent-encoded. Should be used for same-device flow.
 * `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
 * `requestProperties`:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
@@ -420,7 +424,7 @@ DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withSemanticsIdentifier(semanticsIdentifier)
     .withHashAlgorithm(HashAlgorithm.SHA_512)
     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-    .withInitialCallbackURL("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
+    .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initSignatureSession();
 
 // Process the signature response

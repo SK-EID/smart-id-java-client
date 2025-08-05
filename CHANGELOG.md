@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [3.1.7] - 2025-07-10
+
+- Renamed dynamic-link certificate choice to device-link certificate choice.
+- Updated certificate choice endpoint to use /device-link/ paths.
+- Added `initialCallbackUrl` field with regex validation.
+- Added `deviceLinkBase` to session response.
+
 ## [3.1.6] - 2025-07-08
 
 ### Added
@@ -28,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Replaced signature algorithm list with fixed `rsassa-pss`.
 - Added required `signatureAlgorithmParameters.hashAlgorithm` field with validation.
 - Converted interaction list to Base64 string and ensured no duplicates.
-- Added `initialCallbackURL` field with regex validation.
+- Added `initialCallbackUrl` field with regex validation.
 - Added `deviceLinkBase` to session response.
 
 ## [3.1.4] - 2025-07-05
@@ -84,7 +91,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Replaced signature algorithm list with fixed `rsassa-pss`.
 - Added required `signatureAlgorithmParameters.hashAlgorithm` field with validation.
 - Converted interaction list to Base64 string and ensured no duplicates.
-- Added `initialCallbackURL` field with regex validation.
+- Added `initialCallbackUrl` field with regex validation.
 - Added `deviceLinkBase` to session response.
 
 ## [3.1] - 2025-05-20

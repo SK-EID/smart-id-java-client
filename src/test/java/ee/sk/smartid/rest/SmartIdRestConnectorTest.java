@@ -518,12 +518,11 @@ class SmartIdRestConnectorTest {
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-101")
     @Nested
     @WireMockTest(httpPort = 18089)
-    class DynamicLinkCertificateChoiceTests {
+    class DeviceLinkCertificateChoiceTests {
 
-        private static final String ANONYMOUS_CERTIFICATE_CHOICE_PATH = "/certificatechoice/dynamic-link/anonymous";
+        private static final String ANONYMOUS_CERTIFICATE_CHOICE_PATH = "/certificatechoice/device-link/anonymous";
 
         private SmartIdConnector connector;
 
@@ -533,101 +532,101 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initDynamicLinkCertificateChoice() {
-            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/dynamic-link-certificate-choice-session-response.json");
+        void initDeviceLinkCertificateChoice() {
+            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/device-link-certificate-choice-session-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
-            DeviceLinkSessionResponse response = connector.initDynamicLinkCertificateChoice(request);
+            DeviceLinkSessionResponse response = connector.initDeviceLinkCertificateChoice(request);
             Instant end = Instant.now();
 
             assertResponseValues(response, "sampleSessionToken", "sampleSessionSecret", start, end);
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_invalidCertificateLevel_throwsBadRequestException() {
+        void initDeviceLinkCertificateChoice_invalidCertificateLevel_throwsBadRequestException() {
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             request.setCertificateLevel("INVALID_LEVEL");
 
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
-            assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_userAccountNotFound() {
+        void initDeviceLinkCertificateChoice_userAccountNotFound() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 404);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            assertThrows(UserAccountNotFoundException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_relyingPartyNoPermission() {
+        void initDeviceLinkCertificateChoice_relyingPartyNoPermission() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 403);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_invalidRequest() {
+        void initDeviceLinkCertificateChoice_invalidRequest() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
-            CertificateChoiceSessionRequest request = new CertificateChoiceSessionRequest();
+            var request = new CertificateChoiceSessionRequest();
             request.setRelyingPartyUUID("");
             request.setRelyingPartyName("");
 
-            assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
+        void initDeviceLinkCertificateChoice_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 401);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkCertificateChoice(request));
 
-            assertEquals("Request is unauthorized for URI http://localhost:18089/certificatechoice/dynamic-link/anonymous", exception.getMessage());
+            assertEquals("Request is unauthorized for URI http://localhost:18089/certificatechoice/device-link/anonymous", exception.getMessage());
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_throwsNoSuitableAccountOfRequestedTypeFoundException() {
+        void initDeviceLinkCertificateChoice_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 471);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_throwsPersonShouldViewSmartIdPortalException() {
+        void initDeviceLinkCertificateChoice_throwsPersonShouldViewSmartIdPortalException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 472);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_throwsSmartIdClientException() {
+        void initDeviceLinkCertificateChoice_throwsSmartIdClientException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 480);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            Exception exception = assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkCertificateChoice(request));
 
             assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
         }
 
         @Test
-        void initDynamicLinkCertificateChoice_throwsServerMaintenanceException() {
+        void initDeviceLinkCertificateChoice_throwsServerMaintenanceException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 580);
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
-            assertThrows(ServerMaintenanceException.class, () -> connector.initDynamicLinkCertificateChoice(request));
+            assertThrows(ServerMaintenanceException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
     }
 

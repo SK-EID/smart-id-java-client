@@ -78,7 +78,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
-    private static final String CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH = "/certificatechoice/dynamic-link/anonymous";
+    private static final String CERTIFICATE_CHOICE_DEVICE_LINK_PATH = "/certificatechoice/device-link/anonymous";
     private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH = "/certificatechoice/notification/etsi";
 
     private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/";
@@ -180,14 +180,14 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initDynamicLinkCertificateChoice(CertificateChoiceSessionRequest request) {
-        logger.debug("Initiating dynamic link based certificate choice request");
+    public DeviceLinkSessionResponse initDeviceLinkCertificateChoice(CertificateChoiceSessionRequest request) {
+        logger.debug("Initiating device link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(CERTIFICATE_CHOICE_DYNAMIC_LINK_PATH)
+                .path(CERTIFICATE_CHOICE_DEVICE_LINK_PATH)
                 .build();
 
-        return postDynamicLinkCertificateChoiceRequest(uri, request);
+        return postDeviceLinkCertificateChoiceRequest(uri, request);
     }
 
     @Override
@@ -322,7 +322,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DeviceLinkSessionResponse postDynamicLinkCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
+    private DeviceLinkSessionResponse postDeviceLinkCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
         try {
             return postRequest(uri, request, DeviceLinkSessionResponse.class);
         } catch (NotFoundException ex) {
