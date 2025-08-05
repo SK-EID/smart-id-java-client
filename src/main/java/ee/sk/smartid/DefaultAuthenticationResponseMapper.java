@@ -80,21 +80,21 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
         authenticationResponse.setDocumentNumber(sessionResult.getDocumentNumber());
         authenticationResponse.setServerRandom(sessionSignature.getServerRandom());
         authenticationResponse.setUserChallenge(sessionSignature.getUserChallenge());
-        authenticationResponse.setFlowType(FlowType.valueOf(sessionSignature.getFlowType()));
+        authenticationResponse.setFlowType(FlowType.fromString(sessionSignature.getFlowType()));
 
         authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()).orElse(null);
+        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
         authenticationResponse.setSignatureAlgorithm(signatureAlgorithm);
 
         var signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
         var hashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null);
         authenticationResponse.setHashAlgorithm(hashAlgorithm);
-        MaskGenAlgorithm maskGenAlgorithm = MaskGenAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getAlgorithm()).orElse(null);
+        MaskGenAlgorithm maskGenAlgorithm = MaskGenAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getAlgorithm());
         authenticationResponse.setMaskGenAlgorithm(maskGenAlgorithm);
         var maskGenHashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null);
         authenticationResponse.setMaskHashAlgorithm(maskGenHashAlgorithm);
         authenticationResponse.setSaltLength(signatureAlgorithmParameters.getSaltLength());
-        TrailerField trailerField = TrailerField.fromString(signatureAlgorithmParameters.getTrailerField()).orElse(null);
+        TrailerField trailerField = TrailerField.fromString(signatureAlgorithmParameters.getTrailerField());
         authenticationResponse.setTrailerField(trailerField);
 
         authenticationResponse.setCertificate(toCertificate(sessionCertificate));
@@ -193,8 +193,7 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
         if (StringUtil.isEmpty(sessionSignature.getSignatureAlgorithm())) {
             throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithm` is empty");
         }
-        Optional<SignatureAlgorithm> signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
-        if (signatureAlgorithm.isEmpty()) {
+        if (!SignatureAlgorithm.isSupported(sessionSignature.getSignatureAlgorithm())) {
             logger.error("Invalid `signature.signatureAlgorithm` in the session status: {}", sessionSignature.getSignatureAlgorithm());
             throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithm` in the session status");
         }

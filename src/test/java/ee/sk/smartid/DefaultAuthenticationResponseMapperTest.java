@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -82,6 +83,50 @@ class DefaultAuthenticationResponseMapperTest {
         assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
         assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
         assertEquals("0.0.0.0", authenticationResponse.getDeviceIpAddress());
+    }
+
+    @ParameterizedTest
+    @EnumSource(FlowType.class)
+    void from_authenticationWithDifferentFlowTypes_ok(FlowType flowType) {
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+        var sessionSignature = toSessionSignature("rsassa-pss");
+        sessionSignature.setFlowType(flowType.getDescription());
+        var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
+        var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
+
+        AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
+
+        assertEquals("OK", authenticationResponse.getEndResult());
+        assertEquals("signatureValue", authenticationResponse.getSignatureValueInBase64());
+        assertEquals(toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
+        assertEquals(AuthenticationCertificateLevel.QUALIFIED, authenticationResponse.getCertificateLevel());
+        assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
+        assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
+        assertEquals("0.0.0.0", authenticationResponse.getDeviceIpAddress());
+    }
+
+    @ParameterizedTest
+    @EnumSource(HashAlgorithm.class)
+    void from_authenticationWithDifferentHashAlgorithms_ok(HashAlgorithm hashAlgorithm) {
+        var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+        var sessionSignature = toSessionSignature("rsassa-pss");
+        sessionSignature.getSignatureAlgorithmParameters().setHashAlgorithm(hashAlgorithm.getAlgorithmName());
+        sessionSignature.getSignatureAlgorithmParameters().getMaskGenAlgorithm().getParameters().setHashAlgorithm(hashAlgorithm.getAlgorithmName());
+        sessionSignature.getSignatureAlgorithmParameters().setSaltLength(hashAlgorithm.getOctetLength());
+        var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
+        var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
+
+        AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
+
+        assertEquals("OK", authenticationResponse.getEndResult());
+        assertEquals("signatureValue", authenticationResponse.getSignatureValueInBase64());
+        assertEquals(toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
+        assertEquals(AuthenticationCertificateLevel.QUALIFIED, authenticationResponse.getCertificateLevel());
+        assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
+        assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
+        assertEquals("0.0.0.0", authenticationResponse.getDeviceIpAddress());
+        assertEquals(hashAlgorithm, authenticationResponse.getHashAlgorithm());
+        assertEquals(hashAlgorithm.getOctetLength(), authenticationResponse.getSaltLength());
     }
 
     @Test

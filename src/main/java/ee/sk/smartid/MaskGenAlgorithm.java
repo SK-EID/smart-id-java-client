@@ -27,7 +27,6 @@ package ee.sk.smartid;
  */
 
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * Represents mask algorithm in the response and the value used in recrating the signature.
@@ -52,9 +51,10 @@ public enum MaskGenAlgorithm {
         return mgfName;
     }
 
-    public static Optional<MaskGenAlgorithm> fromString(String input) {
+    public static MaskGenAlgorithm fromString(String maskGenAlgorithm) {
         return Arrays.stream(MaskGenAlgorithm.values())
-                .filter(algorithm -> algorithm.getAlgorithmName().equals(input))
-                .findFirst();
+                .filter(m -> m.getAlgorithmName().equals(maskGenAlgorithm))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid maskGenAlgorithm value: " + maskGenAlgorithm));
     }
 }

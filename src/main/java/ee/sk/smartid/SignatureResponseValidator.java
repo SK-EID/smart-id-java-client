@@ -114,7 +114,7 @@ public class SignatureResponseValidator {
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate certificate = sessionStatus.getCert();
 
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm()).orElse(null);
+        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
         HashAlgorithm hashAlgorithm = HashAlgorithm.fromString(sessionSignature.getSignatureAlgorithmParameters().getHashAlgorithm()).orElse(null);
         SessionMaskGenAlgorithm maskGenAlgorithm = sessionSignature.getSignatureAlgorithmParameters().getMaskGenAlgorithm();
         HashAlgorithm maskGenHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm()).orElse(null);
@@ -271,7 +271,9 @@ public class SignatureResponseValidator {
     private static Set<String> getPolicyOids(X509Certificate certificate) {
         Set<String> result = new HashSet<>();
         byte[] extensionValue = certificate.getExtensionValue("2.5.29.32");
-        if (extensionValue == null) return result;
+        if (extensionValue == null) {
+            return result;
+        }
         try (ASN1InputStream ais1 = new ASN1InputStream(extensionValue)) {
             ASN1OctetString octet = (ASN1OctetString) ais1.readObject();
             try (ASN1InputStream ais2 = new ASN1InputStream(octet.getOctets())) {
@@ -288,14 +290,18 @@ public class SignatureResponseValidator {
 
     private static boolean containsQcStatement(X509Certificate cert) {
         byte[] extensionValue = cert.getExtensionValue("1.3.6.1.5.5.7.1.3");
-        if (extensionValue == null) return false;
+        if (extensionValue == null) {
+            return false;
+        }
         try (ASN1InputStream ais1 = new ASN1InputStream(extensionValue)) {
             ASN1OctetString octet = (ASN1OctetString) ais1.readObject();
             try (ASN1InputStream ais2 = new ASN1InputStream(octet.getOctets())) {
                 ASN1Sequence seq = (ASN1Sequence) ais2.readObject();
                 for (int i = 0; i < seq.size(); i++) {
                     QCStatement st = QCStatement.getInstance(seq.getObjectAt(i));
-                    if (QC_STATEMENT_OID.equals(st.getStatementId().getId())) return true;
+                    if (QC_STATEMENT_OID.equals(st.getStatementId().getId())) {
+                        return true;
+                    }
                 }
             }
         } catch (Exception ex) {
@@ -323,7 +329,6 @@ public class SignatureResponseValidator {
         validateSignatureValue(signature.getValue());
         validateSignatureAlgorithmName(signature.getSignatureAlgorithm());
         validateFlowType(signature.getFlowType());
-        validateSignatureAlgorithm(signature.getSignatureAlgorithm());
         validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
 
         logger.info("RAW_DIGEST_SIGNATURE fields successfully validated.");
@@ -335,18 +340,14 @@ public class SignatureResponseValidator {
         }
     }
 
-    private static void validateSignatureAlgorithmName(String algorithm) {
-        if (StringUtil.isEmpty(algorithm)) {
+    private static void validateSignatureAlgorithmName(String signatureAlgorithm) {
+        if (StringUtil.isEmpty(signatureAlgorithm)) {
             throw new UnprocessableSmartIdResponseException("Signature algorithm is missing");
         }
 
-        List<String> allowedSignatureAlgorithms = Arrays.stream(SignatureAlgorithm.values())
-                .map(SignatureAlgorithm::getAlgorithmName)
-                .toList();
-
-        if (!allowedSignatureAlgorithms.contains(algorithm)) {
-            throw new UnprocessableSmartIdResponseException("Unexpected signature algorithm. Expected one of: " + allowedSignatureAlgorithms + ", but got: " + algorithm
-            );
+        if (!SignatureAlgorithm.isSupported(signatureAlgorithm)) {
+            List<String> possibleValues = Arrays.stream(SignatureAlgorithm.values()).map(SignatureAlgorithm::getAlgorithmName).toList();
+            throw new UnprocessableSmartIdResponseException("Unexpected signature algorithm. Expected one of: " + possibleValues + ", but got: " + signatureAlgorithm);
         }
     }
 
@@ -357,13 +358,6 @@ public class SignatureResponseValidator {
         if (!FlowType.isSupported(flowType)) {
             logger.error("Invalid `signature.flowType` in session status: {}", flowType);
             throw new UnprocessableSmartIdResponseException("Invalid `signature.flowType` in session status");
-        }
-    }
-
-    private static void validateSignatureAlgorithm(String algorithm) {
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(algorithm).orElse(null);
-        if (signatureAlgorithm != SignatureAlgorithm.RSASSA_PSS) {
-            throw new UnprocessableSmartIdResponseException("signatureAlgorithm must be rsassa-pss");
         }
     }
 
