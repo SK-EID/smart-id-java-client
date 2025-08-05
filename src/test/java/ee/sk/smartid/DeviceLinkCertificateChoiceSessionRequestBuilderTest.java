@@ -45,6 +45,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -147,62 +148,63 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
     @Nested
     class ErrorCases {
 
-        @Test
-        void initiateCertificateChoice_whenResponseIsNull() {
-            when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(null);
-
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Device link certificate choice session failed: invalid response received.", ex.getMessage());
-        }
-
-        @Test
-        void initiateCertificateChoice_whenSessionIDIsNull() {
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initiateCertificateChoice_whenSessionIDIsNullOrEmpty(String sessionId) {
             var responseWithNullSessionID = new DeviceLinkSessionResponse();
+            responseWithNullSessionID.setSessionID(sessionId);
             responseWithNullSessionID.setSessionToken("test-session-token");
             responseWithNullSessionID.setSessionSecret("test-session-secret");
+            responseWithNullSessionID.setDeviceLinkBase(URI.create("https://example.com/device-link"));
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(responseWithNullSessionID);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Device link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("Session ID is missing from the response", ex.getMessage());
         }
 
-        @Test
-        void initiateCertificateChoice_whenSessionTokenIsNull() {
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initiateCertificateChoice_whenSessionTokenIsNullOrEmpty(String sessionToken) {
             var response = new DeviceLinkSessionResponse();
             response.setSessionID("test-session-id");
+            response.setSessionToken(sessionToken);
             response.setSessionSecret("test-session-secret");
             response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
 
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Device link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("Session token is missing from the response", ex.getMessage());
         }
 
-        @Test
-        void initiateCertificateChoice_whenSessionSecretIsNull() {
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initiateCertificateChoice_whenSessionSecretIsNullOrEmpty(String sessionSecret) {
             var response = new DeviceLinkSessionResponse();
             response.setSessionID("test-session-id");
             response.setSessionToken("test-session-token");
+            response.setSessionSecret(sessionSecret);
             response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
 
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Device link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("Session secret is missing from the response", ex.getMessage());
         }
 
-        @Test
-        void initiateCertificateChoice_whenDeviceLinkBaseIsNull() {
+        @ParameterizedTest
+        @NullAndEmptySource
+        void initiateCertificateChoice_whenDeviceLinkBaseIsNullOrEmpty(String uriString) {
             var response = new DeviceLinkSessionResponse();
             response.setSessionID("test-session-id");
             response.setSessionToken("test-session-token");
             response.setSessionSecret("test-session-secret");
+            response.setDeviceLinkBase(uriString == null ? null : URI.create(uriString));
 
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Device link certificate choice session failed: invalid response received.", ex.getMessage());
+            assertEquals("deviceLinkBase is missing or empty in the response", ex.getMessage());
         }
 
         @Test

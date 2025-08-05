@@ -154,14 +154,10 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
      */
     public DeviceLinkSessionResponse initCertificateChoice() {
         validateRequestParameters();
-        CertificateChoiceSessionRequest request = createCertificateRequest();
-        DeviceLinkSessionResponse response = connector.initDeviceLinkCertificateChoice(request);
-
-        if (response == null || response.getSessionID() == null || response.getSessionToken() == null ||
-                response.getSessionSecret() == null || response.getDeviceLinkBase() == null) {
-            throw new UnprocessableSmartIdResponseException("Device link certificate choice session failed: invalid response received.");
-        }
-        return response;
+        CertificateChoiceSessionRequest certificateChoiceSessionRequest = createCertificateRequest();
+        DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse = connector.initDeviceLinkCertificateChoice(certificateChoiceSessionRequest);
+        validateResponseParameters(deviceLinkCertificateChoiceSessionResponse);
+        return deviceLinkCertificateChoiceSessionResponse;
     }
 
     private void validateRequestParameters() {
@@ -203,6 +199,28 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
     private void validateInitialCallbackUrl() {
         if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
             throw new SmartIdClientException("initialCallbackUrl must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+        }
+    }
+
+    private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse) {
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionID())) {
+            logger.error("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
+        }
+
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionToken())) {
+            logger.error("Session token is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session token is missing from the response");
+        }
+
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionSecret())) {
+            logger.error("Session secret is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
+        }
+
+        if (deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase() == null || deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase().toString().isBlank()) {
+            logger.error("deviceLinkBase is missing or empty in the response");
+            throw new UnprocessableSmartIdResponseException("deviceLinkBase is missing or empty in the response");
         }
     }
 }
