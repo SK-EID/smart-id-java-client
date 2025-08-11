@@ -27,7 +27,6 @@ package ee.sk.smartid;
  */
 
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * TrailerField represents the value used in the trailer field of the Smart-ID authentication response and value necessary for generating the signature.
@@ -48,13 +47,14 @@ public enum TrailerField {
         return value;
     }
 
-    public int getPssSpecValue(){
+    public int getPssSpecValue() {
         return pssSpecValue;
     }
 
-    public static Optional<TrailerField> fromString(String trailerField) {
+    public static TrailerField fromString(String trailerField) {
         return Arrays.stream(TrailerField.values())
                 .filter(field -> field.getValue().equals(trailerField))
-                .findFirst();
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Invalid trailerField value: " + trailerField));
     }
 }
