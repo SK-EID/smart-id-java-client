@@ -62,12 +62,13 @@ import org.mockito.ArgumentCaptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 
 class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
@@ -246,44 +247,44 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID(relyingPartyUUID)
                             .withRelyingPartyName("DEMO")
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
-            assertEquals("Parameter relyingPartyUUID must be set", exception.getMessage());
+            assertEquals("Value for 'relyingPartyUUID' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_relyingPartyNameIsEmpty_throwException(String relyingPartyName) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName(relyingPartyName)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
-            assertEquals("Parameter relyingPartyName must be set", exception.getMessage());
+            assertEquals("Value for 'relyingPartyName' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_rpChallengeIsEmpty_throwException(String rpChallenge) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
                             .withRpChallenge(rpChallenge)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
-            assertEquals("Parameter rpChallenge must be set", exception.getMessage());
+            assertEquals("Value for 'rpChallenge' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidRpChallengeArgumentProvider.class)
         void initAuthenticationSession_rpChallengeIsInvalid_throwException(String rpChallenge, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -296,7 +297,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         void initAuthenticationSession_signatureAlgorithmIsSetToNull_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -304,13 +305,13 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withSignatureAlgorithm(null)
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession());
-            assertEquals("Parameter signatureAlgorithm must be set", exception.getMessage());
+            assertEquals("Value for 'signatureAlgorithm' must be set", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<DeviceLinkInteraction> interactions) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -318,13 +319,13 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withHashAlgorithm(HashAlgorithm.SHA3_512)
                             .withInteractions(interactions)
                             .initAuthenticationSession());
-            assertEquals("Parameter interactions must be set", exception.getMessage());
+            assertEquals("Value for 'interactions' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(DuplicateInteractionsProvider.class)
         void initAuthenticationSession_duplicateInteractions_throwException(List<DeviceLinkInteraction> duplicateInteractions) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -333,7 +334,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withInteractions(duplicateInteractions)
                             .initAuthenticationSession());
 
-            assertEquals("Duplicate values in interactions are not allowed", exception.getMessage());
+            assertEquals("Value for 'interactions' cannot contain duplicate types", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -353,7 +354,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
         void initAuthenticationSession_initialCallbackUrlIsInvalid_throwException(String url, String expectedErrorMessage) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -368,7 +369,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         void initAuthenticationSession_signatureAlgorithmParametersIsNull_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -377,12 +378,12 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
                             .initAuthenticationSession()
             );
-            assertEquals("Parameter hashAlgorithm must be set", exception.getMessage());
+            assertEquals("Value for 'hashAlgorithm' must be set", exception.getMessage());
         }
 
         @Test
         void initAuthenticationSession_signatureAlgorithmParametersHashAlgorithmIsNull_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -392,12 +393,12 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .initAuthenticationSession()
             );
 
-            assertEquals("Parameter hashAlgorithm must be set", exception.getMessage());
+            assertEquals("Value for 'hashAlgorithm' must be set", exception.getMessage());
         }
 
         @Test
         void initAuthenticationSession_bothSemanticsIdentifierAndDocumentNumberSet_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new DeviceLinkAuthenticationSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -409,7 +410,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             .initAuthenticationSession()
             );
 
-            assertEquals("Only one of semanticsIdentifier or documentNumber may be set", exception.getMessage());
+            assertEquals("Only one of 'semanticsIdentifier' or 'documentNumber' may be set", exception.getMessage());
         }
 
         private DeviceLinkInteraction[] parseInteractionsFromBase64(String base64EncodedJson) throws Exception {
@@ -433,7 +434,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
                 initAuthentication();
             });
-            assertEquals("Session ID is missing from the response", exception.getMessage());
+            assertEquals("Device link authentication session initialisation response field 'sessionID' is missing or empty", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -447,7 +448,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
                 initAuthentication();
             });
-            assertEquals("Session token is missing from the response", exception.getMessage());
+            assertEquals("Device link authentication session initialisation response field 'sessionToken' is missing or empty", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -462,7 +463,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
                 initAuthentication();
             });
-            assertEquals("Session secret is missing from the response", exception.getMessage());
+            assertEquals("Device link authentication session initialisation response field 'sessionSecret' is missing or empty", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -479,7 +480,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                 initAuthentication();
             });
 
-            assertEquals("deviceLinkBase is missing or empty in the response", exception.getMessage());
+            assertEquals("Device link authentication session initialisation response field 'deviceLinkBase' is missing or empty", exception.getMessage());
         }
 
         private void initAuthentication() {
@@ -575,11 +576,11 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                     Arguments.of(Named.of("provided string is not in Base64 format", "invalid value"),
-                            "Parameter rpChallenge is not a valid Base64 encoded string"),
+                            "Value for 'rpChallenge' must be Base64-encoded string"),
                     Arguments.of(Named.of("provided value sizes is less than allowed", Base64.toBase64String("a".repeat(30).getBytes())),
-                            "Encoded rpChallenge must be between 44 and 88 characters"),
+                            "Value for 'rpChallenge' must have length between 44 and 88 characters"),
                     Arguments.of(Named.of("provided value sizes exceeds max range value", Base64.toBase64String("a".repeat(67).getBytes())),
-                            "Encoded rpChallenge must be between 44 and 88 characters")
+                            "Value for 'rpChallenge' must have length between 44 and 88 characters")
             );
         }
     }
@@ -617,9 +618,9 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of("http://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("https://example.com|test", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("ftp://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
+                    Arguments.of("http://example.com", "Value for 'initialCallbackUrl' must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("https://example.com|test", "Value for 'initialCallbackUrl' must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
+                    Arguments.of("ftp://example.com", "Value for 'initialCallbackUrl' must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
             );
         }
     }
