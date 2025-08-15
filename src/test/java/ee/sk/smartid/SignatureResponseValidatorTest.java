@@ -37,6 +37,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -70,7 +71,7 @@ class SignatureResponseValidatorTest {
         sessionStatus.setState(null);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-        assertEquals("State parameter is missing in session status", ex.getMessage());
+        assertEquals("Signature session status field 'state' is empty", ex.getMessage());
     }
 
     @Test
@@ -90,17 +91,7 @@ class SignatureResponseValidatorTest {
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-        assertEquals("Result is missing in the session status response", ex.getMessage());
-    }
-
-    @Test
-    void from_sessionResultNull_throwsException() {
-        SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-
-        sessionStatus.setResult(null);
-
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-        assertEquals("Result is missing in the session status response", ex.getMessage());
+        assertEquals("Signature session status field 'result' is missing", ex.getMessage());
     }
 
     @Test
@@ -110,7 +101,7 @@ class SignatureResponseValidatorTest {
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-        assertEquals("Document number is missing in the session result", ex.getMessage());
+        assertEquals("Signature session status field 'result.documentNumber' is empty", ex.getMessage());
     }
 
     @Test
@@ -120,7 +111,7 @@ class SignatureResponseValidatorTest {
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-        assertEquals("InteractionFlowUsed is missing in the session status", ex.getMessage());
+        assertEquals("Signature session status field 'interactionTypeUsed' is empty", ex.getMessage());
     }
 
     @Test
@@ -129,7 +120,7 @@ class SignatureResponseValidatorTest {
         sessionStatus.setSignatureProtocol(null);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-        assertEquals("Signature protocol is missing in session status", ex.getMessage());
+        assertEquals("Signature session status field 'signatureProtocol' is empty", ex.getMessage());
     }
 
     @Nested
@@ -142,7 +133,7 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("Missing certificate in session response", ex.getMessage());
+            assertEquals("Signature session status field 'cert' is missing or empty", ex.getMessage());
         }
 
         @Test
@@ -152,7 +143,7 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(SmartIdClientException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("Missing certificate in session response", ex.getMessage());
+            assertEquals("Signature session status field 'cert.value' is empty", ex.getMessage());
         }
 
         @Test
@@ -161,7 +152,7 @@ class SignatureResponseValidatorTest {
             sessionStatus.getCert().setCertificateLevel(null);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("Certificate level is missing in certificate", ex.getMessage());
+            assertEquals("Signature session status field 'cert.certificateLevel' is empty", ex.getMessage());
         }
 
         @Test
@@ -215,7 +206,7 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertTrue(ex.getMessage().contains("Unexpected signature algorithm"));
+            assertEquals("Signature session status field 'signature.signatureAlgorithm' has unsupported value", ex.getMessage());
         }
 
         @Test
@@ -225,7 +216,7 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("Unknown signature protocol: UNKNOWN_PROTOCOL", ex.getMessage());
+            assertEquals("Signature session status field 'signatureProtocol' has unsupported value", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -267,13 +258,13 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("End result parameter is missing in the session result", ex.getMessage());
+            assertEquals("Signature session status field 'result.endResult' is empty", ex.getMessage());
         }
 
         @Test
         void from_sessionStatusNull() {
             var ex = assertThrows(SmartIdClientException.class, () -> signatureResponseValidator.from(null, "QUALIFIED"));
-            assertEquals("Session status was not provided", ex.getMessage());
+            assertEquals("Parameter 'sessionStatus' is not provided", ex.getMessage());
         }
 
         @Test
@@ -282,7 +273,7 @@ class SignatureResponseValidatorTest {
             sessionStatus.setSignature(null);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("Signature object is missing", ex.getMessage());
+            assertEquals("Signature session status field 'signature' is missing", ex.getMessage());
         }
 
         @Test
@@ -291,7 +282,16 @@ class SignatureResponseValidatorTest {
             sessionStatus.getSignature().setValue(null);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("Signature value is missing or not Base64", ex.getMessage());
+            assertEquals("Signature session status field 'signature.value' is empty", ex.getMessage());
+        }
+
+        @Test
+        void from_signatureValueIsNotInBase64EncodedFormat_throwException() {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+            sessionStatus.getSignature().setValue("invalid-not+encoded+value");
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+            assertEquals("Signature session status field 'signature.value' does not have Base64-encoded value", ex.getMessage());
         }
 
         @Test
@@ -300,7 +300,17 @@ class SignatureResponseValidatorTest {
             sessionStatus.getSignature().setSignatureAlgorithm(null);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("Signature algorithm is missing", ex.getMessage());
+            assertEquals("Signature session status field 'signature.signatureAlgorithm' is missing", ex.getMessage());
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"SHA-1", "invalid"})
+        void from_invalidSignatureAlgorithmIsProvided(String invalidSignatureAlgorithm) {
+            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+            sessionStatus.getSignature().setSignatureAlgorithm(invalidSignatureAlgorithm);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+            assertEquals("Signature session status field 'signature.signatureAlgorithm' has unsupported value", ex.getMessage());
         }
 
         @Test
@@ -310,7 +320,7 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("Session status field `signature.flowType` is empty", ex.getMessage());
+            assertEquals("Signature session status field `signature.flowType` is empty", ex.getMessage());
         }
 
         @Test
@@ -320,7 +330,7 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("Invalid `signature.flowType` in session status", ex.getMessage());
+            assertEquals("Signature session status field 'signature.flowType' has unsupported value", ex.getMessage());
         }
 
         @Test
@@ -329,7 +339,7 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertTrue(ex.getMessage().contains("Unexpected signature algorithm"));
+            assertEquals("Signature session status field 'signature.signatureAlgorithm' has unsupported value", ex.getMessage());
         }
 
         @Test
@@ -339,135 +349,152 @@ class SignatureResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("Unexpected signature algorithm. Expected one of: [rsassa-pss], but got: rsa", ex.getMessage());
+            assertEquals("Signature session status field 'signature.signatureAlgorithm' has unsupported value", ex.getMessage());
         }
 
-        @Test
-        void from_signatureAlgorithmParametersHashAlgorithmMissing() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setHashAlgorithm(null);
+        @Nested
+        class SignatureAlgorithmParametersValidations {
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+            @Test
+            void from_signatureAlgorithmParametersMissing() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().setSignatureAlgorithmParameters(null);
 
-            assertEquals("Session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' is empty", ex.getMessage());
-        }
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters' is missing", ex.getMessage());
+            }
 
-        @Test
-        void from_signatureAlgorithmParametersInvalidHashAlgorithm() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setHashAlgorithm("INVALID-HASH");
+            @ParameterizedTest
+            @NullAndEmptySource
+            void from_hashAlgorithmMissing(String hashAlgorithm) {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().setHashAlgorithm(hashAlgorithm);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            assertEquals("Invalid 'signature.signatureAlgorithmParameters.hashAlgorithm' in session status", ex.getMessage());
-        }
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' is empty", ex.getMessage());
+            }
 
-        @Test
-        void from_signatureAlgorithmParametersMissing() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().setSignatureAlgorithmParameters(null);
+            @Test
+            void from_invalidHashAlgorithm() { // TODO - 15.08.25: rename test name
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().setHashAlgorithm("INVALID-HASH");
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("SignatureAlgorithmParameters is missing", ex.getMessage());
-        }
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-        @Test
-        void from_invalidMaskGenAlgorithmName() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm().setAlgorithm("INVALID");
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has unsupported value", ex.getMessage());
+            }
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("Invalid 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' in session status", ex.getMessage());
-        }
+            @Test
+            void from_maskGenAlgorithmIsMissing() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().setMaskGenAlgorithm(null);
 
-        @Test
-        void from_signatureAlgorithmParametersMaskGenAlgorithmMissing() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setMaskGenAlgorithm(null);
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' is missing", ex.getMessage());
+            }
 
-            assertEquals("Session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' is missing", ex.getMessage());
-        }
+            @ParameterizedTest
+            @NullAndEmptySource
+            void from_maskGenAlgorithmAlgorithmIsEmpty(String algorithm) {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm().setAlgorithm(algorithm);
 
-        @Test
-        void from_signatureAlgorithmParametersMaskGenAlgorithmAlgorithmEmpty() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm().setAlgorithm(null);
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' is empty", ex.getMessage());
+            }
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+            @Test
+            void from_invalidMaskGenAlgorithmName() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm().setAlgorithm("INVALID");
 
-            assertEquals("Session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' is empty", ex.getMessage());
-        }
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' has unsupported value", ex.getMessage());
+            }
 
-        @Test
-        void from_signatureAlgorithmParametersMaskGenHashAlgorithmEmpty() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm()
-                    .getParameters().setHashAlgorithm(null);
+            @Test
+            void from_maskGenHashAlgorithmParametersAreMissing_throwException() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm()
+                        .setParameters(null);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters' is missing", ex.getMessage());
+            }
 
-            assertEquals("Session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' is empty", ex.getMessage());
-        }
+            @ParameterizedTest
+            @NullAndEmptySource
+            void from_hashAlgorithmInMaskGenHashAlgorithmParametersIsEmpty(String hashAlgorithm) {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm()
+                        .getParameters().setHashAlgorithm(hashAlgorithm);
 
-        @Test
-        void from_signatureAlgorithmParametersMaskGenHashAlgorithmInvalid() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm()
-                    .getParameters().setHashAlgorithm("INVALID-HASH");
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' is empty", ex.getMessage());
+            }
 
-            assertEquals("Invalid 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' in session status", ex.getMessage());
-        }
+            @Test
+            void from_maskGenHashAlgorithmInvalid() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm()
+                        .getParameters().setHashAlgorithm("INVALID-HASH");
 
-        @Test
-        void from_mismatchedHashAlgorithms() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm().getParameters().setHashAlgorithm("SHA-256");
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' in session status does not match 'signature.signatureAlgorithmParameters.hashAlgorithm'", ex.getMessage());
-        }
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has unsupported value", ex.getMessage());
+            }
 
-        @Test
-        void from_signatureAlgorithmParametersSaltLengthMissing() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setSaltLength(null);
+            @Test
+            void from_mismatchedHashAlgorithms() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm().getParameters().setHashAlgorithm("SHA-256");
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value", ex.getMessage());
+            }
 
-            assertEquals("Session status field 'signature.signatureAlgorithmParameters.saltLength' is missing", ex.getMessage());
-        }
 
-        @Test
-        void from_invalidSaltLength() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setSaltLength(32);
+            @Test
+            void from_saltLengthIsMissing() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().setSaltLength(null);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("Invalid 'signature.signatureAlgorithmParameters.saltLength' in session status", ex.getMessage());
-        }
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
 
-        @ParameterizedTest
-        @NullAndEmptySource
-        void from_signatureAlgorithmParametersTrailerFieldEmptyOrNull(String trailerField) {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setTrailerField(trailerField);
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.saltLength' is missing", ex.getMessage());
+            }
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+            @Test
+            void from_invalidSaltLength() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().setSaltLength(32);
 
-            assertEquals("Session status field `signature.signatureAlgorithmParameters.trailerField` is empty", ex.getMessage());
-        }
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value", ex.getMessage());
+            }
 
-        @Test
-        void from_invalidTrailerField() {
-            SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
-            sessionStatus.getSignature().getSignatureAlgorithmParameters().setTrailerField("0xab");
+            @ParameterizedTest
+            @NullAndEmptySource
+            void from_signatureAlgorithmParametersTrailerFieldEmptyOrNull(String trailerField) {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().setTrailerField(trailerField);
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
-            assertEquals("Invalid `signature.signatureAlgorithmParameters.trailerField` value in session status", ex.getMessage());
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+
+                assertEquals("Signature status field `signature.signatureAlgorithmParameters.trailerField` is empty", ex.getMessage());
+            }
+
+            @Test
+            void from_invalidTrailerField() {
+                SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
+                sessionStatus.getSignature().getSignatureAlgorithmParameters().setTrailerField("0xab");
+
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.from(sessionStatus, "QUALIFIED"));
+                assertEquals("Signature status field `signature.signatureAlgorithmParameters.trailerField` has unsupported value", ex.getMessage());
+            }
         }
     }
 
