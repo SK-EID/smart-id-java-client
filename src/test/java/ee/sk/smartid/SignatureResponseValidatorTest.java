@@ -451,7 +451,6 @@ class SignatureResponseValidatorTest {
                 assertEquals("Signature session status field field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value", ex.getMessage());
             }
 
-
             @Test
             void validate_saltLengthIsMissing() {
                 SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
