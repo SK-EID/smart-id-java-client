@@ -136,7 +136,7 @@ class AuthenticationResponseValidatorTest {
     @Test
     void validate_sessionStatusResultIsNotProvided_throwException() {
         var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
-        assertEquals("Session status field `result` is empty", ex.getMessage());
+        assertEquals("Authentication session status field 'result' is empty", ex.getMessage());
     }
 
     @Nested

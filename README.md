@@ -1236,7 +1236,9 @@ Exception Categories
    These exceptions indicate issues that are unlikely to be resolved by retrying the request. They are typically caused by client misconfiguration or invalid data input
   * `SmartIdClientException` Thrown for general client-side errors, such as:
     * Missing or invalid configuration (e.g., `trustSslContext` not set).
-    * Unexpected response data (e.g., missing required fields in session status.)
+  * `SmartIdRequestSetupException` Thrown when the request field validations fails, such as:
+    * Missing required fields (e.g., `relyingPartyUUID`, `relyingPartyName`, `signatureProtocol`).
+    * Invalid values for fields (e.g. `interactionType` containing duplicate types).
 * Unprocessable Response Exceptions
    These exceptions are thrown when the response from the Smart-ID service cannot be processed, typically due to malformed data or protocol violations.
   * `UnprocessableSmartIdResponseException`: Thrown when the response from the Smart-ID service cannot be processed.
