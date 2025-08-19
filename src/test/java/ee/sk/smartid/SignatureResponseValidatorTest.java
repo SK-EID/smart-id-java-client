@@ -252,7 +252,6 @@ class SignatureResponseValidatorTest {
             sessionStatus.getResult().setEndResult(null);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.validate(sessionStatus, "QUALIFIED"));
-
             assertEquals("Signature session status field 'result.endResult' is empty", ex.getMessage());
         }
 
@@ -457,7 +456,6 @@ class SignatureResponseValidatorTest {
                 sessionStatus.getSignature().getSignatureAlgorithmParameters().setSaltLength(null);
 
                 var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.validate(sessionStatus, "QUALIFIED"));
-
                 assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.saltLength' is missing", ex.getMessage());
             }
 
@@ -477,7 +475,6 @@ class SignatureResponseValidatorTest {
                 sessionStatus.getSignature().getSignatureAlgorithmParameters().setTrailerField(trailerField);
 
                 var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.validate(sessionStatus, "QUALIFIED"));
-
                 assertEquals("Signature status field `signature.signatureAlgorithmParameters.trailerField` is empty", ex.getMessage());
             }
 

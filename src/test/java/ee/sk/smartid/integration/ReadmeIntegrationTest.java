@@ -170,7 +170,7 @@ public class ReadmeIntegrationTest {
                 // Check that the session has completed successfully
                 assertEquals("COMPLETE", sessionStatus.getState());
 
-                // Setup AuthenticationResponseValidator
+                // Set up AuthenticationResponseValidator
                 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
                 AuthenticationResponseValidator authenticationResponseValidator = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
