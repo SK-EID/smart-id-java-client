@@ -33,16 +33,7 @@ import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
-import java.security.cert.CertPathBuilder;
-import java.security.cert.CertPathBuilderException;
-import java.security.cert.CertStore;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateParsingException;
-import java.security.cert.CollectionCertStoreParameters;
-import java.security.cert.PKIXBuilderParameters;
-import java.security.cert.PKIXCertPathBuilderResult;
-import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PSSParameterSpec;
@@ -50,7 +41,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
-import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.slf4j.Logger;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
@@ -58,7 +48,6 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.util.CertificateAttributeUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -73,26 +62,24 @@ public class AuthenticationResponseValidator {
     private static final int INDEX_OF_KEY_ENCIPHERMENT_VALUE = 2;
     private static final int INDEX_OF_DATA_ENCIPHERMENT_VALUE = 3;
 
-    private final TrustedCACertStore trustedCaCertStore;
+    private final CertificateValidator certificateValidator;
     private final AuthenticationResponseMapper authenticationResponseMapper;
 
     /**
-     * Initializes the validator with a {@link TrustedCACertStore}.
-     *
-     * @param trustedCaCertStore the store containing trusted CA certificates
+     * Initializes the validator with a {@link CertificateValidator}.
      */
-    public AuthenticationResponseValidator(TrustedCACertStore trustedCaCertStore) {
-        this(trustedCaCertStore, DefaultAuthenticationResponseMapper.getInstance());
+    public AuthenticationResponseValidator(CertificateValidator certificateValidator) {
+        this(certificateValidator, DefaultAuthenticationResponseMapper.getInstance());
     }
 
     /**
-     * Initializes the validator with a {@link TrustedCACertStore} and a custom {@link AuthenticationResponseMapper}.
+     * Initializes the validator with a {@link CertificateValidator} and a custom {@link AuthenticationResponseMapper}.
      *
-     * @param trustedCaCertStore          the store containing trusted CA certificates
      * @param authenticationResponseMapper the mapper to convert session status to authentication response
      */
-    public AuthenticationResponseValidator(TrustedCACertStore trustedCaCertStore, AuthenticationResponseMapper authenticationResponseMapper) {
-        this.trustedCaCertStore = trustedCaCertStore;
+    public AuthenticationResponseValidator(CertificateValidator certificateValidator,
+                                           AuthenticationResponseMapper authenticationResponseMapper) {
+        this.certificateValidator = certificateValidator;
         this.authenticationResponseMapper = authenticationResponseMapper;
     }
 
@@ -106,7 +93,9 @@ public class AuthenticationResponseValidator {
      * @param schemaName                   the schema name
      * @return the authentication identity
      */
-    public AuthenticationIdentity validate(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
+    public AuthenticationIdentity validate(SessionStatus sessionStatus,
+                                           AuthenticationSessionRequest authenticationSessionRequest,
+                                           String schemaName) {
         return validate(sessionStatus, authenticationSessionRequest, schemaName, null);
     }
 
@@ -119,7 +108,10 @@ public class AuthenticationResponseValidator {
      * @param brokeredRpName               the brokered relying party name
      * @return the authentication identity
      */
-    public AuthenticationIdentity validate(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName, String brokeredRpName) {
+    public AuthenticationIdentity validate(SessionStatus sessionStatus,
+                                           AuthenticationSessionRequest authenticationSessionRequest,
+                                           String schemaName,
+                                           String brokeredRpName) {
         validateInputs(sessionStatus, authenticationSessionRequest, schemaName);
         AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
         validateCertificate(authenticationResponse, AuthenticationCertificateLevel.valueOf(authenticationSessionRequest.certificateLevel()));
@@ -140,10 +132,9 @@ public class AuthenticationResponseValidator {
     }
 
     private void validateCertificate(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        validateCertificateIsCurrentlyValid(authenticationResponse.getCertificate());
-        validateCertificateChain(authenticationResponse);
-        validateCertificatePurpose(authenticationResponse);
         validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
+        certificateValidator.validateCertificate(authenticationResponse.getCertificate());
+        validateCertificatePurpose(authenticationResponse);
     }
 
     private void validateCertificatePurpose(AuthenticationResponse authenticationResponse) {
@@ -214,40 +205,6 @@ public class AuthenticationResponseValidator {
         return String
                 .join("|", payload)
                 .getBytes(StandardCharsets.UTF_8);
-    }
-
-    private void validateCertificateChain(AuthenticationResponse authenticationResponse) {
-        try {
-            PKIXBuilderParameters params = new PKIXBuilderParameters(trustedCaCertStore.getTrustAnchors(), new X509CertSelector() {{
-                setCertificate(authenticationResponse.getCertificate());
-            }});
-            CertStore intermediateStore = CertStore.getInstance("Collection", new CollectionCertStoreParameters(trustedCaCertStore.getTrustedCACertificates()));
-            params.addCertStore(intermediateStore);
-            params.setRevocationEnabled(trustedCaCertStore.isOcspEnabled());
-            CertPathBuilder builder = CertPathBuilder.getInstance("PKIX");
-            PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult) builder.build(params);
-
-            if (logger.isDebugEnabled()) {
-                X509Certificate leaf = (X509Certificate) result.getCertPath().getCertificates().get(0);
-                X509Certificate intermediate = (X509Certificate) result.getCertPath().getCertificates().get(1);
-                X509Certificate trustedCert = result.getTrustAnchor().getTrustedCert();
-                logger.debug("Leaf: {}, Intermediate: {}, Trust anchor: {}",
-                        CertificateAttributeUtil.getAttributeValue(leaf.getSubjectX500Principal().getName(), BCStyle.CN),
-                        CertificateAttributeUtil.getAttributeValue(intermediate.getSubjectX500Principal().getName(), BCStyle.CN),
-                        CertificateAttributeUtil.getAttributeValue(trustedCert.getSubjectX500Principal().getName(), BCStyle.CN));
-            }
-        } catch (InvalidAlgorithmParameterException | CertPathBuilderException | NoSuchAlgorithmException ex) {
-            throw new UnprocessableSmartIdResponseException("Authentication certificate chain validation failed", ex);
-        }
-    }
-
-    private static void validateCertificateIsCurrentlyValid(X509Certificate certificate) {
-        try {
-            certificate.checkValidity();
-        } catch (CertificateExpiredException | CertificateNotYetValidException ex) {
-            logger.error("Authentication certificate is expired or not yet valid: {}", certificate.getSubjectX500Principal(), ex);
-            throw new UnprocessableSmartIdResponseException("Authentication certificate is invalid", ex);
-        }
     }
 
     private static Signature getSignature(AuthenticationResponse authenticationResponse) {

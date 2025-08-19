@@ -27,17 +27,8 @@ package ee.sk.smartid;
  */
 
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertPathBuilder;
-import java.security.cert.CertPathBuilderException;
-import java.security.cert.CertStore;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.CollectionCertStoreParameters;
-import java.security.cert.PKIXBuilderParameters;
-import java.security.cert.PKIXCertPathBuilderResult;
-import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -70,7 +61,6 @@ import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
-//TODO: review this class for possible refactoring and improvements - 2025-07-08
 public class SignatureResponseValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(SignatureResponseValidator.class);
@@ -82,16 +72,19 @@ public class SignatureResponseValidator {
     private static final String QC_STATEMENT_OID = "1.3.6.1.5.5.7.1.3";
     private static final String ELECTRONIC_SIGNING = "0.4.0.1862.1.6.1";
 
-    private final TrustedCACertStore trustedCaCertStore;
+    private final CertificateValidator certificateValidator;
     private final boolean qcStatementRequired;
 
-    public SignatureResponseValidator(TrustedCACertStore store, boolean qcRequired) {
-        this.trustedCaCertStore = store;
+    public SignatureResponseValidator(CertificateValidator certificateValidator, boolean qcRequired) {
+        this.certificateValidator = certificateValidator;
         this.qcStatementRequired = qcRequired;
     }
 
-    public SignatureResponseValidator(TrustedCACertStore store) {
-        this(store, false);
+    /**
+     * Initializes the validator with a {@link CertificateValidator}.
+     */
+    public SignatureResponseValidator(CertificateValidator certificateValidator) {
+        this(certificateValidator, false);
     }
 
     /**
@@ -105,10 +98,10 @@ public class SignatureResponseValidator {
      * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
      * @throws DocumentUnusableException                  when for some reason, this relying party request cannot be completed.
      * @throws UnprocessableSmartIdResponseException      if the session response is structurally invalid, contains missing fields, or violates signature or certificate constraints.
-     * @throws SmartIdClientException                     if session status is missing, incomplete or inconsistent
+     * @throws SmartIdClientException                     if any of method parameters are not provided
      */
-    public SignatureResponse from(SessionStatus sessionStatus,
-                                  String requestedCertificateLevel
+    public SignatureResponse validate(SessionStatus sessionStatus,
+                                      String requestedCertificateLevel
     ) throws UserRefusedException, UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
         validateSessionsStatus(sessionStatus, requestedCertificateLevel);
 
@@ -205,9 +198,8 @@ public class SignatureResponseValidator {
             logger.error("Signature session status certificate level mismatch: requested {}, returned {}", requestedCertificateLevel, sessionCertificate.getCertificateLevel());
             throw new CertificateLevelMismatchException();
         }
-
+        certificateValidator.validateCertificate(certificate);
         validateCertificatePoliciesAndPurpose(certificate);
-        validateCertificateChain(certificate);
     }
 
     private void validateCertificatePoliciesAndPurpose(X509Certificate cert) {
@@ -225,27 +217,6 @@ public class SignatureResponseValidator {
 
         if (qcStatementRequired && !containsQcStatement(cert)) {
             throw new UnprocessableSmartIdResponseException("QCStatement 0.4.0.1862.1.6.1 missing");
-        }
-    }
-
-    private void validateCertificateChain(X509Certificate certificate) {
-        try {
-            var x509CertSelector = new X509CertSelector();
-            x509CertSelector.setCertificate(certificate);
-
-            var params = new PKIXBuilderParameters(trustedCaCertStore.getTrustAnchors(), x509CertSelector);
-
-            CertStore intermediates = CertStore.getInstance("Collection", new CollectionCertStoreParameters(trustedCaCertStore.getTrustedCACertificates()));
-            params.addCertStore(intermediates);
-            params.setRevocationEnabled(trustedCaCertStore.isOcspEnabled());
-
-            CertPathBuilder builder = CertPathBuilder.getInstance("PKIX");
-            PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult) builder.build(params);
-
-            logger.debug("Signature certificate validated. Trust anchor: {}", result.getTrustAnchor().getTrustedCert().getSubjectX500Principal());
-
-        } catch (InvalidAlgorithmParameterException | CertPathBuilderException | NoSuchAlgorithmException ex) {
-            throw new UnprocessableSmartIdResponseException("Certificate chain validation failed", ex);
         }
     }
 

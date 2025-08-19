@@ -59,6 +59,8 @@ import ee.sk.smartid.CertificateByDocumentNumberResult;
 import ee.sk.smartid.CertificateChoiceResponse;
 import ee.sk.smartid.CertificateChoiceResponseMapper;
 import ee.sk.smartid.CertificateLevel;
+import ee.sk.smartid.CertificateValidator;
+import ee.sk.smartid.CertificateValidatorImpl;
 import ee.sk.smartid.DeviceLinkAuthenticationSessionRequestBuilder;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.FileTrustedCAStoreBuilder;
@@ -164,8 +166,9 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", sessionStatus.getState());
 
             // Setup AuthenticationResponseValidator
-            TrustedCACertStore build = new FileTrustedCAStoreBuilder().build();
-            AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(build);
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
             // Validate the certificate and signature, then map the authentication response to the user's identity
             AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
 
@@ -243,7 +246,8 @@ public class ReadmeIntegrationTest {
 
             // Validate the response and return user's identity
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(trustedCaCertStore)
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
                     .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -308,7 +312,8 @@ public class ReadmeIntegrationTest {
 
             // Validate the certificate and signature, then map the authentication response to the user's identity
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(trustedCaCertStore)
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
                     .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -379,8 +384,9 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
-            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+            SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -471,8 +477,9 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
-            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+            SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -521,7 +528,9 @@ public class ReadmeIntegrationTest {
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
             // validate the sessions status and return user's identity
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder().build())
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
                     .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: authentication request will be fixed with notification-based authentication changes
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -569,7 +578,9 @@ public class ReadmeIntegrationTest {
             assertEquals("PNOLT-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder().build())
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
                     .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -671,8 +682,9 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
-            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+            SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOEE-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -680,6 +692,28 @@ public class ReadmeIntegrationTest {
             assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
             assertEquals("verificationCodeChoice", signatureResponse.getInteractionFlowUsed());
             assertNotNull(signatureResponse.getCertificate());
+        }
+    }
+
+    @Nested
+    class CertificateByDocumentNumberExamples {
+
+        @Test
+        void queryCertificate() {
+            String documentNumber = "PNOLT-40504040001-MOCK-Q";
+
+            // Build the certificate by document number request and query the certificate
+            CertificateByDocumentNumberResult certResponse = smartIdClient
+                    .createCertificateByDocumentNumber()
+                    .withDocumentNumber(documentNumber)
+                    .getCertificateByDocumentNumber();
+
+            // Setup the certificate validator
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+
+            // Validate the certificate
+            certificateValidator.validateCertificate(certResponse.certificate());
         }
     }
 

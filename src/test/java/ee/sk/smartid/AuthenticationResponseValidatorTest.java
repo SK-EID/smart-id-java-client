@@ -29,11 +29,7 @@ package ee.sk.smartid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
@@ -65,8 +61,6 @@ class AuthenticationResponseValidatorTest {
 
     private static final String CA_CERT = FileUtil.readFileToString("test-certs/ca-cert.pem.crt");
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
-    private static final String EXPIRED_CERT = FileUtil.readFileToString("test-certs/expired-cert.pem.crt");
-    private static final String UNTRUSTED_CERT = FileUtil.readFileToString("test-certs/other-auth-cert.pem.crt");
     private static final String SIGN_CERT = FileUtil.readFileToString("test-certs/sign-cert-40504040001.pem.crt");
 
     private AuthenticationResponseValidator authenticationResponseValidator;
@@ -74,7 +68,8 @@ class AuthenticationResponseValidatorTest {
     @BeforeEach
     void setUp() {
         TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().withOcspEnabled(false).build();
-        authenticationResponseValidator = new AuthenticationResponseValidator(trustedCaCertStore);
+        CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+        authenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
     }
 
     @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
@@ -143,24 +138,6 @@ class AuthenticationResponseValidatorTest {
     class ValidateSessionStatusCertificate {
 
         @Test
-        void validate_certificateExpired_throwException() {
-            var sessionStatus = toSessionsStatus(EXPIRED_CERT, "QUALIFIED", "");
-
-            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
-
-            assertEquals("Authentication certificate is invalid", ex.getMessage());
-        }
-
-        @Test
-        void validate_certificateIsNotTrusted_throwException() {
-            var sessionStatus = toSessionsStatus(UNTRUSTED_CERT, "QUALIFIED", "");
-
-            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
-
-            assertEquals("Authentication certificate chain validation failed", ex.getMessage());
-        }
-
-        @Test
         void validate_certificateLevelLowerThanRequested_throwException() {
             var sessionStatus = toSessionsStatus(AUTH_CERT, "ADVANCED", "");
 
@@ -170,7 +147,7 @@ class AuthenticationResponseValidatorTest {
         }
 
         @Test
-        void validate_certificateCannotBeForAuthentication_throwException() {
+        void validate_certificateCannotBeUsedForAuthentication_throwException() {
             var sessionStatus = toSessionsStatus(SIGN_CERT, "QUALIFIED", "");
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
@@ -246,14 +223,6 @@ class AuthenticationResponseValidatorTest {
                 null);
     }
 
-    private X509Certificate toX509Certificate(String certificate) {
-        try {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificate.getBytes(StandardCharsets.UTF_8)));
-        } catch (CertificateException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private static String toBase64(String data) {
         return Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
@@ -263,9 +232,5 @@ class AuthenticationResponseValidatorTest {
         return certificate.replace("-----BEGIN CERTIFICATE-----", "")
                 .replace("-----END CERTIFICATE-----", "")
                 .replace("\n", "");
-    }
-
-    private static String toUrlSafeBase64(String data) {
-        return Base64.getUrlEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
     }
 }
