@@ -253,7 +253,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      *
      * @return a {@link DeviceLinkSessionResponse} containing session details such as
      * session ID, session token, session secret and device link base URL.
-     * @throws SmartIdClientException if request parameters are invalid
+     * @throws SmartIdClientException                if request parameters are invalid
      * @throws UnprocessableSmartIdResponseException if the response is missing required fields
      */
     public DeviceLinkSessionResponse initSignatureSession() {
@@ -275,35 +275,20 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private SignatureSessionRequest createSignatureSessionRequest() {
-        var request = new SignatureSessionRequest();
-        request.setRelyingPartyUUID(relyingPartyUUID);
-        request.setRelyingPartyName(relyingPartyName);
-
-        if (certificateLevel != null) {
-            request.setCertificateLevel(certificateLevel.name());
-        }
-
-        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-        if (signableHash != null || signableData != null) {
-            signatureProtocolParameters.setDigest(SignatureUtil.getDigestToSignBase64(signableHash, signableData));
-        }
-        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
-
-        var signatureAlgorithmParameters = new SignatureAlgorithmParameters(hashAlgorithm.getValue());
-        signatureProtocolParameters.setSignatureAlgorithmParameters(signatureAlgorithmParameters);
-
-        request.setSignatureProtocolParameters(signatureProtocolParameters);
-
-        request.setNonce(nonce);
-        request.setInteractions(DeviceLinkUtil.encodeToBase64(interactions));
-
-        if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
-            request.setRequestProperties(requestProperties);
-        }
-        request.setCapabilities(capabilities);
-        request.setInitialCallbackUrl(initialCallbackUrl);
-        return request;
+        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
+                SignatureUtil.getDigestToSignBase64(signableHash, signableData),
+                signatureAlgorithm.getAlgorithmName(),
+                new SignatureAlgorithmParameters(hashAlgorithm.getValue()));
+        return new SignatureSessionRequest(relyingPartyUUID,
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
+                SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                signatureProtocolParameters,
+                nonce != null ? nonce : null,
+                capabilities,
+                DeviceLinkUtil.encodeToBase64(interactions),
+                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
+                initialCallbackUrl);
     }
 
     private void validateParameters() {

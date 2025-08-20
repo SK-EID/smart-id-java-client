@@ -35,12 +35,14 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
 import ee.sk.smartid.util.NotificationUtil;
@@ -63,6 +65,7 @@ public class NotificationSignatureSessionRequestBuilder {
     private List<NotificationInteraction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm;
+    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA_512;
     private SignableData signableData;
     private SignableHash signableHash;
 
@@ -244,30 +247,22 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private SignatureSessionRequest createSignatureSessionRequest() {
-        var request = new SignatureSessionRequest();
-        request.setRelyingPartyUUID(relyingPartyUUID);
-        request.setRelyingPartyName(relyingPartyName);
+        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
+                SignatureUtil.getDigestToSignBase64(signableHash, signableData),
+                signatureAlgorithm.getAlgorithmName(),
+                new SignatureAlgorithmParameters(hashAlgorithm.getValue()));
 
-        if (certificateLevel != null) {
-            request.setCertificateLevel(certificateLevel.name());
-        }
-
-        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-        if (signableHash != null || signableData != null) {
-            signatureProtocolParameters.setDigest(SignatureUtil.getDigestToSignBase64(signableHash, signableData));
-        }
-        signatureProtocolParameters.setSignatureAlgorithm(signatureAlgorithm.getAlgorithmName());
-        request.setSignatureProtocolParameters(signatureProtocolParameters);
-        request.setNonce(nonce);
-        request.setInteractions(NotificationUtil.encodeToBase64(allowedInteractionsOrder));
-
-        if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
-            request.setRequestProperties(requestProperties);
-        }
-
-        request.setCapabilities(capabilities);
-        return request;
+        return new SignatureSessionRequest(relyingPartyUUID,
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
+                SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                signatureProtocolParameters,
+                nonce,
+                capabilities,
+                NotificationUtil.encodeToBase64(allowedInteractionsOrder),
+                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
+                null
+        );
     }
 
     private void validateParameters() {

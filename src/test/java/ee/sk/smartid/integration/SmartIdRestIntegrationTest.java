@@ -168,16 +168,20 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDeviceLinkSignature_withSemanticIdentifier() {
-                var request = new SignatureSessionRequest();
-                request.setRelyingPartyUUID(RELYING_PARTY_UUID);
-                request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))));
-
-                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-                String digest = Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512));
-                signatureProtocolParameters.setDigest(digest);
-                request.setSignatureProtocolParameters(signatureProtocolParameters);
+                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512)),
+                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                var request = new SignatureSessionRequest(RELYING_PARTY_UUID,
+                        RELYING_PARTY_NAME,
+                        null,
+                        SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                        signatureProtocolParameters,
+                        null,
+                        null,
+                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
+                        null,
+                        null
+                );
 
                 DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
@@ -189,16 +193,21 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDeviceLinkSignature_withDocumentNumber() {
-                var request = new SignatureSessionRequest();
-                request.setRelyingPartyUUID(RELYING_PARTY_UUID);
-                request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))));
-
-                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-                String digest = Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512));
-                signatureProtocolParameters.setDigest(digest);
-                request.setSignatureProtocolParameters(signatureProtocolParameters);
+                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
+                        Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512)),
+                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                var request = new SignatureSessionRequest(RELYING_PARTY_UUID,
+                        RELYING_PARTY_NAME,
+                        null,
+                        SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                        signatureProtocolParameters,
+                        null,
+                        null,
+                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
+                        null,
+                        null
+                );
 
                 DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
 
@@ -298,18 +307,21 @@ class SmartIdRestIntegrationTest {
             }
 
             private static SignatureSessionRequest toSignatureSessionRequest() {
-                var request = new SignatureSessionRequest();
-                request.setRelyingPartyUUID(RELYING_PARTY_UUID);
-                request.setRelyingPartyName(RELYING_PARTY_NAME);
-                request.setCertificateLevel("QUALIFIED");
-
-                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters();
-                String digest = Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512));
-                signatureProtocolParameters.setSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName());
-                signatureProtocolParameters.setDigest(digest);
-                request.setSignatureProtocolParameters(signatureProtocolParameters);
-                request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))));
-                return request;
+                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
+                        Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512)),
+                        SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                return new SignatureSessionRequest(RELYING_PARTY_UUID,
+                        RELYING_PARTY_NAME,
+                        "QUALIFIED",
+                        SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                        signatureProtocolParameters,
+                        null,
+                        null,
+                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
+                        null,
+                        null
+                );
             }
         }
     }

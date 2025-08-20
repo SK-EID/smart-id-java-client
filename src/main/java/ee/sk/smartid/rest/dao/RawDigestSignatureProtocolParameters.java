@@ -28,33 +28,7 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-public class RawDigestSignatureProtocolParameters implements Serializable {
-
-    private String digest;
-    private String signatureAlgorithm;
-    private SignatureAlgorithmParameters signatureAlgorithmParameters;
-
-    public String getDigest() {
-        return digest;
-    }
-
-    public void setDigest(String digest) {
-        this.digest = digest;
-    }
-
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
-    }
-
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
-    }
-
-    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
-        return signatureAlgorithmParameters;
-    }
-
-    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
-        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
-    }
+public record RawDigestSignatureProtocolParameters(String digest,
+                                                   String signatureAlgorithm,
+                                                   SignatureAlgorithmParameters signatureAlgorithmParameters) implements Serializable {
 }

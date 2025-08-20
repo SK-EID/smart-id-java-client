@@ -30,108 +30,15 @@ import java.io.Serializable;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.SignatureProtocol;
 
-public class SignatureSessionRequest implements Serializable {
-
-    private String relyingPartyUUID;
-    private String relyingPartyName;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String certificateLevel;
-
-    private final String signatureProtocol = SignatureProtocol.RAW_DIGEST_SIGNATURE.name();
-
-    private RawDigestSignatureProtocolParameters signatureProtocolParameters;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String nonce;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Set<String> capabilities;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String interactions;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private RequestProperties requestProperties;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String initialCallbackUrl;
-
-    public String getRelyingPartyUUID() {
-        return relyingPartyUUID;
-    }
-
-    public void setRelyingPartyUUID(String relyingPartyUUID) {
-        this.relyingPartyUUID = relyingPartyUUID;
-    }
-
-    public String getRelyingPartyName() {
-        return relyingPartyName;
-    }
-
-    public void setRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyName = relyingPartyName;
-    }
-
-    public String getCertificateLevel() {
-        return certificateLevel;
-    }
-
-    public void setCertificateLevel(String certificateLevel) {
-        this.certificateLevel = certificateLevel;
-    }
-
-    public String getSignatureProtocol() {
-        return signatureProtocol;
-    }
-
-    public RawDigestSignatureProtocolParameters getSignatureProtocolParameters() {
-        return signatureProtocolParameters;
-    }
-
-    public void setSignatureProtocolParameters(RawDigestSignatureProtocolParameters signatureProtocolParameters) {
-        this.signatureProtocolParameters = signatureProtocolParameters;
-    }
-
-    public String getNonce() {
-        return nonce;
-    }
-
-    public void setNonce(String nonce) {
-        this.nonce = nonce;
-    }
-
-    public Set<String> getCapabilities() {
-        return capabilities;
-    }
-
-    public void setCapabilities(Set<String> capabilities) {
-        this.capabilities = capabilities;
-    }
-
-    public String getInteractions() {
-        return interactions;
-    }
-
-    public void setInteractions(String interactions) {
-        this.interactions = interactions;
-    }
-
-    public RequestProperties getRequestProperties() {
-        return requestProperties;
-    }
-
-    public void setRequestProperties(RequestProperties requestProperties) {
-        this.requestProperties = requestProperties;
-    }
-
-    public String getInitialCallbackUrl() {
-        return initialCallbackUrl;
-    }
-
-    public void setInitialCallbackUrl(String initialCallbackUrl) {
-        this.initialCallbackUrl = initialCallbackUrl;
-    }
+public record SignatureSessionRequest(String relyingPartyUUID,
+                                      String relyingPartyName,
+                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,
+                                      String signatureProtocol,
+                                      RawDigestSignatureProtocolParameters signatureProtocolParameters,
+                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String nonce,
+                                      @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
+                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String interactions,
+                                      @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
+                                      @JsonInclude(JsonInclude.Include.NON_NULL) String initialCallbackUrl) implements Serializable {
 }

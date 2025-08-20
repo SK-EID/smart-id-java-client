@@ -787,9 +787,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkSignature_invalidRequest() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 400);
 
-            SignatureSessionRequest request = new SignatureSessionRequest();
-            request.setRelyingPartyUUID("");
-            request.setRelyingPartyName("");
+            SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
             assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkSignature(request, semanticsIdentifier));
@@ -1121,39 +1119,38 @@ class SmartIdRestConnectorTest {
     }
 
     private static SignatureSessionRequest createSignatureSessionRequest() {
-        var request = new SignatureSessionRequest();
-        request.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
-        request.setRelyingPartyName("BANK123");
+        var protocolParameters = new RawDigestSignatureProtocolParameters("base64-encoded-digest",
+                "rsassa-pss",
+                new SignatureAlgorithmParameters("SHA3-512"));
 
-        var protocolParameters = new RawDigestSignatureProtocolParameters();
-        protocolParameters.setDigest("base64-encoded-digest");
-        protocolParameters.setSignatureAlgorithm("rsassa-pss");
-        protocolParameters.setSignatureAlgorithm("SHA3-512");
-
-        request.setSignatureProtocolParameters(protocolParameters);
-
-        DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Sign the document");
-        request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
-
-        return request;
+        return new SignatureSessionRequest("de305d54-75b4-431b-adb2-eb6b9e546014",
+                "BANK123",
+                null,
+                SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                protocolParameters,
+                null,
+                null,
+                InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign the document"))),
+                null,
+                null);
     }
 
     private static SignatureSessionRequest createNotificationSignatureSessionRequest() {
-        var request = new SignatureSessionRequest();
-        request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        request.setRelyingPartyName("DEMO");
-
-        var protocolParameters = new RawDigestSignatureProtocolParameters();
-        protocolParameters.setDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==");
-        protocolParameters.setSignatureAlgorithm("rsassa-pss");
-        protocolParameters.setSignatureAlgorithm("sha512WithRSAEncryption");
-
-        request.setSignatureProtocolParameters(protocolParameters);
-
-        DeviceLinkInteraction interaction = DeviceLinkInteraction.displayTextAndPIN("Verify the code");
-        request.setInteractions(InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)));
-
-        return request;
+        var protocolParameters = new RawDigestSignatureProtocolParameters("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
+                "rsassa-pss",
+                new SignatureAlgorithmParameters("SHA-512"));
+        var interaction = DeviceLinkInteraction.displayTextAndPIN("Verify the code");
+        return new SignatureSessionRequest("00000000-0000-0000-0000-000000000000",
+                "DEMO",
+                null,
+                SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                protocolParameters,
+                null,
+                null,
+                InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)),
+                null,
+                null
+        );
     }
 
     private static void assertResponseValues(DeviceLinkSessionResponse response,
