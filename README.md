@@ -8,7 +8,7 @@
 
 This library supports Smart-ID API v3.1.
 
-# Table of contents
+## Table of contents
 
 * [Smart-ID Java client](#smart-id-java-client)
     *   [Introduction](#introduction)
@@ -822,11 +822,16 @@ SignatureResponseValidator depends on CertificateValidator. Checkout [setting up
     
 ```java
 try {
-    // Initialize the validator with CertificateValidator
-    SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
-    
+    // Initialize the signature response validator with CertificateValidator
+    SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
     // Validate and map the session status. If the sessions end result is other than OK, then an exception will be thrown.
-    SignatureResponse signatureResponse = validator.validate(sessionStatus, "QUALIFIED");
+    SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+    // Validate signature value. This step can be skipped if other means of validating the signature value can be used. 
+    SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+    signatureValueValidator.validate(signatureResponse.getSignatureValue(),
+            signableData.calculateHash(),
+            certResponse.certificate(),
+            signatureResponse.getRsaSsaPssParameters());
 
     // Process the response (e.g., save to database or pass to another system)
     handleSignatureResponse(signatureResponse);
