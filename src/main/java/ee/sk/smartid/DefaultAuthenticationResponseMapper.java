@@ -81,28 +81,21 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
         authenticationResponse.setServerRandom(sessionSignature.getServerRandom());
         authenticationResponse.setUserChallenge(sessionSignature.getUserChallenge());
         authenticationResponse.setFlowType(FlowType.fromString(sessionSignature.getFlowType()));
-
         authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
-        authenticationResponse.setSignatureAlgorithm(signatureAlgorithm);
 
         var signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
-        var hashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null);
-        authenticationResponse.setHashAlgorithm(hashAlgorithm);
-        MaskGenAlgorithm maskGenAlgorithm = MaskGenAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getAlgorithm());
-        authenticationResponse.setMaskGenAlgorithm(maskGenAlgorithm);
-        var maskGenHashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null);
-        authenticationResponse.setMaskHashAlgorithm(maskGenHashAlgorithm);
-        authenticationResponse.setSaltLength(signatureAlgorithmParameters.getSaltLength());
-        TrailerField trailerField = TrailerField.fromString(signatureAlgorithmParameters.getTrailerField());
-        authenticationResponse.setTrailerField(trailerField);
+        var rssSsaPssParameters = new RsaSsaPssParameters();
+        rssSsaPssParameters.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
+        rssSsaPssParameters.setMaskGenAlgorithm(MaskGenAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getAlgorithm()));
+        rssSsaPssParameters.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
+        rssSsaPssParameters.setSaltLength(signatureAlgorithmParameters.getSaltLength());
+        rssSsaPssParameters.setTrailerField(TrailerField.fromString(signatureAlgorithmParameters.getTrailerField()));
+        authenticationResponse.setRsaSsaPssSignatureParameters(rssSsaPssParameters);
 
         authenticationResponse.setCertificate(toCertificate(sessionCertificate));
         authenticationResponse.setCertificateLevel(toAuthenticationCertificateLevel(sessionCertificate));
-
         authenticationResponse.setInteractionTypeUsed(sessionStatus.getInteractionTypeUsed());
         authenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
-
         return authenticationResponse;
     }
 

@@ -29,14 +29,8 @@ package ee.sk.smartid;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Signature;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
-import java.security.spec.MGF1ParameterSpec;
-import java.security.spec.PSSParameterSpec;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -63,14 +57,8 @@ public class AuthenticationResponseValidator {
     private static final int INDEX_OF_DATA_ENCIPHERMENT_VALUE = 3;
 
     private final CertificateValidator certificateValidator;
+    private final SignatureValueValidator signatureValueValidator;
     private final AuthenticationResponseMapper authenticationResponseMapper;
-
-    /**
-     * Initializes the validator with a {@link CertificateValidator}.
-     */
-    public AuthenticationResponseValidator(CertificateValidator certificateValidator) {
-        this(certificateValidator, DefaultAuthenticationResponseMapper.getInstance());
-    }
 
     /**
      * Initializes the validator with a {@link CertificateValidator} and a custom {@link AuthenticationResponseMapper}.
@@ -78,9 +66,23 @@ public class AuthenticationResponseValidator {
      * @param authenticationResponseMapper the mapper to convert session status to authentication response
      */
     public AuthenticationResponseValidator(CertificateValidator certificateValidator,
-                                           AuthenticationResponseMapper authenticationResponseMapper) {
+                                           AuthenticationResponseMapper authenticationResponseMapper,
+                                           SignatureValueValidator signatureValueValidator) {
         this.certificateValidator = certificateValidator;
         this.authenticationResponseMapper = authenticationResponseMapper;
+        this.signatureValueValidator = signatureValueValidator;
+    }
+
+    /**
+     * Creates an instance of {@link AuthenticationResponseValidator} using {@link CertificateValidator},
+     * and default {@link DefaultAuthenticationResponseMapper} and {@link SignatureValueValidatorImpl}.
+     *
+     * @return a new instance of {@link AuthenticationResponseValidator}
+     */
+    public static AuthenticationResponseValidator defaultSetupWithCertificateValidator(CertificateValidator certificateValidator) {
+        return new AuthenticationResponseValidator(certificateValidator,
+                DefaultAuthenticationResponseMapper.getInstance(),
+                SignatureValueValidatorImpl.getInstance());
     }
 
     /**
@@ -171,18 +173,11 @@ public class AuthenticationResponseValidator {
                                    AuthenticationSessionRequest authenticationSessionRequest,
                                    String schemaName,
                                    String brokeredRpName) {
-        try {
-            Signature result = getSignature(authenticationResponse);
-            result.initVerify(authenticationResponse.getCertificate().getPublicKey());
-            result.update(constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName));
-            byte[] signedHash = authenticationResponse.getSignatureValue();
-            if (!result.verify(signedHash)) {
-                logger.error("Signature value does not match the calculated signature for authentication response");
-                throw new UnprocessableSmartIdResponseException("Failed to verify validity of authentication signature returned by Smart-ID");
-            }
-        } catch (GeneralSecurityException ex) {
-            throw new UnprocessableSmartIdResponseException("Authentication signature validation failed", ex);
-        }
+        byte[] payload = constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
+        signatureValueValidator.validate(authenticationResponse.getSignatureValue(),
+                payload,
+                authenticationResponse.getCertificate(),
+                authenticationResponse.getRsaSsaPssSignatureParameters());
     }
 
     private byte[] constructPayload(AuthenticationResponse authenticationResponse,
@@ -205,24 +200,6 @@ public class AuthenticationResponseValidator {
         return String
                 .join("|", payload)
                 .getBytes(StandardCharsets.UTF_8);
-    }
-
-    private static Signature getSignature(AuthenticationResponse authenticationResponse) {
-        try {
-            var params = new PSSParameterSpec(authenticationResponse.getHashAlgorithm().getAlgorithmName(),
-                    authenticationResponse.getMaskGenAlgorithm().getMgfName(),
-                    new MGF1ParameterSpec(authenticationResponse.getMaskHashAlgorithm().getAlgorithmName()),
-                    authenticationResponse.getSaltLength(),
-                    authenticationResponse.getTrailerField().getPssSpecValue());
-            var signature = Signature.getInstance(authenticationResponse.getSignatureAlgorithm().getAlgorithmName());
-            signature.setParameter(params);
-            return signature;
-        } catch (NoSuchAlgorithmException ex) {
-            logger.error("Invalid signature algorithm was provided: {}", authenticationResponse.getSignatureAlgorithm());
-            throw new UnprocessableSmartIdResponseException("Invalid signature algorithm was provided", ex);
-        } catch (InvalidAlgorithmParameterException ex) {
-            throw new UnprocessableSmartIdResponseException("Invalid signature algorithm parameters were provided", ex);
-        }
     }
 
     private static byte[] calculateInteractionsDigest(AuthenticationSessionRequest authenticationSessionRequest) {

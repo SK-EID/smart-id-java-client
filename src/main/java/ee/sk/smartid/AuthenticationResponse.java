@@ -43,19 +43,14 @@ public class AuthenticationResponse {
     private String serverRandom;
     private String userChallenge;
     private String relyingPartyName;
-    private SignatureAlgorithm signatureAlgorithm;
     private String signatureValueInBase64;
-    private HashAlgorithm hashAlgorithm;
     private X509Certificate certificate;
     private AuthenticationCertificateLevel certificateLevel;
     private String documentNumber;
     private String interactionTypeUsed;
     private FlowType flowType;
     private String deviceIpAddress;
-    private MaskGenAlgorithm maskGenAlgorithm;
-    private HashAlgorithm maskHashAlgorithm;
-    private int saltLength;
-    private TrailerField trailerField;
+    private RsaSsaPssParameters rsaSsaPssSignatureParameters;
 
     public String getEndResult() {
         return endResult;
@@ -85,14 +80,6 @@ public class AuthenticationResponse {
             throw new UnprocessableSmartIdResponseException(
                     "Failed to parse signature value in base64. Incorrectly encoded base64 string: '" + signatureValueInBase64 + "'");
         }
-    }
-
-    public SignatureAlgorithm getSignatureAlgorithm() {
-        return signatureAlgorithm;
-    }
-
-    public void setSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
     }
 
     public X509Certificate getCertificate() {
@@ -167,43 +154,11 @@ public class AuthenticationResponse {
         this.flowType = flowType;
     }
 
-    public HashAlgorithm getHashAlgorithm() {
-        return hashAlgorithm;
+    public RsaSsaPssParameters getRsaSsaPssSignatureParameters() {
+        return rsaSsaPssSignatureParameters;
     }
 
-    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
-    }
-
-    public MaskGenAlgorithm getMaskGenAlgorithm() {
-        return maskGenAlgorithm;
-    }
-
-    public void setMaskGenAlgorithm(MaskGenAlgorithm maskGenAlgorithm) {
-        this.maskGenAlgorithm = maskGenAlgorithm;
-    }
-
-    public HashAlgorithm getMaskHashAlgorithm() {
-        return maskHashAlgorithm;
-    }
-
-    public void setMaskHashAlgorithm(HashAlgorithm maskHashAlgorithm) {
-        this.maskHashAlgorithm = maskHashAlgorithm;
-    }
-
-    public int getSaltLength() {
-        return saltLength;
-    }
-
-    public void setSaltLength(int saltLength) {
-        this.saltLength = saltLength;
-    }
-
-    public TrailerField getTrailerField() {
-        return trailerField;
-    }
-
-    public void setTrailerField(TrailerField trailerField) {
-        this.trailerField = trailerField;
+    public void setRsaSsaPssSignatureParameters(RsaSsaPssParameters rsaSsaPssSignatureParameters) {
+        this.rsaSsaPssSignatureParameters = rsaSsaPssSignatureParameters;
     }
 }

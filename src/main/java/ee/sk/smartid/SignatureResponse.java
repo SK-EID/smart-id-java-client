@@ -38,11 +38,6 @@ public class SignatureResponse implements Serializable {
     private String signatureValueInBase64;
     private String algorithmName;
     private SignatureAlgorithm signatureAlgorithm;
-    private HashAlgorithm hashAlgorithm;
-    private MaskGenAlgorithm maskGenAlgorithm;
-    private HashAlgorithm maskHashAlgorithm;
-    private int saltLength;
-    private TrailerField trailerField;
     private FlowType flowType;
     private X509Certificate certificate;
     private String requestedCertificateLevel;
@@ -50,6 +45,7 @@ public class SignatureResponse implements Serializable {
     private String documentNumber;
     private String interactionFlowUsed;
     private String deviceIpAddress;
+    private RsaSsaPssParameters rsaSsaPssParameters;
 
     public byte[] getSignatureValue() {
         try {
@@ -90,46 +86,6 @@ public class SignatureResponse implements Serializable {
 
     public void setSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
-    }
-
-    public HashAlgorithm getHashAlgorithm() {
-        return hashAlgorithm;
-    }
-
-    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
-    }
-
-    public MaskGenAlgorithm getMaskGenAlgorithm() {
-        return maskGenAlgorithm;
-    }
-
-    public void setMaskGenAlgorithm(MaskGenAlgorithm maskGenAlgorithm) {
-        this.maskGenAlgorithm = maskGenAlgorithm;
-    }
-
-    public HashAlgorithm getMaskHashAlgorithm() {
-        return maskHashAlgorithm;
-    }
-
-    public void setMaskHashAlgorithm(HashAlgorithm maskHashAlgorithm) {
-        this.maskHashAlgorithm = maskHashAlgorithm;
-    }
-
-    public int getSaltLength() {
-        return saltLength;
-    }
-
-    public void setSaltLength(int saltLength) {
-        this.saltLength = saltLength;
-    }
-
-    public TrailerField getTrailerField() {
-        return trailerField;
-    }
-
-    public void setTrailerField(TrailerField trailerField) {
-        this.trailerField = trailerField;
     }
 
     public FlowType getFlowType() {
@@ -186,5 +142,13 @@ public class SignatureResponse implements Serializable {
 
     public void setDeviceIpAddress(String deviceIpAddress) {
         this.deviceIpAddress = deviceIpAddress;
+    }
+
+    public RsaSsaPssParameters getRsaSsaPssParameters() {
+        return rsaSsaPssParameters;
+    }
+
+    public void setRsaSsaPssParameters(RsaSsaPssParameters rsaSsaPssParameters) {
+        this.rsaSsaPssParameters = rsaSsaPssParameters;
     }
 }

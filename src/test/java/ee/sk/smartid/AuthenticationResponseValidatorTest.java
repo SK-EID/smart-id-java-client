@@ -69,7 +69,7 @@ class AuthenticationResponseValidatorTest {
     void setUp() {
         TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().withOcspEnabled(false).build();
         CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
-        authenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+        authenticationResponseValidator = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
     }
 
     @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
@@ -166,7 +166,7 @@ class AuthenticationResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
-            assertEquals("Authentication signature validation failed", ex.getMessage());
+            assertEquals("Signature value validation failed", ex.getMessage());
         }
     }
 

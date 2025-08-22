@@ -168,7 +168,7 @@ public class ReadmeIntegrationTest {
             // Setup AuthenticationResponseValidator
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
-            AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+            AuthenticationResponseValidator authenticationResponseValidator = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
             // Validate the certificate and signature, then map the authentication response to the user's identity
             AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
 
@@ -247,7 +247,7 @@ public class ReadmeIntegrationTest {
             // Validate the response and return user's identity
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
+            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                     .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -313,7 +313,7 @@ public class ReadmeIntegrationTest {
             // Validate the certificate and signature, then map the authentication response to the user's identity
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
+            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                     .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -530,7 +530,7 @@ public class ReadmeIntegrationTest {
             // validate the sessions status and return user's identity
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
+            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                     .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: authentication request will be fixed with notification-based authentication changes
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -580,7 +580,7 @@ public class ReadmeIntegrationTest {
 
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(certificateValidator)
+            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                     .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());

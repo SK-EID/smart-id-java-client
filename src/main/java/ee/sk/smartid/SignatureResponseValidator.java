@@ -109,21 +109,19 @@ public class SignatureResponseValidator {
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate certificate = sessionStatus.getCert();
 
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
-        HashAlgorithm hashAlgorithm = HashAlgorithm.fromString(sessionSignature.getSignatureAlgorithmParameters().getHashAlgorithm()).orElse(null);
-        SessionMaskGenAlgorithm maskGenAlgorithm = sessionSignature.getSignatureAlgorithmParameters().getMaskGenAlgorithm();
-        HashAlgorithm maskGenHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm()).orElse(null);
-
         var signatureResponse = new SignatureResponse();
         signatureResponse.setEndResult(sessionResult.getEndResult());
         signatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        signatureResponse.setSignatureAlgorithm(signatureAlgorithm);
-        signatureResponse.setHashAlgorithm(hashAlgorithm);
-        signatureResponse.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
-        signatureResponse.setMaskHashAlgorithm(maskGenHashAlgorithm);
-        signatureResponse.setSaltLength(sessionSignature.getSignatureAlgorithmParameters().getSaltLength());
         signatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
-        signatureResponse.setTrailerField(TrailerField.OXBC);
+
+        SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
+        var rsaSsaPssParams = new RsaSsaPssParameters();
+        rsaSsaPssParams.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
+        rsaSsaPssParams.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
+        rsaSsaPssParams.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
+        rsaSsaPssParams.setSaltLength(signatureAlgorithmParameters.getSaltLength());
+        rsaSsaPssParams.setTrailerField(TrailerField.OXBC);
+        signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
 
         signatureResponse.setFlowType(FlowType.valueOf(sessionSignature.getFlowType()));
         signatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));

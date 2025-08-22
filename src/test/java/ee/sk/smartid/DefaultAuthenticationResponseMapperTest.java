@@ -125,8 +125,8 @@ class DefaultAuthenticationResponseMapperTest {
         assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
         assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
         assertEquals("0.0.0.0", authenticationResponse.getDeviceIpAddress());
-        assertEquals(hashAlgorithm, authenticationResponse.getHashAlgorithm());
-        assertEquals(hashAlgorithm.getOctetLength(), authenticationResponse.getSaltLength());
+        assertEquals(hashAlgorithm, authenticationResponse.getRsaSsaPssSignatureParameters().getDigestHashAlgorithm());
+        assertEquals(hashAlgorithm.getOctetLength(), authenticationResponse.getRsaSsaPssSignatureParameters().getSaltLength());
     }
 
     @Test
