@@ -111,20 +111,20 @@ class AuthenticationResponseValidatorTest {
         @Test
         void validate_sessionStatusNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(null, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
-            assertEquals("`sessionStatus` is not provided", ex.getMessage());
+            assertEquals("Parameter 'sessionStatus' is not provided", ex.getMessage());
         }
 
         @Test
         void validate_authenticationSessionRequestIsNotProvided_throwException() {
             var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), null, "smart-id-demo", null));
-            assertEquals("`authenticationSessionRequest` is not provided", ex.getMessage());
+            assertEquals("Parameter 'authenticationSessionRequest' is not provided", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void validate_emptySchemaNameIsProvided_throwException(String schemaName) {
             var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), schemaName, null));
-            assertEquals("`schemaName` is not provided", ex.getMessage());
+            assertEquals("Parameter 'schemaName' is not provided", ex.getMessage());
         }
     }
 
