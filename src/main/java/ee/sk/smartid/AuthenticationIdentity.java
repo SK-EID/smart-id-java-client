@@ -90,7 +90,7 @@ public class AuthenticationIdentity {
   }
 
   /**
-   * Person date of birth.
+   * Person's date of birth.
    * NB! This information is not available for some Latvian certificates.
    *
    * @return Date of birth if this information is available in authentication response or empty optional.

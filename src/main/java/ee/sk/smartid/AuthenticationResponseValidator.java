@@ -61,9 +61,12 @@ public class AuthenticationResponseValidator {
     private final AuthenticationResponseMapper authenticationResponseMapper;
 
     /**
-     * Initializes the validator with a {@link CertificateValidator} and a custom {@link AuthenticationResponseMapper}.
+     * Creates an instance of {@link AuthenticationResponseValidator}
+     * using {@link CertificateValidator}, {@link AuthenticationResponseMapper} and {@link SignatureValueValidator}
      *
+     * @param certificateValidator         validator used to verify the authentication certificate is valid and trusted
      * @param authenticationResponseMapper the mapper to convert session status to authentication response
+     * @param signatureValueValidator      validator used to verify the correctness of the authentication signature value
      */
     public AuthenticationResponseValidator(CertificateValidator certificateValidator,
                                            AuthenticationResponseMapper authenticationResponseMapper,
@@ -74,21 +77,19 @@ public class AuthenticationResponseValidator {
     }
 
     /**
-     * Creates an instance of {@link AuthenticationResponseValidator} using {@link CertificateValidator},
-     * and default {@link DefaultAuthenticationResponseMapper} and {@link SignatureValueValidatorImpl}.
+     * Creates an instance of {@link AuthenticationResponseValidator} using {@link CertificateValidator}
+     * and using default implementations of {@link AuthenticationResponseMapperImpl} and {@link SignatureValueValidatorImpl}
      *
      * @return a new instance of {@link AuthenticationResponseValidator}
      */
     public static AuthenticationResponseValidator defaultSetupWithCertificateValidator(CertificateValidator certificateValidator) {
         return new AuthenticationResponseValidator(certificateValidator,
-                DefaultAuthenticationResponseMapper.getInstance(),
+                AuthenticationResponseMapperImpl.getInstance(),
                 SignatureValueValidatorImpl.getInstance());
     }
 
     /**
      * Validates the authentication session status and converts it to {@link AuthenticationIdentity}.
-     * <p>
-     * This method sets brokeredRpName value to null
      *
      * @param sessionStatus                the session status
      * @param authenticationSessionRequest the authentication session request
@@ -121,21 +122,9 @@ public class AuthenticationResponseValidator {
         return AuthenticationIdentityMapper.from(authenticationResponse.getCertificate());
     }
 
-    private static void validateInputs(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
-        if (sessionStatus == null) {
-            throw new SmartIdClientException("`sessionStatus` is not provided");
-        }
-        if (authenticationSessionRequest == null) {
-            throw new SmartIdClientException("`authenticationSessionRequest` is not provided");
-        }
-        if (StringUtil.isEmpty(schemaName)) {
-            throw new SmartIdClientException("`schemaName` is not provided");
-        }
-    }
-
     private void validateCertificate(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
         validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
-        certificateValidator.validateCertificate(authenticationResponse.getCertificate());
+        certificateValidator.validate(authenticationResponse.getCertificate());
         validateCertificatePurpose(authenticationResponse);
     }
 
@@ -200,6 +189,18 @@ public class AuthenticationResponseValidator {
         return String
                 .join("|", payload)
                 .getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static void validateInputs(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
+        if (sessionStatus == null) {
+            throw new SmartIdClientException("Parameter 'sessionStatus' is not provided");
+        }
+        if (authenticationSessionRequest == null) {
+            throw new SmartIdClientException("Parameter 'authenticationSessionRequest' is not provided");
+        }
+        if (StringUtil.isEmpty(schemaName)) {
+            throw new SmartIdClientException("Parameter 'schemaName' is not provided");
+        }
     }
 
     private static byte[] calculateInteractionsDigest(AuthenticationSessionRequest authenticationSessionRequest) {

@@ -53,28 +53,28 @@ class CertificateValidatorImplTest {
     }
 
     @Test
-    void validateCertificate_ok() throws CertificateException {
+    void validate_ok() throws CertificateException {
         X509Certificate certificate = CertificateUtil.getX509Certificate(TRUSTED_CERT.getBytes(StandardCharsets.UTF_8));
 
-        assertDoesNotThrow(() -> certificateValidator.validateCertificate(certificate));
+        assertDoesNotThrow(() -> certificateValidator.validate(certificate));
     }
 
     @Test
-    void validateCertificate_expired() throws CertificateException {
+    void validate_expired() throws CertificateException {
         X509Certificate certificate = CertificateUtil.getX509Certificate(EXPIRED_CERT.getBytes(StandardCharsets.UTF_8));
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            certificateValidator.validateCertificate(certificate);
+            certificateValidator.validate(certificate);
         });
         assertEquals("Certificate is invalid", exception.getMessage());
     }
 
     @Test
-    void validateCertificate_notTrusted() throws CertificateException {
+    void validate_notTrusted() throws CertificateException {
         X509Certificate certificate = CertificateUtil.getX509Certificate(NOT_TRUSTED_CERT.getBytes(StandardCharsets.UTF_8));
 
         var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            certificateValidator.validateCertificate(certificate);
+            certificateValidator.validate(certificate);
         });
         assertEquals("Certificate chain validation failed", exception.getMessage());
     }

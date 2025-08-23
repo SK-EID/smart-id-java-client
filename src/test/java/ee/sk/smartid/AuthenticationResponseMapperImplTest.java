@@ -56,7 +56,7 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
-class DefaultAuthenticationResponseMapperTest {
+class AuthenticationResponseMapperImplTest {
 
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
 
@@ -64,7 +64,7 @@ class DefaultAuthenticationResponseMapperTest {
 
     @BeforeEach
     void setUp() {
-        authenticationResponseMapper = DefaultAuthenticationResponseMapper.getInstance();
+        authenticationResponseMapper = AuthenticationResponseMapperImpl.getInstance();
     }
 
     @Test

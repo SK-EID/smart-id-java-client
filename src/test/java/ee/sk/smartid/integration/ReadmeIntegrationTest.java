@@ -735,7 +735,7 @@ public class ReadmeIntegrationTest {
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
 
             // Validate the certificate
-            certificateValidator.validateCertificate(certResponse.certificate());
+            certificateValidator.validate(certResponse.certificate());
         }
     }
 

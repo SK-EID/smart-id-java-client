@@ -57,7 +57,7 @@ public class CertificateValidatorImpl implements CertificateValidator {
     }
 
     @Override
-    public void validateCertificate(X509Certificate certificate) {
+    public void validate(X509Certificate certificate) {
         validateCertificateIsCurrentlyValid(certificate);
         validateCertificateChain(certificate);
     }

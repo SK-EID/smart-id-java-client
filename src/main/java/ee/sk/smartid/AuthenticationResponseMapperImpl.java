@@ -44,9 +44,9 @@ import ee.sk.smartid.util.StringUtil;
 /**
  * Validates and maps the received session status to authentication response
  */
-public class DefaultAuthenticationResponseMapper implements AuthenticationResponseMapper {
+public class AuthenticationResponseMapperImpl implements AuthenticationResponseMapper {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultAuthenticationResponseMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseMapperImpl.class);
 
     private static AuthenticationResponseMapper instance;
 
@@ -56,13 +56,13 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
 
     public static AuthenticationResponseMapper getInstance() {
         if (instance == null) {
-            instance = new DefaultAuthenticationResponseMapper();
+            instance = new AuthenticationResponseMapperImpl();
         }
         return instance;
     }
 
     /**
-     * Maps session status to authentication response
+     * Maps session status to authentication response {@link AuthenticationResponse]
      *
      * @param sessionStatus session status received from Smart-ID server
      * @return authentication response

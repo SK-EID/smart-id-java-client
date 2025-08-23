@@ -31,12 +31,12 @@ import java.security.cert.X509Certificate;
 public interface SignatureValueValidator {
 
     /**
-     * Validates the signature value against the expected digest.
+     * Validates the signature value against the calculated signature value.
      *
      * @param signatureValue      the signature value to validate
      * @param payload             the original data that was signed
      * @param certificate         X509 certificate used for signature validation
-     * @param rsaSsaPssParameters signature parameters used for validation
+     * @param rsaSsaPssParameters signature parameters used for creating signature value
      * @throws UnsupportedOperationException when there are any issue with validating the signature value
      */
     void validate(byte[] signatureValue,

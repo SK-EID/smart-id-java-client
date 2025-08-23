@@ -54,7 +54,6 @@ import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.dao.SessionCertificate;
-import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithm;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
@@ -196,7 +195,7 @@ public class SignatureResponseValidator {
             logger.error("Signature session status certificate level mismatch: requested {}, returned {}", requestedCertificateLevel, sessionCertificate.getCertificateLevel());
             throw new CertificateLevelMismatchException();
         }
-        certificateValidator.validateCertificate(certificate);
+        certificateValidator.validate(certificate);
         validateCertificatePoliciesAndPurpose(certificate);
     }
 
