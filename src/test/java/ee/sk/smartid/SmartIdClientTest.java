@@ -658,7 +658,6 @@ class SmartIdClientTest {
                     .initCertificateChoice();
 
             long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
-
             URI deviceLink = smartIdClient.createDynamicContent()
                     .withDeviceLinkBase(response.deviceLinkBase().toString())
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
