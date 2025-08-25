@@ -26,8 +26,6 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
@@ -41,29 +39,49 @@ import ee.sk.smartid.util.StringUtil;
 /**
  * Validates and maps the received session status to certificate choice response
  */
-public class CertificateChoiceResponseMapper {
+public class CertificateChoiceResponseValidator {
+
+    private final CertificateValidator certificateValidator;
 
     /**
-     * Maps session status to certificate choice response
+     * Initializes the certificate choice response validator with a certificate validator
+     *
+     * @param certificateValidator certificate validator to validate the received certificate
+     */
+    public CertificateChoiceResponseValidator(CertificateValidator certificateValidator) {
+        this.certificateValidator = certificateValidator;
+    }
+
+    /**
+     * Validates certificate choice session status response
      * <p>
      * Uses {@link CertificateLevel#QUALIFIED} as the default for requested certificate level
      *
      * @param sessionStatus session status received from Smart-ID server
-     * @return certificate choice response
+     * @return certificate choice response {@link CertificateChoiceResponse}
      */
-    public static CertificateChoiceResponse from(SessionStatus sessionStatus) {
-        return from(sessionStatus, CertificateLevel.QUALIFIED);
+    public CertificateChoiceResponse validate(SessionStatus sessionStatus) {
+        return validate(sessionStatus, CertificateLevel.QUALIFIED);
     }
 
     /**
-     * Maps session status to certificate choice response
+     * Validates session status to certificate choice response with the requested certificate level
      *
      * @param sessionStatus             session status received from Smart-ID server
      * @param requestedCertificateLevel requested certificate level
-     * @return certificate choice response
+     * @return certificate choice response  {@link CertificateChoiceResponse}
+     * @throws SmartIdClientException                when the parameters are not provided
+     * @throws UnprocessableSmartIdResponseException when any required field is missing from the response or has invalid value
+     * @throws CertificateLevelMismatchException     when the returned certificate level is lower than the requested one
      */
-    public static CertificateChoiceResponse from(SessionStatus sessionStatus, CertificateLevel requestedCertificateLevel) {
-        validateSessionStatus(sessionStatus);
+    public CertificateChoiceResponse validate(SessionStatus sessionStatus, CertificateLevel requestedCertificateLevel) {
+        if (sessionStatus == null) {
+            throw new SmartIdClientException("Parameter 'sessionStatus' is not provided");
+        }
+        if (requestedCertificateLevel == null) {
+            throw new SmartIdClientException("Parameter 'requestedCertificateLevel' is not provided");
+        }
+        validateResult(sessionStatus.getResult());
         X509Certificate certificate = getValidatedCertificate(sessionStatus, requestedCertificateLevel);
 
         var certificateChoiceResponse = new CertificateChoiceResponse();
@@ -76,58 +94,47 @@ public class CertificateChoiceResponseMapper {
         return certificateChoiceResponse;
     }
 
-    private static void validateSessionStatus(SessionStatus sessionStatus) {
-        if (sessionStatus == null) {
-            throw new SmartIdClientException("Session status parameter is not provided");
-        }
-        validateResult(sessionStatus.getResult());
-    }
-
     private static void validateResult(SessionResult sessionResult) {
         if (sessionResult == null) {
-            throw new UnprocessableSmartIdResponseException("Session result parameter is missing");
+            throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'result' is missing");
         }
         String endResult = sessionResult.getEndResult();
         if (StringUtil.isEmpty(endResult)) {
-            throw new UnprocessableSmartIdResponseException("End result parameter is missing in the session result");
+            throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'result.endResult' is empty");
         }
         if (!"OK".equalsIgnoreCase(endResult)) {
             ErrorResultHandler.handle(sessionResult);
         }
         if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
-            throw new UnprocessableSmartIdResponseException("Document number parameter is missing in the session result");
+            throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'result.documentNumber' is empty");
         }
     }
 
-    private static X509Certificate getValidatedCertificate(SessionStatus sessionStatus, CertificateLevel requestedCertificateLevel) {
+    private X509Certificate getValidatedCertificate(SessionStatus sessionStatus, CertificateLevel requestedCertificateLevel) {
         validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
         X509Certificate certificate = CertificateParser.parseX509Certificate(sessionStatus.getCert().getValue());
-        try {
-            certificate.checkValidity();
-        } catch (CertificateExpiredException | CertificateNotYetValidException ex) {
-            throw new UnprocessableSmartIdResponseException("Signer's certificate is not valid", ex);
-        }
+        certificateValidator.validate(certificate);
+        // TODO - 23.08.25: add purpose validations
         return certificate;
     }
 
     private static void validateCertificate(SessionCertificate sessionCertificate, CertificateLevel requestedCertificateLevel) {
         if (sessionCertificate == null) {
-            throw new UnprocessableSmartIdResponseException("Certificate parameter is missing in session status");
+            throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'cert' is missing");
         }
         if (StringUtil.isEmpty(sessionCertificate.getValue())) {
-            throw new UnprocessableSmartIdResponseException("Value parameter is missing in certificate");
+            throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'cert.value' has empty value");
         }
         if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
-            throw new UnprocessableSmartIdResponseException("Certificate level parameter is missing in certificate");
+            throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'cert.certificateLevel' has empty value");
         }
-        if (!isCertificateLevelValid(requestedCertificateLevel.name(), sessionCertificate.getCertificateLevel())) {
-            throw new CertificateLevelMismatchException("Certificate level returned by Smart-ID is lower than requested");
+        if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
+            throw new CertificateLevelMismatchException("Certificate choice session status response certificate level is lower than requested");
         }
     }
 
-    private static boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
-        CertificateLevel requestedLevel = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
+    private static boolean isCertificateLevelValid(CertificateLevel requestedCertificateLevel, String returnedCertificateLevel) {
         CertificateLevel returnedLevel = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
-        return returnedLevel.isSameLevelOrHigher(requestedLevel);
+        return returnedLevel.isSameLevelOrHigher(requestedCertificateLevel);
     }
 }

@@ -802,10 +802,15 @@ if("COMPLETE".equals(sessionStatus.getState())){
 
 #### Example of validating the certificate choice session response:
 
+CertificateChoiceResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator)
+
 ```java
 try {
+    // Set up CertificateChoiceResponseValidator with the CertificateValidator
+    CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
     // Validate and map the session status. If the sessions end result is other than OK, then an exception will be thrown.
-    CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(sessionStatus);
+    CertificateChoiceResponse certificateChoiceResponse = certificateChoiceResponseValidator.validate(sessionStatus);
+    
 } catch (UserRefusedException e) {
     System.out.println("User refused the session.");
 } catch (SessionTimeoutException e) {
@@ -824,7 +829,7 @@ SignatureResponseValidator depends on CertificateValidator. Checkout [setting up
 ```java
 try {
     // Objects needed for validation
-    CertificateResponse certResponse; // queried by document number or from certificate choice session
+    CertificateResponse certResponse; // queried by document number or use CertificateChoiceResponse
     SignableData signableData; // data that was sent for signing
     // Initialize the signature response validator with CertificateValidator
     SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);

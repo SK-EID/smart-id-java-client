@@ -49,15 +49,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateByDocumentNumberResult;
 import ee.sk.smartid.CertificateChoiceResponse;
-import ee.sk.smartid.CertificateChoiceResponseMapper;
+import ee.sk.smartid.CertificateChoiceResponseValidator;
 import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.CertificateValidator;
 import ee.sk.smartid.CertificateValidatorImpl;
@@ -93,7 +91,6 @@ import ee.sk.smartid.rest.dao.SessionStatus;
 public class ReadmeIntegrationTest {
 
     private static final String ALPHA_NUMERIC_PATTERN = "^[A-z0-9]{4}$";
-    private static final Logger log = LoggerFactory.getLogger(ReadmeIntegrationTest.class);
 
     private SmartIdClient smartIdClient;
 
@@ -432,7 +429,10 @@ public class ReadmeIntegrationTest {
 
                 // Querying the sessions status
                 SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
-                CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
+                TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+                CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+                CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+                CertificateChoiceResponse certificateChoiceResponse = certificateChoiceResponseValidator.validate(certificateSessionStatus);
 
                 // For example construct DataToSign using digidoc4j library and queried certificate
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
@@ -488,9 +488,6 @@ public class ReadmeIntegrationTest {
                 SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
                 // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
                 assertEquals("COMPLETE", signatureSessionStatus.getState());
-
-                TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-                CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
 
                 // Validate signature response
                 SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
@@ -635,7 +632,11 @@ public class ReadmeIntegrationTest {
             // Querying the sessions status
             SessionStatus sessionStatus = poller.getSessionStatus(sessionId);
 
-            CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus);
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus);
+
             assertEquals("OK", response.getEndResult());
             assertEquals("PNOLT-40504040001-MOCK-Q", response.getDocumentNumber());
             assertNotNull(response.getCertificate());
@@ -666,7 +667,10 @@ public class ReadmeIntegrationTest {
             // Querying the sessions status
             SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
 
-            CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(certificateSessionStatus);
             // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
 
             // Create the signable data
@@ -703,8 +707,6 @@ public class ReadmeIntegrationTest {
             // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
             SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
 

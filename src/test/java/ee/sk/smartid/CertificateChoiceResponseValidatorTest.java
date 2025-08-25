@@ -35,6 +35,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
@@ -49,26 +50,25 @@ import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionResultDetails;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
-public class CertificateChoiceResponseMapperTest {
+public class CertificateChoiceResponseValidatorTest {
 
     private static final String CERTIFICATE_CHOICE_CERT = FileUtil.readFileToString("test-certs/cert-choice-cert-40504040001.pem.cert");
     private static final String EXPIRED_CERT = FileUtil.readFileToString("test-certs/expired-cert.pem.crt");
 
+    CertificateChoiceResponseValidator certificateChoiceResponseValidator;
+
+    @BeforeEach
+    void setUp() {
+        TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+        CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+        certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+    }
+
     @Test
     void from() {
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("OK");
-        sessionResult.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        var sessionStatus = toSessionStatus(CERTIFICATE_CHOICE_CERT, "QUALIFIED");
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(getEncodedCertificateData(CERTIFICATE_CHOICE_CERT));
-        sessionCertificate.setCertificateLevel("QUALIFIED");
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setCert(sessionCertificate);
-
-        CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus);
+        CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus);
 
         assertEquals("OK", response.getEndResult());
         assertEquals("PNOEE-40504040001-MOCK-Q", response.getDocumentNumber());
@@ -79,19 +79,9 @@ public class CertificateChoiceResponseMapperTest {
     @ParameterizedTest
     @EnumSource(value = CertificateLevel.class, names = {"QUALIFIED", "QSCD"})
     void from_returnedCertificateLevelSameAsRequested_ok(CertificateLevel requestedCertificateLevel) {
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("OK");
-        sessionResult.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        var sessionStatus = toSessionStatus(CERTIFICATE_CHOICE_CERT, "QUALIFIED");
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(getEncodedCertificateData(CERTIFICATE_CHOICE_CERT));
-        sessionCertificate.setCertificateLevel("QUALIFIED");
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setCert(sessionCertificate);
-
-        CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus, requestedCertificateLevel);
+        CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus, requestedCertificateLevel);
 
         assertEquals("OK", response.getEndResult());
         assertEquals("PNOEE-40504040001-MOCK-Q", response.getDocumentNumber());
@@ -101,19 +91,9 @@ public class CertificateChoiceResponseMapperTest {
 
     @Test
     void from_returnedCertificateHigherThanRequested_ok() {
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("OK");
-        sessionResult.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        var sessionStatus = toSessionStatus(CERTIFICATE_CHOICE_CERT, "QUALIFIED");
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(getEncodedCertificateData(CERTIFICATE_CHOICE_CERT));
-        sessionCertificate.setCertificateLevel("QUALIFIED");
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setCert(sessionCertificate);
-
-        CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus, CertificateLevel.ADVANCED);
+        CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus, CertificateLevel.ADVANCED);
 
         assertEquals("OK", response.getEndResult());
         assertEquals("PNOEE-40504040001-MOCK-Q", response.getDocumentNumber());
@@ -122,39 +102,34 @@ public class CertificateChoiceResponseMapperTest {
     }
 
     @Test
+    void from_sessionStatusNotProvided_throwException() {
+        var ex = assertThrows(SmartIdClientException.class, () -> certificateChoiceResponseValidator.validate(null));
+        assertEquals("Parameter 'sessionStatus' is not provided", ex.getMessage());
+    }
+
+
+    @Test
+    void from_requestCertificateLevelNotProvided_throwException() {
+        var sessionStatus = toSessionStatus(CERTIFICATE_CHOICE_CERT, "QUALIFIED");
+
+        var ex = assertThrows(SmartIdClientException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus, null));
+        assertEquals("Parameter 'requestedCertificateLevel' is not provided", ex.getMessage());
+    }
+
+    @Test
     void from_expiredCertificateWasReturned() {
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("OK");
-        sessionResult.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        var sessionStatus = toSessionStatus(EXPIRED_CERT, "QUALIFIED");
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(getEncodedCertificateData(EXPIRED_CERT));
-        sessionCertificate.setCertificateLevel("QUALIFIED");
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setCert(sessionCertificate);
-
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
-        assertEquals("Signer's certificate is not valid", ex.getMessage());
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus));
+        assertEquals("Certificate is invalid", ex.getMessage());
     }
 
     @Test
     void from_sessionRequestCertificateLevelIsLowerThanRequested_throwException() {
-        var sessionResult = new SessionResult();
-        sessionResult.setEndResult("OK");
-        sessionResult.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+        var sessionStatus = toSessionStatus(CERTIFICATE_CHOICE_CERT, "ADVANCED");
 
-        var sessionCertificate = new SessionCertificate();
-        sessionCertificate.setValue(getEncodedCertificateData(CERTIFICATE_CHOICE_CERT));
-        sessionCertificate.setCertificateLevel("ADVANCED");
-
-        var sessionStatus = new SessionStatus();
-        sessionStatus.setResult(sessionResult);
-        sessionStatus.setCert(sessionCertificate);
-
-        var ex = assertThrows(CertificateLevelMismatchException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
-        assertEquals("Certificate level returned by Smart-ID is lower than requested", ex.getMessage());
+        var ex = assertThrows(CertificateLevelMismatchException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus));
+        assertEquals("Certificate choice session status response certificate level is lower than requested", ex.getMessage());
     }
 
     @Test
@@ -170,8 +145,8 @@ public class CertificateChoiceResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setCert(sessionCertificate);
 
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
-        assertEquals("Certificate level parameter is missing in certificate", ex.getMessage());
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus));
+        assertEquals("Certificate choice session status field 'cert.certificateLevel' has empty value", ex.getMessage());
     }
 
     @ParameterizedTest
@@ -188,8 +163,8 @@ public class CertificateChoiceResponseMapperTest {
         sessionStatus.setResult(sessionResult);
         sessionStatus.setCert(sessionCertificate);
 
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
-        assertEquals("Value parameter is missing in certificate", ex.getMessage());
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus));
+        assertEquals("Certificate choice session status field 'cert.value' has empty value", ex.getMessage());
     }
 
     @Test
@@ -201,8 +176,8 @@ public class CertificateChoiceResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
-        assertEquals("Certificate parameter is missing in session status", ex.getMessage());
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus));
+        assertEquals("Certificate choice session status field 'cert' is missing", ex.getMessage());
     }
 
     @Test
@@ -213,8 +188,8 @@ public class CertificateChoiceResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
-        assertEquals("Document number parameter is missing in the session result", ex.getMessage());
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus));
+        assertEquals("Certificate choice session status field 'result.documentNumber' is empty", ex.getMessage());
     }
 
     @ParameterizedTest
@@ -226,7 +201,7 @@ public class CertificateChoiceResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(sessionResult);
 
-        assertThrows(expectedException, () -> CertificateChoiceResponseMapper.from(sessionStatus));
+        assertThrows(expectedException, () -> certificateChoiceResponseValidator.validate(sessionStatus));
     }
 
     @ParameterizedTest
@@ -243,7 +218,7 @@ public class CertificateChoiceResponseMapperTest {
         sessionStatus.setState("COMPLETE");
         sessionStatus.setResult(sessionResult);
 
-        assertThrows(expectedException, () -> CertificateChoiceResponseMapper.from(sessionStatus));
+        assertThrows(expectedException, () -> certificateChoiceResponseValidator.validate(sessionStatus));
     }
 
     @Test
@@ -251,20 +226,29 @@ public class CertificateChoiceResponseMapperTest {
         var sessionStatus = new SessionStatus();
         sessionStatus.setResult(new SessionResult());
 
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(sessionStatus));
-        assertEquals("End result parameter is missing in the session result", ex.getMessage());
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateChoiceResponseValidator.validate(sessionStatus));
+        assertEquals("Certificate choice session status field 'result.endResult' is empty", ex.getMessage());
     }
 
     @Test
     void from_sessionResultIsNotProvided_throwException() {
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> CertificateChoiceResponseMapper.from(new SessionStatus()));
-        assertEquals("Session result parameter is missing", ex.getMessage());
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateChoiceResponseValidator.validate(new SessionStatus()));
+        assertEquals("Certificate choice session status field 'result' is missing", ex.getMessage());
     }
 
-    @Test
-    void from_sessionStatusNotProvided_throwException() {
-        var ex = assertThrows(SmartIdClientException.class, () -> CertificateChoiceResponseMapper.from(null));
-        assertEquals("Session status parameter is not provided", ex.getMessage());
+    private static SessionStatus toSessionStatus(String certificateChoiceCert, String QUALIFIED) {
+        var sessionResult = new SessionResult();
+        sessionResult.setEndResult("OK");
+        sessionResult.setDocumentNumber("PNOEE-40504040001-MOCK-Q");
+
+        var sessionCertificate = new SessionCertificate();
+        sessionCertificate.setValue(getEncodedCertificateData(certificateChoiceCert));
+        sessionCertificate.setCertificateLevel(QUALIFIED);
+
+        var sessionStatus = new SessionStatus();
+        sessionStatus.setResult(sessionResult);
+        sessionStatus.setCert(sessionCertificate);
+        return sessionStatus;
     }
 
     private static X509Certificate toX509Certificate() {
