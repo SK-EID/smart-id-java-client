@@ -271,7 +271,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             builder.withDocumentNumber(null).withSemanticsIdentifier(null);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.", ex.getMessage());
+            assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed.", ex.getMessage());
         }
 
         @Test
@@ -300,12 +300,12 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             builder.withInteractions(interactions);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Parameter interactions must be set and contain at least one interaction.", ex.getMessage());
+            assertEquals("Value for 'interactions' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
-        void initSignatureSession_initialCallbackUrlIsInvalid_throwException(String url, String expectedErrorMessage) {
+        void initSignatureSession_initialCallbackUrlIsInvalid_throwException(String url) {
             var exception = assertThrows(SmartIdClientException.class, () ->
                     new DeviceLinkSignatureSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -318,7 +318,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                             .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
                             .initSignatureSession()
             );
-            assertEquals(expectedErrorMessage, exception.getMessage());
+            assertEquals("Value for 'initialCallbackUrl' must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -335,7 +335,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                             .initSignatureSession()
             );
 
-            assertEquals("Duplicate values in interactions are not allowed", exception.getMessage());
+            assertEquals("Value for 'interactions' cannot contain duplicate types", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -344,7 +344,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             builder.withRelyingPartyUUID(relyingPartyUUID);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Relying Party UUID must be set.", ex.getMessage());
+            assertEquals("Value for 'relyingPartyUUID' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -353,21 +353,21 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             builder.withRelyingPartyName(relyingPartyName);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Relying Party Name must be set.", ex.getMessage());
+            assertEquals("Value for 'relyingPartyName' cannot be empty", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_invalidNonce() {
             builder.withNonce("1234567890123456789012345678901");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
+            assertEquals("Value for 'nonce' length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_emptyNonce() {
             builder.withNonce("");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
+            assertEquals("Value for 'nonce' length must be between 1 and 30 characters.", ex.getMessage());
         }
 
         @Test
@@ -396,7 +396,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
-            assertEquals("Session ID is missing from the response", ex.getMessage());
+            assertEquals("Device link signature session initialisation response field 'sessionID' is missing or empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -412,7 +412,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
-            assertEquals("Session token is missing from the response", ex.getMessage());
+            assertEquals("Device link signature session initialisation response field 'sessionToken' is missing or empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -428,7 +428,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
-            assertEquals("Session secret is missing from the response", ex.getMessage());
+            assertEquals("Device link signature session initialisation response field 'sessionSecret' is missing or empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -444,7 +444,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
-            assertEquals("deviceLinkBase is missing from the response", ex.getMessage());
+            assertEquals("Device link signature session initialisation response field 'deviceLinkBase' is missing or empty", ex.getMessage());
         }
     }
 
@@ -490,9 +490,9 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of("http://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("https://example.com|test", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("ftp://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
+                    Arguments.of("http://example.com"),
+                    Arguments.of("https://example.com|test"),
+                    Arguments.of("ftp://example.com")
             );
         }
     }

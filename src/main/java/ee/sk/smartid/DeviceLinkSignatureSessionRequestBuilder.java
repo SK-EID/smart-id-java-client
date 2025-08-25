@@ -29,11 +29,9 @@ package ee.sk.smartid;
 import java.util.List;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
@@ -50,7 +48,6 @@ import ee.sk.smartid.util.StringUtil;
 
 public class DeviceLinkSignatureSessionRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(DeviceLinkSignatureSessionRequestBuilder.class);
     private static final String INITIAL_CALLBACK_URL_PATTERN = "^https://[^|]+$";
 
     private final SmartIdConnector connector;
@@ -243,7 +240,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     /**
-     * Sends the signature request and initiates a device link-based signature session.
+     * Sends the signature request and initiates a device link based signature session.
      * <p>
      * There are two supported ways to start the signature session:
      * <ul>
@@ -270,7 +267,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         } else if (semanticsIdentifier != null) {
             return connector.initDeviceLinkSignature(request, semanticsIdentifier);
         } else {
-            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set. Anonymous signing is not allowed.");
+            throw new SmartIdClientException("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed.");
         }
     }
 
@@ -293,23 +290,22 @@ public class DeviceLinkSignatureSessionRequestBuilder {
 
     private void validateParameters() {
         if (relyingPartyUUID == null || relyingPartyUUID.isEmpty()) {
-            throw new SmartIdClientException("Relying Party UUID must be set.");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (relyingPartyName == null || relyingPartyName.isEmpty()) {
-            throw new SmartIdClientException("Relying Party Name must be set.");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
         }
         validateInteractions();
         validateInitialCallbackUrl();
 
         if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
-            throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
+            throw new SmartIdClientException("Value for 'nonce' length must be between 1 and 30 characters.");
         }
     }
 
     private void validateInteractions() {
         if (interactions == null || interactions.isEmpty()) {
-            logger.error("Parameter interactions must be set and contain at least one interaction.");
-            throw new SmartIdClientException("Parameter interactions must be set and contain at least one interaction.");
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         validateNoDuplicateInteractions();
         interactions.forEach(DeviceLinkInteraction::validate);
@@ -317,35 +313,30 @@ public class DeviceLinkSignatureSessionRequestBuilder {
 
     private void validateInitialCallbackUrl() {
         if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
-            throw new SmartIdClientException("initialCallbackUrl must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+            throw new SmartIdClientException("Value for 'initialCallbackUrl' must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
         }
     }
 
     private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkSignatureSessionResponse) {
         if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionID())) {
-            logger.error("Session ID is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionID' is missing or empty");
         }
 
         if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionToken())) {
-            logger.error("Session token is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session token is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionToken' is missing or empty");
         }
 
         if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionSecret())) {
-            logger.error("Session secret is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionSecret' is missing or empty");
         }
         if (deviceLinkSignatureSessionResponse.getDeviceLinkBase() == null || deviceLinkSignatureSessionResponse.getDeviceLinkBase().toString().isBlank()) {
-            logger.error("deviceLinkBase is missing or empty in the response");
-            throw new UnprocessableSmartIdResponseException("deviceLinkBase is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'deviceLinkBase' is missing or empty");
         }
     }
 
     private void validateNoDuplicateInteractions() {
         if (interactions.stream().map(Interaction::getType).distinct().count() != interactions.size()) {
-            logger.error("Duplicate values found in interactions");
-            throw new SmartIdClientException("Duplicate values in interactions are not allowed");
+            throw new SmartIdClientException("Value for 'interactions' cannot contain duplicate types");
         }
     }
 }
