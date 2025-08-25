@@ -109,7 +109,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             verify(connector).initNotificationCertificateChoice(requestCaptor.capture(), any(SemanticsIdentifier.class));
             CertificateChoiceSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(expectedValue, request.getCertificateLevel());
+            assertEquals(expectedValue, request.certificateLevel());
         }
 
         @ParameterizedTest
@@ -130,7 +130,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             verify(connector).initNotificationCertificateChoice(requestCaptor.capture(), any(SemanticsIdentifier.class));
             CertificateChoiceSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(nonce, request.getNonce());
+            assertEquals(nonce, request.nonce());
         }
 
         @Test
@@ -150,7 +150,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             verify(connector).initNotificationCertificateChoice(requestCaptor.capture(), any(SemanticsIdentifier.class));
             CertificateChoiceSessionRequest request = requestCaptor.getValue();
 
-            assertNull(request.getRequestProperties());
+            assertNull(request.requestProperties());
         }
 
         @ParameterizedTest
@@ -172,8 +172,8 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             verify(connector).initNotificationCertificateChoice(requestCaptor.capture(), any(SemanticsIdentifier.class));
             CertificateChoiceSessionRequest request = requestCaptor.getValue();
 
-            assertNotNull(request.getRequestProperties());
-            assertEquals(ipRequested, request.getRequestProperties().shareMdClientIpAddress());
+            assertNotNull(request.requestProperties());
+            assertEquals(ipRequested, request.requestProperties().shareMdClientIpAddress());
         }
 
         @ParameterizedTest
@@ -194,7 +194,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             verify(connector).initNotificationCertificateChoice(requestCaptor.capture(), any(SemanticsIdentifier.class));
             CertificateChoiceSessionRequest request = requestCaptor.getValue();
 
-            assertEquals(expectedCapabilities, request.getCapabilities());
+            assertEquals(expectedCapabilities, request.capabilities());
         }
 
         @ParameterizedTest

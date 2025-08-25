@@ -93,10 +93,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
-        assertEquals("test-session-id", signature.getSessionID());
-        assertEquals("test-session-token", signature.getSessionToken());
-        assertEquals("test-session-secret", signature.getSessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), signature.getDeviceLinkBase());
+        assertEquals("test-session-id", signature.sessionID());
+        assertEquals("test-session-token", signature.sessionToken());
+        assertEquals("test-session-secret", signature.sessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), signature.deviceLinkBase());
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), eq(semanticsIdentifier));
@@ -114,10 +114,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         DeviceLinkSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
-        assertEquals("test-session-id", signature.getSessionID());
-        assertEquals("test-session-token", signature.getSessionToken());
-        assertEquals("test-session-secret", signature.getSessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), signature.getDeviceLinkBase());
+        assertEquals("test-session-id", signature.sessionID());
+        assertEquals("test-session-token", signature.sessionToken());
+        assertEquals("test-session-secret", signature.sessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), signature.deviceLinkBase());
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), eq(documentNumber));
@@ -386,11 +386,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionID(String sessionID) {
-            var response = new DeviceLinkSessionResponse();
-            response.setSessionID(sessionID);
-            response.setSessionToken("test-session-token");
-            response.setSessionSecret("test-session-secret");
-            response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
+            var response = new DeviceLinkSessionResponse(sessionID,
+                    "test-session-token",
+                    "test-session-secret",
+                    URI.create("https://example.com/device-link"));
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
@@ -402,11 +401,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionToken(String sessionToken) {
-            var response = new DeviceLinkSessionResponse();
-            response.setSessionID("test-session-id");
-            response.setSessionToken(sessionToken);
-            response.setSessionSecret("test-session-secret");
-            response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
+            var response = new DeviceLinkSessionResponse("test-session-id",
+                    sessionToken,
+                    "test-session-secret",
+                    URI.create("https://example.com/device-link"));
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
@@ -418,11 +416,11 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponseParameters_missingSessionSecret(String sessionSecret) {
-            var response = new DeviceLinkSessionResponse();
-            response.setSessionID("test-session-id");
-            response.setSessionToken("test-session-token");
-            response.setSessionSecret(sessionSecret);
-            response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
+            var response = new DeviceLinkSessionResponse("test-session-id",
+                    "test-session-token",
+                    sessionSecret,
+                    URI.create("https://example.com/device-link"));
+
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
@@ -434,11 +432,11 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_deviceLinkBaseIsMissingOrBlank_throwException(String deviceLinkBaseValue) {
-            var response = new DeviceLinkSessionResponse();
-            response.setSessionID("test-session-id");
-            response.setSessionToken("test-session-token");
-            response.setSessionSecret("test-session-secret");
-            response.setDeviceLinkBase(deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
+            var response = new DeviceLinkSessionResponse("test-session-id",
+                    "test-session-token",
+                    "test-session-secret",
+                    deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
+
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
@@ -449,12 +447,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     }
 
     private DeviceLinkSessionResponse mockSignatureSessionResponse() {
-        var response = new DeviceLinkSessionResponse();
-        response.setSessionID("test-session-id");
-        response.setSessionToken("test-session-token");
-        response.setSessionSecret("test-session-secret");
-        response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
-        return response;
+        return new DeviceLinkSessionResponse("test-session-id",
+                "test-session-token",
+                "test-session-secret",
+                URI.create("https://example.com/device-link"));
     }
 
     private static class CertificateLevelArgumentProvider implements ArgumentsProvider {

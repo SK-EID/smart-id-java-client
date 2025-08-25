@@ -215,15 +215,15 @@ DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthentica
 AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
 // Use sessionID to start polling for session status
-String sessionId = authenticationSessionResponse.getSessionID();
+String sessionId = authenticationSessionResponse.sessionID();
 
 // Following values are used for generating device link or QR-code
-String sessionToken = authenticationSessionResponse.getSessionToken();
+String sessionToken = authenticationSessionResponse.sessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
-URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+String sessionSecret = authenticationSessionResponse.sessionSecret();
+URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
 // Will be used to calculate elapsed time being used in QR-code
-Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
 // Next steps:
 // - Generate QR-code or device link to be displayed to the user
@@ -264,15 +264,15 @@ DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthentica
 AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
 // Use sessionID to start polling for session status
-String sessionId = authenticationSessionResponse.getSessionID();
+String sessionId = authenticationSessionResponse.sessionID();
 
 // Following values are used for generating device link or QR-code
-String sessionToken = authenticationSessionResponse.getSessionToken();
+String sessionToken = authenticationSessionResponse.sessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
-URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+String sessionSecret = authenticationSessionResponse.sessionSecret();
+URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
 // Will be used to calculate elapsed time being used in QR-code
-Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
 // Next steps:
 // - Generate QR-code or device link to be displayed to the user
@@ -306,15 +306,15 @@ DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthentica
 AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
 // Use sessionID to start polling for session status
-String sessionId = authenticationSessionResponse.getSessionID();
+String sessionId = authenticationSessionResponse.sessionID();
 
 // Following values are used for generating device link or QR-code
-String sessionToken = authenticationSessionResponse.getSessionToken();
+String sessionToken = authenticationSessionResponse.sessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
-String sessionSecret = authenticationSessionResponse.getSessionSecret();
-URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+String sessionSecret = authenticationSessionResponse.sessionSecret();
+URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
 // Will be used to calculate elapsed time being used in QR-code
-Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
 // Next steps:
 // - Generate QR-code or device link to be displayed to the user 
@@ -357,14 +357,14 @@ DeviceLinkSessionResponse certificateChoice = client.createDeviceLinkCertificate
     .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initiateCertificateChoice();
 
-String sessionId = certificateChoice.getSessionID();
+String sessionId = certificateChoice.sessionID();
 // SessionID is used to query sessions status later
 
-String sessionToken = certificateChoice.getSessionToken();
+String sessionToken = certificateChoice.sessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
-String sessionSecret = certificateChoice.getSessionSecret();
-String deviceLinkBase = certificateChoice.getDeviceLinkBase();
-Instant responseReceivedAt = certificateChoice.getReceivedAt();
+String sessionSecret = certificateChoice.sessionSecret();
+String deviceLinkBase = certificateChoice.deviceLinkBase();
+Instant responseReceivedAt = certificateChoice.receivedAt();
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
@@ -430,12 +430,12 @@ DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .initSignatureSession();
 
 // Process the signature response
-String sessionID = signatureResponse.getSessionID();
-String sessionToken = signatureResponse.getSessionToken();
+String sessionID = signatureResponse.sessionID();
+String sessionToken = signatureResponse.sessionToken();
 // Store sessionSecret only on backend side. Do not expose it to the client side.
-String sessionSecret = signatureResponse.getSessionSecret();
-Instant receivedAt = signatureResponse.getReceivedAt();
-String deviceLinkBase = signatureResponse.getDeviceLinkBase();
+String sessionSecret = signatureResponse.sessionSecret();
+Instant receivedAt = signatureResponse.receivedAt();
+String deviceLinkBase = signatureResponse.deviceLinkBase();
 
 // Generate QR-code or device link to be displayed to the user
 // Start querying sessions status
@@ -463,13 +463,13 @@ DeviceLinkSessionResponse signatureResponse = smartIdClient.createDeviceLinkSign
     .initSignatureSession();
 
 // Process the signature response
-String sessionID = signatureResponse.getSessionID();
-String sessionToken = signatureResponse.getSessionToken();
+String sessionID = signatureResponse.sessionID();
+String sessionToken = signatureResponse.sessionToken();
 
 // Store sessionSecret only on backend side. Do not expose it to the client side.
-String sessionSecret = signatureResponse.getSessionSecret();
-Instant receivedAt = signatureResponse.getReceivedAt();
-String deviceLinkBase = signatureResponse.getDeviceLinkBase();
+String sessionSecret = signatureResponse.sessionSecret();
+Instant receivedAt = signatureResponse.receivedAt();
+String deviceLinkBase = signatureResponse.deviceLinkBase();
 
 // Generate QR-code or device link to be displayed to the user
 // Start querying sessions status
@@ -582,17 +582,17 @@ Device link can be generated for 3 use cases: QR-code, web link to Smart-ID app,
 ```java
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Calculate elapsed seconds since session response
-long elapsedSeconds = Duration.between(session.getReceivedAt(), Instant.now()).getSeconds();
+long elapsedSeconds = Duration.between(session.receivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
+        .withDeviceLinkBase(sessionResponse.deviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(sessionResponse.getSessionToken())
+        .withSessionToken(sessionResponse.sessionToken())
         .withElapsedSeconds(elapsedSeconds)
         .withLang("eng")
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
-        .buildDeviceLink(sessionResponse.getSessionSecret());
+        .buildDeviceLink(sessionResponse.sessionSecret());
 ```
 
 ##### Overriding default values
@@ -602,14 +602,14 @@ DeviceLinkSessionResponse sessionResponse; // response from the session initiati
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
         .withSchemeName("smart-id-demo") // override default scheme name to use demo environment
-        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
+        .withDeviceLinkBase(sessionResponse.deviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.APP_2_APP)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(sessionResponse.getSessionToken())
+        .withSessionToken(sessionResponse.sessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withInitialCallbackUrl("https://your-app/callback")
-        .buildDeviceLink(sessionResponse.getSessionSecret());
+        .buildDeviceLink(sessionResponse.sessionSecret());
 ```
 
 #### Generating QR-code
@@ -625,17 +625,17 @@ Generated QR code will have error correction level low.
 ```java
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
-long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
+long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
+        .withDeviceLinkBase(sessionResponse.deviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(sessionResponse.getSessionToken())
+        .withSessionToken(sessionResponse.sessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withElapsedSeconds(elapsedSeconds)
-        .buildDeviceLink(sessionResponse.getSessionSecret());
+        .buildDeviceLink(sessionResponse.sessionSecret());
 
 // Generate QR code image from device link URI
 String qrCodeDataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
@@ -653,17 +653,17 @@ The width and height of 1159px produce a QR code with a module size of 19px.
 ```java
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
 // Calculate elapsed seconds from response received time
-long elapsedSeconds = Duration.between(response.getReceivedAt(), Instant.now()).getSeconds();
+long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
-        .withDeviceLinkBase(sessionResponse.getDeviceLinkBase())
+        .withDeviceLinkBase(sessionResponse.deviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
-        .withSessionToken(sessionResponse.getSessionToken())
+        .withSessionToken(sessionResponse.sessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withElapsedSeconds(elapsedSeconds)
-        .buildDeviceLink(sessionResponse.getSessionSecret());
+        .buildDeviceLink(sessionResponse.sessionSecret());
 
 // Create QR-code with height and width of 570px and quiet area of 2 modules.
 BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toString(), 570, 570, 2);
@@ -705,7 +705,7 @@ The following example shows how to use the SessionStatusPoller to fetch the sess
 SessionsStatusPoller poller = client.getSessionsStatusPoller();
 
 // Get sessionID from current session response
-SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.getSessionID());
+SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.sessionID());
 
 // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
 if("COMPLETE".equalsIgnoreCase(sessionStatus.getState())){
@@ -723,7 +723,7 @@ NB! If using this method for dynamic-link flows. Make sure the pollingSleepTimeo
 SessionStatusPoller poller = client.getSessionStatusPoller();
 
 // Querying the sessions status
-SessionStatus sessionStatus = poller.getSessionStatus(sessionResponse.getSessionID());
+SessionStatus sessionStatus = poller.getSessionStatus(sessionResponse.sessionID());
 // Checking sessions state
 if ("RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
     // Session is still running and querying can be continued
@@ -791,7 +791,7 @@ AuthenticationSessionRequest authenticationSessionRequest = authenticationReques
 
 // get sessions result
 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.getSessionID());
+SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.sessionID());
 
 // validate sessions state is completed
 if("COMPLETE".equals(sessionStatus.getState())){
@@ -981,7 +981,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         ))
         .initAuthenticationSession();
 
-String sessionId = authenticationSessionResponse.getSessionID();
+String sessionId = authenticationSessionResponse.sessionID();
 // SessionID is used to query sessions status later
 
 String verificationCode = authenticationSessionResponse.getVc().getValue();
@@ -1013,7 +1013,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         ))
         .initAuthenticationSession();
 
-String sessionId = authenticationSessionResponse.getSessionID();
+String sessionId = authenticationSessionResponse.sessionID();
 // SessionID is used to query sessions status later
 
 String verificationCode = authenticationSessionResponse.getVc().getValue();
@@ -1054,7 +1054,7 @@ NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = 
         .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
         .initCertificateChoice();
 
-String sessionId = certificateChoiceSessionResponse.getSessionID();
+String sessionId = certificateChoiceSessionResponse.sessionID();
 // SessionID is used to query sessions status later
 ```
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
@@ -1114,7 +1114,7 @@ NotificationSignatureSessionResponse signatureSessionResponse = client.createNot
     .initSignatureSession();
 
 // Process the querying sessions status response
-String sessionID = signatureSessionResponse.getSessionID();
+String sessionID = signatureSessionResponse.sessionID();
 
 // Display verification code to the user
 String verificationCode = signatureSessionResponse.getVc().getValue();
@@ -1143,7 +1143,7 @@ NotificationSignatureSessionResponse signatureResponse = client.createNotificati
     .initSignatureSession();
 
 // Process the signature response
-String sessionID = signatureResponse.getSessionID();
+String sessionID = signatureResponse.sessionID();
 
 // Display verification code to the user
 String verificationCode = signatureResponse.getVc().getValue();

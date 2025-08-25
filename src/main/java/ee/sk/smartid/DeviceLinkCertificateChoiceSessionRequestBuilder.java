@@ -171,24 +171,15 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
     }
 
     private CertificateChoiceSessionRequest createCertificateRequest() {
-        var request = new CertificateChoiceSessionRequest();
-        request.setRelyingPartyUUID(relyingPartyUUID);
-        request.setRelyingPartyName(relyingPartyName);
-
-        if (certificateLevel != null) {
-            request.setCertificateLevel(certificateLevel.name());
-        }
-
-        request.setNonce(nonce);
-        request.setCapabilities(capabilities);
-
-        if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
-            request.setRequestProperties(requestProperties);
-        }
-        request.setInitialCallbackUrl(initialCallbackUrl);
-
-        return request;
+        return new CertificateChoiceSessionRequest(
+                relyingPartyUUID,
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
+                nonce,
+                capabilities,
+                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
+                initialCallbackUrl
+        );
     }
 
     private void validateInitialCallbackUrl() {
@@ -198,19 +189,20 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
     }
 
     private static void validateResponseParameters(DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse) {
-        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionID())) {
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.sessionID())) {
             throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'sessionID' is missing or empty");
         }
 
-        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionToken())) {
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.sessionToken())) {
             throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'sessionToken' is missing or empty");
         }
 
-        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionSecret())) {
+        if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.sessionSecret())) {
             throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'sessionSecret' is missing or empty");
         }
 
-        if (deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase() == null || deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase().toString().isBlank()) {
+        if (deviceLinkCertificateChoiceSessionResponse.deviceLinkBase() == null
+                || deviceLinkCertificateChoiceSessionResponse.deviceLinkBase().toString().isBlank()) {
             throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'deviceLinkBase' is missing or empty");
         }
     }

@@ -318,18 +318,18 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkSignatureSessionResponse) {
-        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionID())) {
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.sessionID())) {
             throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionID' is missing or empty");
         }
 
-        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionToken())) {
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.sessionToken())) {
             throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionToken' is missing or empty");
         }
 
-        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.getSessionSecret())) {
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.sessionSecret())) {
             throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionSecret' is missing or empty");
         }
-        if (deviceLinkSignatureSessionResponse.getDeviceLinkBase() == null || deviceLinkSignatureSessionResponse.getDeviceLinkBase().toString().isBlank()) {
+        if (deviceLinkSignatureSessionResponse.deviceLinkBase() == null || deviceLinkSignatureSessionResponse.deviceLinkBase().toString().isBlank()) {
             throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'deviceLinkBase' is missing or empty");
         }
     }

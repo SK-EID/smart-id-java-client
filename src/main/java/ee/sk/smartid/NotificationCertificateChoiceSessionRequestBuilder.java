@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,19 +26,19 @@ package ee.sk.smartid;
  * #L%
  */
 
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.util.StringUtil;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
-
-import java.util.Set;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.util.StringUtil;
 
 public class NotificationCertificateChoiceSessionRequestBuilder {
 
@@ -179,23 +179,15 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     }
 
     private CertificateChoiceSessionRequest createCertificateChoiceRequest() {
-        var request = new CertificateChoiceSessionRequest();
-        request.setRelyingPartyUUID(relyingPartyUUID);
-        request.setRelyingPartyName(relyingPartyName);
-
-        if (certificateLevel != null) {
-            request.setCertificateLevel(certificateLevel.name());
-        }
-
-        request.setNonce(nonce);
-
-        if (this.shareMdClientIpAddress != null) {
-            var requestProperties = new RequestProperties(this.shareMdClientIpAddress);
-            request.setRequestProperties(requestProperties);
-        }
-
-        request.setCapabilities(capabilities);
-        return request;
+        return new CertificateChoiceSessionRequest(
+                relyingPartyUUID,
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
+                nonce,
+                capabilities,
+                shareMdClientIpAddress != null ? new RequestProperties(shareMdClientIpAddress) : null,
+                null
+        );
     }
 
     private void validateNonce() {

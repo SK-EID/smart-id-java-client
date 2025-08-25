@@ -428,8 +428,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
-                dynamicLinkAuthenticationSessionResponse.setSessionID(sessionId);
+                var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse(sessionId, null, null, null);
                 when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
@@ -441,9 +440,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         void initAuthenticationSession_sessionTokenIsNotPresentInTheResponse_throwException(String sessionToken) {
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
-                deviceLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
-                deviceLinkAuthenticationSessionResponse.setSessionToken(sessionToken);
+                var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", sessionToken, null, null);
                 when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(deviceLinkAuthenticationSessionResponse);
 
                 initAuthentication();
@@ -455,10 +452,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
-                dynamicLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
-                dynamicLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
-                dynamicLinkAuthenticationSessionResponse.setSessionSecret(sessionSecret);
+                var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", generateBase64String("sessionToken"), sessionSecret, null);
                 when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
                 initAuthentication();
@@ -470,12 +464,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         void initAuthenticationSession_deviceLinkBaseIsMissingOrBlank_throwException(String deviceLinkBaseValue) {
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var response = new DeviceLinkSessionResponse();
-                response.setSessionID("00000000-0000-0000-0000-000000000000");
-                response.setSessionToken(generateBase64String("sessionToken"));
-                response.setSessionSecret(generateBase64String("sessionSecret"));
-                response.setDeviceLinkBase(deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
-
+                var response = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000",generateBase64String("sessionToken"), generateBase64String("sessionSecret"), deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue) );
                 when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(response);
                 initAuthentication();
             });
@@ -537,12 +526,10 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
     }
 
     private DeviceLinkSessionResponse createDynamicLinkAuthenticationResponse() {
-        var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse();
-        deviceLinkAuthenticationSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
-        deviceLinkAuthenticationSessionResponse.setSessionToken(generateBase64String("sessionToken"));
-        deviceLinkAuthenticationSessionResponse.setSessionSecret(generateBase64String("sessionSecret"));
-        deviceLinkAuthenticationSessionResponse.setDeviceLinkBase(URI.create("https://example.com/callback"));
-        return deviceLinkAuthenticationSessionResponse;
+        return new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000",
+                generateBase64String("sessionToken"),
+                generateBase64String("sessionSecret"),
+                URI.create("https://example.com/callback"));
     }
 
     private static String generateBase64String(String text) {

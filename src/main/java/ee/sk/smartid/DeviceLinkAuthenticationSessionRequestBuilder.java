@@ -347,19 +347,19 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkAuthenticationSessionResponse) {
-        if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.getSessionID())) {
+        if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.sessionID())) {
             throw new UnprocessableSmartIdResponseException("Device link authentication session initialisation response field 'sessionID' is missing or empty");
         }
 
-        if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.getSessionToken())) {
+        if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.sessionToken())) {
             throw new UnprocessableSmartIdResponseException("Device link authentication session initialisation response field 'sessionToken' is missing or empty");
         }
 
-        if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.getSessionSecret())) {
+        if (StringUtil.isEmpty(deviceLinkAuthenticationSessionResponse.sessionSecret())) {
             throw new UnprocessableSmartIdResponseException("Device link authentication session initialisation response field 'sessionSecret' is missing or empty");
         }
-        if (deviceLinkAuthenticationSessionResponse.getDeviceLinkBase() == null
-                || deviceLinkAuthenticationSessionResponse.getDeviceLinkBase().toString().isBlank()) {
+        if (deviceLinkAuthenticationSessionResponse.deviceLinkBase() == null
+                || deviceLinkAuthenticationSessionResponse.deviceLinkBase().toString().isBlank()) {
             throw new UnprocessableSmartIdResponseException("Device link authentication session initialisation response field 'deviceLinkBase' is missing or empty");
 
         }

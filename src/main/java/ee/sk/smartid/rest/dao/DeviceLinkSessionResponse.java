@@ -30,57 +30,24 @@ import java.io.Serializable;
 import java.net.URI;
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DeviceLinkSessionResponse implements Serializable {
+public record DeviceLinkSessionResponse(String sessionID,
+                                        String sessionToken,
+                                        String sessionSecret,
+                                        URI deviceLinkBase,
+                                        Instant receivedAt
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private final Instant receivedAt;
+) implements Serializable {
 
-    private String sessionID;
-    private String sessionToken;
-    private String sessionSecret;
-    private URI deviceLinkBase;
-
-    public DeviceLinkSessionResponse() {
-        receivedAt = Instant.now();
-    }
-
-    public String getSessionID() {
-        return sessionID;
-    }
-
-    public void setSessionID(String sessionID) {
-        this.sessionID = sessionID;
-    }
-
-    public String getSessionToken() {
-        return sessionToken;
-    }
-
-    public void setSessionToken(String sessionToken) {
-        this.sessionToken = sessionToken;
-    }
-
-    public String getSessionSecret() {
-        return sessionSecret;
-    }
-
-    public void setSessionSecret(String sessionSecret) {
-        this.sessionSecret = sessionSecret;
-    }
-
-    public Instant getReceivedAt() {
-        return receivedAt;
-    }
-
-    public URI getDeviceLinkBase() {
-        return deviceLinkBase;
-    }
-
-    public void setDeviceLinkBase(URI deviceLinkBase) {
-        this.deviceLinkBase = deviceLinkBase;
+    @JsonCreator
+    public DeviceLinkSessionResponse(@JsonProperty("sessionID") String sessionID,
+                                     @JsonProperty("sessionToken") String sessionToken,
+                                     @JsonProperty("sessionSecret") String sessionSecret,
+                                     @JsonProperty("deviceLinkBase") URI deviceLinkBase) {
+        this(sessionID, sessionToken, sessionSecret, deviceLinkBase, Instant.now());
     }
 }
