@@ -78,7 +78,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
-    private static final String CERTIFICATE_CHOICE_DEVICE_LINK_PATH = "/certificatechoice/device-link/anonymous";
+    private static final String DEVICE_LINK_CERTIFICATE_CHOICE_DEVICE_LINK_PATH = "signature/certificate-choice/device-link/anonymous";
     private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH = "/certificatechoice/notification/etsi";
 
     private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/";
@@ -184,7 +184,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
         logger.debug("Initiating device link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
-                .path(CERTIFICATE_CHOICE_DEVICE_LINK_PATH)
+                .path(DEVICE_LINK_CERTIFICATE_CHOICE_DEVICE_LINK_PATH)
                 .build();
 
         return postDeviceLinkCertificateChoiceRequest(uri, request);
