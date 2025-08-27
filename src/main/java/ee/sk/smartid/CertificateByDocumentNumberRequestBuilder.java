@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,8 +25,6 @@ package ee.sk.smartid;
  * THE SOFTWARE.
  * #L%
  */
-
-import static ee.sk.smartid.util.StringUtil.isEmpty;
 
 import java.util.regex.Pattern;
 
@@ -111,9 +109,9 @@ public class CertificateByDocumentNumberRequestBuilder {
      * Builds the request and retrieves the certificate by document number.
      *
      * @return CertificateByDocumentNumberResult containing the certificate level and parsed X509Certificate
-     * @throws SmartIdClientException if any required parameters are missing or invalid
+     * @throws SmartIdClientException                if any required parameters are missing or invalid
      * @throws UnprocessableSmartIdResponseException if the response is not valid
-     * @throws DocumentUnusableException if the document is unusable
+     * @throws DocumentUnusableException             if the document is unusable
      */
     public CertificateByDocumentNumberResult getCertificateByDocumentNumber() {
         validateRequestParameters();
@@ -144,55 +142,49 @@ public class CertificateByDocumentNumberRequestBuilder {
 
     private void validateResponseParameters(CertificateResponse certificateResponse) {
         if (certificateResponse == null) {
-            logger.error("CertificateByDocumentNumberResponse is null");
             throw new UnprocessableSmartIdResponseException("Certificate certificateByDocumentNumberResponse is null");
         }
-        handleResponseState(certificateResponse.getState());
-        validateCertificateLevel(certificateResponse.getCert().getCertificateLevel());
+        validateState(certificateResponse);
 
-        if (certificateResponse.getCert() == null || isEmpty(certificateResponse.getCert().getValue())) {
-            logger.error("Parameter cert.value is missing");
+        if (certificateResponse.getCert() == null) {
+            throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert' is missing");
+        }
+        validateCertificateLevel(certificateResponse);
+
+        if (StringUtil.isEmpty(certificateResponse.getCert().getValue())) {
             throw new UnprocessableSmartIdResponseException("Parameter cert.value is missing");
         }
 
         if (!BASE64_PATTERN.matcher(certificateResponse.getCert().getValue()).matches()) {
-            logger.error("Parameter cert.value is not a valid Base64-encoded string");
             throw new UnprocessableSmartIdResponseException("Parameter cert.value is not a valid Base64-encoded string");
         }
     }
 
-    private void validateCertificateLevel(String certificateLevel) {
-        if (StringUtil.isEmpty(certificateLevel)) {
-            logger.error("Parameter certificateLevel is missing");
-            throw new UnprocessableSmartIdResponseException("Parameter certificateLevel is missing");
+    private static void validateState(CertificateResponse certificateResponse) {
+        String state = certificateResponse.getState();
+        if (StringUtil.isEmpty(state)) {
+            throw new UnprocessableSmartIdResponseException("Queried certificate response field 'state' is missing");
         }
-
-        try {
-            CertificateLevel level = CertificateLevel.valueOf(certificateLevel);
-            if (!level.isSameLevelOrHigher(this.certificateLevel)) {
-                logger.error("Certificate level is lower than requested");
-                throw new UnprocessableSmartIdResponseException("Certificate level is lower than requested");
-            }
-        } catch (IllegalArgumentException e) {
-            logger.error("Invalid certificateLevel: {}", certificateLevel);
-            throw new UnprocessableSmartIdResponseException("Invalid certificateLevel: " + certificateLevel);
+        if (!CertificateState.isSupported(state)) {
+            logger.error("Queried certificate response field 'state' has invalid value: {}", state);
+            throw new UnprocessableSmartIdResponseException("Queried certificate response field 'state' has unsupported value");
+        }
+        if (CertificateState.valueOf(state) == CertificateState.DOCUMENT_UNUSABLE) {
+            throw new DocumentUnusableException();
         }
     }
 
-    private void handleResponseState(String state) {
-        if (isEmpty(state)) {
-            logger.error("Response state is missing");
-            throw new UnprocessableSmartIdResponseException("Missing response 'state'");
+    private void validateCertificateLevel(CertificateResponse certificateResponse) {
+        String certificateLevel = certificateResponse.getCert().getCertificateLevel();
+        if (StringUtil.isEmpty(certificateLevel)) {
+            throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.certificateLevel' is missing");
         }
-
-        try {
-            if (CertificateState.valueOf(state) == CertificateState.DOCUMENT_UNUSABLE) {
-                logger.error("Document is unusable");
-                throw new DocumentUnusableException();
-            }
-        } catch (IllegalArgumentException e) {
-            logger.error("Unsupported certificate state: {}", state);
-            throw new UnprocessableSmartIdResponseException("Unsupported certificate state: " + state);
+        if (!CertificateLevel.isSupported(certificateLevel)) {
+            logger.error("Queried certificate response field 'cert.certificateLevel' has invalid value: {}", certificateLevel);
+            throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.certificateLevel' has unsupported value");
+        }
+        if (!CertificateLevel.valueOf(certificateLevel).isSameLevelOrHigher(this.certificateLevel)) {
+            throw new UnprocessableSmartIdResponseException("Queried certificate has lower level than requested");
         }
     }
 }
