@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,19 +26,19 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-import java.util.Set;
+import java.security.cert.X509Certificate;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
-public record SignatureSessionRequest(String relyingPartyUUID,
-                                      String relyingPartyName,
-                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,
-                                      String signatureProtocol,
-                                      RawDigestSignatureProtocolParameters signatureProtocolParameters,
-                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String nonce,
-                                      @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
-                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String interactions,
-                                      @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
-                                      @JsonInclude(JsonInclude.Include.NON_NULL) String initialCallbackUrl) implements Serializable {
+public interface CertificateValidator {
+
+    /**
+     * Validates the given X509 certificate.
+     * <p>
+     * This method checks if the certificate is not expired and can be trusted
+     *
+     * @param certificate the X509Certificate to validate
+     * @throws UnprocessableSmartIdResponseException if the certificate is invalid
+     */
+    void validate(X509Certificate certificate);
 }

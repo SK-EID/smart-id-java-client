@@ -4,7 +4,7 @@ package ee.sk.smartid.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,33 +28,7 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-public class RawDigestSignatureProtocolParameters implements Serializable {
-
-    private String digest;
-    private String signatureAlgorithm;
-    private SignatureAlgorithmParameters signatureAlgorithmParameters;
-
-    public String getDigest() {
-        return digest;
-    }
-
-    public void setDigest(String digest) {
-        this.digest = digest;
-    }
-
-    public String getSignatureAlgorithm() {
-        return signatureAlgorithm;
-    }
-
-    public void setSignatureAlgorithm(String signatureAlgorithm) {
-        this.signatureAlgorithm = signatureAlgorithm;
-    }
-
-    public SignatureAlgorithmParameters getSignatureAlgorithmParameters() {
-        return signatureAlgorithmParameters;
-    }
-
-    public void setSignatureAlgorithmParameters(SignatureAlgorithmParameters signatureAlgorithmParameters) {
-        this.signatureAlgorithmParameters = signatureAlgorithmParameters;
-    }
+public record RawDigestSignatureProtocolParameters(String digest,
+                                                   String signatureAlgorithm,
+                                                   SignatureAlgorithmParameters signatureAlgorithmParameters) implements Serializable {
 }

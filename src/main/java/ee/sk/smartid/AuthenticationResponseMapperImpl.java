@@ -44,9 +44,9 @@ import ee.sk.smartid.util.StringUtil;
 /**
  * Validates and maps the received session status to authentication response
  */
-public class DefaultAuthenticationResponseMapper implements AuthenticationResponseMapper {
+public class AuthenticationResponseMapperImpl implements AuthenticationResponseMapper {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultAuthenticationResponseMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseMapperImpl.class);
 
     private static AuthenticationResponseMapper instance;
 
@@ -56,13 +56,13 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
 
     public static AuthenticationResponseMapper getInstance() {
         if (instance == null) {
-            instance = new DefaultAuthenticationResponseMapper();
+            instance = new AuthenticationResponseMapperImpl();
         }
         return instance;
     }
 
     /**
-     * Maps session status to authentication response
+     * Maps session status to authentication response {@link AuthenticationResponse]
      *
      * @param sessionStatus session status received from Smart-ID server
      * @return authentication response
@@ -81,28 +81,21 @@ public class DefaultAuthenticationResponseMapper implements AuthenticationRespon
         authenticationResponse.setServerRandom(sessionSignature.getServerRandom());
         authenticationResponse.setUserChallenge(sessionSignature.getUserChallenge());
         authenticationResponse.setFlowType(FlowType.fromString(sessionSignature.getFlowType()));
-
         authenticationResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
-        authenticationResponse.setSignatureAlgorithm(signatureAlgorithm);
 
         var signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
-        var hashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null);
-        authenticationResponse.setHashAlgorithm(hashAlgorithm);
-        MaskGenAlgorithm maskGenAlgorithm = MaskGenAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getAlgorithm());
-        authenticationResponse.setMaskGenAlgorithm(maskGenAlgorithm);
-        var maskGenHashAlgorithm = HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null);
-        authenticationResponse.setMaskHashAlgorithm(maskGenHashAlgorithm);
-        authenticationResponse.setSaltLength(signatureAlgorithmParameters.getSaltLength());
-        TrailerField trailerField = TrailerField.fromString(signatureAlgorithmParameters.getTrailerField());
-        authenticationResponse.setTrailerField(trailerField);
+        var rssSsaPssParameters = new RsaSsaPssParameters();
+        rssSsaPssParameters.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
+        rssSsaPssParameters.setMaskGenAlgorithm(MaskGenAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getAlgorithm()));
+        rssSsaPssParameters.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
+        rssSsaPssParameters.setSaltLength(signatureAlgorithmParameters.getSaltLength());
+        rssSsaPssParameters.setTrailerField(TrailerField.fromString(signatureAlgorithmParameters.getTrailerField()));
+        authenticationResponse.setRsaSsaPssSignatureParameters(rssSsaPssParameters);
 
         authenticationResponse.setCertificate(toCertificate(sessionCertificate));
         authenticationResponse.setCertificateLevel(toAuthenticationCertificateLevel(sessionCertificate));
-
         authenticationResponse.setInteractionTypeUsed(sessionStatus.getInteractionTypeUsed());
         authenticationResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
-
         return authenticationResponse;
     }
 

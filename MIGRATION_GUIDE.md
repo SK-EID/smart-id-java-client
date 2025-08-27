@@ -16,10 +16,10 @@ It is recommended to start using device-link authentication flows from Smart-ID 
 1. Create authentication hash
 2. Generate verification code from authentication hash
 3. Verification code can be shown to the user
-4. Create builder and set values. [Checkout setting values for authentication](README.md#examples-of-performing-authentication)
+4. Create builder and set values.
 5. Call build method (`authenticate()`) to create authentication session and to start polling for session status.
 6. After session status is `COMPLETE` response will be checked in the build method.
-7. Use `AuthenticationResponseValidator` to validate the certificate and the signature in the response. [Validating authentication response](README.md#validating-authentication-response)
+7. Use `AuthenticationResponseValidator` to validate the certificate and the signature in the response.
 
 ### Moving to V3 authentication flow
 
@@ -33,26 +33,43 @@ It is recommended to start using device-link authentication flows from Smart-ID 
 
 ## Migrating signing
 
-Before migrating please read through [session types documentation](https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.3/sessions.html). It provides information about what has to be considered for implementing signing flow.
-In here will be focusing on [signing on same device with prior authentication session](https://sk-eid.github.io/smart-id-documentation/rp-api/3.0.2/sessions.html#_signing_with_prior_authentication_2).
+Signing migration will be focusing on moving to signature flow when device link authentication has been completed before. 
 
 ### Overview of V2 signing flow
 
 1. Set values for certificate choice builder and call build method. Should return certificate as a response.
-2. Use queried certificate to create DataToSign object. Requires digidoc4j library.
+2. Use queried certificate to create DataToSign object. Requires DigiDoc4j library.
 3. Create SignableData from DataToSign.
 4. Create verification code from SignableData
-5. Create signature builder and set values. [Checkout setting values for signing](README.md#create-the-signature)
+5. Create signature builder and set values.
 6. Call build method (`sign()`) to create signing session and to start polling for session status.
 7. After session status is `COMPLETE` response will be checked in the build method. And signed document will be returned.
 
-### Moving to V3 signing flow
+### Moving to V3 signing flow - with DigiDoc4j library
 
-1. Replace certificate choice builder with`NotificationCertificateChoiceSessionRequestBuilder`. SmartID client `ee.sk.smartid.SmartIdClient` provides method `createNotificationCertificateChoice()` for easier access. Call build method `.initCertificateChoice()` to start the certificate choice session. Checkout example [here](README.md#examples-of-initiating-a-notification-based-certificate-choice-session).
-2. Poll for session status with `sessionStatusPoller::fetchFinalSessionState(sessionID)`. 
-3. If session status state is `COMPLETE` then check response with `CertificateChoiceResponseMapper` for errors and to validate required fields. `CertificateChoiceResponse` will be returned when everything is ok.
-4. Replace V2 SignableData with `ee.sk.smartid.SignableData`. In V3 SignableData the code to generate verification code was removed other than should be same as before. NB! If you are using Digidoc4j `DataToSign` make sure hash type in signable data matches digest algorithm in DataToSign.
-5. Use `ee.sk.smartid.SmartIdClient` to [create session request builder](README.md#examples-of-initiating-a-device-link-signature-session) `createDeviceLinkSignature()` and call build method `initSignatureSession()` to start the signing session.
-6. Replace showing verification code with showing device link or QR-code. [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
-7. Poll for session status until its complete.
-8. Validate session response with `SignatureSessionResponseMapper` and validate required fields. `SignatureSessionResponse` will be returned when everything is ok.
+DigiDoc4j library does not currently support signing with signature algorithm RSASSA-PSS. Support will be added in the future. 
+There is a possible workaround to use DigiDoc4j library and DSS library together to create ASICS container and sign it with Smart-ID v3 API.
+Steps below include examples how to set up DataToSign for signing with RSASSA-PSS and how validate returned signature value. 
+
+#### Steps to migrate 
+
+1. Replace certificate choice builder with`CertificateByDocumentNumberRequestBuilder`. SmartID client `ee.sk.smartid.SmartIdClient` provides method `createCertificateByDocumentNumber()` for easier access. Call build method `.getCertificateByDocumentNumber()` to get the certificate. Checkout example [here](README.md#example-of-querying-certificate-by-document-number).
+2. Use `SignableData` to create digested value for signing. Example for setting up DataToSign with DSS: https://github.com/SK-EID/smart-id-java-demo/blob/81880330822f7d86a9205e597f24bca42c72d87b/src/main/java/ee/sk/siddemo/services/SmartIdDeviceLinkSignatureService.java#L181
+3. Use `ee.sk.smartid.SmartIdClient` to [create session request builder](README.md#examples-of-initiating-a-device-link-signature-session) `createDeviceLinkSignature()` and call build method `initSignatureSession()` to start the signing session.
+4. Replace showing verification code with showing device link or QR-code. [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. QR-code should be recreated after every second.
+5. Poll for session status until its complete.
+6. Validate session response with `SignatureResponseValidator`. `SignatureSessionResponse` will be returned when everything is ok.
+7. Validate signature value. Example for validating signature value: https://github.com/SK-EID/smart-id-java-demo/blob/81880330822f7d86a9205e597f24bca42c72d87b/src/main/java/ee/sk/siddemo/services/SmartIdSignatureService.java#L65
+
+### Moving to V3 signing flow without DigiDoc4j library
+
+NB! Without DigiDoc4j library integrator has to provide implementation for creating signed container.
+Smart-id-java-client only provides means to validate that signature response has required fields and returned signature value is valid.
+
+1. Replace certificate choice builder with`CertificateByDocumentNumberRequestBuilder`. SmartID client `ee.sk.smartid.SmartIdClient` provides method `createCertificateByDocumentNumber()` for easier access. Call build method `.getCertificateByDocumentNumber()` to get the certificate. Checkout example [here](README.md#example-of-querying-certificate-by-document-number).
+2. Use `SignableData` to create digested value for signing.
+3. Use `ee.sk.smartid.SmartIdClient` to [create session request builder](README.md#examples-of-initiating-a-device-link-signature-session) `createDeviceLinkSignature()` and call build method `initSignatureSession()` to start the signing session.
+4. Replace showing verification code with showing device link or QR-code. [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. QR-code should be recreated after every second.
+5. Poll for session status until its complete.
+6. Validate session status response with `SignatureResponseValidator`. `SignatureSessionResponse` will be returned when everything is ok.
+7. Validate signature value with `SignatureValueValidator`

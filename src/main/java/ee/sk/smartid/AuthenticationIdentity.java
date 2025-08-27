@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -90,7 +90,7 @@ public class AuthenticationIdentity {
   }
 
   /**
-   * Person date of birth.
+   * Person's date of birth.
    * NB! This information is not available for some Latvian certificates.
    *
    * @return Date of birth if this information is available in authentication response or empty optional.

@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,19 +26,21 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-import java.util.Set;
+import java.security.cert.X509Certificate;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+public interface SignatureValueValidator {
 
-public record SignatureSessionRequest(String relyingPartyUUID,
-                                      String relyingPartyName,
-                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,
-                                      String signatureProtocol,
-                                      RawDigestSignatureProtocolParameters signatureProtocolParameters,
-                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String nonce,
-                                      @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
-                                      @JsonInclude(JsonInclude.Include.NON_EMPTY) String interactions,
-                                      @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
-                                      @JsonInclude(JsonInclude.Include.NON_NULL) String initialCallbackUrl) implements Serializable {
+    /**
+     * Validates the signature value against the calculated signature value.
+     *
+     * @param signatureValue      the signature value to validate
+     * @param payload             the original data that was signed
+     * @param certificate         X509 certificate used for signature validation
+     * @param rsaSsaPssParameters signature parameters used for creating signature value
+     * @throws UnsupportedOperationException when there are any issue with validating the signature value
+     */
+    void validate(byte[] signatureValue,
+                  byte[] payload,
+                  X509Certificate certificate,
+                  RsaSsaPssParameters rsaSsaPssParameters);
 }

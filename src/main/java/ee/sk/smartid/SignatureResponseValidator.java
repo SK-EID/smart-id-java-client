@@ -26,17 +26,9 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertPathBuilder;
-import java.security.cert.CertPathBuilderException;
-import java.security.cert.CertStore;
+import java.io.IOException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.CollectionCertStoreParameters;
-import java.security.cert.PKIXBuilderParameters;
-import java.security.cert.PKIXCertPathBuilderResult;
-import java.security.cert.X509CertSelector;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -62,14 +54,12 @@ import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.dao.SessionCertificate;
-import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithm;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
-//TODO: review this class for possible refactoring and improvements - 2025-07-08
 public class SignatureResponseValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(SignatureResponseValidator.class);
@@ -77,19 +67,23 @@ public class SignatureResponseValidator {
     private static final Pattern BASE64_PATTERN = Pattern.compile("^[a-zA-Z0-9+/]+={0,2}$");
     private static final Set<String> QUALIFIED_POLICY_OIDS = Set.of("1.3.6.1.4.1.10015.17.2", "0.4.0.194112.1.2");
     private static final Set<String> NONQUALIFIED_POLICY_OIDS = Set.of("1.3.6.1.4.1.10015.17.1", "0.4.0.2042.1.1");
-    private static final String QC_STATEMENT_OID = "0.4.0.1862.1.6.1";
     private static final int KEYUSAGE_NON_REPUDIATION_INDEX = 1;
+    private static final String QC_STATEMENT_OID = "1.3.6.1.5.5.7.1.3";
+    private static final String ELECTRONIC_SIGNING = "0.4.0.1862.1.6.1";
 
-    private final TrustedCACertStore trustedCaCertStore;
+    private final CertificateValidator certificateValidator;
     private final boolean qcStatementRequired;
 
-    public SignatureResponseValidator(TrustedCACertStore store, boolean qcRequired) {
-        this.trustedCaCertStore = store;
+    public SignatureResponseValidator(CertificateValidator certificateValidator, boolean qcRequired) {
+        this.certificateValidator = certificateValidator;
         this.qcStatementRequired = qcRequired;
     }
 
-    public SignatureResponseValidator(TrustedCACertStore store) {
-        this(store, false);
+    /**
+     * Initializes the validator with a {@link CertificateValidator}.
+     */
+    public SignatureResponseValidator(CertificateValidator certificateValidator) {
+        this(certificateValidator, false);
     }
 
     /**
@@ -103,10 +97,10 @@ public class SignatureResponseValidator {
      * @throws UserSelectedWrongVerificationCodeException when user was presented with three control codes and user selected wrong code
      * @throws DocumentUnusableException                  when for some reason, this relying party request cannot be completed.
      * @throws UnprocessableSmartIdResponseException      if the session response is structurally invalid, contains missing fields, or violates signature or certificate constraints.
-     * @throws SmartIdClientException                     if session status is missing, incomplete or inconsistent
+     * @throws SmartIdClientException                     if any of method parameters are not provided
      */
-    public SignatureResponse from(SessionStatus sessionStatus,
-                                  String requestedCertificateLevel
+    public SignatureResponse validate(SessionStatus sessionStatus,
+                                      String requestedCertificateLevel
     ) throws UserRefusedException, UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
         validateSessionsStatus(sessionStatus, requestedCertificateLevel);
 
@@ -114,21 +108,19 @@ public class SignatureResponseValidator {
         SessionSignature sessionSignature = sessionStatus.getSignature();
         SessionCertificate certificate = sessionStatus.getCert();
 
-        SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.fromString(sessionSignature.getSignatureAlgorithm());
-        HashAlgorithm hashAlgorithm = HashAlgorithm.fromString(sessionSignature.getSignatureAlgorithmParameters().getHashAlgorithm()).orElse(null);
-        SessionMaskGenAlgorithm maskGenAlgorithm = sessionSignature.getSignatureAlgorithmParameters().getMaskGenAlgorithm();
-        HashAlgorithm maskGenHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm()).orElse(null);
-
         var signatureResponse = new SignatureResponse();
         signatureResponse.setEndResult(sessionResult.getEndResult());
         signatureResponse.setSignatureValueInBase64(sessionSignature.getValue());
-        signatureResponse.setSignatureAlgorithm(signatureAlgorithm);
-        signatureResponse.setHashAlgorithm(hashAlgorithm);
-        signatureResponse.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
-        signatureResponse.setMaskHashAlgorithm(maskGenHashAlgorithm);
-        signatureResponse.setSaltLength(sessionSignature.getSignatureAlgorithmParameters().getSaltLength());
         signatureResponse.setAlgorithmName(sessionSignature.getSignatureAlgorithm());
-        signatureResponse.setTrailerField(TrailerField.OXBC);
+
+        SessionSignatureAlgorithmParameters signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
+        var rsaSsaPssParams = new RsaSsaPssParameters();
+        rsaSsaPssParams.setDigestHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getHashAlgorithm()).orElse(null));
+        rsaSsaPssParams.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
+        rsaSsaPssParams.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
+        rsaSsaPssParams.setSaltLength(signatureAlgorithmParameters.getSaltLength());
+        rsaSsaPssParams.setTrailerField(TrailerField.OXBC);
+        signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
 
         signatureResponse.setFlowType(FlowType.valueOf(sessionSignature.getFlowType()));
         signatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
@@ -143,11 +135,11 @@ public class SignatureResponseValidator {
 
     private void validateSessionsStatus(SessionStatus sessionStatus, String requestedCertificateLevel) {
         if (sessionStatus == null) {
-            throw new SmartIdClientException("Session status was not provided");
+            throw new SmartIdClientException("Parameter 'sessionStatus' is not provided");
         }
 
         if (StringUtil.isEmpty(sessionStatus.getState())) {
-            throw new UnprocessableSmartIdResponseException("State parameter is missing in session status");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'state' is empty");
         }
 
         if (!"COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
@@ -161,30 +153,24 @@ public class SignatureResponseValidator {
         SessionResult sessionResult = sessionStatus.getResult();
 
         if (sessionResult == null) {
-            logger.error("Result is missing in the session status response");
-            throw new UnprocessableSmartIdResponseException("Result is missing in the session status response");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'result' is missing");
         }
 
         String endResult = sessionResult.getEndResult();
         if (StringUtil.isEmpty(endResult)) {
-            throw new UnprocessableSmartIdResponseException("End result parameter is missing in the session result");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'result.endResult' is empty");
         }
 
         if ("OK".equalsIgnoreCase(endResult)) {
-            logger.info("Session completed successfully");
-
             if (StringUtil.isEmpty(sessionResult.getDocumentNumber())) {
-                throw new UnprocessableSmartIdResponseException("Document number is missing in the session result");
+                throw new UnprocessableSmartIdResponseException("Signature session status field 'result.documentNumber' is empty");
             }
-
             if (StringUtil.isEmpty(sessionStatus.getInteractionTypeUsed())) {
-                throw new UnprocessableSmartIdResponseException("InteractionFlowUsed is missing in the session status");
+                throw new UnprocessableSmartIdResponseException("Signature session status field 'interactionTypeUsed' is empty");
             }
-
             if (StringUtil.isEmpty(sessionStatus.getSignatureProtocol())) {
-                throw new UnprocessableSmartIdResponseException("Signature protocol is missing in session status");
+                throw new UnprocessableSmartIdResponseException("Signature session status field 'signatureProtocol' is empty");
             }
-
             validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
             validateSignature(sessionStatus);
         } else {
@@ -193,22 +179,24 @@ public class SignatureResponseValidator {
     }
 
     private void validateCertificate(SessionCertificate sessionCertificate, String requestedCertificateLevel) {
-        if (sessionCertificate == null || StringUtil.isEmpty(sessionCertificate.getValue())) {
-            throw new UnprocessableSmartIdResponseException("Missing certificate in session response");
+        if (sessionCertificate == null) {
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'cert' is missing or empty");
+        }
+        if (StringUtil.isEmpty(sessionCertificate.getValue())) {
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'cert.value' is empty");
         }
 
         if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
-            throw new UnprocessableSmartIdResponseException("Certificate level is missing in certificate");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'cert.certificateLevel' is empty");
         }
 
         X509Certificate certificate = parseAndCheckCertificate(sessionCertificate.getValue());
-
         if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
+            logger.error("Signature session status certificate level mismatch: requested {}, returned {}", requestedCertificateLevel, sessionCertificate.getCertificateLevel());
             throw new CertificateLevelMismatchException();
         }
-
+        certificateValidator.validate(certificate);
         validateCertificatePoliciesAndPurpose(certificate);
-        validateCertificateChain(certificate);
     }
 
     private void validateCertificatePoliciesAndPurpose(X509Certificate cert) {
@@ -226,27 +214,6 @@ public class SignatureResponseValidator {
 
         if (qcStatementRequired && !containsQcStatement(cert)) {
             throw new UnprocessableSmartIdResponseException("QCStatement 0.4.0.1862.1.6.1 missing");
-        }
-    }
-
-    private void validateCertificateChain(X509Certificate certificate) {
-        try {
-            var x509CertSelector = new X509CertSelector();
-            x509CertSelector.setCertificate(certificate);
-
-            var params = new PKIXBuilderParameters(trustedCaCertStore.getTrustAnchors(), x509CertSelector);
-
-            CertStore intermediates = CertStore.getInstance("Collection", new CollectionCertStoreParameters(trustedCaCertStore.getTrustedCACertificates()));
-            params.addCertStore(intermediates);
-            params.setRevocationEnabled(trustedCaCertStore.isOcspEnabled());
-
-            CertPathBuilder builder = CertPathBuilder.getInstance("PKIX");
-            PKIXCertPathBuilderResult result = (PKIXCertPathBuilderResult) builder.build(params);
-
-            logger.debug("Signature certificate validated. Trust anchor: {}", result.getTrustAnchor().getTrustedCert().getSubjectX500Principal());
-
-        } catch (InvalidAlgorithmParameterException | CertPathBuilderException | NoSuchAlgorithmException ex) {
-            throw new UnprocessableSmartIdResponseException("Certificate chain validation failed", ex);
         }
     }
 
@@ -282,14 +249,14 @@ public class SignatureResponseValidator {
                     result.add(pi.getPolicyIdentifier().getId());
                 }
             }
-        } catch (Exception e) {
-            logger.debug("Unable to parse CertificatePolicies", e);
+        } catch (IOException ex) {
+            throw new UnprocessableSmartIdResponseException("Unable to parse certificate policies", ex);
         }
         return result;
     }
 
     private static boolean containsQcStatement(X509Certificate cert) {
-        byte[] extensionValue = cert.getExtensionValue("1.3.6.1.5.5.7.1.3");
+        byte[] extensionValue = cert.getExtensionValue(QC_STATEMENT_OID);
         if (extensionValue == null) {
             return false;
         }
@@ -299,13 +266,13 @@ public class SignatureResponseValidator {
                 ASN1Sequence seq = (ASN1Sequence) ais2.readObject();
                 for (int i = 0; i < seq.size(); i++) {
                     QCStatement st = QCStatement.getInstance(seq.getObjectAt(i));
-                    if (QC_STATEMENT_OID.equals(st.getStatementId().getId())) {
+                    if (ELECTRONIC_SIGNING.equals(st.getStatementId().getId())) {
                         return true;
                     }
                 }
             }
-        } catch (Exception ex) {
-            logger.debug("Unable to parse QCStatements", ex);
+        } catch (IOException ex) {
+            throw new UnprocessableSmartIdResponseException("Unable to parse QCStatements", ex);
         }
         return false;
     }
@@ -316,115 +283,121 @@ public class SignatureResponseValidator {
         if (SignatureProtocol.RAW_DIGEST_SIGNATURE.name().equalsIgnoreCase(signatureProtocol)) {
             validateRawDigestSignature(sessionStatus);
         } else {
-            throw new UnprocessableSmartIdResponseException("Unknown signature protocol: " + signatureProtocol);
+            logger.error("Signature session status field 'signatureProtocol' has unsupported value: {}", signatureProtocol);
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signatureProtocol' has unsupported value");
         }
     }
 
     private static void validateRawDigestSignature(SessionStatus sessionStatus) {
         SessionSignature signature = sessionStatus.getSignature();
         if (signature == null) {
-            throw new UnprocessableSmartIdResponseException("Signature object is missing");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature' is missing");
         }
 
         validateSignatureValue(signature.getValue());
         validateSignatureAlgorithmName(signature.getSignatureAlgorithm());
         validateFlowType(signature.getFlowType());
         validateSignatureAlgorithmParameters(signature.getSignatureAlgorithmParameters());
-
-        logger.info("RAW_DIGEST_SIGNATURE fields successfully validated.");
     }
 
     private static void validateSignatureValue(String value) {
-        if (StringUtil.isEmpty(value) || !BASE64_PATTERN.matcher(value).matches()) {
-            throw new UnprocessableSmartIdResponseException("Signature value is missing or not Base64");
+        if (StringUtil.isEmpty(value)) {
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.value' is empty");
+        }
+        if (!BASE64_PATTERN.matcher(value).matches()) {
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.value' does not have Base64-encoded value");
         }
     }
 
     private static void validateSignatureAlgorithmName(String signatureAlgorithm) {
         if (StringUtil.isEmpty(signatureAlgorithm)) {
-            throw new UnprocessableSmartIdResponseException("Signature algorithm is missing");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithm' is missing");
         }
 
         if (!SignatureAlgorithm.isSupported(signatureAlgorithm)) {
             List<String> possibleValues = Arrays.stream(SignatureAlgorithm.values()).map(SignatureAlgorithm::getAlgorithmName).toList();
-            throw new UnprocessableSmartIdResponseException("Unexpected signature algorithm. Expected one of: " + possibleValues + ", but got: " + signatureAlgorithm);
+            logger.error("Signature session status field 'signature.signatureAlgorithm' has unsupported value: {}. Possible values: {}", signatureAlgorithm, possibleValues);
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithm' has unsupported value");
         }
     }
 
     private static void validateFlowType(String flowType) {
         if (StringUtil.isEmpty(flowType)) {
-            throw new UnprocessableSmartIdResponseException("Session status field `signature.flowType` is empty");
+            throw new UnprocessableSmartIdResponseException("Signature session status field `signature.flowType` is empty");
         }
         if (!FlowType.isSupported(flowType)) {
-            logger.error("Invalid `signature.flowType` in session status: {}", flowType);
-            throw new UnprocessableSmartIdResponseException("Invalid `signature.flowType` in session status");
+            logger.error("Signature session status field `signature.flowType` has invalid value: {}", flowType);
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.flowType' has unsupported value");
         }
     }
 
     private static void validateSignatureAlgorithmParameters(SessionSignatureAlgorithmParameters sessionSignatureAlgorithmParameters) {
         if (sessionSignatureAlgorithmParameters == null) {
-            throw new UnprocessableSmartIdResponseException("SignatureAlgorithmParameters is missing");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters' is missing");
         }
 
         if (StringUtil.isEmpty(sessionSignatureAlgorithmParameters.getHashAlgorithm())) {
-            throw new UnprocessableSmartIdResponseException("Session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' is empty");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' is empty");
         }
 
         Optional<HashAlgorithm> hashAlgorithm = HashAlgorithm.fromString(sessionSignatureAlgorithmParameters.getHashAlgorithm());
         if (hashAlgorithm.isEmpty()) {
-            logger.error("Invalid 'signature.signatureAlgorithmParameters.hashAlgorithm' in session status: {}", sessionSignatureAlgorithmParameters.getHashAlgorithm());
-            throw new UnprocessableSmartIdResponseException("Invalid 'signature.signatureAlgorithmParameters.hashAlgorithm' in session status");
+            logger.error("Signature session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has invalid value: {}", sessionSignatureAlgorithmParameters.getHashAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.hashAlgorithm' has unsupported value");
         }
 
         var maskGenAlgorithm = sessionSignatureAlgorithmParameters.getMaskGenAlgorithm();
         if (maskGenAlgorithm == null) {
-            throw new UnprocessableSmartIdResponseException("Session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' is missing");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm' is missing");
         }
 
         if (StringUtil.isEmpty(maskGenAlgorithm.getAlgorithm())) {
-            throw new UnprocessableSmartIdResponseException("Session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' is empty");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' is empty");
         }
 
         if (!MaskGenAlgorithm.ID_MGF1.getAlgorithmName().equals(maskGenAlgorithm.getAlgorithm())) {
-            logger.error("Invalid 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' in session status: {}", maskGenAlgorithm.getAlgorithm());
-            throw new UnprocessableSmartIdResponseException("Invalid 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' in session status");
+            logger.error("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' has invalid value: {}", maskGenAlgorithm.getAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.algorithm' has unsupported value");
         }
 
-        if (maskGenAlgorithm.getParameters() == null || StringUtil.isEmpty(maskGenAlgorithm.getParameters().getHashAlgorithm())) {
-            throw new UnprocessableSmartIdResponseException("Session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' is empty");
+        if (maskGenAlgorithm.getParameters() == null) {
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters' is missing");
+        }
+
+        if (StringUtil.isEmpty(maskGenAlgorithm.getParameters().getHashAlgorithm())) {
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' is empty");
         }
 
         Optional<HashAlgorithm> mgfHashAlgorithm = HashAlgorithm.fromString(maskGenAlgorithm.getParameters().getHashAlgorithm());
         if (mgfHashAlgorithm.isEmpty()) {
-            logger.error("Invalid 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' in session status: {}", maskGenAlgorithm.getParameters().getHashAlgorithm());
-            throw new UnprocessableSmartIdResponseException("Invalid 'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' in session status");
+            logger.error("Signature session 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has invalid value: {}", maskGenAlgorithm.getParameters().getHashAlgorithm());
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' has unsupported value");
         }
 
         if (!hashAlgorithm.get().equals(mgfHashAlgorithm.get())) {
-            logger.error("'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' in session status does not match 'signature.signatureAlgorithmParameters.hashAlgorithm': expected {}, got {}",
+            logger.error("Signature session status field field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value. Expected {}, got {}",
                     hashAlgorithm.get().getAlgorithmName(), mgfHashAlgorithm.get().getAlgorithmName());
-            throw new UnprocessableSmartIdResponseException("'signature.signatureAlgorithmParameters.maskGenAlgorithm.hashAlgorithm' in session status does not match 'signature.signatureAlgorithmParameters.hashAlgorithm'");
+            throw new UnprocessableSmartIdResponseException("Signature session status field field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value");
         }
 
         if (sessionSignatureAlgorithmParameters.getSaltLength() == null) {
-            throw new UnprocessableSmartIdResponseException("Session status field 'signature.signatureAlgorithmParameters.saltLength' is missing");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.saltLength' is missing");
         }
 
         int expectedSaltLength = hashAlgorithm.get().getOctetLength();
         int actualSaltLength = sessionSignatureAlgorithmParameters.getSaltLength();
-
         if (expectedSaltLength != actualSaltLength) {
-            logger.error("Invalid 'signature.signatureAlgorithmParameters.saltLength' in session status: expected {}, got {}", expectedSaltLength, actualSaltLength);
-            throw new UnprocessableSmartIdResponseException("Invalid 'signature.signatureAlgorithmParameters.saltLength' in session status");
+            logger.error("Signature session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value. Expected {}, got {}", expectedSaltLength, actualSaltLength);
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.saltLength' has invalid value");
         }
 
         if (StringUtil.isEmpty(sessionSignatureAlgorithmParameters.getTrailerField())) {
-            throw new UnprocessableSmartIdResponseException("Session status field `signature.signatureAlgorithmParameters.trailerField` is empty");
+            throw new UnprocessableSmartIdResponseException("Signature status field `signature.signatureAlgorithmParameters.trailerField` is empty");
         }
 
         if (!TrailerField.OXBC.getValue().equals(sessionSignatureAlgorithmParameters.getTrailerField())) {
-            logger.error("Invalid `signature.signatureAlgorithmParameters.trailerField` in session status: {}", sessionSignatureAlgorithmParameters.getTrailerField());
-            throw new UnprocessableSmartIdResponseException("Invalid `signature.signatureAlgorithmParameters.trailerField` value in session status");
+            logger.error("Signature status field `signature.signatureAlgorithmParameters.trailerField` has invalid value: {}", sessionSignatureAlgorithmParameters.getTrailerField());
+            throw new UnprocessableSmartIdResponseException("Signature status field `signature.signatureAlgorithmParameters.trailerField` has unsupported value");
         }
     }
 }

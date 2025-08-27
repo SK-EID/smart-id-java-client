@@ -59,6 +59,8 @@ import ee.sk.smartid.CertificateByDocumentNumberResult;
 import ee.sk.smartid.CertificateChoiceResponse;
 import ee.sk.smartid.CertificateChoiceResponseMapper;
 import ee.sk.smartid.CertificateLevel;
+import ee.sk.smartid.CertificateValidator;
+import ee.sk.smartid.CertificateValidatorImpl;
 import ee.sk.smartid.DeviceLinkAuthenticationSessionRequestBuilder;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.FileTrustedCAStoreBuilder;
@@ -69,6 +71,8 @@ import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
 import ee.sk.smartid.SignatureResponse;
 import ee.sk.smartid.SignatureResponseValidator;
+import ee.sk.smartid.SignatureValueValidator;
+import ee.sk.smartid.SignatureValueValidatorImpl;
 import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
@@ -108,378 +112,403 @@ public class ReadmeIntegrationTest {
     @Nested
     class DeviceLinkBasedExamples {
 
-        @Test
-        void anonymousAuthentication_withApp2App() {
-            // For security reasons a new hash value must be created for each new authentication request
-            String rpChallenge = RpChallengeGenerator.generate();
-            // Store generated rpChallenge only on backend side. Do not expose it to the client side.
-            // Used for validating authentication sessions status OK response
+        @Nested
+        class Authentication {
 
-            // Setup builder
-            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
-                    .createDeviceLinkAuthentication()
-                    // to use anonymous authentication, do not set semantics identifier or document number
-                    .withRpChallenge(rpChallenge)
-                    .withInitialCallbackUrl("https://example.com/callback")
-                    .withInteractions(Collections.singletonList(
-                            DeviceLinkInteraction.displayTextAndPIN("Log in?")
-                    ));
-            // Init authentication session
-            DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+            @Test
+            void anonymousAuthentication_withApp2App() {
+                // For security reasons a new hash value must be created for each new authentication request
+                String rpChallenge = RpChallengeGenerator.generate();
+                // Store generated rpChallenge only on backend side. Do not expose it to the client side.
+                // Used for validating authentication sessions status OK response
 
-            // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
-            AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+                // Setup builder
+                DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
+                        .createDeviceLinkAuthentication()
+                        // to use anonymous authentication, do not set semantics identifier or document number
+                        .withRpChallenge(rpChallenge)
+                        .withInitialCallbackUrl("https://example.com/callback")
+                        .withInteractions(Collections.singletonList(
+                                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                        ));
+                // Init authentication session
+                DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
-            // Use sessionID to start polling for session status
-            String sessionId = authenticationSessionResponse.getSessionID();
-            // Following values are used for generating device link or QR-code
-            String sessionToken = authenticationSessionResponse.getSessionToken();
-            // Store sessionSecret only on backend side. Do not expose it to the client side.
-            String sessionSecret = authenticationSessionResponse.getSessionSecret();
-            URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
-            // Will be used to calculate elapsed time being used in dynamic link and in authCode
-            Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+                // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
+                AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
-            // Next steps:
-            // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
-            // - Start querying sessions status
+                // Use sessionID to start polling for session status
+                String sessionId = authenticationSessionResponse.getSessionID();
+                // Following values are used for generating device link or QR-code
+                String sessionToken = authenticationSessionResponse.getSessionToken();
+                // Store sessionSecret only on backend side. Do not expose it to the client side.
+                String sessionSecret = authenticationSessionResponse.getSessionSecret();
+                URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+                // Will be used to calculate elapsed time being used in dynamic link and in authCode
+                Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
-            // Build the  device link URI (without the authCode parameter)
-            // This base URI will be used for QR code or App2App flows
-            URI deviceLink = smartIdClient.createDynamicContent()
-                    .withDeviceLinkBase(deviceLinkBase.toString())
-                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
-                    .withSessionType(SessionType.AUTHENTICATION)
-                    .withSessionToken(sessionToken)
-                    .withDigest(rpChallenge)
-                    .withLang("est")
-                    .withInitialCallbackUrl("https://example.com/callback")
-                    .buildDeviceLink(sessionSecret);
+                // Next steps:
+                // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+                // - Start querying sessions status
 
-            // Use the sessionId from the authentication session response to poll for session status updates
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-            SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
-            // The session can have different states such as RUNNING or COMPLETE.
-            // Check that the session has completed successfully
-            assertEquals("COMPLETE", sessionStatus.getState());
+                // Build the  device link URI (without the authCode parameter)
+                // This base URI will be used for QR code or App2App flows
+                URI deviceLink = smartIdClient.createDynamicContent()
+                        .withDeviceLinkBase(deviceLinkBase.toString())
+                        .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                        .withSessionType(SessionType.AUTHENTICATION)
+                        .withSessionToken(sessionToken)
+                        .withDigest(rpChallenge)
+                        .withLang("est")
+                        .withInitialCallbackUrl("https://example.com/callback")
+                        .buildDeviceLink(sessionSecret);
 
-            // Setup AuthenticationResponseValidator
-            TrustedCACertStore build = new FileTrustedCAStoreBuilder().build();
-            AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(build);
-            // Validate the certificate and signature, then map the authentication response to the user's identity
-            AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
+                // Use the sessionId from the authentication session response to poll for session status updates
+                SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+                SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
+                // The session can have different states such as RUNNING or COMPLETE.
+                // Check that the session has completed successfully
+                assertEquals("COMPLETE", sessionStatus.getState());
 
-            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-            assertEquals("OK", authenticationIdentity.getGivenName());
-            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-            assertEquals("LT", authenticationIdentity.getCountry());
+                // Setup AuthenticationResponseValidator
+                TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+                CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+                AuthenticationResponseValidator authenticationResponseValidator = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
+                // Validate the certificate and signature, then map the authentication response to the user's identity
+                AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
+
+                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("OK", authenticationIdentity.getGivenName());
+                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+                assertEquals("LT", authenticationIdentity.getCountry());
+            }
+
+            @Test
+            void authentication_withSemanticIdentifierAndQrCode() {
+                var semanticsIdentifier = new SemanticsIdentifier(
+                        // 3 character identity type
+                        // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+                        SemanticsIdentifier.IdentityType.PNO,
+                        SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+                        "40504040001"); // identifier (according to country and identity type reference)
+
+                // For security reasons a new random challenge must be created for each new authentication request
+                String rpChallenge = RpChallengeGenerator.generate();
+                // Store generated rpChallenge only backend side. Do not expose it to the client side.
+                // Used for validating authentication sessions status OK response
+
+                DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
+                        .createDeviceLinkAuthentication()
+                        .withSemanticsIdentifier(semanticsIdentifier)
+                        .withRpChallenge(rpChallenge)
+                        .withInteractions(Collections.singletonList(
+                                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                        ));
+
+                // Init authentication session
+                DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+
+                // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
+                AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+                // Use sessionID to start polling for session status
+                String sessionId = authenticationSessionResponse.getSessionID();
+                // Following values are used for generating device link or QR-code
+                String sessionToken = authenticationSessionResponse.getSessionToken();
+                // Store sessionSecret only on backend side. Do not expose it to the client side.
+                String sessionSecret = authenticationSessionResponse.getSessionSecret();
+                URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+                // Will be used to calculate elapsed time being used in dynamic link and in authCode
+                Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+
+                // Next steps:
+                // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+                // - Start querying sessions status
+
+                // Calculate elapsed seconds from response received time
+                long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
+                // Build the  device link URI (without the authCode parameter)
+                // This base URI will be used for QR code or App2App flows
+                URI deviceLink = smartIdClient.createDynamicContent()
+                        .withDeviceLinkBase(deviceLinkBase.toString())
+                        .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                        .withSessionType(SessionType.AUTHENTICATION)
+                        .withSessionToken(sessionToken)
+                        .withDigest(rpChallenge)
+                        .withElapsedSeconds(elapsedSeconds)
+                        .withLang("est")
+                        .buildDeviceLink(sessionSecret);
+                // Return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // Use sessionId to poll for session status updates
+                SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+                SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
+
+                // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
+                assertEquals("COMPLETED", sessionStatus.getState());
+
+                // Validate the response and return user's identity
+                TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
+                CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+                AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
+                        .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+
+                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("OK", authenticationIdentity.getGivenName());
+                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+                assertEquals("EE", authenticationIdentity.getCountry());
+            }
+
+            @Test
+            void authentication_withDocumentNumberAndQrCode() {
+                String documentNumber = "PNOLT-40504040001-MOCK-Q";
+
+                // For security reasons a new random challenge must be created for each new authentication request
+                String rpChallenge = RpChallengeGenerator.generate();
+                // Store generated rpChallenge only on backend side. Do not expose it to the client side.
+                // Used for validating authentication session status OK response
+
+                DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
+                        .createDeviceLinkAuthentication()
+                        .withDocumentNumber(documentNumber)
+                        .withRpChallenge(rpChallenge)
+                        .withInteractions(Collections.singletonList(
+                                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                        ));
+
+                // Init authentication session
+                DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+                // Get AuthenticationSessionRequest after the request is made and store for validations
+                AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+                String sessionId = authenticationSessionResponse.getSessionID();
+                // SessionID is used to query sessions status later
+
+                String sessionToken = authenticationSessionResponse.getSessionToken();
+                // Store sessionSecret only on backend side. Do not expose it to the client side.
+                String sessionSecret = authenticationSessionResponse.getSessionSecret();
+                Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+                URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+
+                // Generate the base (unprotected) device link URI, which does not yet include the authCode
+                long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
+                URI deviceLink = smartIdClient.createDynamicContent()
+                        .withDeviceLinkBase(deviceLinkBase.toString())
+                        .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                        .withSessionType(SessionType.AUTHENTICATION)
+                        .withSessionToken(sessionToken)
+                        .withDigest(rpChallenge)
+                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
+                        .withElapsedSeconds(elapsedSeconds)
+                        .withLang("est")
+                        .buildDeviceLink(sessionSecret);
+                // Return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // Use sessionId to poll for session status updates
+                SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+                SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
+
+                // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
+                assertEquals("COMPLETE", sessionStatus.getState());
+
+                // Validate the certificate and signature, then map the authentication response to the user's identity
+                TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
+                CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+                AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
+                        .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+
+                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("OK", authenticationIdentity.getGivenName());
+                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+                assertEquals("EE", authenticationIdentity.getCountry());
+            }
         }
 
-        @Test
-        void authentication_withSemanticIdentifierAndQrCode() {
-            var semanticsIdentifier = new SemanticsIdentifier(
-                    // 3 character identity type
-                    // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
-                    SemanticsIdentifier.IdentityType.PNO,
-                    SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                    "40504040001"); // identifier (according to country and identity type reference)
+        @Nested
+        class Signature {
 
-            // For security reasons a new random challenge must be created for each new authentication request
-            String rpChallenge = RpChallengeGenerator.generate();
-            // Store generated rpChallenge only backend side. Do not expose it to the client side.
-            // Used for validating authentication sessions status OK response
+            @Test
+            void signature_withDocumentNumberAndQRCode() {
+                String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
-            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
-                    .createDeviceLinkAuthentication()
-                    .withSemanticsIdentifier(semanticsIdentifier)
-                    .withRpChallenge(rpChallenge)
-                    .withInteractions(Collections.singletonList(
-                            DeviceLinkInteraction.displayTextAndPIN("Log in?")
-                    ));
+                CertificateByDocumentNumberResult certResponse = smartIdClient
+                        .createCertificateByDocumentNumber()
+                        .withDocumentNumber(documentNumber)
+                        .getCertificateByDocumentNumber();
 
-            // Init authentication session
-            DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+                // For example construct DataToSign using digidoc4j library and queried certificate
+                // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
-            // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
-            AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+                // Create the signable data from DataToSign
+                var signableData = new SignableData("dataToSign".getBytes());
+                signableData.setHashType(HashType.SHA256);
 
-            // Use sessionID to start polling for session status
-            String sessionId = authenticationSessionResponse.getSessionID();
-            // Following values are used for generating device link or QR-code
-            String sessionToken = authenticationSessionResponse.getSessionToken();
-            // Store sessionSecret only on backend side. Do not expose it to the client side.
-            String sessionSecret = authenticationSessionResponse.getSessionSecret();
-            URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
-            // Will be used to calculate elapsed time being used in dynamic link and in authCode
-            Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+                // Build the dynamic link signature request
+                DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
+                        .withCertificateLevel(CertificateLevel.QSCD)
+                        .withSignableData(signableData)
+                        .withDocumentNumber(documentNumber)
+                        .withHashAlgorithm(HashAlgorithm.SHA_256)
+                        .withInteractions(List.of(
+                                DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                        .initSignatureSession();
 
-            // Next steps:
-            // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
-            // - Start querying sessions status
+                // Process the signature response
+                String signatureSessionId = signatureSessionResponse.getSessionID();
+                String sessionToken = signatureSessionResponse.getSessionToken();
+                // Store sessionSecret only on backend side. Do not expose it to the client side.
+                String sessionSecret = signatureSessionResponse.getSessionSecret();
+                Instant receivedAt = signatureSessionResponse.getReceivedAt();
+                URI deviceLinkBase = signatureSessionResponse.getDeviceLinkBase();
 
-            // Calculate elapsed seconds from response received time
-            long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
-            // Build the  device link URI (without the authCode parameter)
-            // This base URI will be used for QR code or App2App flows
-            URI deviceLink = smartIdClient.createDynamicContent()
-                    .withDeviceLinkBase(deviceLinkBase.toString())
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withSessionType(SessionType.AUTHENTICATION)
-                    .withSessionToken(sessionToken)
-                    .withDigest(rpChallenge)
-                    .withElapsedSeconds(elapsedSeconds)
-                    .withLang("est")
-                    .buildDeviceLink(sessionSecret);
-            // Return URI to be used with QR-code generation library on the frontend side
-            // or create QR-code data-URI from device link and return that to the client side
-            String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+                // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
+                // Start querying sessions status
 
-            // Use sessionId to poll for session status updates
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-            SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
+                // Calculate elapsed seconds from response received time
+                long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
+                // Generate auth code
+                URI deviceLink = smartIdClient.createDynamicContent()
+                        .withDeviceLinkBase(deviceLinkBase.toString())
+                        .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                        .withSessionType(SessionType.SIGNATURE)
+                        .withSessionToken(sessionToken)
+                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
+                        .withElapsedSeconds(elapsedSeconds)
+                        .withLang("est")
+                        .buildDeviceLink(sessionSecret);
 
-            // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
-            assertEquals("COMPLETED", sessionStatus.getState());
+                // Return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
 
-            // Validate the response and return user's identity
-            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(trustedCaCertStore)
-                    .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+                // Get the session status poller
+                SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+                // Get signatureSessionId from current session response and poll for session status
+                SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
+                // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+                assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-            assertEquals("OK", authenticationIdentity.getGivenName());
-            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-            assertEquals("EE", authenticationIdentity.getCountry());
-        }
+                TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
+                CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+                SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
+                // Validate signature response
+                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+                // Validate signature value
+                SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+                signatureValueValidator.validate(signatureResponse.getSignatureValue(), signableData.calculateHash(), certResponse.certificate(), signatureResponse.getRsaSsaPssParameters());
 
-        @Test
-        void authentication_withDocumentNumberAndQrCode() {
-            String documentNumber = "PNOLT-40504040001-MOCK-Q";
+                assertEquals("OK", signatureResponse.getEndResult());
+                assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
+                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+                assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
+                assertNotNull(signatureResponse.getCertificate());
+            }
 
-            // For security reasons a new random challenge must be created for each new authentication request
-            String rpChallenge = RpChallengeGenerator.generate();
-            // Store generated rpChallenge only on backend side. Do not expose it to the client side.
-            // Used for validating authentication session status OK response
+            @Test
+            void signature_withSemanticIdentifier() {
+                var semanticIdentifier = new SemanticsIdentifier(
+                        // 3 character identity type
+                        // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+                        SemanticsIdentifier.IdentityType.PNO,
+                        SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+                        "40504040001"); // identifier (according to country and identity type reference)
 
-            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
-                    .createDeviceLinkAuthentication()
-                    .withDocumentNumber(documentNumber)
-                    .withRpChallenge(rpChallenge)
-                    .withInteractions(Collections.singletonList(
-                            DeviceLinkInteraction.displayTextAndPIN("Log in?")
-                    ));
+                NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
+                        .createNotificationCertificateChoice()
+                        .withSemanticsIdentifier(semanticIdentifier)
+                        .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+                        .initCertificateChoice();
 
-            // Init authentication session
-            DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
-            // Get AuthenticationSessionRequest after the request is made and store for validations
-            AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+                String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
+                // SessionID is used to query sessions status later
 
-            String sessionId = authenticationSessionResponse.getSessionID();
-            // SessionID is used to query sessions status later
+                // Get the session status poller
+                SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 
-            String sessionToken = authenticationSessionResponse.getSessionToken();
-            // Store sessionSecret only on backend side. Do not expose it to the client side.
-            String sessionSecret = authenticationSessionResponse.getSessionSecret();
-            Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
-            URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+                // Querying the sessions status
+                SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
+                CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
 
-            // Generate the base (unprotected) device link URI, which does not yet include the authCode
-            long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
-            URI deviceLink = smartIdClient.createDynamicContent()
-                    .withDeviceLinkBase(deviceLinkBase.toString())
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withSessionType(SessionType.AUTHENTICATION)
-                    .withSessionToken(sessionToken)
-                    .withDigest(rpChallenge)
-                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
-                    .withElapsedSeconds(elapsedSeconds)
-                    .withLang("est")
-                    .buildDeviceLink(sessionSecret);
-            // Return URI to be used with QR-code generation library on the frontend side
-            // or create QR-code data-URI from device link and return that to the client side
-            String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+                // For example construct DataToSign using digidoc4j library and queried certificate
+                // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
-            // Use sessionId to poll for session status updates
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-            SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
+                // Create the signable data
+                var signableData = new SignableData("dataToSign".getBytes());
+                signableData.setHashType(HashType.SHA512);
 
-            // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
-            assertEquals("COMPLETE", sessionStatus.getState());
+                var semanticsIdentifier = new SemanticsIdentifier(
+                        // 3 character identity type
+                        // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
+                        SemanticsIdentifier.IdentityType.PNO,
+                        SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
+                        "40504040001"); // identifier (according to country and identity type reference)
 
-            // Validate the certificate and signature, then map the authentication response to the user's identity
-            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(trustedCaCertStore)
-                    .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+                // Build the dynamic link signature request
+                DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
+                        .withCertificateLevel(CertificateLevel.QUALIFIED)
+                        .withSignableData(signableData)
+                        .withSemanticsIdentifier(semanticsIdentifier)
+                        .withInteractions(List.of(
+                                DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                        .initSignatureSession();
 
-            assertEquals("40504040001", authenticationIdentity.getIdentityCode());
-            assertEquals("OK", authenticationIdentity.getGivenName());
-            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-            assertEquals("EE", authenticationIdentity.getCountry());
-        }
+                // Process the signature response
+                String signatureSessionId = signatureSessionResponse.getSessionID();
+                String sessionToken = signatureSessionResponse.getSessionToken();
 
-        @Test
-        void signature_withDocumentNumberAndQRCode() {
-            String documentNumber = "PNOLT-40504040001-MOCK-Q";
+                // Store sessionSecret only on backend side. Do not expose it to the client side.
+                String sessionSecret = signatureSessionResponse.getSessionSecret();
+                Instant receivedAt = signatureSessionResponse.getReceivedAt();
 
-            CertificateByDocumentNumberResult certResponse = smartIdClient
-                    .createCertificateByDocumentNumber()
-                    .withDocumentNumber(documentNumber)
-                    .getCertificateByDocumentNumber();
+                // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
+                // Start querying sessions status
 
-            // For example construct DataToSign using digidoc4j library and queried certificate
-            // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
+                // Calculate elapsed seconds from response received time
+                long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
+                // Generate auth code
+                URI deviceLink = smartIdClient.createDynamicContent()
+                        .withDeviceLinkBase("smartid://")
+                        .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                        .withSessionType(SessionType.SIGNATURE)
+                        .withSessionToken(sessionToken)
+                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
+                        .withElapsedSeconds(elapsedSeconds)
+                        .withLang("est")
+                        .buildDeviceLink(sessionSecret);
+                // Display QR-code to the user
 
-            // Create the signable data from DataToSign
-            var signableData = new SignableData("dataToSign".getBytes());
-            signableData.setHashType(HashType.SHA256);
+                // Get the session status poller
+                poller = smartIdClient.getSessionStatusPoller();
+                // Get signatureSessionId from current session response and poll for session status
+                SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
+                // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+                assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-            // Build the dynamic link signature request
-            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
-                    .withCertificateLevel(CertificateLevel.QSCD)
-                    .withSignableData(signableData)
-                    .withDocumentNumber(documentNumber)
-                    .withHashAlgorithm(HashAlgorithm.SHA_256)
-                    .withInteractions(List.of(
-                            DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                    .initSignatureSession();
+                TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
+                CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
 
-            // Process the signature response
-            String signatureSessionId = signatureSessionResponse.getSessionID();
-            String sessionToken = signatureSessionResponse.getSessionToken();
-            // Store sessionSecret only on backend side. Do not expose it to the client side.
-            String sessionSecret = signatureSessionResponse.getSessionSecret();
-            Instant receivedAt = signatureSessionResponse.getReceivedAt();
-            URI deviceLinkBase = signatureSessionResponse.getDeviceLinkBase();
+                // Validate signature response
+                SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
+                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+                // Validate signature value
+                SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+                signatureValueValidator.validate(signatureResponse.getSignatureValue(),
+                        signableData.calculateHash(),
+                        certificateChoiceResponse.getCertificate(),
+                        signatureResponse.getRsaSsaPssParameters());
 
-            // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
-            // Start querying sessions status
-
-            // Calculate elapsed seconds from response received time
-            long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
-            // Generate auth code
-            URI deviceLink = smartIdClient.createDynamicContent()
-                    .withDeviceLinkBase(deviceLinkBase.toString())
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withSessionType(SessionType.SIGNATURE)
-                    .withSessionToken(sessionToken)
-                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
-                    .withElapsedSeconds(elapsedSeconds)
-                    .withLang("est")
-                    .buildDeviceLink(sessionSecret);
-
-            // Return URI to be used with QR-code generation library on the frontend side
-            // or create QR-code data-URI from device link and return that to the client side
-            String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
-
-            // Get the session status poller
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-            // Get signatureSessionId from current session response and poll for session status
-            SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
-            assertEquals("COMPLETE", signatureSessionStatus.getState());
-
-            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
-            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
-
-            assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
-            assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
-            assertNotNull(signatureResponse.getCertificate());
-        }
-
-        @Test
-        void signature_withSemanticIdentifier() {
-            var semanticIdentifier = new SemanticsIdentifier(
-                    // 3 character identity type
-                    // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
-                    SemanticsIdentifier.IdentityType.PNO,
-                    SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                    "40504040001"); // identifier (according to country and identity type reference)
-
-            NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
-                    .createNotificationCertificateChoice()
-                    .withSemanticsIdentifier(semanticIdentifier)
-                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
-                    .initCertificateChoice();
-
-            String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
-            // SessionID is used to query sessions status later
-
-            // Get the session status poller
-            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
-
-            // Querying the sessions status
-            SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
-            CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
-
-            // For example construct DataToSign using digidoc4j library and queried certificate
-            // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
-
-            // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes());
-            signableData.setHashType(HashType.SHA512);
-
-            var semanticsIdentifier = new SemanticsIdentifier(
-                    // 3 character identity type
-                    // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
-                    SemanticsIdentifier.IdentityType.PNO,
-                    SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                    "40504040001"); // identifier (according to country and identity type reference)
-
-            // Build the dynamic link signature request
-            DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withSignableData(signableData)
-                    .withSemanticsIdentifier(semanticsIdentifier)
-                    .withInteractions(List.of(
-                            DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                    .initSignatureSession();
-
-            // Process the signature response
-            String signatureSessionId = signatureSessionResponse.getSessionID();
-            String sessionToken = signatureSessionResponse.getSessionToken();
-
-            // Store sessionSecret only on backend side. Do not expose it to the client side.
-            String sessionSecret = signatureSessionResponse.getSessionSecret();
-            Instant receivedAt = signatureSessionResponse.getReceivedAt();
-
-            // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
-            // Start querying sessions status
-
-            // Calculate elapsed seconds from response received time
-            long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
-            // Generate auth code
-            URI deviceLink = smartIdClient.createDynamicContent()
-                    .withDeviceLinkBase("smartid://")
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withSessionType(SessionType.SIGNATURE)
-                    .withSessionToken(sessionToken)
-                    .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
-                    .withElapsedSeconds(elapsedSeconds)
-                    .withLang("est")
-                    .buildDeviceLink(sessionSecret);
-            // Display QR-code to the user
-
-            // Get the session status poller
-            poller = smartIdClient.getSessionStatusPoller();
-            // Get signatureSessionId from current session response and poll for session status
-            SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
-            assertEquals("COMPLETE", signatureSessionStatus.getState());
-
-            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
-            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
-
-            assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
-            assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
-            assertNotNull(signatureResponse.getCertificate());
+                assertEquals("OK", signatureResponse.getEndResult());
+                assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
+                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+                assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
+                assertNotNull(signatureResponse.getCertificate());
+            }
         }
     }
 
@@ -521,7 +550,9 @@ public class ReadmeIntegrationTest {
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
             // validate the sessions status and return user's identity
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder().build())
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                     .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: authentication request will be fixed with notification-based authentication changes
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -569,7 +600,9 @@ public class ReadmeIntegrationTest {
             assertEquals("PNOLT-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
-            AuthenticationIdentity authenticationIdentity = new AuthenticationResponseValidator(new FileTrustedCAStoreBuilder().build())
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                     .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -671,8 +704,9 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            SignatureResponseValidator validator = new SignatureResponseValidator(trustedCaCertStore);
-            SignatureResponse signatureResponse = validator.from(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
+            SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOEE-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
@@ -680,6 +714,28 @@ public class ReadmeIntegrationTest {
             assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
             assertEquals("verificationCodeChoice", signatureResponse.getInteractionFlowUsed());
             assertNotNull(signatureResponse.getCertificate());
+        }
+    }
+
+    @Nested
+    class CertificateByDocumentNumberExamples {
+
+        @Test
+        void queryCertificate() {
+            String documentNumber = "PNOLT-40504040001-MOCK-Q";
+
+            // Build the certificate by document number request and query the certificate
+            CertificateByDocumentNumberResult certResponse = smartIdClient
+                    .createCertificateByDocumentNumber()
+                    .withDocumentNumber(documentNumber)
+                    .getCertificateByDocumentNumber();
+
+            // Setup the certificate validator
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+
+            // Validate the certificate
+            certificateValidator.validate(certResponse.certificate());
         }
     }
 

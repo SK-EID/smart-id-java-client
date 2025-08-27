@@ -56,7 +56,7 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
-class DefaultAuthenticationResponseMapperTest {
+class AuthenticationResponseMapperImplTest {
 
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
 
@@ -64,7 +64,7 @@ class DefaultAuthenticationResponseMapperTest {
 
     @BeforeEach
     void setUp() {
-        authenticationResponseMapper = DefaultAuthenticationResponseMapper.getInstance();
+        authenticationResponseMapper = AuthenticationResponseMapperImpl.getInstance();
     }
 
     @Test
@@ -125,8 +125,8 @@ class DefaultAuthenticationResponseMapperTest {
         assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
         assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
         assertEquals("0.0.0.0", authenticationResponse.getDeviceIpAddress());
-        assertEquals(hashAlgorithm, authenticationResponse.getHashAlgorithm());
-        assertEquals(hashAlgorithm.getOctetLength(), authenticationResponse.getSaltLength());
+        assertEquals(hashAlgorithm, authenticationResponse.getRsaSsaPssSignatureParameters().getDigestHashAlgorithm());
+        assertEquals(hashAlgorithm.getOctetLength(), authenticationResponse.getRsaSsaPssSignatureParameters().getSaltLength());
     }
 
     @Test

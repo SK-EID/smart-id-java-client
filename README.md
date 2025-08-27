@@ -8,7 +8,7 @@
 
 This library supports Smart-ID API v3.1.
 
-# Table of contents
+## Table of contents
 
 * [Smart-ID Java client](#smart-id-java-client)
     *   [Introduction](#introduction)
@@ -49,11 +49,13 @@ This library supports Smart-ID API v3.1.
             * [Example of using session status poller to query final sessions status](#example-of-using-session-status-poller-to-query-final-sessions-status)
             * [Example of querying sessions status](#example-of-querying-sessions-status-only-once)
         * [Validating sessions status response](#validating-session-status-response)
-            * [Example of validating authentication session response](#example-of-validating-the-authentication-sessions-response)
-            * [Example of validating certificate session response](#example-of-validating-the-certificate-choice-session-response)
-            * [Example of validating the signature](#example-of-validating-the-signature-session-response)
-            * [Error handling for session status](#error-handling-for-session-status)
+          * [Setting up CertificateValidator](#set-up-certificatevalidator)
+          * [Example of validating authentication session response](#example-of-validating-the-authentication-sessions-response)
+          * [Example of validating certificate session response](#example-of-validating-the-certificate-choice-session-response)
+          * [Example of validating the signature](#example-of-validating-the-signature-session-response)
+          * [Error handling for session status](#error-handling-for-session-status)
     * [Certificate by document number](#certificate-by-document-number)
+      * [Example of querying certificate by document number](#example-of-querying-certificate-by-document-number)
     * [Notification-based flows](#notification-based-flows)
         * [Differences between notification-based and dynamic link flows](#differences-between-notification-based-and-dynamic-link-flows)
         * [Notification-based authentication session](#notification-based-authentication-session)
@@ -197,7 +199,7 @@ String rpChallenge = RpChallengeGenerator.generate();
 // Store generated rpChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
-// Setup builder
+// Set up builder
 DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .createDeviceLinkAuthentication()
         // to use anonymous authentication, do not set semantics identifier or document number
@@ -206,7 +208,7 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ));
 
-// Init authentication session
+// Initiate authentication session
 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
 // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
@@ -224,7 +226,7 @@ URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Next steps:
-// - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// - Generate QR-code or device link to be displayed to the user
 // - Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
@@ -255,7 +257,7 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
                 DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ));
 
-// Init authentication session
+// Initiate authentication session
 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
 // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
@@ -273,7 +275,7 @@ URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Next steps:
-// - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// - Generate QR-code or device link to be displayed to the user
 // - Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
@@ -297,7 +299,7 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
             DeviceLinkInteraction.displayTextAndPIN("Log in?")
         ));
 
-// Init authentication session
+// Initiate authentication session
 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
 // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
@@ -315,7 +317,7 @@ URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
 Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
 
 // Next steps:
-// - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+// - Generate QR-code or device link to be displayed to the user 
 // - Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
@@ -435,7 +437,7 @@ String sessionSecret = signatureResponse.getSessionSecret();
 Instant receivedAt = signatureResponse.getReceivedAt();
 String deviceLinkBase = signatureResponse.getDeviceLinkBase();
 
-// Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret, receivedAt and deviceLinkBase provided in the signatureResponse
+// Generate QR-code or device link to be displayed to the user
 // Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
@@ -469,7 +471,7 @@ String sessionSecret = signatureResponse.getSessionSecret();
 Instant receivedAt = signatureResponse.getReceivedAt();
 String deviceLinkBase = signatureResponse.getDeviceLinkBase();
 
-// Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret, receivedAt and deviceLinkBase provided in the signatureResponse
+// Generate QR-code or device link to be displayed to the user
 // Start querying sessions status
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
@@ -736,19 +738,18 @@ if ("RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
 ### Validating session status response
 
 It's important to validate the session status response to ensure that the returned signature or authentication result is valid.
+For validating authentication session status response, use the `AuthenticationResponseValidator`.
+For validating signature session status response, use the `SignatureResponseValidator`.
+NB! Integrators must validate signature value against expected signature value.
 
-* Validate that endResult is OK if the session was successful.
-* Check the certificate field to ensure it has the required certificate level and that it is signed by a trusted CA.
-* For `ACSP_V2` signature validation, compare the digest of the signature protocol, server random, and random challenge.
-* For `RAW_DIGEST_SIGNATURE`, validate the signature against the expected digest.
+#### Set up CertificateValidator
 
-#### Example of validating the authentication sessions response:
-
-##### Authentication response validator setup
-
-###### Setup TrustedCACertStore
+CertificateValidator will check if the certificate is not expired and is trusted
+by constructing certificate chain with trust anchors and intermediate CA certificates provided in the TrustedCACertStore.
+Will be used by AuthenticationResponseValidator and SignatureResponseValidator.
 
 ```java
+// Set up TrustedCACertStore
 // Option 1 - initialize certificate store with default locations for trust anchor truststore and for intermediate CA certificates
 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
 
@@ -768,21 +769,28 @@ TrustedCACertStore trustedCACertStore = new DefaultTrustedCACertStore()
         .withTrustAnchors(trustAnchors)
         .withIntermediateCACertificates(intermediateCACertificates)
         .build();
+
+// Set up CertificateValidator with the trusted CA store
+CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
 ```
 
-###### Setup AuthenticationResponseValidator
-```java
-TrustedCACertStore trustedCACertStore;
-AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(trustedCACertStore);
-```
+#### Example of validating the authentication sessions response:
 
-###### Validate sessions status
+AuthenticationResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator) 
 
 ```java
-AuthenticationSessionRequest authenticationSessionRequest;
-DeviceLinkSessionResponse sessionResponse;
+// Set up AuthenticationResponseValidator with the CertificateValidator
+AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+
+// Create authentication request builder
+DeviceLinkAuthenticationSessionRequestBuilder authenticationRequestBuilder =  smartIdClient.createDeviceLinkAuthentication()...;
+// Initialize session
+DeviceLinkSessionResponse sessionResponse = authenticationRequestBuilder.initAuthenticationSession();
+// Get request used for starting the authentication session and use it later to validate sessions status response
+AuthenticationSessionRequest authenticationSessionRequest = authenticationRequestBuilder.getAuthenticationSessionRequest();
 
 // get sessions result
+SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
 SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.getSessionID());
 
 // validate sessions state is completed
@@ -810,19 +818,24 @@ try {
 ```
 
 #### Example of validating the signature session response:
+
+SignatureResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator)
     
 ```java
 try {
-    // Get the session status response
-    TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder()
-            .withOcspEnabled(false)
-            .build();
-
-    // Initialize the validator with the CA store
-    SignatureResponseValidator validator = new SignatureResponseValidator(trustedCACertStore);
-    
+    // Objects needed for validation
+    CertificateResponse certResponse; // queried by document number or from certificate choice session
+    SignableData signableData; // data that was sent for signing
+    // Initialize the signature response validator with CertificateValidator
+    SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
     // Validate and map the session status. If the sessions end result is other than OK, then an exception will be thrown.
-    SignatureResponse signatureResponse = validator.from(sessionStatus, "QUALIFIED");
+    SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+    // Validate signature value. This step can be skipped if other means of validating the signature value can be used. 
+    SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+    signatureValueValidator.validate(signatureResponse.getSignatureValue(),
+            signableData.calculateHash(),
+            certResponse.certificate(),
+            signatureResponse.getRsaSsaPssParameters());
 
     // Process the response (e.g., save to database or pass to another system)
     handleSignatureResponse(signatureResponse);
@@ -861,7 +874,10 @@ The session status response may return various error codes indicating the outcom
 
 ## Certificate by document number
 
-In API v3.1, the flow to initiate a **notification-based certificate choice session using a document number** was removed. Instead, a new, simplified endpoint was introduced.
+In API v3.1 new endpoint was introduced to simplify querying certificate for signing. 
+RP can directly query the user's signing certificate by document number — no session flow or user interaction required.
+Can be used for device link and notification-based signature flows.
+Only requirement is that the device link authentication is successfully completed before to get the document number.
 
 ### Request Parameters
 The request parameters for the certificate by document number request are as follows:
@@ -878,23 +894,25 @@ The request parameters for the certificate by document number request are as fol
     * `value`: Required. Base64-encoded X.509 certificate (matches pattern `^[a-zA-Z0-9+/]+={0,2}$`)
     * `certificateLevel`: Required. Level of the certificate, Possible values `ADVANCED` or `QUALIFIED`
 
-### Get certificate using document number
-
-RP can directly query the user's signing certificate by document number — no session flow or user interaction required.
-
-#### Usage example in Java
+### Example of querying certificate by document number
 
 ```java
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
+// Build the certificate by document number request and query the certificate
 CertificateByDocumentNumberResult certResponse = smartIdClient
         .createCertificateByDocumentNumber()
         .withDocumentNumber(documentNumber)
         .getCertificateByDocumentNumber();
 
-// certResponse.certificate(); contains Base64-encoded certificate
-// certResponse.certificateLevel(); is either ADVANCED or QUALIFIED
+// Set up the certificate validator
+TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+
+// Validate the certificate
+certificateValidator.validateCertificate(certResponse.certificate());
 ```
+Checkout out other ways to set up TrustedCaCertStore with CertificateValidator in [Set up CertificateValidator](#set-up-certificatevalidator).
 
 ## Notification-based flows
 
