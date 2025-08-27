@@ -271,6 +271,10 @@ public class AuthenticationResponseMapperImpl implements AuthenticationResponseM
         if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'cert.certificateLevel' is empty");
         }
+        if (!AuthenticationCertificateLevel.isSupported(sessionCertificate.getCertificateLevel())) {
+            logger.error("Authentication session status field 'cert.certificateLevel' has invalid value: {}", sessionCertificate.getCertificateLevel());
+            throw new UnprocessableSmartIdResponseException("Authentication session status field 'cert.certificateLevel' has unsupported value");
+        }
     }
 
     private static X509Certificate toCertificate(SessionCertificate sessionCertificate) {

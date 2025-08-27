@@ -756,6 +756,23 @@ class AuthenticationResponseMapperImplTest {
             var exception = assertThrows(SmartIdClientException.class, () -> authenticationResponseMapper.from(sessionStatus));
             assertTrue(exception.getMessage().startsWith("Failed to parse X509 certificate from"));
         }
+
+        @Test
+        void from_certificateLevelIsInvalid_throwException() {
+            var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
+            var sessionSignature = toSessionSignature("rsassa-pss");
+            var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "invalid");
+
+            var sessionStatus = new SessionStatus();
+            sessionStatus.setResult(sessionResult);
+            sessionStatus.setSignatureProtocol("ACSP_V2");
+            sessionStatus.setSignature(sessionSignature);
+            sessionStatus.setCert(sessionCertificate);
+            sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
+
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseMapper.from(sessionStatus));
+            assertEquals("Authentication session status field 'cert.certificateLevel' has unsupported value", exception.getMessage());
+        }
     }
 
     @ParameterizedTest

@@ -26,6 +26,8 @@ package ee.sk.smartid;
  * #L%
  */
 
+import java.util.Arrays;
+
 public enum AuthenticationCertificateLevel {
     ADVANCED(1),
     QUALIFIED(2);
@@ -44,5 +46,16 @@ public enum AuthenticationCertificateLevel {
      */
     public boolean isSameLevelOrHigher(AuthenticationCertificateLevel certificateLevel) {
         return this == certificateLevel || this.level > certificateLevel.level;
+    }
+
+    /**
+     * Check if the given certificate level is supported
+     *
+     * @param certificateLevel the level of the certificate
+     * @return true if the level is supported, false otherwise
+     */
+    public static boolean isSupported(String certificateLevel) {
+        return Arrays.stream(AuthenticationCertificateLevel.values())
+                .anyMatch(cl -> cl.name().equals(certificateLevel));
     }
 }
