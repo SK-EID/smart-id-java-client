@@ -31,7 +31,7 @@ It is recommended to start using device-link authentication flows from Smart-ID 
 5. When session status state is `COMPLETE` polling will be stopped and [response should be checked](README.md#example-of-validating-the-authentication-sessions-response) with `AuthenticationResponseValidator`. It will validate required fields, certificate and signature value in sessions status, and it will also handler errors.
 6. If everything is ok `AuthenticationIdentity` will be returned. AuthenticationIdentity is same as used for V2.
 
-## Migrating signing - without DigiDoc4j library
+## Migrating signing
 
 Signing migration will be focusing on moving to signature flow when device link authentication has been completed before. 
 
@@ -64,7 +64,7 @@ Steps below include examples how to set up DataToSign for signing with RSASSA-PS
 ### Moving to V3 signing flow without DigiDoc4j library
 
 NB! Without DigiDoc4j library integrator has to provide implementation for creating signed container.
-Smart-id-java-client only provides mean to validate that signature response has required fields and returned signature value is valid.
+Smart-id-java-client only provides means to validate that signature response has required fields and returned signature value is valid.
 
 1. Replace certificate choice builder with`CertificateByDocumentNumberRequestBuilder`. SmartID client `ee.sk.smartid.SmartIdClient` provides method `createCertificateByDocumentNumber()` for easier access. Call build method `.getCertificateByDocumentNumber()` to get the certificate. Checkout example [here](README.md#example-of-querying-certificate-by-document-number).
 2. Use `SignableData` to create digested value for signing.

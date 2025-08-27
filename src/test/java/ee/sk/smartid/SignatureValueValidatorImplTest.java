@@ -43,16 +43,6 @@ class SignatureValueValidatorImplTest {
         assertDoesNotThrow(() -> signatureValueValidator.validate(SIGNATURE_VALUE, PAYLOAD, certificate, rsaSsaPssParameters));
     }
 
-    private static RsaSsaPssParameters toRsaSsaPssParameters() {
-        RsaSsaPssParameters rsaSsaPssParameters = new RsaSsaPssParameters();
-        rsaSsaPssParameters.setDigestHashAlgorithm(HashAlgorithm.SHA_512);
-        rsaSsaPssParameters.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
-        rsaSsaPssParameters.setMaskHashAlgorithm(HashAlgorithm.SHA_512);
-        rsaSsaPssParameters.setSaltLength(HashAlgorithm.SHA_512.getOctetLength());
-        rsaSsaPssParameters.setTrailerField(TrailerField.OXBC);
-        return rsaSsaPssParameters;
-    }
-
     @ParameterizedTest
     @ArgumentsSource(EmptyInputArgumentProvider.class)
     void validate_InputParametersNotProvided_throwException(byte[] signatureValue, byte[] payload, X509Certificate certificate, RsaSsaPssParameters rsaSsaPssParameters) {
@@ -79,6 +69,16 @@ class SignatureValueValidatorImplTest {
                         CertificateUtil.getX509Certificate(CERT),
                         toRsaSsaPssParameters()));
         assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
+    }
+
+    private static RsaSsaPssParameters toRsaSsaPssParameters() {
+        RsaSsaPssParameters rsaSsaPssParameters = new RsaSsaPssParameters();
+        rsaSsaPssParameters.setDigestHashAlgorithm(HashAlgorithm.SHA_512);
+        rsaSsaPssParameters.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
+        rsaSsaPssParameters.setMaskHashAlgorithm(HashAlgorithm.SHA_512);
+        rsaSsaPssParameters.setSaltLength(HashAlgorithm.SHA_512.getOctetLength());
+        rsaSsaPssParameters.setTrailerField(TrailerField.OXBC);
+        return rsaSsaPssParameters;
     }
 
     private static class EmptyInputArgumentProvider implements ArgumentsProvider {

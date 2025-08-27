@@ -186,7 +186,7 @@ class SignatureResponseValidatorTest {
 
         @ParameterizedTest
         @EnumSource(value = CertificateLevel.class, names = {"QUALIFIED", "QSCD"})
-        void validate_returnedCertificateLevelSameAsRequested(CertificateLevel certificateLevel) { // TODO - 18.08.25: check usage of this test
+        void validate_returnedCertificateLevelSameAsRequested(CertificateLevel certificateLevel) {
             SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
             sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
 
@@ -371,7 +371,7 @@ class SignatureResponseValidatorTest {
             }
 
             @Test
-            void validate_invalidHashAlgorithm() { // TODO - 15.08.25: rename test name
+            void validate_invalidHashAlgorithm() {
                 SessionStatus sessionStatus = createMockSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss");
                 sessionStatus.getSignature().getSignatureAlgorithmParameters().setHashAlgorithm("INVALID-HASH");
 
