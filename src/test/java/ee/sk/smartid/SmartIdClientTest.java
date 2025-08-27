@@ -78,7 +78,7 @@ class SmartIdClientTest {
 
         @Test
         void createDeviceLinkCertificateChoice() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
@@ -425,7 +425,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicContent_certificateChoiceWithWithQRCode() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
@@ -449,8 +449,8 @@ class SmartIdClientTest {
 
         @ParameterizedTest
         @EnumSource(value = DeviceLinkType.class, names = { "WEB_2_APP", "APP_2_APP" })
-        void createDynamicContent_certificateChoiceWithWithWeb2AppAndApp2App(DeviceLinkType deviceLinkType) {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
+        void createDynamicContent_certificateChoiceForSameDeviceFlows(DeviceLinkType deviceLinkType) {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
@@ -472,7 +472,7 @@ class SmartIdClientTest {
 
         @Test
         void createDynamicContent_createQrCode() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))

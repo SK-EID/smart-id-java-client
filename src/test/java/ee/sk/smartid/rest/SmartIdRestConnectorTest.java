@@ -522,7 +522,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class DeviceLinkCertificateChoiceTests {
 
-        private static final String ANONYMOUS_CERTIFICATE_CHOICE_PATH = "/certificatechoice/device-link/anonymous";
+        private static final String ANONYMOUS_CERTIFICATE_CHOICE_PATH = "/signature/certificate-choice/device-link/anonymous";
 
         private SmartIdConnector connector;
 
@@ -588,7 +588,7 @@ class SmartIdRestConnectorTest {
 
             Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkCertificateChoice(request));
 
-            assertEquals("Request is unauthorized for URI http://localhost:18089/certificatechoice/device-link/anonymous", exception.getMessage());
+            assertEquals("Request is unauthorized for URI http://localhost:18089/signature/certificate-choice/device-link/anonymous", exception.getMessage());
         }
 
         @Test

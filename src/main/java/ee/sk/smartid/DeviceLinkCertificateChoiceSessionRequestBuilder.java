@@ -30,11 +30,8 @@ import static ee.sk.smartid.util.StringUtil.isEmpty;
 
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
@@ -43,10 +40,10 @@ import ee.sk.smartid.util.StringUtil;
 
 public class DeviceLinkCertificateChoiceSessionRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(DeviceLinkCertificateChoiceSessionRequestBuilder.class);
     private static final String INITIAL_CALLBACK_URL_PATTERN = "^https://[^|]+$";
 
     private final SmartIdConnector connector;
+
     private String relyingPartyUUID;
     private String relyingPartyName;
     private CertificateLevel certificateLevel;
@@ -149,7 +146,7 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
      * <p>
      *
      * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL for further session management.
-     * @throws SmartIdClientException if the response is invalid or missing necessary session data.
+     * @throws SmartIdRequestSetupException          if the request is invalid or missing necessary data.
      * @throws UnprocessableSmartIdResponseException if the response is missing required fields.
      */
     public DeviceLinkSessionResponse initCertificateChoice() {
@@ -162,15 +159,13 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
 
     private void validateRequestParameters() {
         if (isEmpty(relyingPartyUUID)) {
-            logger.error("Parameter relyingPartyUUID must be set");
-            throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (isEmpty(relyingPartyName)) {
-            logger.error("Parameter relyingPartyName must be set");
-            throw new SmartIdClientException("Parameter relyingPartyName must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
         }
-        if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
-            throw new SmartIdClientException("Nonce must be between 1 and 30 characters");
+        if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
+            throw new SmartIdRequestSetupException("Value for 'nonce' must have length between 1 and 30 characters");
         }
         validateInitialCallbackUrl();
     }
@@ -198,29 +193,25 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
 
     private void validateInitialCallbackUrl() {
         if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
-            throw new SmartIdClientException("initialCallbackUrl must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+            throw new SmartIdRequestSetupException("Value for 'initialCallbackUrl' must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
         }
     }
 
-    private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse) {
+    private static void validateResponseParameters(DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse) {
         if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionID())) {
-            logger.error("Session ID is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'sessionID' is missing or empty");
         }
 
         if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionToken())) {
-            logger.error("Session token is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session token is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'sessionToken' is missing or empty");
         }
 
         if (StringUtil.isEmpty(deviceLinkCertificateChoiceSessionResponse.getSessionSecret())) {
-            logger.error("Session secret is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session secret is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'sessionSecret' is missing or empty");
         }
 
         if (deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase() == null || deviceLinkCertificateChoiceSessionResponse.getDeviceLinkBase().toString().isBlank()) {
-            logger.error("deviceLinkBase is missing or empty in the response");
-            throw new UnprocessableSmartIdResponseException("deviceLinkBase is missing or empty in the response");
+            throw new UnprocessableSmartIdResponseException("Device link certificate choice session initialisation response field 'deviceLinkBase' is missing or empty");
         }
     }
 }

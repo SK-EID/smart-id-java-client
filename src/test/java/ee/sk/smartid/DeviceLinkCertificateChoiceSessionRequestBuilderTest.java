@@ -46,6 +46,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -159,7 +160,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(responseWithNullSessionID);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Session ID is missing from the response", ex.getMessage());
+            assertEquals("Device link certificate choice session initialisation response field 'sessionID' is missing or empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -174,7 +175,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Session token is missing from the response", ex.getMessage());
+            assertEquals("Device link certificate choice session initialisation response field 'sessionToken' is missing or empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -189,7 +190,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Session secret is missing from the response", ex.getMessage());
+            assertEquals("Device link certificate choice session initialisation response field 'sessionSecret' is missing or empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -204,7 +205,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
-            assertEquals("deviceLinkBase is missing or empty in the response", ex.getMessage());
+            assertEquals("Device link certificate choice session initialisation response field 'deviceLinkBase' is missing or empty", ex.getMessage());
         }
 
         @Test
@@ -220,7 +221,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
             builderService.withRelyingPartyUUID(null);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Parameter relyingPartyUUID must be set", ex.getMessage());
+            assertEquals("Value for 'relyingPartyUUID' cannot be empty", ex.getMessage());
         }
 
         @Test
@@ -228,23 +229,16 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
             builderService.withRelyingPartyName(null);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
+            assertEquals("Value for 'relyingPartyName' cannot be empty", ex.getMessage());
         }
 
-        @Test
-        void initiateCertificateChoice_invalidNonce() {
-            builderService.withNonce("1234567890123456789012345678901");
+        @ParameterizedTest
+        @ValueSource(strings = {"","1234567890123456789012345678901" })
+        void initiateCertificateChoice_nonceWithInvalidLength(String invalidNonce) {
+            builderService.withNonce(invalidNonce);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Nonce must be between 1 and 30 characters", ex.getMessage());
-        }
-
-        @Test
-        void initiateCertificateChoice_emptyNonce() {
-            builderService.withNonce("");
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builderService.initCertificateChoice());
-            assertEquals("Nonce must be between 1 and 30 characters", ex.getMessage());
+            assertEquals("Value for 'nonce' must have length between 1 and 30 characters", ex.getMessage());
         }
 
         @Test
@@ -271,7 +265,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
 
         @ParameterizedTest
         @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
-        void initCertificateChoice_initialCallbackUrlIsInvalid_throwException(String url, String expectedErrorMessage) {
+        void initCertificateChoice_initialCallbackUrlIsInvalid_throwException(String url) {
             var builder = new DeviceLinkCertificateChoiceSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
@@ -279,7 +273,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
                     .withInitialCallbackUrl(url);
 
             var exception = assertThrows(SmartIdClientException.class, builder::initCertificateChoice);
-            assertEquals(expectedErrorMessage, exception.getMessage());
+            assertEquals("Value for 'initialCallbackUrl' must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars", exception.getMessage());
         }
     }
 
@@ -296,9 +290,9 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of("http://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("https://example.com|test", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars"),
-                    Arguments.of("ftp://example.com", "initialCallbackUrl must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars")
+                    Arguments.of("http://example.com"),
+                    Arguments.of("https://example.com|test"),
+                    Arguments.of("ftp://example.com")
             );
         }
     }
