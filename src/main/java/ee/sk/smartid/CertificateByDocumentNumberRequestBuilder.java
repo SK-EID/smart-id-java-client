@@ -120,8 +120,8 @@ public class CertificateByDocumentNumberRequestBuilder {
         validateResponseParameters(response);
 
         return new CertificateByDocumentNumberResult(
-                CertificateLevel.valueOf(response.getCert().getCertificateLevel()),
-                CertificateParser.parseX509Certificate(response.getCert().getValue()));
+                CertificateLevel.valueOf(response.cert().certificateLevel()),
+                CertificateParser.parseX509Certificate(response.cert().value()));
     }
 
     private void validateRequestParameters() {
@@ -142,16 +142,16 @@ public class CertificateByDocumentNumberRequestBuilder {
         }
         validateState(certificateResponse);
 
-        if (certificateResponse.getCert() == null) {
+        if (certificateResponse.cert() == null) {
             throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert' is missing");
         }
         validateCertificateLevel(certificateResponse);
 
-        if (StringUtil.isEmpty(certificateResponse.getCert().getValue())) {
+        if (StringUtil.isEmpty(certificateResponse.cert().value())) {
             throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.value' is missing");
         }
-        if (!BASE64_PATTERN.matcher(certificateResponse.getCert().getValue()).matches()) {
-            logger.error("Certificate response field 'cert.value' has invalid value: {}", certificateResponse.getCert().getValue());
+        if (!BASE64_PATTERN.matcher(certificateResponse.cert().value()).matches()) {
+            logger.error("Certificate response field 'cert.value' has invalid value: {}", certificateResponse.cert().value());
             throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.value' does not have Base64-encoded value");
         }
         // TODO - 28.08.25: add certificate valid and trust validations
@@ -159,7 +159,7 @@ public class CertificateByDocumentNumberRequestBuilder {
     }
 
     private static void validateState(CertificateResponse certificateResponse) {
-        String state = certificateResponse.getState();
+        String state = certificateResponse.state();
         if (StringUtil.isEmpty(state)) {
             throw new UnprocessableSmartIdResponseException("Queried certificate response field 'state' is missing");
         }
@@ -173,7 +173,7 @@ public class CertificateByDocumentNumberRequestBuilder {
     }
 
     private void validateCertificateLevel(CertificateResponse certificateResponse) {
-        String certificateLevel = certificateResponse.getCert().getCertificateLevel();
+        String certificateLevel = certificateResponse.cert().certificateLevel();
         if (StringUtil.isEmpty(certificateLevel)) {
             throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.certificateLevel' is missing");
         }

@@ -694,10 +694,10 @@ class SmartIdRestConnectorTest {
             CertificateResponse response = connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
 
             assertNotNull(response);
-            assertEquals("OK", response.getState());
-            assertNotNull(response.getCert());
-            assertEquals("QUALIFIED", response.getCert().getCertificateLevel());
-            assertThat(response.getCert().getValue(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30"));
+            assertEquals("OK", response.state());
+            assertNotNull(response.cert());
+            assertEquals("QUALIFIED", response.cert().certificateLevel());
+            assertThat(response.cert().value(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30"));
         }
 
         @Test
@@ -708,10 +708,10 @@ class SmartIdRestConnectorTest {
             CertificateResponse response = connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", certificateByDocumentNumberRequest);
 
             assertNotNull(response);
-            assertEquals("OK", response.getState());
-            assertNotNull(response.getCert());
-            assertEquals("QUALIFIED", response.getCert().getCertificateLevel());
-            assertThat(response.getCert().getValue(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30"));
+            assertEquals("OK", response.state());
+            assertNotNull(response.cert());
+            assertEquals("QUALIFIED", response.cert().certificateLevel());
+            assertThat(response.cert().value(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30"));
         }
 
         @Test

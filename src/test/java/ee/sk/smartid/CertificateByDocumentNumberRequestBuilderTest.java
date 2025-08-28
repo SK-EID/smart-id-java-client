@@ -68,7 +68,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
     @Test
     void getCertificateByDocumentNumber_ok() {
-        CertificateResponse mockResponse = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
+        CertificateResponse mockResponse = toCertificateResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
         when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(mockResponse);
 
         CertificateByDocumentNumberResult result = new CertificateByDocumentNumberRequestBuilder(connector)
@@ -96,7 +96,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
     @Test
     void getCertificateByDocumentNumber_certificateLevelSetToNull_ok() {
-        CertificateResponse mockResponse = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
+        CertificateResponse mockResponse = toCertificateResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
         when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(mockResponse);
 
         CertificateByDocumentNumberResult result = new CertificateByDocumentNumberRequestBuilder(connector)
@@ -179,9 +179,8 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
             @Test
             void getCertificateByDocumentNumber_responseStateMissing_throwException() {
-                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
-                response.setState(null);
-                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+                var certificateResponse = new CertificateResponse(null, null);
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(certificateResponse);
                 var builder = createValidRequestParameters();
 
                 var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
@@ -190,9 +189,8 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
             @Test
             void getCertificateByDocumentNumber_responseStateValueIsInvalid_throwException() {
-                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
-                response.setState("invalid");
-                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+                var certificateResponse = new CertificateResponse("invalid", null);
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(certificateResponse);
                 var builder = createValidRequestParameters();
 
                 var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
@@ -201,9 +199,8 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
             @Test
             void getCertificateByDocumentNumber_responseStateIsDocumentUnusable_throwException() {
-                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
-                response.setState(CertificateState.DOCUMENT_UNUSABLE.name());
-                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+                var certificateResponse = new CertificateResponse(CertificateState.DOCUMENT_UNUSABLE.name(), null);
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(certificateResponse);
                 var builder = createValidRequestParameters();
 
                 assertThrows(DocumentUnusableException.class, builder::getCertificateByDocumentNumber);
@@ -212,9 +209,8 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
         @Test
         void getCertificateByDocumentNumber_certFieldMissing_throwException() {
-            CertificateResponse response = new CertificateResponse();
-            response.setState(CertificateState.OK.name());
-            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+            var certificateResponse = new CertificateResponse(CertificateState.OK.name(), null);
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(certificateResponse);
 
             var builder = createValidRequestParameters();
 
@@ -227,7 +223,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
             @Test
             void getCertificateByDocumentNumber_responseCertificateLevelMissing_throwException() {
-                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, null);
+                CertificateResponse response = toCertificateResponse(CERTIFICATE_BASE64, null);
                 when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
                 var builder = createValidRequestParameters();
@@ -238,7 +234,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
             @Test
             void getCertificateByDocumentNumber_responseCertificateHasInvalidValue_throwException() {
-                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, "invalid");
+                CertificateResponse response = toCertificateResponse(CERTIFICATE_BASE64, "invalid");
                 when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
                 var builder = createValidRequestParameters();
 
@@ -248,7 +244,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
             @Test
             void getCertificateByDocumentNumber_certificateLevelLowerThanRequested_throwException() {
-                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.ADVANCED.name());
+                CertificateResponse response = toCertificateResponse(CERTIFICATE_BASE64, CertificateLevel.ADVANCED.name());
                 when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
                 var builder = createValidRequestParameters();
@@ -260,7 +256,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
         @Test
         void getCertificateByDocumentNumber_certValueMissing_throwException() {
-            CertificateResponse response = createValidResponse(null, CertificateLevel.QUALIFIED.name());
+            CertificateResponse response = toCertificateResponse(null, CertificateLevel.QUALIFIED.name());
             when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
 
             var builder = createValidRequestParameters();
@@ -271,16 +267,8 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
         @Test
         void getCertificateByDocumentNumber_certValueInvalidBase64_throwException() {
-            var cert = new CertificateInfo();
-            cert.setValue("NOT@BASE64!");
-            cert.setCertificateLevel(CertificateLevel.QUALIFIED.name());
-
-            var response = new CertificateResponse();
-            response.setCert(cert);
-            response.setState(CertificateState.OK.name());
-
-            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
-
+            CertificateResponse certificateResponse = toCertificateResponse("NOT@BASE64!", CertificateLevel.QUALIFIED.name());
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(certificateResponse);
             var builder = createValidRequestParameters();
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
@@ -295,14 +283,8 @@ class CertificateByDocumentNumberRequestBuilderTest {
                 .withRelyingPartyName(RP_NAME);
     }
 
-    private CertificateResponse createValidResponse(String certValue, String level) {
-        var certificate = new CertificateInfo();
-        certificate.setValue(certValue);
-        certificate.setCertificateLevel(level);
-
-        var response = new CertificateResponse();
-        response.setCert(certificate);
-        response.setState(CertificateState.OK.name());
-        return response;
+    private CertificateResponse toCertificateResponse(String certValue, String level) {
+        var certificate = new CertificateInfo(certValue, level);
+        return new CertificateResponse(CertificateState.OK.name(), certificate);
     }
 }
