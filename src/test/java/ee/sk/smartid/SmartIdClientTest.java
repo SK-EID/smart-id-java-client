@@ -226,7 +226,7 @@ class SmartIdClientTest {
 
         @Test
         void createCertificateRequest_withDocumentNumber() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/sign/certificate-by-document-number-request-all-fields.json", "responses/certificate-by-document-number-response.json");
 
             CertificateByDocumentNumberResult response = smartIdClient.createCertificateByDocumentNumber()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")
@@ -240,7 +240,7 @@ class SmartIdClientTest {
 
         @Test
         void getCertificateByDocumentNumber_withUnknownState_throwsException() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response-unknown-state.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q", "requests/sign/certificate-by-document-number-request-all-fields.json", "responses/certificate-by-document-number-response-unknown-state.json");
 
             CertificateByDocumentNumberRequestBuilder builder = smartIdClient.createCertificateByDocumentNumber()
                     .withDocumentNumber("PNOEE-1234567890-MOCK-Q")

@@ -89,9 +89,9 @@ class CertificateByDocumentNumberRequestBuilderTest {
         verify(connector).getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), captor.capture());
 
         CertificateByDocumentNumberRequest sentRequest = captor.getValue();
-        assertEquals(RP_UUID, sentRequest.getRelyingPartyUUID());
-        assertEquals(RP_NAME, sentRequest.getRelyingPartyName());
-        assertEquals("QUALIFIED", sentRequest.getCertificateLevel());
+        assertEquals(RP_UUID, sentRequest.relyingPartyUUID());
+        assertEquals(RP_NAME, sentRequest.relyingPartyName());
+        assertEquals("QUALIFIED", sentRequest.certificateLevel());
     }
 
     @Test
@@ -117,11 +117,10 @@ class CertificateByDocumentNumberRequestBuilderTest {
         verify(connector).getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), captor.capture());
 
         CertificateByDocumentNumberRequest sentRequest = captor.getValue();
-        assertEquals(RP_UUID, sentRequest.getRelyingPartyUUID());
-        assertEquals(RP_NAME, sentRequest.getRelyingPartyName());
-        assertNull(sentRequest.getCertificateLevel());
+        assertEquals(RP_UUID, sentRequest.relyingPartyUUID());
+        assertEquals(RP_NAME, sentRequest.relyingPartyName());
+        assertNull(sentRequest.certificateLevel());
     }
-
 
     @Nested
     class ValidateRequiredRequestParameters {

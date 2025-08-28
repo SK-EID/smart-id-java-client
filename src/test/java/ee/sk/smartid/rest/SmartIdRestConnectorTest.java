@@ -689,7 +689,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void getCertificateByDocumentNumber_successful() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json", "responses/certificate-by-document-number-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/sign/certificate-by-document-number-request-all-fields.json", "responses/certificate-by-document-number-response.json");
 
             CertificateResponse response = connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
 
@@ -701,8 +701,22 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
+        void getCertificateByDocumentNumber_certificateLevelNotSet_successful() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/sign/certificate-by-document-number-request-only-required-fields.json", "responses/certificate-by-document-number-response.json");
+
+            var certificateByDocumentNumberRequest = new CertificateByDocumentNumberRequest("00000000-0000-0000-0000-000000000000", "DEMO", null);
+            CertificateResponse response = connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", certificateByDocumentNumberRequest);
+
+            assertNotNull(response);
+            assertEquals("OK", response.getState());
+            assertNotNull(response.getCert());
+            assertEquals("QUALIFIED", response.getCert().getCertificateLevel());
+            assertThat(response.getCert().getValue(), startsWith("MIIHTTCCBtSgAwIBAgIQZjAo7ibA2G30"));
+        }
+
+        @Test
         void getCertificateByDocumentNumber_userAccountNotFound_throwsException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json");
+            SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/sign/certificate-by-document-number-request-all-fields.json");
             assertThrows(UserAccountNotFoundException.class, () -> {
                 connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
             });
@@ -710,7 +724,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void getCertificateByDocumentNumber_requestUnauthorized_throwsException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/certificate-by-document-number-request.json");
+            SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/sign/certificate-by-document-number-request-all-fields.json");
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
                 connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
             });
@@ -1111,11 +1125,7 @@ class SmartIdRestConnectorTest {
     }
 
     private static CertificateByDocumentNumberRequest toCertificateByDocumentNumberRequest() {
-        var request = new CertificateByDocumentNumberRequest();
-        request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        request.setRelyingPartyName("DEMO");
-        request.setCertificateLevel("ADVANCED");
-        return request;
+        return new CertificateByDocumentNumberRequest("00000000-0000-0000-0000-000000000000", "DEMO", "ADVANCED");
     }
 
     private static SignatureSessionRequest createSignatureSessionRequest() {

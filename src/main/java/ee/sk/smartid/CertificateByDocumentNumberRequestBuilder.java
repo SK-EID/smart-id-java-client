@@ -115,12 +115,7 @@ public class CertificateByDocumentNumberRequestBuilder {
      */
     public CertificateByDocumentNumberResult getCertificateByDocumentNumber() {
         validateRequestParameters();
-        var request = new CertificateByDocumentNumberRequest();
-        request.setRelyingPartyUUID(relyingPartyUUID);
-        request.setRelyingPartyName(relyingPartyName);
-        if (certificateLevel != null) {
-            request.setCertificateLevel(certificateLevel.name());
-        }
+        var request = new CertificateByDocumentNumberRequest(relyingPartyUUID, relyingPartyName, certificateLevel == null ? null : certificateLevel.name());
         CertificateResponse response = connector.getCertificateByDocumentNumber(documentNumber, request);
         validateResponseParameters(response);
 

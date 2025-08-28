@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,33 +28,9 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-public class CertificateByDocumentNumberRequest implements Serializable {
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-    private String relyingPartyUUID;
-    private String relyingPartyName;
-    private String certificateLevel;
-
-    public String getRelyingPartyUUID() {
-        return relyingPartyUUID;
-    }
-
-    public void setRelyingPartyUUID(String relyingPartyUUID) {
-        this.relyingPartyUUID = relyingPartyUUID;
-    }
-
-    public String getRelyingPartyName() {
-        return relyingPartyName;
-    }
-
-    public void setRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyName = relyingPartyName;
-    }
-
-    public String getCertificateLevel() {
-        return certificateLevel;
-    }
-
-    public void setCertificateLevel(String certificateLevel) {
-        this.certificateLevel = certificateLevel;
-    }
+public record CertificateByDocumentNumberRequest(String relyingPartyUUID,
+                                                 String relyingPartyName,
+                                                 @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel) implements Serializable {
 }
