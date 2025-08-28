@@ -135,7 +135,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
                     .withDocumentNumber(documentNumber);
 
             var ex = assertThrows(SmartIdClientException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Parameter documentNumber must be set", ex.getMessage());
+            assertEquals("Value for 'documentNumber' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -147,7 +147,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
                     .withRelyingPartyUUID(uuid);
 
             var ex = assertThrows(SmartIdClientException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Parameter relyingPartyUUID must be set", ex.getMessage());
+            assertEquals("Value for 'relyingPartyUUID' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -159,7 +159,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
                     .withRelyingPartyName(relyingPartyName);
 
             var ex = assertThrows(SmartIdClientException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
+            assertEquals("Value for 'relyingPartyName' cannot be empty", ex.getMessage());
         }
     }
 
@@ -172,7 +172,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
             var builder = createValidRequestParameters();
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Certificate certificateByDocumentNumberResponse is null", ex.getMessage());
+            assertEquals("Queried certificate response is not provided", ex.getMessage());
         }
 
         @Nested
@@ -267,7 +267,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
             var builder = createValidRequestParameters();
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Parameter cert.value is missing", ex.getMessage());
+            assertEquals("Queried certificate response field 'cert.value' is missing", ex.getMessage());
         }
 
         @Test
@@ -285,7 +285,7 @@ class CertificateByDocumentNumberRequestBuilderTest {
             var builder = createValidRequestParameters();
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Parameter cert.value is not a valid Base64-encoded string", ex.getMessage());
+            assertEquals("Queried certificate response field 'cert.value' does not have Base64-encoded value", ex.getMessage());
         }
     }
 

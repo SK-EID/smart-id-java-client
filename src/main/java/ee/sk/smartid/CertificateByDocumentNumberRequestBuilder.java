@@ -124,27 +124,26 @@ public class CertificateByDocumentNumberRequestBuilder {
         CertificateResponse response = connector.getCertificateByDocumentNumber(documentNumber, request);
         validateResponseParameters(response);
 
-        return new CertificateByDocumentNumberResult(CertificateLevel.valueOf(response.getCert().getCertificateLevel()), CertificateParser.parseX509Certificate(response.getCert().getValue()));
+        return new CertificateByDocumentNumberResult(
+                CertificateLevel.valueOf(response.getCert().getCertificateLevel()),
+                CertificateParser.parseX509Certificate(response.getCert().getValue()));
     }
 
     private void validateRequestParameters() {
         if (StringUtil.isEmpty(documentNumber)) {
-            logger.error("Parameter documentNumber must be set");
-            throw new SmartIdClientException("Parameter documentNumber must be set");
+            throw new SmartIdClientException("Value for 'documentNumber' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyUUID)) {
-            logger.error("Parameter relyingPartyUUID must be set");
-            throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
+            throw new SmartIdClientException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyName)) {
-            logger.error("Parameter relyingPartyName must be set");
-            throw new SmartIdClientException("Parameter relyingPartyName must be set");
+            throw new SmartIdClientException("Value for 'relyingPartyName' cannot be empty");
         }
     }
 
     private void validateResponseParameters(CertificateResponse certificateResponse) {
         if (certificateResponse == null) {
-            throw new UnprocessableSmartIdResponseException("Certificate certificateByDocumentNumberResponse is null");
+            throw new UnprocessableSmartIdResponseException("Queried certificate response is not provided");
         }
         validateState(certificateResponse);
 
@@ -154,12 +153,14 @@ public class CertificateByDocumentNumberRequestBuilder {
         validateCertificateLevel(certificateResponse);
 
         if (StringUtil.isEmpty(certificateResponse.getCert().getValue())) {
-            throw new UnprocessableSmartIdResponseException("Parameter cert.value is missing");
+            throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.value' is missing");
         }
-
         if (!BASE64_PATTERN.matcher(certificateResponse.getCert().getValue()).matches()) {
-            throw new UnprocessableSmartIdResponseException("Parameter cert.value is not a valid Base64-encoded string");
+            logger.error("Certificate response field 'cert.value' has invalid value: {}", certificateResponse.getCert().getValue());
+            throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.value' does not have Base64-encoded value");
         }
+        // TODO - 28.08.25: add certificate valid and trust validations
+        // TODO - 28.08.25: add certificate purpose validations
     }
 
     private static void validateState(CertificateResponse certificateResponse) {
