@@ -47,14 +47,14 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 
 class SmartIdClientTest {
@@ -248,7 +248,7 @@ class SmartIdClientTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
 
-            assertTrue(ex.getMessage().contains("Unsupported certificate state"));
+            assertEquals("Queried certificate response field 'state' has unsupported value", ex.getMessage());
         }
     }
 
@@ -369,7 +369,7 @@ class SmartIdClientTest {
     class DynamicContent {
 
         @ParameterizedTest
-        @EnumSource(value = DeviceLinkType.class, names = { "WEB_2_APP", "APP_2_APP" })
+        @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
         void createDynamicContent_authenticationWithWeb2AppAndApp2App(DeviceLinkType deviceLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous", "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
 
@@ -448,7 +448,7 @@ class SmartIdClientTest {
         }
 
         @ParameterizedTest
-        @EnumSource(value = DeviceLinkType.class, names = { "WEB_2_APP", "APP_2_APP" })
+        @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
         void createDynamicContent_certificateChoiceForSameDeviceFlows(DeviceLinkType deviceLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous", "requests/certificate-choice-session-request.json", "responses/device-link-certificate-choice-session-response.json");
 

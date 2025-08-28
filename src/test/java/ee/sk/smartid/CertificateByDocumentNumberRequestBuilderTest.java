@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,20 +36,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.CertificateInfo;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
-import ee.sk.smartid.rest.dao.CertificateResponse;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.ArgumentCaptor;
+
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
+import ee.sk.smartid.rest.dao.CertificateInfo;
+import ee.sk.smartid.rest.dao.CertificateResponse;
 
 class CertificateByDocumentNumberRequestBuilderTest {
 
@@ -137,6 +137,87 @@ class CertificateByDocumentNumberRequestBuilderTest {
     class ValidateRequiredResponseParameters {
 
         @Test
+        void getCertificate_responseIsNull_throwException() {
+            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(null);
+            var builder = createValidRequestParameters();
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+            assertEquals("Certificate certificateByDocumentNumberResponse is null", ex.getMessage());
+        }
+
+        @Nested
+        class ValidateState {
+
+            @Test
+            void getCertificate_responseStateMissing_throwException() {
+                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
+                response.setState(null);
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+                var builder = createValidRequestParameters();
+
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+                assertEquals("Queried certificate response field 'state' is missing", ex.getMessage());
+            }
+
+            @Test
+            void getCertificate_responseStateValueIsInvalid_throwException() {
+                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
+                response.setState("invalid");
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+                var builder = createValidRequestParameters();
+
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+                assertEquals("Queried certificate response field 'state' has unsupported value", ex.getMessage());
+            }
+
+            @Test
+            void getCertificate_responseStateIsDocumentUnusable_throwException() {
+                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
+                response.setState(CertificateState.DOCUMENT_UNUSABLE.name());
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+                var builder = createValidRequestParameters();
+
+                assertThrows(DocumentUnusableException.class, builder::getCertificateByDocumentNumber);
+            }
+        }
+
+        @Nested
+        class ValidateCertificateLevel {
+
+            @Test
+            void getCertificate_responseCertificateLevelMissing_throwException() {
+                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, null);
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+
+                var builder = createValidRequestParameters();
+
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+                assertEquals("Queried certificate response field 'cert.certificateLevel' is missing", ex.getMessage());
+            }
+
+            @Test
+            void getCertificate_responseCertificateHasInvalidValue_throwException() {
+                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, "invalid");
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+                var builder = createValidRequestParameters();
+
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+                assertEquals("Queried certificate response field 'cert.certificateLevel' has unsupported value", ex.getMessage());
+            }
+
+            @Test
+            void getCertificate_certificateLevelLowerThanRequested_throwException() {
+                CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.ADVANCED.name());
+                when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
+
+                var builder = createValidRequestParameters();
+
+                var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+                assertEquals("Queried certificate has lower level than requested", ex.getMessage());
+            }
+        }
+
+        @Test
         void getCertificate_certValueMissing_throwException() {
             CertificateResponse response = createValidResponse(null, CertificateLevel.QUALIFIED.name());
             when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
@@ -163,61 +244,6 @@ class CertificateByDocumentNumberRequestBuilderTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
             assertEquals("Parameter cert.value is not a valid Base64-encoded string", ex.getMessage());
-        }
-
-        @Test
-        void getCertificate_responseStateIsDocumentUnusable_throwException() {
-            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
-            response.setState(CertificateState.DOCUMENT_UNUSABLE.name());
-            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
-
-            var builder = createValidRequestParameters();
-
-            assertThrows(DocumentUnusableException.class, builder::getCertificateByDocumentNumber);
-        }
-
-        @Test
-        void getCertificate_responseIsNull_throwException() {
-            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(null);
-
-            var builder = createValidRequestParameters();
-
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Certificate certificateByDocumentNumberResponse is null", ex.getMessage());
-        }
-
-        @Test
-        void getCertificate_responseStateMissing_throwException() {
-            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.QUALIFIED.name());
-            response.setState(null);
-            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
-
-            var builder = createValidRequestParameters();
-
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Missing response 'state'", ex.getMessage());
-        }
-
-        @Test
-        void getCertificate_responseCertificateLevelMissing_throwException() {
-            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, null);
-            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
-
-            var builder = createValidRequestParameters();
-
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Parameter certificateLevel is missing", ex.getMessage());
-        }
-
-        @Test
-        void getCertificate_certificateLevelLowerThanRequested_throwException() {
-            CertificateResponse response = createValidResponse(CERTIFICATE_BASE64, CertificateLevel.ADVANCED.name());
-            when(connector.getCertificateByDocumentNumber(eq(DOCUMENT_NUMBER), any(CertificateByDocumentNumberRequest.class))).thenReturn(response);
-
-            var builder = createValidRequestParameters();
-
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
-            assertEquals("Certificate level is lower than requested", ex.getMessage());
         }
     }
 
