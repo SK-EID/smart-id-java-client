@@ -118,7 +118,9 @@ public class CertificateByDocumentNumberRequestBuilder {
         var request = new CertificateByDocumentNumberRequest();
         request.setRelyingPartyUUID(relyingPartyUUID);
         request.setRelyingPartyName(relyingPartyName);
-        request.setCertificateLevel(certificateLevel.name());
+        if (certificateLevel != null) {
+            request.setCertificateLevel(certificateLevel.name());
+        }
         CertificateResponse response = connector.getCertificateByDocumentNumber(documentNumber, request);
         validateResponseParameters(response);
 
@@ -183,7 +185,8 @@ public class CertificateByDocumentNumberRequestBuilder {
             logger.error("Queried certificate response field 'cert.certificateLevel' has invalid value: {}", certificateLevel);
             throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.certificateLevel' has unsupported value");
         }
-        if (!CertificateLevel.valueOf(certificateLevel).isSameLevelOrHigher(this.certificateLevel)) {
+        CertificateLevel requestedLevel = this.certificateLevel == null ? CertificateLevel.QUALIFIED : this.certificateLevel;
+        if (!CertificateLevel.valueOf(certificateLevel).isSameLevelOrHigher(requestedLevel)) {
             throw new UnprocessableSmartIdResponseException("Queried certificate has lower level than requested");
         }
     }

@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+Changes mentioned under 3.1.x version have not been published yet. Will be released when v3.1 is stable.
+
+## [3.1.10] - 2025-08-28
+- Updated exception message of `DocumentUnusableException`
+
 ## [3.1.9] - 2025-07-20
 - Extracted common certificate validation logic into `CertificateValidator` and will be used by `AuthenticationResponseValidator` and `SignatureResponseValidator`.
 
