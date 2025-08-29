@@ -154,8 +154,6 @@ public class CertificateByDocumentNumberRequestBuilder {
             logger.error("Certificate response field 'cert.value' has invalid value: {}", certificateResponse.cert().value());
             throw new UnprocessableSmartIdResponseException("Queried certificate response field 'cert.value' does not have Base64-encoded value");
         }
-        // TODO - 28.08.25: add certificate valid and trust validations
-        // TODO - 28.08.25: add certificate purpose validations
     }
 
     private static void validateState(CertificateResponse certificateResponse) {
