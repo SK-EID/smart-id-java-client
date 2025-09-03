@@ -31,24 +31,5 @@ import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CertificateInfo implements Serializable {
-
-    private String value;
-    private String certificateLevel;
-
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getCertificateLevel() {
-        return certificateLevel;
-    }
-
-    public void setCertificateLevel(String certificateLevel) {
-        this.certificateLevel = certificateLevel;
-    }
+public record CertificateInfo(String value, String certificateLevel) implements Serializable {
 }
