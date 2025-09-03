@@ -166,7 +166,7 @@ More info available here https://sk-eid.github.io/smart-id-documentation/rp-api/
 * `certificateLevel`: Level of certificate requested. Possible values are ADVANCED or QUALIFIED. Defaults to QUALIFIED.
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is ACSP_V2.
 * `signatureProtocolParameters`: Required. Parameters for the ACSP_V2 signature protocol.
-    * `rpChallenge`: Required. Base64-encoded value, length between 44 and 88 characters..
+    * `rpChallenge`: Required. Base64-encoded value, length between 44 and 88 characters.
     * `signatureAlgorithm`: Required. Signature algorithm name. Supported value only `rsassa-pss`.
     * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
         * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
@@ -617,7 +617,7 @@ URI deviceLink = new DeviceLinkBuilder()
 Creating a QR code uses the Zxing library to generate a QR code image with device link as content.
 According to link size the QR-code of version 9 (53x53 modules) is used.
 For the QR-code to be scannable by most devices the QR code module size should be ~10px.
-It is achieved by setting the height and width of the QR code to 610px (calculated as (53+2x4)*10px)).
+It is achieved by setting the height and width of the QR code to 610px (calculated as (53+2x4)*10px).
 Generated QR code will have error correction level low.
 
 ##### Generate QR-code Data URI
@@ -836,7 +836,7 @@ try {
     // Validate and map the session status. If the sessions end result is other than OK, then an exception will be thrown.
     SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
     // Validate signature value. This step can be skipped if other means of validating the signature value can be used. 
-    SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+    SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
     signatureValueValidator.validate(signatureResponse.getSignatureValue(),
             signableData.calculateHash(),
             certResponse.certificate(),

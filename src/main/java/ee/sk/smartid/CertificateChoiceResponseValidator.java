@@ -28,6 +28,9 @@ package ee.sk.smartid;
 
 import java.security.cert.X509Certificate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
@@ -41,7 +44,10 @@ import ee.sk.smartid.util.StringUtil;
  */
 public class CertificateChoiceResponseValidator {
 
+    private static final Logger logger = LoggerFactory.getLogger(CertificateChoiceResponseValidator.class);
+
     private final CertificateValidator certificateValidator;
+    private final SignatureCertificatePurposeValidatorFactory signatureCertificatePurposeValidatorFactory;
 
     /**
      * Initializes the certificate choice response validator with a certificate validator
@@ -49,7 +55,19 @@ public class CertificateChoiceResponseValidator {
      * @param certificateValidator certificate validator to validate the received certificate
      */
     public CertificateChoiceResponseValidator(CertificateValidator certificateValidator) {
+        this(certificateValidator, new SignatureCertificatePurposeValidatorFactoryImpl());
+    }
+
+    /**
+     * Initializes the certificate choice response validator with a certificate validator and signature certificate purpose validator factory
+     *
+     * @param certificateValidator                        certificate validator to validate the received certificate
+     * @param signatureCertificatePurposeValidatorFactory factory to create signature certificate purpose validators
+     */
+    public CertificateChoiceResponseValidator(CertificateValidator certificateValidator,
+                                              SignatureCertificatePurposeValidatorFactory signatureCertificatePurposeValidatorFactory) {
         this.certificateValidator = certificateValidator;
+        this.signatureCertificatePurposeValidatorFactory = signatureCertificatePurposeValidatorFactory;
     }
 
     /**
@@ -82,16 +100,26 @@ public class CertificateChoiceResponseValidator {
             throw new SmartIdClientException("Parameter 'requestedCertificateLevel' is not provided");
         }
         validateResult(sessionStatus.getResult());
-        X509Certificate certificate = getValidatedCertificate(sessionStatus, requestedCertificateLevel);
+        SessionCertificate sessionCertificate = sessionStatus.getCert();
+        validateSessionStatusCertificate(sessionCertificate);
+        CertificateLevel certificateLevel = CertificateLevel.valueOf(sessionCertificate.getCertificateLevel());
+        X509Certificate certificate = getValidateX509Certificate(sessionCertificate, certificateLevel, requestedCertificateLevel);
+        return toCertificateChoiceResponse(sessionStatus, certificate, certificateLevel);
+    }
 
-        var certificateChoiceResponse = new CertificateChoiceResponse();
-        certificateChoiceResponse.setEndResult(sessionStatus.getResult().getEndResult());
-        certificateChoiceResponse.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
-        certificateChoiceResponse.setCertificate(certificate);
-        certificateChoiceResponse.setCertificateLevel(CertificateLevel.valueOf(sessionStatus.getCert().getCertificateLevel()));
-        certificateChoiceResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
-        certificateChoiceResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
-        return certificateChoiceResponse;
+
+    private X509Certificate getValidateX509Certificate(SessionCertificate sessionCertificate,
+                                                       CertificateLevel certificateLevel,
+                                                       CertificateLevel requestedCertificateLevel) {
+        if (!certificateLevel.isSameLevelOrHigher(requestedCertificateLevel)) {
+            throw new CertificateLevelMismatchException("Certificate choice session status response certificate level is lower than requested");
+        }
+        X509Certificate certificate = CertificateParser.parseX509Certificate(sessionCertificate.getValue());
+        certificateValidator.validate(certificate);
+
+        SignatureCertificatePurposeValidator purposeValidator = signatureCertificatePurposeValidatorFactory.create(certificateLevel);
+        purposeValidator.validate(certificate);
+        return certificate;
     }
 
     private static void validateResult(SessionResult sessionResult) {
@@ -110,15 +138,7 @@ public class CertificateChoiceResponseValidator {
         }
     }
 
-    private X509Certificate getValidatedCertificate(SessionStatus sessionStatus, CertificateLevel requestedCertificateLevel) {
-        validateCertificate(sessionStatus.getCert(), requestedCertificateLevel);
-        X509Certificate certificate = CertificateParser.parseX509Certificate(sessionStatus.getCert().getValue());
-        certificateValidator.validate(certificate);
-        // TODO - 23.08.25: add purpose validations
-        return certificate;
-    }
-
-    private static void validateCertificate(SessionCertificate sessionCertificate, CertificateLevel requestedCertificateLevel) {
+    private static void validateSessionStatusCertificate(SessionCertificate sessionCertificate) {
         if (sessionCertificate == null) {
             throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'cert' is missing");
         }
@@ -128,13 +148,22 @@ public class CertificateChoiceResponseValidator {
         if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
             throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'cert.certificateLevel' has empty value");
         }
-        if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
-            throw new CertificateLevelMismatchException("Certificate choice session status response certificate level is lower than requested");
+        if (!CertificateLevel.isSupported(sessionCertificate.getCertificateLevel())) {
+            logger.error("Certificate choice session status field 'cert.certificateLevel' has invalid value: {}", sessionCertificate.getCertificateLevel());
+            throw new UnprocessableSmartIdResponseException("Certificate choice session status field 'cert.certificateLevel' has unsupported value");
         }
     }
 
-    private static boolean isCertificateLevelValid(CertificateLevel requestedCertificateLevel, String returnedCertificateLevel) {
-        CertificateLevel returnedLevel = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
-        return returnedLevel.isSameLevelOrHigher(requestedCertificateLevel);
+    private static CertificateChoiceResponse toCertificateChoiceResponse(SessionStatus sessionStatus,
+                                                                         X509Certificate certificate,
+                                                                         CertificateLevel certificateLevel) {
+        var certificateChoiceResponse = new CertificateChoiceResponse();
+        certificateChoiceResponse.setEndResult(sessionStatus.getResult().getEndResult());
+        certificateChoiceResponse.setDocumentNumber(sessionStatus.getResult().getDocumentNumber());
+        certificateChoiceResponse.setCertificate(certificate);
+        certificateChoiceResponse.setCertificateLevel(certificateLevel);
+        certificateChoiceResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
+        certificateChoiceResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
+        return certificateChoiceResponse;
     }
 }

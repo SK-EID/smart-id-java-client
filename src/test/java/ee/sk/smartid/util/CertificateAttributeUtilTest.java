@@ -27,15 +27,18 @@ package ee.sk.smartid.util;
  */
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -49,6 +52,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import ee.sk.smartid.CertificateUtil;
+import ee.sk.smartid.InvalidCertificateGenerator;
 
 public class CertificateAttributeUtilTest {
 
@@ -57,7 +61,7 @@ public class CertificateAttributeUtilTest {
 
     @Test
     public void getDateOfBirthFromCertificateAttribute_datePresent_returns() throws CertificateException {
-        X509Certificate certificateWithDob = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV_WITH_DOB);
+        X509Certificate certificateWithDob = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV_WITH_DOB);
 
         LocalDate dateOfBirthCertificateAttribute = CertificateAttributeUtil.getDateOfBirth(certificateWithDob);
 
@@ -67,7 +71,7 @@ public class CertificateAttributeUtilTest {
 
     @Test
     public void getDateOfBirthFromCertificateAttribute_dateNotPresent_returnsEmpty() throws CertificateException {
-        X509Certificate certificateWithoutDobAttribute = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV);
+        X509Certificate certificateWithoutDobAttribute = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV);
 
         LocalDate dateOfBirthCertificateAttribute = CertificateAttributeUtil.getDateOfBirth(certificateWithoutDobAttribute);
 
@@ -77,7 +81,7 @@ public class CertificateAttributeUtilTest {
     @ParameterizedTest
     @ArgumentsSource(AttributeArgumentProvider.class)
     void getAttributeValue(ASN1ObjectIdentifier attribute, String expectedValue) throws CertificateException {
-        X509Certificate certificate = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV_WITH_DOB);
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV_WITH_DOB);
         String distinguishedName = certificate.getSubjectX500Principal().getName();
 
         Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(distinguishedName, attribute);
@@ -88,12 +92,44 @@ public class CertificateAttributeUtilTest {
 
     @Test
     void getAttributeValue_valueDoesNotExist_returnEmptyOptional() throws CertificateException {
-        X509Certificate certificate = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV_WITH_DOB);
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV_WITH_DOB);
         String distinguishedName = certificate.getSubjectX500Principal().getName();
 
         Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.GENDER);
 
         assertTrue(attributeValue.isEmpty());
+    }
+
+    @Test
+    void getCertificatePolicy_certificatePolicyIsNotPresent_returnEmptySet() {
+        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
+
+        Set<String> certificatePolicy = CertificateAttributeUtil.getCertificatePolicy(certificate);
+
+        assertTrue(certificatePolicy.isEmpty());
+    }
+
+    @Test
+    void getCertificatePolicy_certificatePolicyPresent() throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV);
+
+        Set<String> certificatePolicy = CertificateAttributeUtil.getCertificatePolicy(certificate);
+
+        assertThat(certificatePolicy, contains("1.3.6.1.4.1.10015.3.17.2", "0.4.0.2042.1.1"));
+    }
+
+    @Test
+    void hasNonRepudiation_KeyUsageExtensionIsMissing() {
+        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
+
+        assertFalse(CertificateAttributeUtil.hasNonRepudiationKeyUsage(certificate));
+    }
+
+    @Test
+    void hasNonRepudiation_KeyUsageExtensionIsMising() {
+        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
+
+        assertFalse(CertificateAttributeUtil.hasNonRepudiationKeyUsage(certificate));
     }
 
     private static class AttributeArgumentProvider implements ArgumentsProvider {

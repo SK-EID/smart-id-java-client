@@ -143,7 +143,6 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
      * Starts a device link-based certificate choice session and returns the session response.
      * This response includes essential values such as sessionID, sessionToken, sessionSecret and deviceLinkBase URL,
      * which can be used by the Relying Party to manage and verify the session independently.
-     * <p>
      *
      * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL for further session management.
      * @throws SmartIdRequestSetupException          if the request is invalid or missing necessary data.

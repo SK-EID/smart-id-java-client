@@ -42,8 +42,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.AuthenticationIdentityMapper;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.CertificateUtil;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 public class NationalIdentityNumberUtilTest {
 
@@ -53,7 +53,7 @@ public class NationalIdentityNumberUtilTest {
 
     @Test
     public void getDateOfBirthFromIdCode_estonianIdCode_returns() throws CertificateException {
-        X509Certificate eeCertificate = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_EE);
+        X509Certificate eeCertificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_EE);
 
         AuthenticationIdentity identity = AuthenticationIdentityMapper.from(eeCertificate);
 
@@ -65,7 +65,7 @@ public class NationalIdentityNumberUtilTest {
 
     @Test
     public void getDateOfBirthFromIdCode_latvianIdCode_returns() throws CertificateException {
-        X509Certificate lvCertificate = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LV_DOB_03_APRIL_1903);
+        X509Certificate lvCertificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV_DOB_03_APRIL_1903);
 
         AuthenticationIdentity identity = AuthenticationIdentityMapper.from(lvCertificate);
 
@@ -77,7 +77,7 @@ public class NationalIdentityNumberUtilTest {
 
     @Test
     public void getDateOfBirthFromIdCode_lithuanianIdCode_returns() throws CertificateException {
-        X509Certificate ltCertificate = CertificateUtil.getX509Certificate(AUTH_CERTIFICATE_LT);
+        X509Certificate ltCertificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LT);
 
         AuthenticationIdentity identity = AuthenticationIdentityMapper.from(ltCertificate);
 

@@ -393,15 +393,15 @@ public class ReadmeIntegrationTest {
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
                 SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
                 // Validate signature response
-                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
-                SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+                SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
                 signatureValueValidator.validate(signatureResponse.getSignatureValue(), signableData.calculateHash(), certResponse.certificate(), signatureResponse.getRsaSsaPssParameters());
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
                 assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
                 assertNotNull(signatureResponse.getCertificate());
             }
@@ -491,9 +491,9 @@ public class ReadmeIntegrationTest {
 
                 // Validate signature response
                 SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
-                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
-                SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+                SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
                 signatureValueValidator.validate(signatureResponse.getSignatureValue(),
                         signableData.calculateHash(),
                         certificateChoiceResponse.getCertificate(),
@@ -501,8 +501,8 @@ public class ReadmeIntegrationTest {
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
                 assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
                 assertNotNull(signatureResponse.getCertificate());
             }
@@ -708,12 +708,12 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
-            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOEE-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+            assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
+            assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
             assertEquals("verificationCodeChoice", signatureResponse.getInteractionFlowUsed());
             assertNotNull(signatureResponse.getCertificate());
         }
@@ -732,7 +732,7 @@ public class ReadmeIntegrationTest {
                     .withDocumentNumber(documentNumber)
                     .getCertificateByDocumentNumber();
 
-            // Setup the certificate validator
+            // Set up the certificate validator
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
 

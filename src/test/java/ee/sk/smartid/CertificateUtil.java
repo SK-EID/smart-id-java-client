@@ -27,6 +27,7 @@ package ee.sk.smartid;
  */
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -36,19 +37,34 @@ public final class CertificateUtil {
     private CertificateUtil() {
     }
 
-    public static byte[] getX509CertificateBytes(String base64Certificate) {
-        String caCertificateInPem = CertificateParser.BEGIN_CERT + "\n" + base64Certificate + "\n" + CertificateParser.END_CERT;
-        return caCertificateInPem.getBytes();
-    }
-
-    public static X509Certificate getX509Certificate(byte[] certificateBytes) throws CertificateException {
+    public static X509Certificate toX509Certificate(byte[] certificateBytes) throws CertificateException {
         CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
         return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
     }
 
-    public static X509Certificate getX509Certificate(String base64Certificate) throws CertificateException {
+    public static X509Certificate toX509Certificate(String certificate) {
+        try {
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificate.getBytes(StandardCharsets.UTF_8)));
+        } catch (CertificateException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static X509Certificate toX509CertificateFromEncodedString(String base64Certificate) throws CertificateException {
         byte[] certificateBytes = getX509CertificateBytes(base64Certificate);
-        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-        return (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(certificateBytes));
+        return toX509Certificate(certificateBytes);
     }
+
+    public static String getEncodedCertificateData(String certificate) {
+        return certificate.replace("-----BEGIN CERTIFICATE-----", "")
+                .replace("-----END CERTIFICATE-----", "")
+                .replace("\n", "");
+    }
+
+    private static byte[] getX509CertificateBytes(String encodedData) {
+        String certificate = CertificateParser.BEGIN_CERT + "\n" + encodedData + "\n" + CertificateParser.END_CERT;
+        return certificate.getBytes(StandardCharsets.UTF_8);
+    }
+
 }

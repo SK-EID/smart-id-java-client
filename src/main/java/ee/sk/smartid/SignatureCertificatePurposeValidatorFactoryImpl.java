@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,29 +26,19 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-import java.security.cert.X509Certificate;
-import java.time.LocalDate;
-import java.util.Optional;
+public class SignatureCertificatePurposeValidatorFactoryImpl implements SignatureCertificatePurposeValidatorFactory {
 
-import org.junit.jupiter.api.Test;
-
-class AuthenticationIdentityMapperTest {
-
-    private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
-
-    @Test
-    void from() {
-        X509Certificate certificate = CertificateUtil.toX509Certificate(AUTH_CERT);
-        AuthenticationIdentity authenticationIdentity = AuthenticationIdentityMapper.from(certificate);
-
-        assertEquals("OK", authenticationIdentity.getGivenName());
-        assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-        assertEquals("40504040001", authenticationIdentity.getIdentityNumber());
-        assertEquals("EE", authenticationIdentity.getCountry());
-
-        assertEquals(certificate, authenticationIdentity.getAuthCertificate());
-        assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
+    @Override
+    public SignatureCertificatePurposeValidator create(CertificateLevel certificateLevel) {
+        if (certificateLevel == null) {
+            throw new SmartIdClientException("Parameter 'certificateLevel' is not provided");
+        }
+        return switch (certificateLevel) {
+            case QUALIFIED -> new QualifiedSignatureCertificatePurposeValidator();
+            case ADVANCED -> new NonQualifiedSignatureCertificatePurposeValidator();
+            default -> throw new SmartIdClientException("Unsupported certificate level: " + certificateLevel);
+        };
     }
 }

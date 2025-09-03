@@ -40,8 +40,8 @@ public class SignatureResponse implements Serializable {
     private SignatureAlgorithm signatureAlgorithm;
     private FlowType flowType;
     private X509Certificate certificate;
-    private String requestedCertificateLevel;
-    private String certificateLevel;
+    private CertificateLevel requestedCertificateLevel;
+    private CertificateLevel certificateLevel;
     private String documentNumber;
     private String interactionFlowUsed;
     private String deviceIpAddress;
@@ -104,19 +104,19 @@ public class SignatureResponse implements Serializable {
         this.certificate = certificate;
     }
 
-    public String getCertificateLevel() {
+    public CertificateLevel getCertificateLevel() {
         return certificateLevel;
     }
 
-    public void setCertificateLevel(String certificateLevel) {
+    public void setCertificateLevel(CertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
     }
 
-    public String getRequestedCertificateLevel() {
+    public CertificateLevel getRequestedCertificateLevel() {
         return requestedCertificateLevel;
     }
 
-    public void setRequestedCertificateLevel(String requestedCertificateLevel) {
+    public void setRequestedCertificateLevel(CertificateLevel requestedCertificateLevel) {
         this.requestedCertificateLevel = requestedCertificateLevel;
     }
 
