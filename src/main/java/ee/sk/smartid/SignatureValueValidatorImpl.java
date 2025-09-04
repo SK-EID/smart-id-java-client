@@ -44,18 +44,6 @@ public final class SignatureValueValidatorImpl implements SignatureValueValidato
 
     private final Logger logger = LoggerFactory.getLogger(SignatureValueValidatorImpl.class);
 
-    private static SignatureValueValidatorImpl INSTANCE;
-
-    private SignatureValueValidatorImpl() {
-    }
-
-    public static SignatureValueValidatorImpl getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new SignatureValueValidatorImpl();
-        }
-        return INSTANCE;
-    }
-
     @Override
     public void validate(byte[] signatureValue,
                          byte[] payload,

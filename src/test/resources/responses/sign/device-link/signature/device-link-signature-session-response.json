@@ -1,7 +1,7 @@
 {
   "sessionID": "test-session-id",
   "sessionToken": "test-session-token",
-  "sessionSecret": "test-session-secret",
+  "sessionSecret": "c2Vzc2lvblNlY3JldA==",
   "deviceLinkBase": "https://smart-id.com/device-link/",
   "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
 }

@@ -453,7 +453,7 @@ class SmartIdRestConnectorTest {
         @Disabled("Request body has changed")
         @Test
         void initNotificationAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/notification-authentication-session-request.json", "responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request.json", "responses/notification-session-response.json");
             NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
 
             assertNotNull(response);
@@ -462,7 +462,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             });
         }
@@ -471,7 +471,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
             });
         }
@@ -494,7 +494,7 @@ class SmartIdRestConnectorTest {
         @Disabled("Request body has changed")
         @Test
         void initNotificationAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/notification-authentication-session-request.json", "responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request.json", "responses/notification-session-response.json");
             NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
 
             assertNotNull(response);
@@ -503,7 +503,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -512,7 +512,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationAuthentication_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/notification-authentication-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request.json");
                 connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
             });
         }
@@ -533,7 +533,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDeviceLinkCertificateChoice() {
-            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/device-link-certificate-choice-session-response.json");
+            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
@@ -546,7 +546,6 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkCertificateChoice_invalidCertificateLevel_throwsBadRequestException() {
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
-            request.setCertificateLevel("INVALID_LEVEL");
 
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
@@ -573,9 +572,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_invalidRequest() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
-            var request = new CertificateChoiceSessionRequest();
-            request.setRelyingPartyUUID("");
-            request.setRelyingPartyName("");
+            var request = new CertificateChoiceSessionRequest("", "", null, null, null, null, null);
 
             assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
@@ -628,6 +625,18 @@ class SmartIdRestConnectorTest {
 
             assertThrows(ServerMaintenanceException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
+
+        private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
+            return new CertificateChoiceSessionRequest(
+                    "00000000-0000-0000-0000-000000000000",
+                    "DEMO",
+                    "ADVANCED",
+                    null,
+                    null,
+                    null,
+                    null
+            );
+        }
     }
 
     @Nested
@@ -660,7 +669,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initCertificateChoice_userAccountNotFound_throwException() {
             assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "requests/certificate-choice-session-request.json");
+                SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "requests/sign/notification/certificate-choice-session-request.json");
                 connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111"));
             });
         }
@@ -668,9 +677,21 @@ class SmartIdRestConnectorTest {
         @Test
         void initCertificateChoice_requestIsUnauthorized_throwException() {
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "requests/certificate-choice-session-request.json");
+                SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "requests/sign/notification/certificate-choice-session-request.json");
                 connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111"));
             });
+        }
+
+        private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
+            return new CertificateChoiceSessionRequest(
+                    "00000000-0000-0000-0000-000000000000",
+                    "DEMO",
+                    "ADVANCED",
+                    "cmFuZG9tTm9uY2U=",
+                    null,
+                    null,
+                    null
+            );
         }
     }
 
@@ -747,7 +768,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDeviceLinkSignature_withSemanticsIdentifier_successful() {
-            stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "responses/device-link-signature-session-response.json");
+            stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "responses/sign/device-link/signature/device-link-signature-session-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
@@ -755,15 +776,15 @@ class SmartIdRestConnectorTest {
             DeviceLinkSessionResponse response = connector.initDeviceLinkSignature(request, semanticsIdentifier);
 
             assertNotNull(response);
-            assertEquals("test-session-id", response.getSessionID());
-            assertEquals("test-session-token", response.getSessionToken());
-            assertEquals("test-session-secret", response.getSessionSecret());
-            assertEquals(URI.create("https://smart-id.com/device-link/"), response.getDeviceLinkBase());
+            assertEquals("test-session-id", response.sessionID());
+            assertEquals("test-session-token", response.sessionToken());
+            assertEquals("c2Vzc2lvblNlY3JldA==", response.sessionSecret());
+            assertEquals(URI.create("https://smart-id.com/device-link/"), response.deviceLinkBase());
         }
 
         @Test
         void initDeviceLinkSignature_withDocumentNumber_successful() {
-            stubPostRequestWithResponse("/signature/device-link/document/PNOEE-31111111111-MOCK-Q", "responses/device-link-signature-session-response.json");
+            stubPostRequestWithResponse("/signature/device-link/document/PNOEE-31111111111-MOCK-Q", "responses/sign/device-link/signature/device-link-signature-session-response.json");
 
             SignatureSessionRequest request = createSignatureSessionRequest();
             String documentNumber = "PNOEE-31111111111-MOCK-Q";
@@ -771,10 +792,10 @@ class SmartIdRestConnectorTest {
             DeviceLinkSessionResponse response = connector.initDeviceLinkSignature(request, documentNumber);
 
             assertNotNull(response);
-            assertEquals("test-session-id", response.getSessionID());
-            assertEquals("test-session-token", response.getSessionToken());
-            assertEquals("test-session-secret", response.getSessionSecret());
-            assertEquals(URI.create("https://smart-id.com/device-link/"), response.getDeviceLinkBase());
+            assertEquals("test-session-id", response.sessionID());
+            assertEquals("test-session-token", response.sessionToken());
+            assertEquals("c2Vzc2lvblNlY3JldA==", response.sessionSecret());
+            assertEquals(URI.create("https://smart-id.com/device-link/"), response.deviceLinkBase());
         }
 
         @Test
@@ -879,7 +900,7 @@ class SmartIdRestConnectorTest {
         @Disabled("Request body has changed")
         @Test
         void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/notification-signature-session-request.json", "responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/notification-signature-session-request.json", "responses/notification-session-response.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -895,7 +916,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_userAccountNotFound_throwException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -908,7 +929,7 @@ class SmartIdRestConnectorTest {
         @Disabled("Request body has changed")
         @Test
         void initNotificationSignature_requestIsUnauthorized_throwException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -987,7 +1008,7 @@ class SmartIdRestConnectorTest {
         @Disabled("Request body has changed")
         @Test
         void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/notification-signature-session-request.json", "responses/notification-session-response.json");
+            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/sign/notification/notification-signature-session-request.json", "responses/notification-session-response.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -1003,7 +1024,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initNotificationSignature_userAccountNotFound_throwException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/sign/notification/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -1016,7 +1037,7 @@ class SmartIdRestConnectorTest {
         @Disabled("Request body has changed")
         @Test
         void initNotificationSignature_requestIsUnauthorized_throwException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/notification-signature-session-request.json");
+            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/sign/notification/notification-signature-session-request.json");
 
             SignatureSessionRequest request = createNotificationSignatureSessionRequest();
 
@@ -1115,15 +1136,6 @@ class SmartIdRestConnectorTest {
         );
     }
 
-    private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
-        var request = new CertificateChoiceSessionRequest();
-        request.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
-        request.setRelyingPartyName("DEMO");
-        request.setCertificateLevel("ADVANCED");
-        request.setNonce("cmFuZG9tTm9uY2U=");
-        return request;
-    }
-
     private static CertificateByDocumentNumberRequest toCertificateByDocumentNumberRequest() {
         return new CertificateByDocumentNumberRequest("00000000-0000-0000-0000-000000000000", "DEMO", "ADVANCED");
     }
@@ -1169,11 +1181,11 @@ class SmartIdRestConnectorTest {
                                              Instant start,
                                              Instant end) {
         assertNotNull(response);
-        assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
-        assertEquals(expectedSessionToken, response.getSessionToken());
-        assertEquals(expectedSessionSecret, response.getSessionSecret());
-        assertNotNull(response.getReceivedAt());
-        assertFalse(response.getReceivedAt().isBefore(start.minusSeconds(1)));
-        assertFalse(response.getReceivedAt().isAfter(end.plusSeconds(1)));
+        assertEquals("00000000-0000-0000-0000-000000000000", response.sessionID());
+        assertEquals(expectedSessionToken, response.sessionToken());
+        assertEquals(expectedSessionSecret, response.sessionSecret());
+        assertNotNull(response.receivedAt());
+        assertFalse(response.receivedAt().isBefore(start.minusSeconds(1)));
+        assertFalse(response.receivedAt().isAfter(end.plusSeconds(1)));
     }
 }

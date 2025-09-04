@@ -197,7 +197,7 @@ class AuthenticationResponseValidatorTest {
         signature.setSignatureAlgorithmParameters(sessionSignatureAlgorithmParameters);
 
         var cert = new SessionCertificate();
-        cert.setValue(getEncodedCertificateData(certificateValue));
+        cert.setValue(CertificateUtil.getEncodedCertificateData(certificateValue));
         cert.setCertificateLevel(certificateLevel);
 
         var sessionStatus = new SessionStatus();
@@ -223,14 +223,7 @@ class AuthenticationResponseValidatorTest {
                 null);
     }
 
-
     private static String toBase64(String data) {
         return Base64.getEncoder().encodeToString(data.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private static String getEncodedCertificateData(String certificate) {
-        return certificate.replace("-----BEGIN CERTIFICATE-----", "")
-                .replace("-----END CERTIFICATE-----", "")
-                .replace("\n", "");
     }
 }

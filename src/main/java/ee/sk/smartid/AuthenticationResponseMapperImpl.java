@@ -48,21 +48,12 @@ public class AuthenticationResponseMapperImpl implements AuthenticationResponseM
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationResponseMapperImpl.class);
 
-    private static AuthenticationResponseMapper instance;
-
     private static final String USER_CHALLENGE_PATTERN = "^[a-zA-Z0-9-_]{43}$";
     private static final String BASE64_FORMAT_PATTERN = "^[a-zA-Z0-9+/]+={0,2}$";
     private static final int MINIMUM_SERVER_RANDOM_LENGTH = 24;
 
-    public static AuthenticationResponseMapper getInstance() {
-        if (instance == null) {
-            instance = new AuthenticationResponseMapperImpl();
-        }
-        return instance;
-    }
-
     /**
-     * Maps session status to authentication response {@link AuthenticationResponse]
+     * Maps session status to authentication response {@link AuthenticationResponse}
      *
      * @param sessionStatus session status received from Smart-ID server
      * @return authentication response

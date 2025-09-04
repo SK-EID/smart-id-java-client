@@ -49,15 +49,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateByDocumentNumberResult;
 import ee.sk.smartid.CertificateChoiceResponse;
-import ee.sk.smartid.CertificateChoiceResponseMapper;
+import ee.sk.smartid.CertificateChoiceResponseValidator;
 import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.CertificateValidator;
 import ee.sk.smartid.CertificateValidatorImpl;
@@ -93,7 +91,6 @@ import ee.sk.smartid.rest.dao.SessionStatus;
 public class ReadmeIntegrationTest {
 
     private static final String ALPHA_NUMERIC_PATTERN = "^[A-z0-9]{4}$";
-    private static final Logger log = LoggerFactory.getLogger(ReadmeIntegrationTest.class);
 
     private SmartIdClient smartIdClient;
 
@@ -138,14 +135,14 @@ public class ReadmeIntegrationTest {
                 AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
                 // Use sessionID to start polling for session status
-                String sessionId = authenticationSessionResponse.getSessionID();
+                String sessionId = authenticationSessionResponse.sessionID();
                 // Following values are used for generating device link or QR-code
-                String sessionToken = authenticationSessionResponse.getSessionToken();
+                String sessionToken = authenticationSessionResponse.sessionToken();
                 // Store sessionSecret only on backend side. Do not expose it to the client side.
-                String sessionSecret = authenticationSessionResponse.getSessionSecret();
-                URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+                String sessionSecret = authenticationSessionResponse.sessionSecret();
+                URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
                 // Will be used to calculate elapsed time being used in dynamic link and in authCode
-                Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+                Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
                 // Next steps:
                 // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
@@ -212,14 +209,14 @@ public class ReadmeIntegrationTest {
                 AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
                 // Use sessionID to start polling for session status
-                String sessionId = authenticationSessionResponse.getSessionID();
+                String sessionId = authenticationSessionResponse.sessionID();
                 // Following values are used for generating device link or QR-code
-                String sessionToken = authenticationSessionResponse.getSessionToken();
+                String sessionToken = authenticationSessionResponse.sessionToken();
                 // Store sessionSecret only on backend side. Do not expose it to the client side.
-                String sessionSecret = authenticationSessionResponse.getSessionSecret();
-                URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+                String sessionSecret = authenticationSessionResponse.sessionSecret();
+                URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
                 // Will be used to calculate elapsed time being used in dynamic link and in authCode
-                Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
+                Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
                 // Next steps:
                 // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
@@ -283,14 +280,14 @@ public class ReadmeIntegrationTest {
                 // Get AuthenticationSessionRequest after the request is made and store for validations
                 AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
-                String sessionId = authenticationSessionResponse.getSessionID();
+                String sessionId = authenticationSessionResponse.sessionID();
                 // SessionID is used to query sessions status later
 
-                String sessionToken = authenticationSessionResponse.getSessionToken();
+                String sessionToken = authenticationSessionResponse.sessionToken();
                 // Store sessionSecret only on backend side. Do not expose it to the client side.
-                String sessionSecret = authenticationSessionResponse.getSessionSecret();
-                Instant responseReceivedAt = authenticationSessionResponse.getReceivedAt();
-                URI deviceLinkBase = authenticationSessionResponse.getDeviceLinkBase();
+                String sessionSecret = authenticationSessionResponse.sessionSecret();
+                Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
+                URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
 
                 // Generate the base (unprotected) device link URI, which does not yet include the authCode
                 long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
@@ -358,12 +355,12 @@ public class ReadmeIntegrationTest {
                         .initSignatureSession();
 
                 // Process the signature response
-                String signatureSessionId = signatureSessionResponse.getSessionID();
-                String sessionToken = signatureSessionResponse.getSessionToken();
+                String signatureSessionId = signatureSessionResponse.sessionID();
+                String sessionToken = signatureSessionResponse.sessionToken();
                 // Store sessionSecret only on backend side. Do not expose it to the client side.
-                String sessionSecret = signatureSessionResponse.getSessionSecret();
-                Instant receivedAt = signatureSessionResponse.getReceivedAt();
-                URI deviceLinkBase = signatureSessionResponse.getDeviceLinkBase();
+                String sessionSecret = signatureSessionResponse.sessionSecret();
+                Instant receivedAt = signatureSessionResponse.receivedAt();
+                URI deviceLinkBase = signatureSessionResponse.deviceLinkBase();
 
                 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
                 // Start querying sessions status
@@ -396,15 +393,15 @@ public class ReadmeIntegrationTest {
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
                 SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
                 // Validate signature response
-                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
-                SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+                SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
                 signatureValueValidator.validate(signatureResponse.getSignatureValue(), signableData.calculateHash(), certResponse.certificate(), signatureResponse.getRsaSsaPssParameters());
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
                 assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
                 assertNotNull(signatureResponse.getCertificate());
             }
@@ -432,7 +429,10 @@ public class ReadmeIntegrationTest {
 
                 // Querying the sessions status
                 SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
-                CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
+                TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+                CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+                CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+                CertificateChoiceResponse certificateChoiceResponse = certificateChoiceResponseValidator.validate(certificateSessionStatus);
 
                 // For example construct DataToSign using digidoc4j library and queried certificate
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
@@ -458,12 +458,12 @@ public class ReadmeIntegrationTest {
                         .initSignatureSession();
 
                 // Process the signature response
-                String signatureSessionId = signatureSessionResponse.getSessionID();
-                String sessionToken = signatureSessionResponse.getSessionToken();
+                String signatureSessionId = signatureSessionResponse.sessionID();
+                String sessionToken = signatureSessionResponse.sessionToken();
 
                 // Store sessionSecret only on backend side. Do not expose it to the client side.
-                String sessionSecret = signatureSessionResponse.getSessionSecret();
-                Instant receivedAt = signatureSessionResponse.getReceivedAt();
+                String sessionSecret = signatureSessionResponse.sessionSecret();
+                Instant receivedAt = signatureSessionResponse.receivedAt();
 
                 // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
                 // Start querying sessions status
@@ -489,14 +489,11 @@ public class ReadmeIntegrationTest {
                 // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
                 assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-                TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-                CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
-
                 // Validate signature response
                 SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
-                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+                SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
                 // Validate signature value
-                SignatureValueValidator signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+                SignatureValueValidator signatureValueValidator = new SignatureValueValidatorImpl();
                 signatureValueValidator.validate(signatureResponse.getSignatureValue(),
                         signableData.calculateHash(),
                         certificateChoiceResponse.getCertificate(),
@@ -504,8 +501,8 @@ public class ReadmeIntegrationTest {
 
                 assertEquals("OK", signatureResponse.getEndResult());
                 assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-                assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
+                assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
                 assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
                 assertNotNull(signatureResponse.getCertificate());
             }
@@ -635,7 +632,11 @@ public class ReadmeIntegrationTest {
             // Querying the sessions status
             SessionStatus sessionStatus = poller.getSessionStatus(sessionId);
 
-            CertificateChoiceResponse response = CertificateChoiceResponseMapper.from(sessionStatus);
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus);
+
             assertEquals("OK", response.getEndResult());
             assertEquals("PNOLT-40504040001-MOCK-Q", response.getDocumentNumber());
             assertNotNull(response.getCertificate());
@@ -666,7 +667,10 @@ public class ReadmeIntegrationTest {
             // Querying the sessions status
             SessionStatus certificateSessionStatus = poller.getSessionStatus(certificateChoiceSessionId);
 
-            CertificateChoiceResponse certificateChoiceResponse = CertificateChoiceResponseMapper.from(certificateSessionStatus);
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(certificateSessionStatus);
             // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
 
             // Create the signable data
@@ -703,15 +707,13 @@ public class ReadmeIntegrationTest {
             // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
-            TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
-            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
-            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED.name());
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
 
             assertEquals("OK", signatureResponse.getEndResult());
             assertEquals("PNOEE-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getCertificateLevel());
-            assertEquals(CertificateLevel.QUALIFIED.name(), signatureResponse.getRequestedCertificateLevel());
+            assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
+            assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
             assertEquals("verificationCodeChoice", signatureResponse.getInteractionFlowUsed());
             assertNotNull(signatureResponse.getCertificate());
         }
@@ -730,7 +732,7 @@ public class ReadmeIntegrationTest {
                     .withDocumentNumber(documentNumber)
                     .getCertificateByDocumentNumber();
 
-            // Setup the certificate validator
+            // Set up the certificate validator
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
 

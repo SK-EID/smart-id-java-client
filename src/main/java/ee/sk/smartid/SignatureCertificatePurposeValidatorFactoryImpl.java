@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,28 +26,19 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-import java.net.URI;
-import java.time.Instant;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+public class SignatureCertificatePurposeValidatorFactoryImpl implements SignatureCertificatePurposeValidatorFactory {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public record DeviceLinkSessionResponse(String sessionID,
-                                        String sessionToken,
-                                        String sessionSecret,
-                                        URI deviceLinkBase,
-                                        Instant receivedAt
-
-) implements Serializable {
-
-    @JsonCreator
-    public DeviceLinkSessionResponse(@JsonProperty("sessionID") String sessionID,
-                                     @JsonProperty("sessionToken") String sessionToken,
-                                     @JsonProperty("sessionSecret") String sessionSecret,
-                                     @JsonProperty("deviceLinkBase") URI deviceLinkBase) {
-        this(sessionID, sessionToken, sessionSecret, deviceLinkBase, Instant.now());
+    @Override
+    public SignatureCertificatePurposeValidator create(CertificateLevel certificateLevel) {
+        if (certificateLevel == null) {
+            throw new SmartIdClientException("Parameter 'certificateLevel' is not provided");
+        }
+        return switch (certificateLevel) {
+            case QUALIFIED -> new QualifiedSignatureCertificatePurposeValidator();
+            case ADVANCED -> new NonQualifiedSignatureCertificatePurposeValidator();
+            default -> throw new SmartIdClientException("Unsupported certificate level: " + certificateLevel);
+        };
     }
 }

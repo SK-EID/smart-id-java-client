@@ -26,23 +26,14 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.io.IOException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1OctetString;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.x509.CertificatePolicies;
-import org.bouncycastle.asn1.x509.PolicyInformation;
-import org.bouncycastle.asn1.x509.qualified.QCStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,25 +56,29 @@ public class SignatureResponseValidator {
     private static final Logger logger = LoggerFactory.getLogger(SignatureResponseValidator.class);
 
     private static final Pattern BASE64_PATTERN = Pattern.compile("^[a-zA-Z0-9+/]+={0,2}$");
-    private static final Set<String> QUALIFIED_POLICY_OIDS = Set.of("1.3.6.1.4.1.10015.17.2", "0.4.0.194112.1.2");
-    private static final Set<String> NONQUALIFIED_POLICY_OIDS = Set.of("1.3.6.1.4.1.10015.17.1", "0.4.0.2042.1.1");
-    private static final int KEYUSAGE_NON_REPUDIATION_INDEX = 1;
-    private static final String QC_STATEMENT_OID = "1.3.6.1.5.5.7.1.3";
-    private static final String ELECTRONIC_SIGNING = "0.4.0.1862.1.6.1";
 
     private final CertificateValidator certificateValidator;
-    private final boolean qcStatementRequired;
+    private final SignatureCertificatePurposeValidatorFactory signatureCertificatePurposeValidatorFactory;
 
-    public SignatureResponseValidator(CertificateValidator certificateValidator, boolean qcRequired) {
+    /**
+     * Initializes the validator with a {@link CertificateValidator} and a {@link SignatureCertificatePurposeValidatorFactory}.
+     *
+     * @param certificateValidator                        the certificate validator
+     * @param signatureCertificatePurposeValidatorFactory the signature certificate purpose validator factory
+     */
+    public SignatureResponseValidator(CertificateValidator certificateValidator,
+                                      SignatureCertificatePurposeValidatorFactory signatureCertificatePurposeValidatorFactory) {
         this.certificateValidator = certificateValidator;
-        this.qcStatementRequired = qcRequired;
+        this.signatureCertificatePurposeValidatorFactory = signatureCertificatePurposeValidatorFactory;
     }
 
     /**
-     * Initializes the validator with a {@link CertificateValidator}.
+     * Initializes the validator with a {@link CertificateValidator}
+     *
+     * @param certificateValidator the certificate validator
      */
     public SignatureResponseValidator(CertificateValidator certificateValidator) {
-        this(certificateValidator, false);
+        this(certificateValidator, new SignatureCertificatePurposeValidatorFactoryImpl());
     }
 
     /**
@@ -100,7 +95,7 @@ public class SignatureResponseValidator {
      * @throws SmartIdClientException                     if any of method parameters are not provided
      */
     public SignatureResponse validate(SessionStatus sessionStatus,
-                                      String requestedCertificateLevel
+                                      CertificateLevel requestedCertificateLevel
     ) throws UserRefusedException, UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
         validateSessionsStatus(sessionStatus, requestedCertificateLevel);
 
@@ -125,7 +120,7 @@ public class SignatureResponseValidator {
         signatureResponse.setFlowType(FlowType.valueOf(sessionSignature.getFlowType()));
         signatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
         signatureResponse.setRequestedCertificateLevel(requestedCertificateLevel);
-        signatureResponse.setCertificateLevel(certificate.getCertificateLevel());
+        signatureResponse.setCertificateLevel(CertificateLevel.valueOf(certificate.getCertificateLevel()));
         signatureResponse.setDocumentNumber(sessionResult.getDocumentNumber());
         signatureResponse.setInteractionFlowUsed(sessionStatus.getInteractionTypeUsed());
         signatureResponse.setDeviceIpAddress(sessionStatus.getDeviceIpAddress());
@@ -133,7 +128,7 @@ public class SignatureResponseValidator {
         return signatureResponse;
     }
 
-    private void validateSessionsStatus(SessionStatus sessionStatus, String requestedCertificateLevel) {
+    private void validateSessionsStatus(SessionStatus sessionStatus, CertificateLevel requestedCertificateLevel) {
         if (sessionStatus == null) {
             throw new SmartIdClientException("Parameter 'sessionStatus' is not provided");
         }
@@ -149,7 +144,7 @@ public class SignatureResponseValidator {
         validateSessionResult(sessionStatus, requestedCertificateLevel);
     }
 
-    private void validateSessionResult(SessionStatus sessionStatus, String requestedCertificateLevel) {
+    private void validateSessionResult(SessionStatus sessionStatus, CertificateLevel requestedCertificateLevel) {
         SessionResult sessionResult = sessionStatus.getResult();
 
         if (sessionResult == null) {
@@ -178,43 +173,31 @@ public class SignatureResponseValidator {
         }
     }
 
-    private void validateCertificate(SessionCertificate sessionCertificate, String requestedCertificateLevel) {
+    private void validateCertificate(SessionCertificate sessionCertificate, CertificateLevel requestedCertificateLevel) {
         if (sessionCertificate == null) {
-            throw new UnprocessableSmartIdResponseException("Signature session status field 'cert' is missing or empty");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'cert' is missing");
         }
         if (StringUtil.isEmpty(sessionCertificate.getValue())) {
             throw new UnprocessableSmartIdResponseException("Signature session status field 'cert.value' is empty");
         }
-
         if (StringUtil.isEmpty(sessionCertificate.getCertificateLevel())) {
             throw new UnprocessableSmartIdResponseException("Signature session status field 'cert.certificateLevel' is empty");
         }
-
-        X509Certificate certificate = parseAndCheckCertificate(sessionCertificate.getValue());
-        if (!isCertificateLevelValid(requestedCertificateLevel, sessionCertificate.getCertificateLevel())) {
-            logger.error("Signature session status certificate level mismatch: requested {}, returned {}", requestedCertificateLevel, sessionCertificate.getCertificateLevel());
+        if (!CertificateLevel.isSupported(sessionCertificate.getCertificateLevel())) {
+            logger.error("Signature session status field 'cert.certificateLevel' has invalid value: {}", sessionCertificate.getCertificateLevel());
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'cert.certificateLevel' has unsupported value");
+        }
+        CertificateLevel certificateLevel = CertificateLevel.valueOf(sessionCertificate.getCertificateLevel());
+        if (!certificateLevel.isSameLevelOrHigher(requestedCertificateLevel)) {
+            logger.error("Signature session status certificate level mismatch: requested {}, returned {}",
+                    requestedCertificateLevel, sessionCertificate.getCertificateLevel());
             throw new CertificateLevelMismatchException();
         }
+        X509Certificate certificate = parseAndCheckCertificate(sessionCertificate.getValue());
         certificateValidator.validate(certificate);
-        validateCertificatePoliciesAndPurpose(certificate);
-    }
 
-    private void validateCertificatePoliciesAndPurpose(X509Certificate cert) {
-        Set<String> oids = getPolicyOids(cert);
-        boolean hasAllQualified = oids.containsAll(QUALIFIED_POLICY_OIDS);
-        boolean hasAllNonQual = oids.containsAll(NONQUALIFIED_POLICY_OIDS);
-        if (!hasAllQualified && !hasAllNonQual) {
-            throw new UnprocessableSmartIdResponseException("CertificatePolicies missing required Smart-ID OIDs");
-        }
-
-        boolean[] keyUsage = cert.getKeyUsage();
-        if (keyUsage == null || keyUsage.length < 2 || !keyUsage[KEYUSAGE_NON_REPUDIATION_INDEX]) {
-            throw new UnprocessableSmartIdResponseException("KeyUsage must contain NonRepudiation");
-        }
-
-        if (qcStatementRequired && !containsQcStatement(cert)) {
-            throw new UnprocessableSmartIdResponseException("QCStatement 0.4.0.1862.1.6.1 missing");
-        }
+        SignatureCertificatePurposeValidator purposeValidator = signatureCertificatePurposeValidatorFactory.create(certificateLevel);
+        purposeValidator.validate(certificate);
     }
 
     private static X509Certificate parseAndCheckCertificate(String certBase64) {
@@ -226,55 +209,6 @@ public class SignatureResponseValidator {
             throw new UnprocessableSmartIdResponseException("Signature certificate is invalid", ex);
         }
         return certificate;
-    }
-
-    private static boolean isCertificateLevelValid(String requestedCertificateLevel, String returnedCertificateLevel) {
-        CertificateLevel requestedLevel = CertificateLevel.valueOf(requestedCertificateLevel.toUpperCase());
-        CertificateLevel returnedLevel = CertificateLevel.valueOf(returnedCertificateLevel.toUpperCase());
-
-        return returnedLevel.isSameLevelOrHigher(requestedLevel);
-    }
-
-    private static Set<String> getPolicyOids(X509Certificate certificate) {
-        Set<String> result = new HashSet<>();
-        byte[] extensionValue = certificate.getExtensionValue("2.5.29.32");
-        if (extensionValue == null) {
-            return result;
-        }
-        try (ASN1InputStream ais1 = new ASN1InputStream(extensionValue)) {
-            ASN1OctetString octet = (ASN1OctetString) ais1.readObject();
-            try (ASN1InputStream ais2 = new ASN1InputStream(octet.getOctets())) {
-                CertificatePolicies policies = CertificatePolicies.getInstance(ais2.readObject());
-                for (PolicyInformation pi : policies.getPolicyInformation()) {
-                    result.add(pi.getPolicyIdentifier().getId());
-                }
-            }
-        } catch (IOException ex) {
-            throw new UnprocessableSmartIdResponseException("Unable to parse certificate policies", ex);
-        }
-        return result;
-    }
-
-    private static boolean containsQcStatement(X509Certificate cert) {
-        byte[] extensionValue = cert.getExtensionValue(QC_STATEMENT_OID);
-        if (extensionValue == null) {
-            return false;
-        }
-        try (ASN1InputStream ais1 = new ASN1InputStream(extensionValue)) {
-            ASN1OctetString octet = (ASN1OctetString) ais1.readObject();
-            try (ASN1InputStream ais2 = new ASN1InputStream(octet.getOctets())) {
-                ASN1Sequence seq = (ASN1Sequence) ais2.readObject();
-                for (int i = 0; i < seq.size(); i++) {
-                    QCStatement st = QCStatement.getInstance(seq.getObjectAt(i));
-                    if (ELECTRONIC_SIGNING.equals(st.getStatementId().getId())) {
-                        return true;
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            throw new UnprocessableSmartIdResponseException("Unable to parse QCStatements", ex);
-        }
-        return false;
     }
 
     private static void validateSignature(SessionStatus sessionStatus) {

@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,28 +26,17 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-import java.net.URI;
-import java.time.Instant;
+import java.security.cert.X509Certificate;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public record DeviceLinkSessionResponse(String sessionID,
-                                        String sessionToken,
-                                        String sessionSecret,
-                                        URI deviceLinkBase,
-                                        Instant receivedAt
+public interface SignatureCertificatePurposeValidator {
 
-) implements Serializable {
-
-    @JsonCreator
-    public DeviceLinkSessionResponse(@JsonProperty("sessionID") String sessionID,
-                                     @JsonProperty("sessionToken") String sessionToken,
-                                     @JsonProperty("sessionSecret") String sessionSecret,
-                                     @JsonProperty("deviceLinkBase") URI deviceLinkBase) {
-        this(sessionID, sessionToken, sessionSecret, deviceLinkBase, Instant.now());
-    }
+    /**
+     * Validates that the provided certificate is suitable for digital signing
+     *
+     * @param certificate certificate to validate
+     * @throws UnprocessableSmartIdResponseException when the certificate is not suitable for digital signing
+     */
+    void validate(X509Certificate certificate);
 }

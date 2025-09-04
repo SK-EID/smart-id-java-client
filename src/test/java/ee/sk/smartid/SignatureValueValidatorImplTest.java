@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -58,12 +58,12 @@ class SignatureValueValidatorImplTest {
 
     @BeforeEach
     void setUp() {
-        signatureValueValidator = SignatureValueValidatorImpl.getInstance();
+        signatureValueValidator = new SignatureValueValidatorImpl();
     }
 
     @Test
     void validate() throws CertificateException {
-        X509Certificate certificate = CertificateUtil.getX509Certificate(CERT);
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(CERT);
         RsaSsaPssParameters rsaSsaPssParameters = toRsaSsaPssParameters();
 
         assertDoesNotThrow(() -> signatureValueValidator.validate(SIGNATURE_VALUE, PAYLOAD, certificate, rsaSsaPssParameters));
@@ -81,7 +81,7 @@ class SignatureValueValidatorImplTest {
                 () -> signatureValueValidator.validate(
                         "invalidValue".getBytes(StandardCharsets.UTF_8),
                         PAYLOAD,
-                        CertificateUtil.getX509Certificate(CERT),
+                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
                         toRsaSsaPssParameters()));
         assertEquals("Signature value validation failed", ex.getMessage());
     }
@@ -92,7 +92,7 @@ class SignatureValueValidatorImplTest {
                 () -> signatureValueValidator.validate(
                         SIGNATURE_VALUE,
                         "payloadThatDoesNotMatch".getBytes(StandardCharsets.UTF_8),
-                        CertificateUtil.getX509Certificate(CERT),
+                        CertificateUtil.toX509CertificateFromEncodedString(CERT),
                         toRsaSsaPssParameters()));
         assertEquals("Provided signature value does not match the calculated signature value", ex.getMessage());
     }
@@ -114,7 +114,7 @@ class SignatureValueValidatorImplTest {
                     Arguments.of(null, null, null, null),
                     Arguments.of(new byte[0], null, null, null),
                     Arguments.of(new byte[0], new byte[0], null, null),
-                    Arguments.of(new byte[0], new byte[0], CertificateUtil.getX509Certificate(CERT), null)
+                    Arguments.of(new byte[0], new byte[0], CertificateUtil.toX509CertificateFromEncodedString(CERT), null)
             );
         }
     }

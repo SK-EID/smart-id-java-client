@@ -80,12 +80,13 @@ public class AuthenticationResponseValidator {
      * Creates an instance of {@link AuthenticationResponseValidator} using {@link CertificateValidator}
      * and using default implementations of {@link AuthenticationResponseMapperImpl} and {@link SignatureValueValidatorImpl}
      *
+     * @param certificateValidator validator used to verify the authentication certificate is valid and trusted
      * @return a new instance of {@link AuthenticationResponseValidator}
      */
     public static AuthenticationResponseValidator defaultSetupWithCertificateValidator(CertificateValidator certificateValidator) {
         return new AuthenticationResponseValidator(certificateValidator,
-                AuthenticationResponseMapperImpl.getInstance(),
-                SignatureValueValidatorImpl.getInstance());
+                new AuthenticationResponseMapperImpl(),
+                new SignatureValueValidatorImpl());
     }
 
     /**

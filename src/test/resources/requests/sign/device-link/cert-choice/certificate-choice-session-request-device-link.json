@@ -1,0 +1,6 @@
+{
+  "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
+  "relyingPartyName": "DEMO",
+  "certificateLevel": "QUALIFIED",
+  "initialCallbackUrl": "https://example.com/callback"
+}

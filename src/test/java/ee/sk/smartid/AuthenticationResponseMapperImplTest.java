@@ -30,12 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -64,21 +58,21 @@ class AuthenticationResponseMapperImplTest {
 
     @BeforeEach
     void setUp() {
-        authenticationResponseMapper = AuthenticationResponseMapperImpl.getInstance();
+        authenticationResponseMapper = new AuthenticationResponseMapperImpl();
     }
 
     @Test
     void from() {
         var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("rsassa-pss");
-        var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
+        var sessionCertificate = toSessionCertificate(CertificateUtil.getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
 
         AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
 
         assertEquals("OK", authenticationResponse.getEndResult());
         assertEquals("signatureValue", authenticationResponse.getSignatureValueInBase64());
-        assertEquals(toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
+        assertEquals(CertificateUtil.toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
         assertEquals(AuthenticationCertificateLevel.QUALIFIED, authenticationResponse.getCertificateLevel());
         assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
         assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
@@ -91,14 +85,14 @@ class AuthenticationResponseMapperImplTest {
         var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
         var sessionSignature = toSessionSignature("rsassa-pss");
         sessionSignature.setFlowType(flowType.getDescription());
-        var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
+        var sessionCertificate = toSessionCertificate(CertificateUtil.getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
 
         AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
 
         assertEquals("OK", authenticationResponse.getEndResult());
         assertEquals("signatureValue", authenticationResponse.getSignatureValueInBase64());
-        assertEquals(toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
+        assertEquals(CertificateUtil.toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
         assertEquals(AuthenticationCertificateLevel.QUALIFIED, authenticationResponse.getCertificateLevel());
         assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
         assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
@@ -113,14 +107,14 @@ class AuthenticationResponseMapperImplTest {
         sessionSignature.getSignatureAlgorithmParameters().setHashAlgorithm(hashAlgorithm.getAlgorithmName());
         sessionSignature.getSignatureAlgorithmParameters().getMaskGenAlgorithm().getParameters().setHashAlgorithm(hashAlgorithm.getAlgorithmName());
         sessionSignature.getSignatureAlgorithmParameters().setSaltLength(hashAlgorithm.getOctetLength());
-        var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
+        var sessionCertificate = toSessionCertificate(CertificateUtil.getEncodedCertificateData(AUTH_CERT), "QUALIFIED");
         var sessionStatus = toSessionStatus(sessionResult, sessionSignature, sessionCertificate);
 
         AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
 
         assertEquals("OK", authenticationResponse.getEndResult());
         assertEquals("signatureValue", authenticationResponse.getSignatureValueInBase64());
-        assertEquals(toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
+        assertEquals(CertificateUtil.toX509Certificate(AUTH_CERT), authenticationResponse.getCertificate());
         assertEquals(AuthenticationCertificateLevel.QUALIFIED, authenticationResponse.getCertificateLevel());
         assertEquals("PNOEE-12345678901-MOCK-Q", authenticationResponse.getDocumentNumber());
         assertEquals("displayTextAndPIN", authenticationResponse.getInteractionTypeUsed());
@@ -198,7 +192,6 @@ class AuthenticationResponseMapperImplTest {
             assertEquals("Authentication session status field 'result.documentNumber' is empty", exception.getMessage());
         }
     }
-
 
     @ParameterizedTest
     @NullAndEmptySource
@@ -428,7 +421,6 @@ class AuthenticationResponseMapperImplTest {
                 var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
                 signatureAlgorithmParameters.setHashAlgorithm(hashAlgorithm);
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
-
 
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 
@@ -761,7 +753,7 @@ class AuthenticationResponseMapperImplTest {
         void from_certificateLevelIsInvalid_throwException() {
             var sessionResult = toSessionResult("PNOEE-12345678901-MOCK-Q");
             var sessionSignature = toSessionSignature("rsassa-pss");
-            var sessionCertificate = toSessionCertificate(getEncodedCertificateData(AUTH_CERT), "invalid");
+            var sessionCertificate = toSessionCertificate(CertificateUtil.getEncodedCertificateData(AUTH_CERT), "invalid");
 
             var sessionStatus = new SessionStatus();
             sessionStatus.setResult(sessionResult);
@@ -841,20 +833,5 @@ class AuthenticationResponseMapperImplTest {
         sessionStatus.setInteractionTypeUsed("displayTextAndPIN");
         sessionStatus.setDeviceIpAddress("0.0.0.0");
         return sessionStatus;
-    }
-
-    private static X509Certificate toX509Certificate(String certificateValue) {
-        try {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certificateValue.getBytes(StandardCharsets.UTF_8)));
-        } catch (CertificateException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static String getEncodedCertificateData(String certificate) {
-        return certificate.replace("-----BEGIN CERTIFICATE-----", "")
-                .replace("-----END CERTIFICATE-----", "")
-                .replace("\n", "");
     }
 }

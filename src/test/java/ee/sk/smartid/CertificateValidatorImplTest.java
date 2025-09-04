@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -54,28 +54,24 @@ class CertificateValidatorImplTest {
 
     @Test
     void validate_ok() throws CertificateException {
-        X509Certificate certificate = CertificateUtil.getX509Certificate(TRUSTED_CERT.getBytes(StandardCharsets.UTF_8));
+        X509Certificate certificate = CertificateUtil.toX509Certificate(TRUSTED_CERT.getBytes(StandardCharsets.UTF_8));
 
         assertDoesNotThrow(() -> certificateValidator.validate(certificate));
     }
 
     @Test
     void validate_expired() throws CertificateException {
-        X509Certificate certificate = CertificateUtil.getX509Certificate(EXPIRED_CERT.getBytes(StandardCharsets.UTF_8));
+        X509Certificate certificate = CertificateUtil.toX509Certificate(EXPIRED_CERT.getBytes(StandardCharsets.UTF_8));
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            certificateValidator.validate(certificate);
-        });
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateValidator.validate(certificate));
         assertEquals("Certificate is invalid", exception.getMessage());
     }
 
     @Test
     void validate_notTrusted() throws CertificateException {
-        X509Certificate certificate = CertificateUtil.getX509Certificate(NOT_TRUSTED_CERT.getBytes(StandardCharsets.UTF_8));
+        X509Certificate certificate = CertificateUtil.toX509Certificate(NOT_TRUSTED_CERT.getBytes(StandardCharsets.UTF_8));
 
-        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-            certificateValidator.validate(certificate);
-        });
+        var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> certificateValidator.validate(certificate));
         assertEquals("Certificate chain validation failed", exception.getMessage());
     }
 }

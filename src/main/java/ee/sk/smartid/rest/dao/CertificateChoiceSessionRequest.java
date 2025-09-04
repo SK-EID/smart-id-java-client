@@ -31,79 +31,13 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-public class CertificateChoiceSessionRequest implements Serializable {
+public record CertificateChoiceSessionRequest(
+        String relyingPartyUUID,
+        String relyingPartyName,
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) String nonce,
+        @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
+        @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
+        @JsonInclude(JsonInclude.Include.NON_NULL) String initialCallbackUrl) implements Serializable {
 
-    private String relyingPartyUUID;
-    private String relyingPartyName;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String certificateLevel;
-
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private String nonce;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Set<String> capabilities;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private RequestProperties requestProperties;
-
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String initialCallbackUrl;
-
-    public String getRelyingPartyUUID() {
-        return relyingPartyUUID;
-    }
-
-    public void setRelyingPartyUUID(String relyingPartyUUID) {
-        this.relyingPartyUUID = relyingPartyUUID;
-    }
-
-    public String getRelyingPartyName() {
-        return relyingPartyName;
-    }
-
-    public void setRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyName = relyingPartyName;
-    }
-
-    public String getCertificateLevel() {
-        return certificateLevel;
-    }
-
-    public void setCertificateLevel(String certificateLevel) {
-        this.certificateLevel = certificateLevel;
-    }
-
-    public String getNonce() {
-        return nonce;
-    }
-
-    public void setNonce(String nonce) {
-        this.nonce = nonce;
-    }
-
-    public Set<String> getCapabilities() {
-        return capabilities;
-    }
-
-    public void setCapabilities(Set<String> capabilities) {
-        this.capabilities = capabilities;
-    }
-
-    public RequestProperties getRequestProperties() {
-        return requestProperties;
-    }
-
-    public void setRequestProperties(RequestProperties requestProperties) {
-        this.requestProperties = requestProperties;
-    }
-
-    public String getInitialCallbackUrl() {
-        return initialCallbackUrl;
-    }
-
-    public void setInitialCallbackUrl(String initialCallbackUrl) {
-        this.initialCallbackUrl = initialCallbackUrl;
-    }
 }

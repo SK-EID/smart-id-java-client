@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,28 +26,13 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-import java.net.URI;
-import java.time.Instant;
+public interface SignatureCertificatePurposeValidatorFactory {
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-public record DeviceLinkSessionResponse(String sessionID,
-                                        String sessionToken,
-                                        String sessionSecret,
-                                        URI deviceLinkBase,
-                                        Instant receivedAt
-
-) implements Serializable {
-
-    @JsonCreator
-    public DeviceLinkSessionResponse(@JsonProperty("sessionID") String sessionID,
-                                     @JsonProperty("sessionToken") String sessionToken,
-                                     @JsonProperty("sessionSecret") String sessionSecret,
-                                     @JsonProperty("deviceLinkBase") URI deviceLinkBase) {
-        this(sessionID, sessionToken, sessionSecret, deviceLinkBase, Instant.now());
-    }
+    /**
+     * Creates SignatureCertificatePurposeValidator based on the provided certificate level.
+     *
+     * @param certificateLevel the certificate level to create the validator for
+     * @return SignatureCertificatePurposeValidator instance
+     */
+    SignatureCertificatePurposeValidator create(CertificateLevel certificateLevel);
 }

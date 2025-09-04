@@ -79,10 +79,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
-        assertEquals("test-session-id", result.getSessionID());
-        assertEquals("test-session-token", result.getSessionToken());
-        assertEquals("test-session-secret", result.getSessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
+        assertEquals("test-session-id", result.sessionID());
+        assertEquals("test-session-token", result.sessionToken());
+        assertEquals("test-session-secret", result.sessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.deviceLinkBase());
 
         verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
@@ -95,10 +95,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
-        assertEquals("test-session-id", result.getSessionID());
-        assertEquals("test-session-token", result.getSessionToken());
-        assertEquals("test-session-secret", result.getSessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
+        assertEquals("test-session-id", result.sessionID());
+        assertEquals("test-session-token", result.sessionToken());
+        assertEquals("test-session-secret", result.sessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.deviceLinkBase());
 
         verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
@@ -122,10 +122,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
-        assertEquals("test-session-id", result.getSessionID());
-        assertEquals("test-session-token", result.getSessionToken());
-        assertEquals("test-session-secret", result.getSessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
+        assertEquals("test-session-id", result.sessionID());
+        assertEquals("test-session-token", result.sessionToken());
+        assertEquals("test-session-secret", result.sessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.deviceLinkBase());
 
         verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
@@ -138,10 +138,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         DeviceLinkSessionResponse result = builderService.initCertificateChoice();
 
         assertNotNull(result);
-        assertEquals("test-session-id", result.getSessionID());
-        assertEquals("test-session-token", result.getSessionToken());
-        assertEquals("test-session-secret", result.getSessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), result.getDeviceLinkBase());
+        assertEquals("test-session-id", result.sessionID());
+        assertEquals("test-session-token", result.sessionToken());
+        assertEquals("test-session-secret", result.sessionSecret());
+        assertEquals(URI.create("https://example.com/device-link"), result.deviceLinkBase());
 
         verify(connector).initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class));
     }
@@ -152,12 +152,12 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initiateCertificateChoice_whenSessionIDIsNullOrEmpty(String sessionId) {
-            var responseWithNullSessionID = new DeviceLinkSessionResponse();
-            responseWithNullSessionID.setSessionID(sessionId);
-            responseWithNullSessionID.setSessionToken("test-session-token");
-            responseWithNullSessionID.setSessionSecret("test-session-secret");
-            responseWithNullSessionID.setDeviceLinkBase(URI.create("https://example.com/device-link"));
-            when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(responseWithNullSessionID);
+            var response = new DeviceLinkSessionResponse(sessionId,
+                    "test-session-token",
+                    "test-session-secret",
+                    URI.create("https://example.com/device-link"),
+                    null);
+            when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builderService.initCertificateChoice());
             assertEquals("Device link certificate choice session initialisation response field 'sessionID' is missing or empty", ex.getMessage());
@@ -166,11 +166,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initiateCertificateChoice_whenSessionTokenIsNullOrEmpty(String sessionToken) {
-            var response = new DeviceLinkSessionResponse();
-            response.setSessionID("test-session-id");
-            response.setSessionToken(sessionToken);
-            response.setSessionSecret("test-session-secret");
-            response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
+            var response = new DeviceLinkSessionResponse("test-session-id",
+                    sessionToken,
+                    "test-session-secret",
+                    URI.create("https://example.com/device-link"));
 
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
@@ -181,11 +180,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initiateCertificateChoice_whenSessionSecretIsNullOrEmpty(String sessionSecret) {
-            var response = new DeviceLinkSessionResponse();
-            response.setSessionID("test-session-id");
-            response.setSessionToken("test-session-token");
-            response.setSessionSecret(sessionSecret);
-            response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
+            var response = new DeviceLinkSessionResponse("test-session-id",
+                    "test-session-token",
+                    sessionSecret,
+                    URI.create("https://example.com/device-link"));
 
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
@@ -196,11 +194,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initiateCertificateChoice_whenDeviceLinkBaseIsNullOrEmpty(String uriString) {
-            var response = new DeviceLinkSessionResponse();
-            response.setSessionID("test-session-id");
-            response.setSessionToken("test-session-token");
-            response.setSessionSecret("test-session-secret");
-            response.setDeviceLinkBase(uriString == null ? null : URI.create(uriString));
+            var response = new DeviceLinkSessionResponse("test-session-id",
+                    "test-session-token",
+                    "test-session-secret",
+                    uriString == null ? null : URI.create(uriString));
 
             when(connector.initDeviceLinkCertificateChoice(any(CertificateChoiceSessionRequest.class))).thenReturn(response);
 
@@ -233,7 +230,7 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"","1234567890123456789012345678901" })
+        @ValueSource(strings = {"", "1234567890123456789012345678901"})
         void initiateCertificateChoice_nonceWithInvalidLength(String invalidNonce) {
             builderService.withNonce(invalidNonce);
 
@@ -278,12 +275,10 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
     }
 
     private static DeviceLinkSessionResponse mockCertificateChoiceResponse() {
-        var response = new DeviceLinkSessionResponse();
-        response.setSessionID("test-session-id");
-        response.setSessionToken("test-session-token");
-        response.setSessionSecret("test-session-secret");
-        response.setDeviceLinkBase(URI.create("https://example.com/device-link"));
-        return response;
+        return new DeviceLinkSessionResponse("test-session-id",
+                "test-session-token",
+                "test-session-secret",
+                URI.create("https://example.com/device-link"));
     }
 
     private static class InvalidInitialCallbackUrlArgumentProvider implements ArgumentsProvider {
