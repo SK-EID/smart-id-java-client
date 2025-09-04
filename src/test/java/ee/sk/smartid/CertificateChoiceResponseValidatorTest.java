@@ -118,7 +118,6 @@ public class CertificateChoiceResponseValidatorTest {
             assertEquals("Parameter 'sessionStatus' is not provided", ex.getMessage());
         }
 
-
         @Test
         void validate_requestCertificateLevelNotProvided_throwException() {
             var sessionStatus = toSessionStatus(CERTIFICATE_CHOICE_CERT, "QUALIFIED");

@@ -193,7 +193,6 @@ class AuthenticationResponseMapperImplTest {
         }
     }
 
-
     @ParameterizedTest
     @NullAndEmptySource
     void from_signatureProtocolIsNotProvided_throwException(String signatureProtocol) {
@@ -422,7 +421,6 @@ class AuthenticationResponseMapperImplTest {
                 var signatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
                 signatureAlgorithmParameters.setHashAlgorithm(hashAlgorithm);
                 var sessionSignature = toSessionSignature(signatureAlgorithmParameters);
-
 
                 var sessionStatus = toSessionStatus(sessionResult, sessionSignature);
 

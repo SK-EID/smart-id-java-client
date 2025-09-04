@@ -58,7 +58,6 @@ class NonQualifiedSignatureCertificatePurposeValidatorTest {
     private static final String SK_NON_QUALIFIED_POLICY_OID = "1.3.6.1.4.1.10015.17.1";
     private static final String NCP_POLICY_OID = "0.4.0.2042.1.1";
 
-
     private NonQualifiedSignatureCertificatePurposeValidator validator;
 
     @BeforeEach
@@ -89,7 +88,6 @@ class NonQualifiedSignatureCertificatePurposeValidatorTest {
         );
         CertificatePolicies policies = InvalidCertificateGenerator.createCertificatePolicies(policyInfo);
         X509Certificate certificate = InvalidCertificateGenerator.createCertificate(policies, null, null);
-
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(certificate));
         assertEquals("Certificate does not contain required non-qualified certificate policy OIDs", ex.getMessage());

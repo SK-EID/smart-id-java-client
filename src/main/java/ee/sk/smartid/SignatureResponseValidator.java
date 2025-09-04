@@ -211,7 +211,6 @@ public class SignatureResponseValidator {
         return certificate;
     }
 
-
     private static void validateSignature(SessionStatus sessionStatus) {
         String signatureProtocol = sessionStatus.getSignatureProtocol();
 

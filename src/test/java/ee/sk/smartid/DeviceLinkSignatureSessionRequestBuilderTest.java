@@ -421,7 +421,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     sessionSecret,
                     URI.create("https://example.com/device-link"));
 
-
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
@@ -436,7 +435,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     "test-session-token",
                     "test-session-secret",
                     deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
-
 
             builder.withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);

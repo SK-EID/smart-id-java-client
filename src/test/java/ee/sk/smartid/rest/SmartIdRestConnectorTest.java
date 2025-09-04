@@ -533,7 +533,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDeviceLinkCertificateChoice() {
-            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/sign/device-link/certficate-choice/device-link-certificate-choice-session-response.json");
+            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
@@ -681,7 +681,6 @@ class SmartIdRestConnectorTest {
                 connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111"));
             });
         }
-
 
         private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
             return new CertificateChoiceSessionRequest(

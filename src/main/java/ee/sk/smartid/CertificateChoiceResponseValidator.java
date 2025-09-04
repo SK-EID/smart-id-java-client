@@ -107,7 +107,6 @@ public class CertificateChoiceResponseValidator {
         return toCertificateChoiceResponse(sessionStatus, certificate, certificateLevel);
     }
 
-
     private X509Certificate getValidateX509Certificate(SessionCertificate sessionCertificate,
                                                        CertificateLevel certificateLevel,
                                                        CertificateLevel requestedCertificateLevel) {

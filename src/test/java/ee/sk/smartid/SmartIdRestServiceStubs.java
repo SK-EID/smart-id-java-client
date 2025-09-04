@@ -106,6 +106,16 @@ public class SmartIdRestServiceStubs {
                         .withBody(readFileBody(responseFile))));
     }
 
+    public static void stubStrictRequestWithResponse(String url, String requestFile, String responseFile) {
+        stubFor(post(urlEqualTo(url))
+                .withHeader("Accept", equalTo("application/json"))
+                .withRequestBody(equalToJson(readFileBody(requestFile), false, false))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(readFileBody(responseFile))));
+    }
+
     public static void stubSessionStatusWithState(String sessionId, String responseFile, String startState, String endState) {
         String urlEquals = "/session/" + sessionId;
         stubFor(get(urlEqualTo(urlEquals))
