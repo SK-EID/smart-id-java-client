@@ -28,6 +28,7 @@ package ee.sk.smartid;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.nio.charset.StandardCharsets;
@@ -35,7 +36,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
 
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 public class DigestCalculatorTest {
 
@@ -67,6 +68,7 @@ public class DigestCalculatorTest {
 
     @Test
     public void calculateDigest_nullHashType() {
-        assertThrows(UnprocessableSmartIdResponseException.class, () -> DigestCalculator.calculateDigest(HELLO_WORLD_BYTES, null));
+        var ex = assertThrows(SmartIdClientException.class, () -> DigestCalculator.calculateDigest(HELLO_WORLD_BYTES, null));
+        assertEquals("Parameter 'hashType' must be set", ex.getMessage());
     }
 }

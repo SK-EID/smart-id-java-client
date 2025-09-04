@@ -12,10 +12,10 @@ package ee.sk.smartid.util;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,8 +30,21 @@ import ee.sk.smartid.SignableData;
 import ee.sk.smartid.SignableHash;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-public class SignatureUtil {
+/**
+ * Utility class for signature-related operations.
+ */
+public final class SignatureUtil {
 
+    private SignatureUtil() {
+    }
+
+    /**
+     * Decides which of the two parameters to use for obtaining the Base64-encoded digest to sign.
+     *
+     * @param signableHash value to be sent for signing on data that was already hashed
+     * @param signableData value to be hashed before sending for signing
+     * @return Base64-encoded digest
+     */
     public static String getDigestToSignBase64(SignableHash signableHash, SignableData signableData) {
         if (signableHash != null && signableHash.areFieldsFilled()) {
             return signableHash.getHashInBase64();
