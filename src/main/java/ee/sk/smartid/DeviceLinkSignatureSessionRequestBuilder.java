@@ -155,7 +155,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
 
     /**
      * Sets the hash algorithm to be used for signature creation.
-     * By default, SHA3-512 is used.
+     * By default, SHA-512 is used.
      *
      * @param hashAlgorithm the hash algorithm to use
      * @return this builder
