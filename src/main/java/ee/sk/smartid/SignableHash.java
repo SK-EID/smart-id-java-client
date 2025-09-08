@@ -46,7 +46,8 @@ public record SignableHash(byte[] hashToBeSigned, HashAlgorithm hashAlgorithm) i
      * <p>
      * Will use SHA-512 as the default hashing algorithm
      *
-     * @param hashToSign
+     * @param hashToSign byte array of hash to be signed
+     * @throws SmartIdRequestSetupException when hashToSign is missing or empty
      */
     public SignableHash(byte[] hashToSign) {
         this(hashToSign, HashAlgorithm.SHA_512);
@@ -55,9 +56,9 @@ public record SignableHash(byte[] hashToBeSigned, HashAlgorithm hashAlgorithm) i
     /**
      * Creates {@link SignableHash} instance
      *
-     * @param hashToBeSigned               byte array of hash to be signed
-     * @param hashAlgorithm                hashing algorithm used to create the hash
-     * @param SmartIdRequestSetupException when input parameters are missing or empty
+     * @param hashToBeSigned byte array of hash to be signed
+     * @param hashAlgorithm  hashing algorithm used to create the hash
+     * @throws SmartIdRequestSetupException when input parameters are missing or empty
      */
     public SignableHash(byte[] hashToBeSigned, HashAlgorithm hashAlgorithm) {
         validateInputs(hashToBeSigned, hashAlgorithm);

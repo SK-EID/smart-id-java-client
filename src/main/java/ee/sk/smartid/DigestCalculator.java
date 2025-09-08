@@ -40,7 +40,7 @@ public final class DigestCalculator {
     }
 
     /**
-     * Calculates the digest of the provided data using the specified hash type.
+     * Calculates the digest of the provided data using the specified hash algorithm.
      *
      * @param dataToDigest  The data to be hashed.
      * @param hashAlgorithm The hash algorithm to use.

@@ -77,14 +77,13 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void initSignatureSession_withSemanticsIdentifier() {
-        var semanticsIdentifier = SEMANTICS_IDENTIFIER;
         var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(semanticsIdentifier)
+                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
                 .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()));
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), eq(semanticsIdentifier))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), eq(SEMANTICS_IDENTIFIER))).thenReturn(mockSignatureSessionResponse());
 
         DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
 
@@ -97,7 +96,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void initSignatureSession_withDocumentNumber() {
-        String documentNumber = "PNOEE-31111111111";
+        String documentNumber = "PNOEE-31111111111-MOCK-Q";
         var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
