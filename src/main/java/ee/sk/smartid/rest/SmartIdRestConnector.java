@@ -206,6 +206,25 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
+    public LinkedSignatureSessionResponse initLinkedNotificationSignature(LinkedSignatureSessionRequest request, String documentNumber) {
+        logger.debug("Starting linked notification-based signature session");
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(LINKED_NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
+                .path(documentNumber)
+                .build();
+        try {
+            return postRequest(uri, request, LinkedSignatureSessionResponse.class);
+        } catch (NotFoundException ex) {
+            logger.warn("User account not found for URI {}", uri, ex);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
+        }
+    }
+
+    @Override
     public NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
