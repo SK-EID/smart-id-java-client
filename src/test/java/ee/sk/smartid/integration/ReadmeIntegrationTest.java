@@ -62,7 +62,7 @@ import ee.sk.smartid.CertificateValidatorImpl;
 import ee.sk.smartid.DeviceLinkAuthenticationSessionRequestBuilder;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.FileTrustedCAStoreBuilder;
-import ee.sk.smartid.HashType;
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.QrCodeGenerator;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
@@ -78,13 +78,13 @@ import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.util.DeviceLinkUtil;
 
 @Disabled("Replace relying party UUID and name with your own values in setup")
 @SmartIdDemoIntegrationTest
@@ -341,17 +341,15 @@ public class ReadmeIntegrationTest {
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
                 // Create the signable data from DataToSign
-                var signableData = new SignableData("dataToSign".getBytes());
-                signableData.setHashType(HashType.SHA256);
+                var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
 
                 // Build the dynamic link signature request
+                List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document"));
                 DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
                         .withCertificateLevel(CertificateLevel.QSCD)
                         .withSignableData(signableData)
                         .withDocumentNumber(documentNumber)
-                        .withHashAlgorithm(HashAlgorithm.SHA_256)
-                        .withInteractions(List.of(
-                                DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                        .withInteractions(signatureInteractions)
                         .initSignatureSession();
 
                 // Process the signature response
@@ -376,6 +374,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
+                        .withInteractions(DeviceLinkUtil.encodeToBase64(signatureInteractions))
                         .buildDeviceLink(sessionSecret);
 
                 // Return URI to be used with QR-code generation library on the frontend side
@@ -438,8 +437,7 @@ public class ReadmeIntegrationTest {
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
                 // Create the signable data
-                var signableData = new SignableData("dataToSign".getBytes());
-                signableData.setHashType(HashType.SHA512);
+                var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
 
                 var semanticsIdentifier = new SemanticsIdentifier(
                         // 3 character identity type
@@ -449,12 +447,12 @@ public class ReadmeIntegrationTest {
                         "40504040001"); // identifier (according to country and identity type reference)
 
                 // Build the dynamic link signature request
+                List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document"));
                 DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
                         .withCertificateLevel(CertificateLevel.QUALIFIED)
                         .withSignableData(signableData)
                         .withSemanticsIdentifier(semanticsIdentifier)
-                        .withInteractions(List.of(
-                                DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                        .withInteractions(signatureInteractions)
                         .initSignatureSession();
 
                 // Process the signature response
@@ -479,6 +477,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
+                        .withInteractions(DeviceLinkUtil.encodeToBase64(signatureInteractions))
                         .buildDeviceLink(sessionSecret);
                 // Display QR-code to the user
 
@@ -674,8 +673,7 @@ public class ReadmeIntegrationTest {
             // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
 
             // Create the signable data
-            var signableData = new SignableData("dataToSign".getBytes());
-            signableData.setHashType(HashType.SHA512);
+            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
 
             // Create the Semantics Identifier
             var semanticsIdentifier = new SemanticsIdentifier(

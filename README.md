@@ -409,8 +409,7 @@ The response from a successful device-link signature session creation contains t
 
 ```java
 // Create the signable data
-var signableData = new SignableData("Test data to sign".getBytes());
-signableData.setHashType(HashType.SHA256);
+var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
 
 // Create the Semantics Identifier
 var semanticsIdentifier = new SemanticsIdentifier(
@@ -447,8 +446,7 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 
 ```java
 // Create the signable data
-var signableData = new SignableData("Test data to sign".getBytes());
-signableData.setHashType(HashType.SHA256);
+var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
 
 // Specify the document number
 String documentNumber = "PNOEE-40504040001-MOCK-Q";
@@ -921,17 +919,17 @@ Checkout out other ways to set up TrustedCaCertStore with CertificateValidator i
 
 ## Notification-based flows
 
-### Differences between notification-based and dynamic-link flows
+### Differences between notification-based and device link flows
 
 * `Notification-Based flow`
     * Push notifications: The user gets a notification directly on their Smart-ID app to proceed with the signing or authentication process.
     * Known users or devices: 
       * Notification-based flows are more vulnerable to phishing attacks. It is recommended to use notification-based flows after the user has been identified by using dynamic-link flows.
     * No dynamic updates: The process is straightforward, with no need to update links or use QR codes.
-* `Dynamic Link flow`
-    * Dynamic links: Generates links like QR codes or Web2App/App2App links that the user interacts with to start the process.
-    * Supports unknown users or devices: Useful when the user's identity or device is not known in advance.
-    * Real-time updates: Dynamic links and QR-code need to be refreshed every second to ensure validity.
+* `Device Link flow`
+    * Device links: Generates links for QR codes or Web2App/App2App links that the user interacts with to start the process.
+    * Authentication and certificate-choice support unknown users or devices: Useful when the user's identity or device is not known in advance.
+    * Real-time updates: QR-code needs to be refreshed every second to ensure validity.
 
 ### Notification-based authentication session
 
@@ -1092,8 +1090,7 @@ The request parameters for the notification-based signature session are as follo
 
 ```java
 // Create the signable data
-SignableData signableData = new SignableData("Data to sign".getBytes());
-signableData.setHashType(HashType.SHA256);
+var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
 
 // Create the Semantics Identifier
 SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
@@ -1125,8 +1122,7 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 
 ```java
 // Create the signable data
-SignableData signableData = new SignableData("Data to sign".getBytes());
-signableData.setHashType(HashType.SHA256);
+var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
 
 // Specify the document number
 String documentNumber = "PNOEE-40504040001-MOCK-Q";

@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.DigestCalculator;
-import ee.sk.smartid.HashType;
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.InteractionUtil;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SignatureAlgorithm;
@@ -53,7 +53,6 @@ import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
@@ -130,7 +129,7 @@ class SmartIdRestIntegrationTest {
                 var signatureParameters = new AcspV2SignatureProtocolParameters(
                         RpChallengeGenerator.generate(),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
-                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
                 return new AuthenticationSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
@@ -174,9 +173,9 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDeviceLinkSignature_withSemanticIdentifier() {
-                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512)),
+                var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashAlgorithm.SHA3_512)),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
-                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
                 var request = new SignatureSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         null,
@@ -200,9 +199,9 @@ class SmartIdRestIntegrationTest {
             @Test
             void initDeviceLinkSignature_withDocumentNumber() {
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
-                        Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512)),
+                        Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashAlgorithm.SHA_512)),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
-                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
                 var request = new SignatureSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         null,
@@ -257,7 +256,7 @@ class SmartIdRestIntegrationTest {
                 var signatureParameters = new AcspV2SignatureProtocolParameters(
                         RpChallengeGenerator.generate(),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
-                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
                 return new AuthenticationSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
@@ -312,9 +311,9 @@ class SmartIdRestIntegrationTest {
 
             private static SignatureSessionRequest toSignatureSessionRequest() {
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
-                        Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashType.SHA512)),
+                        Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashAlgorithm.SHA_512)),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
-                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                        new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
                 return new SignatureSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         "QUALIFIED",

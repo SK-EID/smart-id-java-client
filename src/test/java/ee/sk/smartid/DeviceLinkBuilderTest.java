@@ -254,7 +254,7 @@ class DeviceLinkBuilderTest {
                     .withSessionType(sessionType)
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withBrokeredRpName(BROKERED_RP)
-                    .withInteractions(BASE64_INTERACTIONS)
+                    .withInteractions(BASE64_INTERACTIONS) // // TODO - 07.09.25: fix this, if certificate choice then it should be empty
                     .withLang(LANGUAGE)
                     .withElapsedSeconds(1L)
                     .withRelyingPartyName(RELYING_PARTY_NAME);

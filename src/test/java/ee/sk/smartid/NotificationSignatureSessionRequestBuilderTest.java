@@ -198,11 +198,9 @@ class NotificationSignatureSessionRequestBuilderTest {
 
     @Disabled("Signature algorithm has changed")
     @ParameterizedTest
-    @EnumSource(HashType.class)
-    void initSignatureSession_withSignableHash(HashType hashType) {
-        var signableHash = new SignableHash();
-        signableHash.setHash("Test hash".getBytes());
-        signableHash.setHashType(hashType);
+    @EnumSource(HashAlgorithm.class)
+    void initSignatureSession_withSignableHash(HashAlgorithm hashAlgorithm) {
+        var signableHash = new SignableHash("Test hash".getBytes(), hashAlgorithm);
         builder.withSignableData(null).withSignableHash(signableHash).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
@@ -214,7 +212,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
-        assertEquals(hashType.getHashTypeName().toLowerCase() + "WithRSAEncryption", capturedRequest.signatureProtocolParameters().signatureAlgorithm());
+        assertEquals(hashAlgorithm.getAlgorithmName().toLowerCase() + "WithRSAEncryption", capturedRequest.signatureProtocolParameters().signatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString("Test hash".getBytes()), capturedRequest.signatureProtocolParameters().digest());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
     }
@@ -239,10 +237,9 @@ class NotificationSignatureSessionRequestBuilderTest {
     }
 
     @ParameterizedTest
-    @EnumSource(HashType.class)
-    void initSignatureSession_withHashType_overridesExplicitSignatureAlgorithm(HashType hashType) {
-        var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(hashType);
+    @EnumSource(HashAlgorithm.class)
+    void initSignatureSession_withHashType_overridesExplicitSignatureAlgorithm(HashAlgorithm hashAlgorithm) {
+        var signableData = new SignableData("Test data".getBytes(), hashAlgorithm);
         builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
@@ -262,7 +259,6 @@ class NotificationSignatureSessionRequestBuilderTest {
     @Test
     void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
         var signableData = new SignableData("Test data".getBytes());
-        signableData.setHashType(HashType.SHA512);
         builder.withSignableData(signableData).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
         when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
@@ -307,7 +303,6 @@ class NotificationSignatureSessionRequestBuilderTest {
         @Test
         void initSignatureSession_whenSignableDataHashTypeIsNull() {
             SignableData signableData = new SignableData("Test data".getBytes());
-            signableData.setHashType(null);
             builder.withSignableData(signableData).withSignableHash(null).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
             SmartIdClientException exception = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -317,7 +312,6 @@ class NotificationSignatureSessionRequestBuilderTest {
         @Test
         void initSignatureSession_whenHashTypeIsNull() {
             var signableData = new SignableData("Test data".getBytes());
-            signableData.setHashType(null);
             builder.withSignableData(signableData).withSignableHash(null).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
@@ -363,15 +357,6 @@ class NotificationSignatureSessionRequestBuilderTest {
             builder.withNonce("");
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Nonce length must be between 1 and 30 characters.", ex.getMessage());
-        }
-
-        @Test
-        void initSignatureSession_whenSignableHashNotFilled() {
-            var signableHash = new SignableHash();
-            builder.withSignableData(null).withSignableHash(signableHash).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
-
-            var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
-            assertEquals("Either signableHash or signableData must be set.", ex.getMessage());
         }
     }
 
