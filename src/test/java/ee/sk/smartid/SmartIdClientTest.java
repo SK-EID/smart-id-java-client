@@ -82,8 +82,8 @@ class SmartIdClientTest {
         @Test
         void createSameDeviceCertificateChoiceSession() {
             SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
-                    "requests/sign/device-link/cert-choice/certificate-choice-session-request-device-link.json",
-                    "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-device-link.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withCertificateLevel(CertificateLevel.QUALIFIED)
@@ -100,8 +100,8 @@ class SmartIdClientTest {
         @Test
         void createSameDeviceCertificateChoiceSessionWithAllFields() {
             SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
-                    "requests/sign/device-link/cert-choice/certificate-choice-session-request-all-fields.json",
-                    "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-all-fields.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withCertificateLevel(CertificateLevel.QUALIFIED)
@@ -120,8 +120,8 @@ class SmartIdClientTest {
         @Test
         void createQrCodeCertificateChoiceSession() {
             SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
-                    "requests/sign/device-link/cert-choice/certificate-choice-session-request-for-qr-code.json",
-                    "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-for-qr-code.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withCertificateLevel(CertificateLevel.ADVANCED)
@@ -665,8 +665,8 @@ class SmartIdClientTest {
         @Test
         void createDynamicContent_certificateChoiceWithDeviceLinkGeneratedForQrCode() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
-                    "requests/sign/device-link/cert-choice/certificate-choice-session-request-for-qr-code.json",
-                    "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-for-qr-code.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
@@ -689,8 +689,8 @@ class SmartIdClientTest {
         @Test
         void createDynamicContent_createQrCodeImage() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
-                    "requests/sign/device-link/cert-choice/certificate-choice-session-request-for-qr-code.json",
-                    "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-for-qr-code.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
@@ -719,8 +719,8 @@ class SmartIdClientTest {
         @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
         void createDynamicContent_certificateChoiceForSameDeviceFlows(DeviceLinkType deviceLinkType) {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
-                    "requests/sign/device-link/cert-choice/certificate-choice-session-request-device-link.json",
-                    "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-device-link.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
                     .withCertificateLevel(CertificateLevel.QUALIFIED)

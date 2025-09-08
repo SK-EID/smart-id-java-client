@@ -44,15 +44,17 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
-import ee.sk.smartid.rest.dao.CertificateResponse;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SessionStatusRequest;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
@@ -78,7 +80,10 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
     private static final String SESSION_STATUS_URI = "/session/{sessionId}";
+
     private static final String DEVICE_LINK_CERTIFICATE_CHOICE_DEVICE_LINK_PATH = "signature/certificate-choice/device-link/anonymous";
+    private static final String LINKED_NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "signature/notification/linked";
+
     private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH = "/certificatechoice/notification/etsi";
 
     private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/";
@@ -188,6 +193,25 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .build();
 
         return postDeviceLinkCertificateChoiceRequest(uri, request);
+    }
+
+    @Override
+    public LinkedSignatureSessionResponse initLinkedNotificationSignature(LinkedSignatureSessionRequest request, String documentNumber) {
+        logger.debug("Starting linked notification-based signature session");
+        URI uri = UriBuilder
+                .fromUri(endpointUrl)
+                .path(LINKED_NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
+                .path(documentNumber)
+                .build();
+        try {
+            return postRequest(uri, request, LinkedSignatureSessionResponse.class);
+        } catch (NotFoundException ex) {
+            logger.warn("User account not found for URI {}", uri, ex);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
+        }
     }
 
     @Override

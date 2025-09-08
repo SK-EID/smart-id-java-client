@@ -56,6 +56,7 @@ import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.InteractionUtil;
 import ee.sk.smartid.SignatureProtocol;
@@ -74,11 +75,14 @@ import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
+import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionSignature;
@@ -533,7 +537,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDeviceLinkCertificateChoice() {
-            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/sign/device-link/certificate-choice/device-link-certificate-choice-session-response.json");
+            stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
             CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
@@ -641,6 +645,133 @@ class SmartIdRestConnectorTest {
 
     @Nested
     @WireMockTest(httpPort = 18089)
+    class LinkedNotificationSignature {
+
+        private static final String LINKED_SIGNATURE_PATH = "/signature/notification/linked/PNOEE-31111111111-MOCK-Q";
+        private static final String DOCUMENT_NUMBER = "PNOEE-31111111111-MOCK-Q";
+
+        private SmartIdRestConnector connector;
+
+        @BeforeEach
+        void setUp() {
+            connector = new SmartIdRestConnector("http://localhost:18089");
+        }
+
+        @Test
+        void initLinkedNotificationSignature_onlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-only-required-fields.json", "responses/sign/linked/signature/linked-notification-signature-session-response.json");
+
+            LinkedSignatureSessionRequest request = toLinkedSignatureSessionRequest(null, null, null);
+            LinkedSignatureSessionResponse linkedSignatureSessionResponse = connector.initLinkedNotificationSignature(request, DOCUMENT_NUMBER);
+
+            assertNotNull(linkedSignatureSessionResponse);
+            assertEquals("00000000-0000-0000-0000-000000000000", linkedSignatureSessionResponse.sessionID());
+        }
+
+        @Test
+        void initLinkedNotificationSignature_withAllFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json", "responses/sign/linked/signature/linked-notification-signature-session-response.json");
+
+            var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+            LinkedSignatureSessionResponse linkedSignatureSessionResponse = connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+
+            assertNotNull(linkedSignatureSessionResponse);
+            assertEquals("00000000-0000-0000-0000-000000000000", linkedSignatureSessionResponse.sessionID());
+        }
+
+        @Test
+        void initLinkedNotificationSignature_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json");
+
+            assertThrows(SmartIdClientException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+
+        @Test
+        void initLinkedNotificationSignature_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+        @Test
+        void initLinkedNotificationSignature_rpNotAllowedToMakeTheRequest_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+        @Test
+        void initLinkedNotificationSignature_documentNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json");
+
+            assertThrows(UserAccountNotFoundException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+        @Test
+        void initLinkedNotificationSignature_accountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json", 471);
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+        @Test
+        void initLinkedNotificationSignature_ApiClientIsOutdated_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json", 480);
+
+            assertThrows(SmartIdClientException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+        @Test
+        void initLinkedNotificationSignature_systemUnderMaintenance_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json", 580);
+
+            assertThrows(ServerMaintenanceException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+        private static LinkedSignatureSessionRequest toLinkedSignatureSessionRequest(CertificateLevel certificateLevel,
+                                                                                     String nonce,
+                                                                                     RequestProperties requestProperties) {
+            var rawDigestSignatureProtocolParameters = new RawDigestSignatureProtocolParameters(
+                    "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+                    "rsassa-pss",
+                    new SignatureAlgorithmParameters(HashAlgorithm.SHA_512.getAlgorithmName()));
+
+            return new LinkedSignatureSessionRequest("00000000-0000-000-000-000000000000",
+                    "DEMO",
+                    certificateLevel != null ? certificateLevel.name() : null,
+                    "RAW_DIGEST_SIGNATURE",
+                    rawDigestSignatureProtocolParameters,
+                    "10000000-0000-000-000-000000000000",
+                    nonce,
+                    "W3sidHlwZSI6ImNvbmZpcm1hdGlvbk1lc3NhZ2UiLCJkaXNwbGF5VGV4dDIwMCI6IkxvbmdlciBkZXNjcmlwdGlvbiBvZiB0aGUgdHJhbnNhY3Rpb24gY29udGV4dCJ9LHsidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IlNob3J0IGRlc2NyaXB0aW9uIG9mIHRoZSB0cmFuc2FjdGlvbiBjb250ZXh0In1d",
+                    requestProperties);
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
     class SemanticsIdentifierNotificationCertificateChoiceTests {
 
         private static final String CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH = "/certificatechoice/notification/etsi/PNOEE-31111111111";
@@ -668,18 +799,20 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initCertificateChoice_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "requests/sign/notification/certificate-choice-session-request.json");
-                connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111"));
-            });
+            SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/certificate-choice-session-request.json");
+
+            assertThrows(UserAccountNotFoundException.class,
+                    () -> connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111")));
         }
 
         @Test
         void initCertificateChoice_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "requests/sign/notification/certificate-choice-session-request.json");
-                connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111"));
-            });
+            SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/certificate-choice-session-request.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), new SemanticsIdentifier("PNOEE-31111111111")));
         }
 
         private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {

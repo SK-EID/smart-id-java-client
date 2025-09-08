@@ -34,6 +34,8 @@ import javax.net.ssl.SSLContext;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
@@ -70,6 +72,14 @@ public interface SmartIdConnector extends Serializable {
      * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
      */
     DeviceLinkSessionResponse initDeviceLinkCertificateChoice(CertificateChoiceSessionRequest request);
+
+    /**
+     * Initiates a linked notification based signature session.
+     *
+     * @param request LinkedSignatureSessionRequest containing necessary parameters
+     * @return LinkedSignatureSessionResponse containing sessionID
+     */
+    LinkedSignatureSessionResponse initLinkedNotificationSignature(LinkedSignatureSessionRequest request, String documentNumber);
 
     /**
      * Initiates a notification based certificate choice request.
