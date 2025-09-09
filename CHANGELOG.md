@@ -6,6 +6,7 @@ Changes mentioned under 3.1.x version have not been published yet. Will be relea
 
 ## [3.1.13] - 2025-09-08
 - Added endpoint for creating linked signature session `POST /v3/signature/notification/linked/{document-number}`.
+- Added builder to create linked signature session request `LinkedSignatureSessionRequestBuilder`.
 
 ## [3.1.12] - 2025-09-08
 - Removed HashType and update SignableHash and SignableData to use HashAlgorithm

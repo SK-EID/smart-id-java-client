@@ -1,10 +1,10 @@
 {
-  "relyingPartyUUID": "00000000-0000-000-000-000000000000",
+  "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
   "relyingPartyName": "DEMO",
   "certificateLevel": "QUALIFIED",
   "signatureProtocol": "RAW_DIGEST_SIGNATURE",
   "signatureProtocolParameters": {
-    "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+    "digest": "2xN/gwSxWos+lJPQ/AeIlBXmdPRRlOfOD5+Ezz0FWWABd96mQNkR/b1/2wpAIGwS1SsW1oRVtdRVKYyV21yGWA==",
     "signatureAlgorithm": "rsassa-pss",
     "signatureAlgorithmParameters": {
       "hashAlgorithm": "SHA-512"
@@ -12,7 +12,7 @@
   },
   "linkedSessionID": "10000000-0000-000-000-000000000000",
   "nonce": "cmFuZG9tTm9uY2U=",
-  "interactions": "W3sidHlwZSI6ImNvbmZpcm1hdGlvbk1lc3NhZ2UiLCJkaXNwbGF5VGV4dDIwMCI6IkxvbmdlciBkZXNjcmlwdGlvbiBvZiB0aGUgdHJhbnNhY3Rpb24gY29udGV4dCJ9LHsidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IlNob3J0IGRlc2NyaXB0aW9uIG9mIHRoZSB0cmFuc2FjdGlvbiBjb250ZXh0In1d",
+  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IlNpZ24/In1d",
   "requestProperties": {
     "shareMdClientIpAddress": true
   }

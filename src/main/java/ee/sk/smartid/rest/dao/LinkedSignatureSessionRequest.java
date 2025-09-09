@@ -26,6 +26,8 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 public record LinkedSignatureSessionRequest(String relyingPartyUUID,
@@ -36,5 +38,6 @@ public record LinkedSignatureSessionRequest(String relyingPartyUUID,
                                             String linkedSessionID,
                                             @JsonInclude(JsonInclude.Include.NON_EMPTY) String nonce,
                                             String interactions,
-                                            @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties) {
+                                            @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
+                                            @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities) {
 }

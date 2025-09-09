@@ -50,6 +50,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -431,6 +432,50 @@ class SmartIdClientTest {
             assertNotNull(response.getVc());
             assertNotNull(response.getVc().getType());
             assertNotNull(response.getVc().getValue());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class LinkedNotificationBasedSignatureSession {
+
+        private static final String DOCUMENT_NUMBER = "PNOEE-1234567890-MOCK-Q";
+
+        @Test
+        void createLinkedNotificationSignature_onlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/notification/linked/" + DOCUMENT_NUMBER,
+                    "requests/sign/linked/signature/linked-notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/linked/signature/linked-notification-signature-session-response.json");
+
+            LinkedSignatureSessionResponse response = smartIdClient.createLinkedNotificationSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withSignableData(new SignableData("Test data".getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withLinkedSessionID("10000000-0000-000-000-000000000000")
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")))
+                    .initSignatureSession();
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void createLinkedNotificationSignature_allFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/notification/linked/" + DOCUMENT_NUMBER,
+                    "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json",
+                    "responses/sign/linked/signature/linked-notification-signature-session-response.json");
+
+            LinkedSignatureSessionResponse response = smartIdClient.createLinkedNotificationSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withSignableData(new SignableData("Test data".getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withLinkedSessionID("10000000-0000-000-000-000000000000")
+                    .withNonce("cmFuZG9tTm9uY2U=")
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")))
+                    .withShareMdClientIpAddress(true)
+                    .initSignatureSession();
+
+            assertNotNull(response);
         }
     }
 

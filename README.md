@@ -27,9 +27,6 @@ This library supports Smart-ID API v3.1.
             * [Initiating an anonymous authentication session](#initiating-an-anonymous-authentication-session)
             * [Initiating a dynamic-link authentication session with semantics identifier](#initiating-a-device-link-authentication-session-with-semantics-identifier)
             * [Initiating a dynamic-link authentication session with document number](#initiating-a-device-link-authentication-session-with-document-number)
-        * [Device link certificate choice session](#device-link-certificate-choice-session)
-            * [Examples of initiating a device-link certificate choice session](#examples-of-initiating-a-device-link-certificate-choice-session)
-              * [Initiating device-link certificate choice](#initiating-an-anonymous-certificate-choice-session)
         * [Device-link signature session](#device-link-signature-session)
           * [Examples of initiating a device-link signature session](#examples-of-initiating-a-device-link-signature-session)
               * [Initiating a device-link signature session using semantics identifier](#initiating-a-device-link-signature-session-with-semantics-identifier)
@@ -56,8 +53,13 @@ This library supports Smart-ID API v3.1.
           * [Error handling for session status](#error-handling-for-session-status)
     * [Certificate by document number](#certificate-by-document-number)
       * [Example of querying certificate by document number](#example-of-querying-certificate-by-document-number)
+    * [Linked signature session flow](#linked-signature-flow)
+      * [Device link certificate choice session](#device-link-certificate-choice-session)
+        * [Examples of initiating a device-link certificate choice session](#example-of-initiating-a-device-link-certificate-choice-session)
+      * [Linked notification-based signature session](#linked-notification-based-signature-session)
+        * [Example of initiating a linked notification-based signature session](#example-of-initiating-a-linked-notification-based-signature-session)
     * [Notification-based flows](#notification-based-flows)
-        * [Differences between notification-based and dynamic link flows](#differences-between-notification-based-and-dynamic-link-flows)
+        * [Differences between notification-based and dynamic link flows](#differences-between-notification-based-and-device-link-flows)
         * [Notification-based authentication session](#notification-based-authentication-session)
           * [Examples of initiating notification authentication session](#examples-of-initiating-a-notification-based-authentication-session)
               * [Initiating notification authentication session with document number](#initiating-a-notification-based-authentication-session-with-document-number)
@@ -319,52 +321,6 @@ Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 // Next steps:
 // - Generate QR-code or device link to be displayed to the user 
 // - Start querying sessions status
-```
-Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
-Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
-
-### Device-link certificate choice session
-
-The Smart-ID API v3.1 introduces device-link certificate choice session. This allows more secure way of initiating signing. 
-Scanning QR-code or clicking on device link will prove that the certificates of the device being used for signing is in the proximity where the signing was initiated.
-The certificate choice session must be followed by a linked notification-based signature session.
-
-#### Request Parameters
-
-* `relyingPartyUUID`: Required. UUID of the Relying Party.
-* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
-* `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
-* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency. 
-* `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
-* `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
-* `initialCallbackUrl` : Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be used for same-device flow.
-
-#### Response parameters
-
-* `sessionID`: A string that can be used to request the session status result.
-* `sessionToken`: Unique random value that will be used to connect created session between the relevant parties (RP, RP-API, mobile app).
-* `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
-* `deviceLinkBase`: Required. Base URI used to form the device link or QR code.
-
-#### Examples of initiating a device-link certificate choice session
-
-##### Initiating an anonymous certificate choice session
-```java
-DeviceLinkSessionResponse certificateChoice = client.createDeviceLinkCertificateRequest()
-    .withRelyingPartyUUID(client.getRelyingPartyUUID())
-    .withRelyingPartyName(client.getRelyingPartyName())
-    .withCertificateLevel(CertificateLevel.QUALIFIED)
-    .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
-    .initiateCertificateChoice();
-
-String sessionId = certificateChoice.sessionID();
-// SessionID is used to query sessions status later
-
-String sessionToken = certificateChoice.sessionToken();
-// Store sessionSecret only on backend side. Do not expose it to the client side.
-String sessionSecret = certificateChoice.sessionSecret();
-String deviceLinkBase = certificateChoice.deviceLinkBase();
-Instant responseReceivedAt = certificateChoice.receivedAt();
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
@@ -916,6 +872,101 @@ CertificateValidator certificateValidator = new CertificateValidatorImpl(trusted
 certificateValidator.validateCertificate(certResponse.certificate());
 ```
 Checkout out other ways to set up TrustedCaCertStore with CertificateValidator in [Set up CertificateValidator](#set-up-certificatevalidator).
+
+## Linked signature flow
+
+In API v3.1 a new flow was introduced to link signature session to a previously completed certificate choice session.
+The flow starts off with device link certificate choice session and must be followed by a linked notification-based signature session.
+
+### Device link certificate choice session
+
+Anonymous device link certificate choice session can be initiated without knowing the user's document number. When the session is completed successfully,
+the Smart-ID API will stay waiting for the RP to start the [linked notification-based signature session](#linked-notification-based-signature-session).
+
+#### Request Parameters
+
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
+* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
+* `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
+* `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
+* `initialCallbackUrl` : Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be used for same-device flow.
+
+#### Response parameters
+
+* `sessionID`: A string that can be used to request the session status result.
+* `sessionToken`: Unique random value that will be used to connect created session between the relevant parties (RP, RP-API, mobile app).
+* `sessionSecret`: Base64-encoded random key value that should be kept secret and shared only between the RP backend and the RP-API server.
+* `deviceLinkBase`: Required. Base URI used to form the device link or QR code.
+
+#### Example of initiating a device-link certificate choice session
+
+```java
+DeviceLinkSessionResponse certificateChoice = client.createDeviceLinkCertificateRequest()
+    .withCertificateLevel(CertificateLevel.QUALIFIED)
+    .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
+    .initiateCertificateChoice();
+
+String sessionId = certificateChoice.sessionID();
+// SessionID is used to query sessions status later
+
+String sessionToken = certificateChoice.sessionToken();
+// Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = certificateChoice.sessionSecret();
+String deviceLinkBase = certificateChoice.deviceLinkBase();
+Instant responseReceivedAt = certificateChoice.receivedAt();
+```
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
+
+### Linked notification-based signature session
+
+Second part of the linked signature flow. Will be used to start the signature session after the device link certificate choice session is completed successfully.
+
+#### Request parameters
+
+* `relyingPartyUUID`: Required. UUID of the Relying Party.
+* `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
+* `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
+* `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
+    * `digest`: Required. Base64 encoded digest to be signed.
+    * `signatureAlgorithm`: Required. Signature algorithm name. Only supported value is `rsassa-pss`
+    * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
+        * `hashAlgorithm`: Required. Hash algorithm name. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+* `linkedSessionID`: Required. Session ID of the previously completed certificate choice session.
+* `interactions`: Required. Base64-encoded JSON string of an array of interaction objects.
+    * Each interaction object includes:
+        * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`.
+        * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
+* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
+* `requestProperties`:
+    * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
+* `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
+
+#### Response parameters
+
+* `sessionID`: Required. String that can be used to request the signature session status result.
+
+#### Example of initiating a linked notification-based signature session
+
+```java
+// Prerequisite: device link certificate choice has been completed successfully. 
+DeviceLinkSessionResponse certificateChoiceSessionResponse;
+CertificateChoiceResponse certificateChoiceResponse;
+
+// Start the linked notification signature session using the sessionID from the certificate choice session
+LinkedSignatureSessionResponse signatureSessionResponse = smartIdClient.createLinkedNotificationSignature()
+        .withDocumentNumber(certificateChoiceResponse.getDocumentNumber())
+        .withLinkedSessionID(certificateChoiceSessionResponse.sessionID())
+        .withSignableData(new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256))
+        .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")))
+        .initSignatureSession();
+
+// SessionID is used to query sessions status later
+String sessionId = signatureSessionResponse.sessionID();
+```
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ## Notification-based flows
 

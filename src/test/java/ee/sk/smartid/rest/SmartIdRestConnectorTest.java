@@ -689,7 +689,6 @@ class SmartIdRestConnectorTest {
             });
         }
 
-
         @Test
         void initLinkedNotificationSignature_unauthorized_throwException() {
             SmartIdRestServiceStubs.stubUnauthorizedResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json");
@@ -754,19 +753,19 @@ class SmartIdRestConnectorTest {
                                                                                      String nonce,
                                                                                      RequestProperties requestProperties) {
             var rawDigestSignatureProtocolParameters = new RawDigestSignatureProtocolParameters(
-                    "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+                    "2xN/gwSxWos+lJPQ/AeIlBXmdPRRlOfOD5+Ezz0FWWABd96mQNkR/b1/2wpAIGwS1SsW1oRVtdRVKYyV21yGWA==",
                     "rsassa-pss",
                     new SignatureAlgorithmParameters(HashAlgorithm.SHA_512.getAlgorithmName()));
-
-            return new LinkedSignatureSessionRequest("00000000-0000-000-000-000000000000",
+            return new LinkedSignatureSessionRequest("00000000-0000-0000-0000-000000000000",
                     "DEMO",
                     certificateLevel != null ? certificateLevel.name() : null,
                     "RAW_DIGEST_SIGNATURE",
                     rawDigestSignatureProtocolParameters,
                     "10000000-0000-000-000-000000000000",
                     nonce,
-                    "W3sidHlwZSI6ImNvbmZpcm1hdGlvbk1lc3NhZ2UiLCJkaXNwbGF5VGV4dDIwMCI6IkxvbmdlciBkZXNjcmlwdGlvbiBvZiB0aGUgdHJhbnNhY3Rpb24gY29udGV4dCJ9LHsidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IlNob3J0IGRlc2NyaXB0aW9uIG9mIHRoZSB0cmFuc2FjdGlvbiBjb250ZXh0In1d",
-                    requestProperties);
+                    "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IlNpZ24/In1d",
+                    requestProperties,
+                    null);
         }
     }
 
@@ -871,17 +870,15 @@ class SmartIdRestConnectorTest {
         @Test
         void getCertificateByDocumentNumber_userAccountNotFound_throwsException() {
             SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/sign/certificate-by-document-number-request-all-fields.json");
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
-            });
+            assertThrows(UserAccountNotFoundException.class,
+                    () -> connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest()));
         }
 
         @Test
         void getCertificateByDocumentNumber_requestUnauthorized_throwsException() {
             SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/sign/certificate-by-document-number-request-all-fields.json");
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest());
-            });
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.getCertificateByDocumentNumber("PNOEE-30303039914-MOCK-Q", toCertificateByDocumentNumberRequest()));
         }
     }
 
