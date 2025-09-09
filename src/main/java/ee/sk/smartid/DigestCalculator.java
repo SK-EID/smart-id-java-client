@@ -27,18 +27,36 @@ package ee.sk.smartid;
  */
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-public class DigestCalculator {
+/**
+ * Utility class for calculating digests using specified hash algorithms.
+ */
+public final class DigestCalculator {
 
+    private DigestCalculator() {
+    }
+
+    /**
+     * Calculates the digest of the provided data using the specified hash type.
+     *
+     * @param dataToDigest The data to be hashed.
+     * @param hashType     The hash algorithm to use.
+     * @return The calculated digest as a byte array.
+     * @throws UnprocessableSmartIdResponseException If there is an issue with the digest calculation.
+     */
     public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
+        if (hashType == null) {
+            throw new SmartIdClientException("Parameter 'hashType' must be set");
+        }
         try {
             MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
             return digest.digest(dataToDigest);
-        } catch (Exception e) {
-            throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new SmartIdClientException("Problem with digest calculation.", ex);
         }
     }
-
 }
