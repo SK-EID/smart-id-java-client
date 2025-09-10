@@ -429,7 +429,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                 .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
                 .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()));
-
     }
 
     private DeviceLinkSessionResponse mockSignatureSessionResponse() {
