@@ -44,7 +44,7 @@ public class VerificationCodeCalculator {
    * @return verification code.
    */
   public static String calculate(byte[] documentHash) {
-    byte[] digest = DigestCalculator.calculateDigest(documentHash, HashType.SHA256);
+    byte[] digest = DigestCalculator.calculateDigest(documentHash, HashAlgorithm.SHA_256);
     ByteBuffer byteBuffer = ByteBuffer.wrap(digest);
     int shortBytes = Short.SIZE / Byte.SIZE; // Short.BYTES in java 8
     int rightMostBytesIndex = byteBuffer.limit() - shortBytes;

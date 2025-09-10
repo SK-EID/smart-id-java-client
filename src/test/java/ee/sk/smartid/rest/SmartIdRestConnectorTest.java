@@ -56,6 +56,7 @@ import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.InteractionUtil;
 import ee.sk.smartid.SignatureProtocol;
 import ee.sk.smartid.SmartIdRestServiceStubs;
@@ -73,7 +74,6 @@ import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -1102,7 +1102,7 @@ class SmartIdRestConnectorTest {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(
                 Base64.toBase64String("a".repeat(32).getBytes()),
                 "rsassa-pss",
-                new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getValue()));
+                new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
         return new AuthenticationSessionRequest(
                 "00000000-0000-0000-0000-000000000000",

@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,6 @@ import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -331,7 +330,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private AuthenticationSessionRequest createAuthenticationRequest() {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(rpChallenge,
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(this.hashAlgorithm.getValue()));
+                new SignatureAlgorithmParameters(this.hashAlgorithm.getAlgorithmName()));
 
         return new AuthenticationSessionRequest(
                 relyingPartyUUID,

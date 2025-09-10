@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,38 +31,56 @@ import java.security.SecureRandom;
 /**
  * Class containing the hash and its hash type used for authentication
  */
-public class AuthenticationHash extends SignableHash {
+public class AuthenticationHash {
 
-  /**
-   * creates {@link AuthenticationHash} instance
-   * containing a randomly generated hash
-   * of the chosen hash type
-   *
-   * @param hashType hash type of the randomly generated hash
-   * @return authentication hash
-   */
-  public static AuthenticationHash generateRandomHash(HashType hashType) {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    byte[] generatedDigest = DigestCalculator.calculateDigest(getRandomBytes(), hashType);
-    authenticationHash.setHash(generatedDigest);
-    authenticationHash.setHashType(hashType);
-    return authenticationHash;
-  }
+    private byte[] hash;
+    private HashAlgorithm hashAlgorithm;
 
-  /**
-   * creates {@link AuthenticationHash} instance
-   * containing a randomly generated SHA-512 hash
-   *
-   * @return authentication hash
-   */
-  public static AuthenticationHash generateRandomHash() {
-    return generateRandomHash(HashType.SHA512);
-  }
+    /**
+     * creates {@link AuthenticationHash} instance
+     * containing a randomly generated hash
+     * of the chosen hash type
+     *
+     * @param hashAlgorithm hash type of the randomly generated hash
+     * @return authentication hash
+     */
+    public static AuthenticationHash generateRandomHash(HashAlgorithm hashAlgorithm) {
+        AuthenticationHash authenticationHash = new AuthenticationHash();
+        byte[] generatedDigest = DigestCalculator.calculateDigest(getRandomBytes(), hashAlgorithm);
+        authenticationHash.setHash(generatedDigest);
+        authenticationHash.setHashAlgorithm(hashAlgorithm);
+        return authenticationHash;
+    }
 
-  private static byte[] getRandomBytes() {
-    byte[] randBytes = new byte[64];
-    new SecureRandom().nextBytes(randBytes);
-    return randBytes;
-  }
+    /**
+     * creates {@link AuthenticationHash} instance
+     * containing a randomly generated SHA-512 hash
+     *
+     * @return authentication hash
+     */
+    public static AuthenticationHash generateRandomHash() {
+        return generateRandomHash(HashAlgorithm.SHA_512);
+    }
 
+    private static byte[] getRandomBytes() {
+        byte[] randBytes = new byte[64];
+        new SecureRandom().nextBytes(randBytes);
+        return randBytes;
+    }
+
+    public byte[] getHash() {
+        return hash;
+    }
+
+    public void setHash(byte[] hash) {
+        this.hash = hash;
+    }
+
+    public HashAlgorithm getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
+    public void setHashAlgorithm(HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
+    }
 }

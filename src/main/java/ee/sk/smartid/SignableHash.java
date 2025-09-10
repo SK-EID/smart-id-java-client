@@ -29,45 +29,59 @@ package ee.sk.smartid;
 import java.io.Serializable;
 import java.util.Base64;
 
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
+
 /**
  * This class can be used to contain the hash
  * to be signed
- * <p>
- * {@link #setHash(byte[])} can be used
- * to set the hash.
- * {@link #setHashType(HashType)} can be used
- * to set the hash type.
  * <p>
  * {@link SignableData} can be used
  * instead when the data to be signed is not already
  * in hashed format.
  */
-public class SignableHash implements Serializable {
+public record SignableHash(byte[] hashToBeSigned, HashAlgorithm hashAlgorithm) implements Serializable, DigestInput {
 
-    private byte[] hash;
-    private HashType hashType;
-
-    public void setHash(byte[] hash) {
-        this.hash = hash.clone();
+    /**
+     * Creates {@link SignableHash} instance,
+     * <p>
+     * Will use SHA-512 as the default hashing algorithm
+     *
+     * @param hashToSign byte array of hash to be signed
+     * @throws SmartIdRequestSetupException when hashToSign is missing or empty
+     */
+    public SignableHash(byte[] hashToSign) {
+        this(hashToSign, HashAlgorithm.SHA_512);
     }
 
-    public void setHashInBase64(String hashInBase64) {
-        hash = Base64.getDecoder().decode(hashInBase64);
+    /**
+     * Creates {@link SignableHash} instance
+     *
+     * @param hashToBeSigned byte array of hash to be signed
+     * @param hashAlgorithm  hashing algorithm used to create the hash
+     * @throws SmartIdRequestSetupException when input parameters are missing or empty
+     */
+    public SignableHash(byte[] hashToBeSigned, HashAlgorithm hashAlgorithm) {
+        validateInputs(hashToBeSigned, hashAlgorithm);
+        this.hashToBeSigned = hashToBeSigned.clone();
+        this.hashAlgorithm = hashAlgorithm;
     }
 
-    public String getHashInBase64() {
-        return Base64.getEncoder().encodeToString(hash);
+    private static void validateInputs(byte[] hash, HashAlgorithm hashAlgorithm) {
+        if (hash == null || hash.length == 0) {
+            throw new SmartIdRequestSetupException("Parameter 'hash' cannot be empty");
+        }
+        if (hashAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Parameter 'hashAlgorithm' must be set");
+        }
     }
 
-    public HashType getHashType() {
-        return hashType;
-    }
-
-    public void setHashType(HashType hashType) {
-        this.hashType = hashType;
-    }
-
-    public boolean areFieldsFilled() {
-        return hashType != null && hash != null && hash.length > 0;
+    /**
+     * Get the hash as Base64-encoded string
+     *
+     * @return String
+     */
+    @Override
+    public String getDigestInBase64() {
+        return Base64.getEncoder().encodeToString(hashToBeSigned);
     }
 }

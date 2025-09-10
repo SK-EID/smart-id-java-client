@@ -35,7 +35,6 @@ import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
@@ -43,7 +42,6 @@ import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.util.DeviceLinkUtil;
-import ee.sk.smartid.util.SignatureUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -62,13 +60,11 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA_512;
     private List<DeviceLinkInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
-    private SignableData signableData;
-    private SignableHash signableHash;
     private String initialCallbackUrl;
+    private DigestInput digestInput;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -157,18 +153,6 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     /**
-     * Sets the hash algorithm to be used for signature creation.
-     * By default, SHA-512 is used.
-     *
-     * @param hashAlgorithm the hash algorithm to use
-     * @return this builder
-     */
-    public DeviceLinkSignatureSessionRequestBuilder withHashAlgorithm(HashAlgorithm hashAlgorithm) {
-        this.hashAlgorithm = hashAlgorithm;
-        return this;
-    }
-
-    /**
      * Sets the interactions for device-link signature.
      *
      * @param interactions the interactions
@@ -205,13 +189,15 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      * Sets the data to be signed.
      * <p>
      * This method allows setting a {@link SignableData} object, which contains the data to be hashed and signed in the signing request.
-     * If both {@link SignableData} and {@link SignableHash} are provided, {@link SignableData} will take precedence.
      *
      * @param signableData the data to be signed
      * @return this builder instance
      */
     public DeviceLinkSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
-        this.signableData = signableData;
+        if (this.digestInput != null && this.digestInput instanceof SignableHash) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' has already been set with SignableHash.");
+        }
+        this.digestInput = signableData;
         return this;
     }
 
@@ -225,7 +211,10 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      * @return this builder
      */
     public DeviceLinkSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
-        this.signableHash = signableHash;
+        if (this.digestInput != null && this.digestInput instanceof SignableData) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' has already been set with SignableData.");
+        }
+        this.digestInput = signableHash;
         return this;
     }
 
@@ -276,10 +265,9 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private SignatureSessionRequest createSignatureSessionRequest() {
-        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
-                SignatureUtil.getDigestToSignBase64(signableHash, signableData),
+        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(hashAlgorithm.getValue()));
+                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
         return new SignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
@@ -301,6 +289,9 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         }
         if (signatureAlgorithm == null) {
             throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
+        }
+        if (digestInput == null) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' must be set with either SignableData or SignableHash");
         }
         validateInteractions();
         validateInitialCallbackUrl();

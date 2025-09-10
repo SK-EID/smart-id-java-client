@@ -205,6 +205,7 @@ public class AuthenticationResponseValidator {
     }
 
     private static byte[] calculateInteractionsDigest(AuthenticationSessionRequest authenticationSessionRequest) {
-        return DigestCalculator.calculateDigest(authenticationSessionRequest.interactions().getBytes(StandardCharsets.UTF_8), HashType.SHA256);
+        byte[] interactions = authenticationSessionRequest.interactions().getBytes(StandardCharsets.UTF_8);
+        return DigestCalculator.calculateDigest(interactions, HashAlgorithm.SHA_256);
     }
 }

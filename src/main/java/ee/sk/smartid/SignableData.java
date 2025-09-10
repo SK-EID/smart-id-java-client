@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,44 +29,65 @@ package ee.sk.smartid;
 import java.io.Serializable;
 import java.util.Base64;
 
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
+
 /**
  * This class can be used to contain the data
  * to be signed when it is not yet in hashed format
- * <p>
- * {@link #setHashType(HashType)} can be used
- * to set the wanted hash type. SHA-512 is default.
- * <p>
- * {@link #calculateHash()} and
- * {@link #calculateHashInBase64()} methods
- * are used to calculate the hash for signing request.
  * <p>
  * {@link SignableHash} can be used
  * instead when the data to be signed is already
  * in hashed format.
  */
-public class SignableData implements Serializable {
+public record SignableData(byte[] dataToSign, HashAlgorithm hashAlgorithm) implements Serializable, DigestInput {
 
-    private final byte[] dataToSign;
-    private HashType hashType = HashType.SHA512;
-
+    /**
+     * Creates a new instance of SignableData
+     * <p>
+     * Will use SHA-512 as the default hashing algorithm
+     *
+     * @param dataToSign byte array of data to be signed
+     */
     public SignableData(byte[] dataToSign) {
-        this.dataToSign = dataToSign.clone();
+        this(dataToSign, HashAlgorithm.SHA_512);
     }
 
-    public String calculateHashInBase64() {
+    /**
+     * Creates a new instance of SignableData
+     *
+     * @param dataToSign    byte array of data to be signed
+     * @param hashAlgorithm hashing algorithm to be used
+     * @throws SmartIdRequestSetupException when input values are missing or empty
+     */
+    public SignableData(byte[] dataToSign, HashAlgorithm hashAlgorithm) {
+        if (dataToSign == null || dataToSign.length == 0) {
+            throw new SmartIdRequestSetupException("Parameter 'dataToSign' cannot be empty");
+        }
+        if (hashAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Parameter 'hashAlgorithm' must be set");
+        }
+        this.dataToSign = dataToSign.clone();
+        this.hashAlgorithm = hashAlgorithm;
+    }
+
+    /**
+     * Calculates the digest of the data to be signed
+     * and returns it in Base64 encoded format
+     *
+     * @return Base64 encoded hash
+     */
+    @Override
+    public String getDigestInBase64() {
         byte[] digest = calculateHash();
         return Base64.getEncoder().encodeToString(digest);
     }
 
+    /**
+     * Calculates the digest of the data to be signed
+     *
+     * @return hash
+     */
     public byte[] calculateHash() {
-        return DigestCalculator.calculateDigest(dataToSign, hashType);
-    }
-
-    public void setHashType(HashType hashType) {
-        this.hashType = hashType;
-    }
-
-    public HashType getHashType() {
-        return hashType;
+        return DigestCalculator.calculateDigest(dataToSign, hashAlgorithm);
     }
 }

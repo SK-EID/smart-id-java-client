@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.HashAlgorithm;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
@@ -46,7 +45,6 @@ import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
 import ee.sk.smartid.util.NotificationUtil;
-import ee.sk.smartid.util.SignatureUtil;
 import ee.sk.smartid.util.StringUtil;
 
 public class NotificationSignatureSessionRequestBuilder {
@@ -65,9 +63,7 @@ public class NotificationSignatureSessionRequestBuilder {
     private List<NotificationInteraction> allowedInteractionsOrder;
     private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm;
-    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA_512;
-    private SignableData signableData;
-    private SignableHash signableHash;
+    private DigestInput digestInput;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -198,7 +194,7 @@ public class NotificationSignatureSessionRequestBuilder {
      * @return this builder instance
      */
     public NotificationSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
-        this.signableData = signableData;
+        this.digestInput = signableData;
         return this;
     }
 
@@ -212,7 +208,7 @@ public class NotificationSignatureSessionRequestBuilder {
      * @return this builder
      */
     public NotificationSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
-        this.signableHash = signableHash;
+        this.digestInput = signableHash;
         return this;
     }
 
@@ -247,10 +243,9 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private SignatureSessionRequest createSignatureSessionRequest() {
-        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
-                SignatureUtil.getDigestToSignBase64(signableHash, signableData),
+        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters(hashAlgorithm.getValue()));
+                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
 
         return new SignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
