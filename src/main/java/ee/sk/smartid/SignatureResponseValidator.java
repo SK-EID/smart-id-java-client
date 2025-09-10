@@ -117,7 +117,7 @@ public class SignatureResponseValidator {
         rsaSsaPssParams.setTrailerField(TrailerField.OXBC);
         signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
 
-        signatureResponse.setFlowType(FlowType.valueOf(sessionSignature.getFlowType()));
+        signatureResponse.setFlowType(FlowType.fromString(sessionSignature.getFlowType()));
         signatureResponse.setCertificate(CertificateParser.parseX509Certificate(certificate.getValue()));
         signatureResponse.setRequestedCertificateLevel(requestedCertificateLevel);
         signatureResponse.setCertificateLevel(CertificateLevel.valueOf(certificate.getCertificateLevel()));
