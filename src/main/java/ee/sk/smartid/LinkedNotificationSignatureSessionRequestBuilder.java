@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -122,7 +122,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
      * @throws SmartIdRequestSetupException if the digest input has already been set with SignableHash
      */
     public LinkedNotificationSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
-        if (digestInput != null) {
+        if (digestInput != null && digestInput instanceof SignableHash) {
             throw new SmartIdRequestSetupException("Value for 'digestInput' has been already set with SignableHash");
         }
         this.digestInput = signableData;
@@ -137,7 +137,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
      * @throws SmartIdRequestSetupException if the digest input has already been set with SignableData
      */
     public LinkedNotificationSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
-        if (digestInput != null) {
+        if (digestInput != null && digestInput instanceof SignableData) {
             throw new SmartIdRequestSetupException("Value for 'digestInput' has been already set with SignableData");
         }
         this.digestInput = signableHash;

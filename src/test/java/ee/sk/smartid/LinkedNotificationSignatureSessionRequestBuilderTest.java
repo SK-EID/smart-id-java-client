@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,6 +34,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -62,15 +63,9 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
 
     @Test
     void initSignatureSession_ok() {
-        LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withDocumentNumber(DOCUMENT_NUMBER)
-                .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                .withSignableData(new SignableData("Test data".getBytes()))
-                .withLinkedSessionID("10000000-0000-0000-0000-000000000000")
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")));
-        when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER))).thenReturn(new LinkedSignatureSessionResponse("20000000-0000-0000-0000-000000000000"));
+        LinkedNotificationSignatureSessionRequestBuilder builder = toBaseLinkedNotificationSignatureSessionRequestBuilder();
+        when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER)))
+                .thenReturn(new LinkedSignatureSessionResponse("20000000-0000-0000-0000-000000000000"));
 
         LinkedSignatureSessionResponse response = builder.initSignatureSession();
         assertEquals("20000000-0000-0000-0000-000000000000", response.sessionID());
@@ -99,55 +94,41 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID(relyingPartyUUID);
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withRelyingPartyUUID(relyingPartyUUID));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'relyingPartyUUID' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_relyingPartyNameIsEmpty_throwException(String relyingPartyName) {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName(relyingPartyName);
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withRelyingPartyName(relyingPartyName));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'relyingPartyName' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_documentNumberIsEmpty_throwException(String documentNumber) {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(documentNumber);
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withDocumentNumber(documentNumber));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'documentNumber' cannot be empty", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_signableDataOrSignableHashNotProvided_throwException() {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withSignableData(null)
-                    .withSignableHash(null);
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withSignableData(null).withSignableHash(null));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'digestInput' must be set with SignableData or with SignableHash", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_signableDataAlreadyUsedForSettingDigest_throwException() {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(DOCUMENT_NUMBER);
+            var builder = toBaseLinkedNotificationSignatureSessionRequestBuilder();
 
             var ex = assertThrows(SmartIdRequestSetupException.class,
                     () -> builder.withSignableData(new SignableData("Test data".getBytes()))
@@ -157,7 +138,7 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
 
         @Test
         void initSignatureSession_signableHashAlreadyUsedForSettingDigest_throwException() {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
+            var builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
                     .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                     .withRelyingPartyName("DEMO")
                     .withDocumentNumber(DOCUMENT_NUMBER);
@@ -171,79 +152,61 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_linkedSessionIDIsEmpty_throwException(String linkedSessionID) {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withSignableData(new SignableData("Test data".getBytes()));
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withLinkedSessionID(linkedSessionID));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class,
-                    () -> builder.withLinkedSessionID(linkedSessionID)
-                            .initSignatureSession());
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'linkedSessionID' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
         @ValueSource(strings = {"1234567890123456789012345678901", ""})
         void initSignatureSession_nonceWithIncorrectLengthProvided_throwException(String nonce) {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withLinkedSessionID("10000000-0000-0000-0000-000000000000")
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")));
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withNonce(nonce));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class,
-                    () -> builder.withNonce(nonce)
-                            .initSignatureSession());
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'nonce' must be 1-30 characters long", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_interactionsInEmpty_throwException(List<DeviceLinkInteraction> interactions) {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withLinkedSessionID("10000000-0000-0000-0000-000000000000");
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withInteractions(interactions));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class,
-                    () -> builder.withInteractions(interactions)
-                            .initSignatureSession());
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'interactions' cannot be empty", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_interactionsContainDuplicates_throwException() {
-            LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withLinkedSessionID("10000000-0000-0000-0000-000000000000");
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b ->
+                    b.withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?"),
+                            DeviceLinkInteraction.displayTextAndPIN("Sign again?"))));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class,
-                    () -> builder.withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?"), DeviceLinkInteraction.displayTextAndPIN("Sign again?")))
-                            .initSignatureSession());
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'interactions' cannot contain duplicate types", ex.getMessage());
         }
     }
 
     @Test
     void initSignatureSession_sessionIDMissingFromResponse_throwException() {
-        LinkedNotificationSignatureSessionRequestBuilder builder = new LinkedNotificationSignatureSessionRequestBuilder(connector)
+        LinkedNotificationSignatureSessionRequestBuilder builder = toBaseLinkedNotificationSignatureSessionRequestBuilder();
+        when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER))).thenReturn(new LinkedSignatureSessionResponse(null));
+
+        var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
+        assertEquals("Linked notification-base signature session response field 'sessionID' is missing or empty", ex.getMessage());
+    }
+
+    private LinkedNotificationSignatureSessionRequestBuilder toLinkedNotificationSignatureSessionRequestBuilder(UnaryOperator<LinkedNotificationSignatureSessionRequestBuilder> builder) {
+        return builder.apply(toBaseLinkedNotificationSignatureSessionRequestBuilder());
+    }
+
+    private LinkedNotificationSignatureSessionRequestBuilder toBaseLinkedNotificationSignatureSessionRequestBuilder() {
+        return new LinkedNotificationSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
                 .withDocumentNumber(DOCUMENT_NUMBER)
                 .withSignableData(new SignableData("Test data".getBytes()))
                 .withLinkedSessionID("10000000-0000-0000-0000-000000000000")
                 .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")));
-        when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER))).thenReturn(new LinkedSignatureSessionResponse(null));
-
-        var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
-        assertEquals("Linked notification-base signature session response field 'sessionID' is missing or empty", ex.getMessage());
     }
 }
