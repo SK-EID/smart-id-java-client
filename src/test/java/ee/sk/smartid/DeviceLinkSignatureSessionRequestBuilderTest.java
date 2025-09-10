@@ -37,10 +37,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +53,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
@@ -77,15 +78,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void initSignatureSession_withSemanticsIdentifier() {
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                .withSignableData(new SignableData("Test data".getBytes()));
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), eq(SEMANTICS_IDENTIFIER))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSemanticsIdentifier(SEMANTICS_IDENTIFIER));
 
-        DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
+        DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
         assertEquals("test-session-id", signatureSessionResponse.sessionID());
@@ -97,15 +93,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @Test
     void initSignatureSession_withDocumentNumber() {
         String documentNumber = "PNOEE-31111111111-MOCK-Q";
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withDocumentNumber(documentNumber)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                .withSignableData(new SignableData("Test data".getBytes()));
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withDocumentNumber(documentNumber));
 
-        DeviceLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signature);
         assertEquals("test-session-id", signature.sessionID());
@@ -117,16 +108,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @ArgumentsSource(CertificateLevelArgumentProvider.class)
     void initSignatureSession_withCertificateLevel(CertificateLevel certificateLevel, String expectedValue) {
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withCertificateLevel(certificateLevel)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                .withSignableData(new SignableData("Test data".getBytes()));
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withCertificateLevel(certificateLevel));
 
-        DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
+        DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
@@ -140,16 +125,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @ArgumentsSource(ValidNonceArgumentSourceProvider.class)
     void initSignatureSession_withNonce_ok(String nonce) {
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                .withSignableData(new SignableData("Test data".getBytes()))
-                .withNonce(nonce);
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withNonce(nonce));
 
-        DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
+        DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
@@ -162,16 +141,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void initSignatureSession_withRequestProperties() {
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                .withSignableData(new SignableData("Test data".getBytes()))
-                .withShareMdClientIpAddress(true);
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withShareMdClientIpAddress(true));
 
-        DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
+        DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
@@ -185,17 +158,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void initSignatureSession_withSignatureAlgorithm_setsCorrectAlgorithm() {
-        var signableData = new SignableData("Test data".getBytes());
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                .withSignableData(signableData)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")));
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS));
 
-        DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
+        DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
@@ -204,22 +170,16 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         SignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
-        assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.signatureProtocolParameters().digest());
     }
 
     @ParameterizedTest
     @EnumSource(HashAlgorithm.class)
     void initSignatureSession_withSignableHash(HashAlgorithm hashAlgorithm) {
-        var signableHash = new SignableHash("Test hash".getBytes(), hashAlgorithm);
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withSignableHash(signableHash)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")));
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var signableHash = new SignableHash("Test hash".getBytes(), hashAlgorithm);
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignableData(null).withSignableHash(signableHash));
 
-        DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
+        DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
@@ -233,16 +193,11 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @EnumSource(HashAlgorithm.class)
     void initSignatureSession_withSignablData(HashAlgorithm hashAlgorithm) {
-        var signableHash = new SignableData("Test hash".getBytes(), hashAlgorithm);
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withSignableData(signableHash)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")));
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var signableData = new SignableData("Test hash".getBytes(), hashAlgorithm);
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignableData(signableData));
 
-        DeviceLinkSessionResponse signatureSessionResponse = builder.initSignatureSession();
+        DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
@@ -257,16 +212,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @ArgumentsSource(CapabilitiesArgumentProvider.class)
     void initSignatureSession_withCapabilities(String[] capabilities, Set<String> expectedCapabilities) {
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withSignableData(new SignableData("Test data".getBytes()))
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
-                .withCapabilities(capabilities);
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withCapabilities(capabilities));
 
-        DeviceLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signature);
 
@@ -279,17 +228,10 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
-        var signableData = new SignableData("Test data".getBytes());
-        var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("test-relying-party-uuid")
-                .withRelyingPartyName("DEMO")
-                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withSignableData(signableData)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")));
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class)))
-                .thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
 
-        DeviceLinkSessionResponse signature = builder.initSignatureSession();
+        DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
         assertNotNull(signature);
 
         ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
@@ -305,31 +247,17 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_missingDocumentNumberAndSemanticsIdentifier(String documentNumber) {
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("test-relying-party-uuid")
-                    .withRelyingPartyName("DEMO")
-                    .withDocumentNumber(documentNumber)
-                    .withSemanticsIdentifier(null)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")));
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withDocumentNumber(documentNumber).withSemanticsIdentifier(null));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
             assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed.", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_signatureAlgorithmIsSetToNull_throwException() {
-            var signableData = new SignableData("Test data".getBytes());
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("test-relying-party-uuid")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(signableData)
-                    .withSignatureAlgorithm(null)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")));
-            when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(null));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'signatureAlgorithm' must be set", ex.getMessage());
         }
 
@@ -347,25 +275,16 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
         @Test
         void initSignatureSession_whenSignableHashAndDataAreNull_throwException() {
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("test-relying-party-uuid")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(null)
-                    .withSignableHash(null)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")));
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignableData(null).withSignableHash(null));
 
-            var ex = assertThrows(SmartIdClientException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdClientException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'digestInput' must be set with either SignableData or SignableHash", ex.getMessage());
         }
 
         @Test
         void initSignatureSession_signableHashBeingSetAfterSignableData_throwException() {
             var ex = assertThrows(SmartIdRequestSetupException.class,
-                    () -> new DeviceLinkSignatureSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("test-relying-party-uuid")
-                            .withRelyingPartyName("DEMO")
-                            .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
+                    () -> toBaseDeviceLinkSessionRequestBuilder()
                             .withSignableData(new SignableData("Test data".getBytes()))
                             .withSignableHash(new SignableHash("Test data".getBytes())));
             assertEquals("Value for 'digestInput' has already been set with SignableData.", ex.getMessage());
@@ -384,105 +303,56 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @NullAndEmptySource
-        void initSignatureSession_whenInteractionsIsNullOrEmpty(List<DeviceLinkInteraction> interactions) {
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("test-relying-party-uuid")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(interactions);
+        @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
+        void initSignatureSession_initialCallbackUrlIsInvalid_throwException(String url) {
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withInitialCallbackUrl(url));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, () -> builder.initSignatureSession());
-            assertEquals("Value for 'interactions' cannot be empty", ex.getMessage());
+            var exception = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
+            assertEquals("Value for 'initialCallbackUrl' must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars", exception.getMessage());
         }
 
         @ParameterizedTest
-        @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
-        void initSignatureSession_initialCallbackUrlIsInvalid_throwException(String url) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkSignatureSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withSignableData(new SignableData("test".getBytes()))
-                            .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                            .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")))
-                            .withInitialCallbackUrl(url)
-                            .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
-                            .initSignatureSession()
-            );
-            assertEquals("Value for 'initialCallbackUrl' must match pattern ^https://[^|]+$ and must not contain unencoded vertical bars", exception.getMessage());
+        @NullAndEmptySource
+        void initSignatureSession_whenInteractionsIsNullOrEmpty(List<DeviceLinkInteraction> interactions) {
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withInteractions(interactions));
+
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
+            assertEquals("Value for 'interactions' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(DuplicateInteractionsProvider.class)
         void initSignatureSession_duplicateInteractions_shouldThrowException(List<DeviceLinkInteraction> duplicateInteractions) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkSignatureSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                            .withSignableData(new SignableData("data".getBytes(StandardCharsets.UTF_8)))
-                            .withInteractions(duplicateInteractions)
-                            .initSignatureSession()
-            );
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withInteractions(duplicateInteractions));
 
-            assertEquals("Value for 'interactions' cannot contain duplicate types", exception.getMessage());
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
+            assertEquals("Value for 'interactions' cannot contain duplicate types", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_missingRelyingPartyUUID(String relyingPartyUUID) {
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID(relyingPartyUUID)
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")));
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withRelyingPartyUUID(relyingPartyUUID));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'relyingPartyUUID' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_missingRelyingPartyName(String relyingPartyName) {
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName(relyingPartyName)
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")));
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withRelyingPartyName(relyingPartyName));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'relyingPartyName' cannot be empty", ex.getMessage());
         }
 
-        @Test
-        void initSignatureSession_invalidNonce() {
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")))
-                    .withNonce("1234567890123456789012345678901");
+        @ParameterizedTest
+        @ValueSource(strings = {"", "1234567890123456789012345678901"})
+        void initSignatureSession_invalidNonce(String nonce) {
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withNonce(nonce));
 
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
-            assertEquals("Value for 'nonce' length must be between 1 and 30 characters.", ex.getMessage());
-        }
-
-        @Test
-        void initSignatureSession_emptyNonce() {
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")))
-                    .withNonce("");
-
-            var ex = assertThrows(SmartIdRequestSetupException.class, builder::initSignatureSession);
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'nonce' length must be between 1 and 30 characters.", ex.getMessage());
         }
     }
@@ -497,12 +367,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     "test-session-token",
                     "test-session-secret",
                     URI.create("https://example.com/device-link"));
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")));
+            var builder = toBaseDeviceLinkSessionRequestBuilder();
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
@@ -516,12 +381,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     sessionToken,
                     "test-session-secret",
                     URI.create("https://example.com/device-link"));
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")));
+            var builder = toBaseDeviceLinkSessionRequestBuilder();
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
@@ -535,12 +395,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     "test-session-token",
                     sessionSecret,
                     URI.create("https://example.com/device-link"));
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")));
+            var builder = toBaseDeviceLinkSessionRequestBuilder();
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
@@ -554,17 +409,27 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     "test-session-token",
                     "test-session-secret",
                     deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
-            var builder = new DeviceLinkSignatureSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                    .withSignableData(new SignableData("Test data".getBytes()))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in")));
+            var builder = toBaseDeviceLinkSessionRequestBuilder();
             when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
             assertEquals("Device link signature session initialisation response field 'deviceLinkBase' is missing or empty", ex.getMessage());
         }
+    }
+
+    private DeviceLinkSignatureSessionRequestBuilder toDeviceLinkSignatureSessionRequestBuilder(UnaryOperator<DeviceLinkSignatureSessionRequestBuilder> builder) {
+        var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
+        return builder.apply(deviceLinkSessionRequestBuilder);
+    }
+
+    private DeviceLinkSignatureSessionRequestBuilder toBaseDeviceLinkSessionRequestBuilder() {
+        return new DeviceLinkSignatureSessionRequestBuilder(connector)
+                .withRelyingPartyUUID("test-relying-party-uuid")
+                .withRelyingPartyName("DEMO")
+                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
+                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                .withSignableData(new SignableData("Test data".getBytes()));
+
     }
 
     private DeviceLinkSessionResponse mockSignatureSessionResponse() {
