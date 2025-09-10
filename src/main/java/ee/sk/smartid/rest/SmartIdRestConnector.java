@@ -75,7 +75,7 @@ import jakarta.ws.rs.core.UriBuilder;
 public class SmartIdRestConnector implements SmartIdConnector {
 
     @Serial
-    private static final long serialVersionUID = 2024_10_18;
+    private static final long serialVersionUID = 2025_09_10L;
 
     private static final Logger logger = LoggerFactory.getLogger(SmartIdRestConnector.class);
 
@@ -142,7 +142,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DEVICE_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postDeviceLinkAuthenticationRequest(uri, authenticationRequest);
+        return postRequest(uri, authenticationRequest, DeviceLinkSessionResponse.class);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DEVICE_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postDeviceLinkAuthenticationRequest(uri, authenticationRequest);
+        return postRequest(uri, authenticationRequest, DeviceLinkSessionResponse.class);
     }
 
     @Override
@@ -161,7 +161,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(ANONYMOUS_DEVICE_LINK_AUTHENTICATION_PATH)
                 .build();
-        return postDeviceLinkAuthenticationRequest(uri, authenticationRequest);
+        return postRequest(uri, authenticationRequest, DeviceLinkSessionResponse.class);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postNotificationAuthenticationRequest(uri, authenticationRequest);
+        return postRequest(uri, authenticationRequest, NotificationAuthenticationSessionResponse.class);
     }
 
     @Override
@@ -181,7 +181,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postNotificationAuthenticationRequest(uri, authenticationRequest);
+        return postRequest(uri, authenticationRequest, NotificationAuthenticationSessionResponse.class);
     }
 
     @Override
@@ -191,8 +191,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .fromUri(endpointUrl)
                 .path(DEVICE_LINK_CERTIFICATE_CHOICE_DEVICE_LINK_PATH)
                 .build();
-
-        return postDeviceLinkCertificateChoiceRequest(uri, request);
+        return postRequest(uri, request, DeviceLinkSessionResponse.class);
     }
 
     @Override
@@ -203,15 +202,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(LINKED_NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        try {
-            return postRequest(uri, request, LinkedSignatureSessionResponse.class);
-        } catch (NotFoundException ex) {
-            logger.warn("User account not found for URI {}", uri, ex);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException ex) {
-            logger.warn("No permission to issue the request", ex);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
-        }
+        return postRequest(uri, request, LinkedSignatureSessionResponse.class);
     }
 
     @Override
@@ -221,7 +212,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postNotificationCertificateChoiceRequest(uri, request);
+        return postRequest(uri, request, NotificationCertificateChoiceSessionResponse.class);
     }
 
     public CertificateResponse getCertificateByDocumentNumber(String documentNumber, CertificateByDocumentNumberRequest request) {
@@ -230,7 +221,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postCertificateByDocumentNumberRequest(uri, request);
+        return postRequest(uri, request, CertificateResponse.class);
     }
 
     @Override
@@ -240,7 +231,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DEVICE_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postDeviceLinkSignatureRequest(uri, request);
+        return postRequest(uri, request, DeviceLinkSessionResponse.class);
     }
 
     @Override
@@ -250,25 +241,27 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .path(DEVICE_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postDeviceLinkSignatureRequest(uri, request);
+        return postRequest(uri, request, DeviceLinkSessionResponse.class);
     }
 
+    @Override
     public NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(NOTIFICATION_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
                 .build();
-        return postNotificationSignatureRequest(uri, request);
+        return postRequest(uri, request, NotificationSignatureSessionResponse.class);
     }
 
+    @Override
     public NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, String documentNumber) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
                 .path(documentNumber)
                 .build();
-        return postNotificationSignatureRequest(uri, request);
+        return postRequest(uri, request, NotificationSignatureSessionResponse.class);
     }
 
     @Override
@@ -322,90 +315,6 @@ public class SmartIdRestConnector implements SmartIdConnector {
         }
     }
 
-    private DeviceLinkSessionResponse postDeviceLinkAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
-        try {
-            return postRequest(uri, request, DeviceLinkSessionResponse.class);
-        } catch (NotFoundException e) {
-            logger.warn("User account not found for URI " + uri, e);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException e) {
-            logger.warn("No permission to issue the request", e);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
-        }
-    }
-
-    private NotificationAuthenticationSessionResponse postNotificationAuthenticationRequest(URI uri, AuthenticationSessionRequest request) {
-        try {
-            return postRequest(uri, request, NotificationAuthenticationSessionResponse.class);
-        } catch (NotFoundException e) {
-            logger.warn("User account not found for URI " + uri, e);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException e) {
-            logger.warn("No permission to issue the request", e);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", e);
-        }
-    }
-
-    private DeviceLinkSessionResponse postDeviceLinkCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
-        try {
-            return postRequest(uri, request, DeviceLinkSessionResponse.class);
-        } catch (NotFoundException ex) {
-            logger.warn("User account not found for URI {}", uri, ex);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException ex) {
-            logger.warn("No permission to issue the request", ex);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
-        }
-    }
-
-    private NotificationCertificateChoiceSessionResponse postNotificationCertificateChoiceRequest(URI uri, CertificateChoiceSessionRequest request) {
-        try {
-            return postRequest(uri, request, NotificationCertificateChoiceSessionResponse.class);
-        } catch (NotFoundException ex) {
-            logger.warn("User account not found for URI {}", uri, ex);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException ex) {
-            logger.warn("No permission to issue the request", ex);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
-        }
-    }
-
-    private CertificateResponse postCertificateByDocumentNumberRequest(URI uri, CertificateByDocumentNumberRequest request) {
-        try {
-            return postRequest(uri, request, CertificateResponse.class);
-        } catch (NotFoundException ex) {
-            logger.warn("User account not found for URI {}", uri, ex);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException ex) {
-            logger.warn("No permission to issue the request", ex);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
-        }
-    }
-
-    private DeviceLinkSessionResponse postDeviceLinkSignatureRequest(URI uri, SignatureSessionRequest request) {
-        try {
-            return postRequest(uri, request, DeviceLinkSessionResponse.class);
-        } catch (NotFoundException ex) {
-            logger.warn("User account not found for URI " + uri, ex);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException ex) {
-            logger.warn("No permission to issue the request", ex);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
-        }
-    }
-
-    private NotificationSignatureSessionResponse postNotificationSignatureRequest(URI uri, SignatureSessionRequest request) {
-        try {
-            return postRequest(uri, request, NotificationSignatureSessionResponse.class);
-        } catch (NotFoundException ex) {
-            logger.warn("User account not found for URI {}", uri, ex);
-            throw new UserAccountNotFoundException();
-        } catch (ForbiddenException ex) {
-            logger.warn("No permission to issue the request", ex);
-            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
-        }
-    }
-
     private <T, V> T postRequest(URI uri, V request, Class<T> responseType) {
         try {
             Entity<V> requestEntity = Entity.entity(request, MediaType.APPLICATION_JSON);
@@ -416,6 +325,12 @@ public class SmartIdRestConnector implements SmartIdConnector {
         } catch (BadRequestException ex) {
             logger.warn("Request is invalid for URI {}", uri, ex);
             throw new SmartIdClientException("Server refused the request", ex);
+        } catch (NotFoundException e) {
+            logger.warn("User account not found for URI " + uri, e);
+            throw new UserAccountNotFoundException();
+        } catch (ForbiddenException ex) {
+            logger.warn("No permission to issue the request", ex);
+            throw new RelyingPartyAccountConfigurationException("No permission to issue the request", ex);
         } catch (ClientErrorException ex) {
             if (ex.getResponse().getStatus() == 471) {
                 logger.warn("No suitable account of requested type found, but user has some other accounts.", ex);
