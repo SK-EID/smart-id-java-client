@@ -41,7 +41,6 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashAlgorithm;
-import ee.sk.smartid.InteractionUtil;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SignatureAlgorithm;
 import ee.sk.smartid.SignatureProtocol;
@@ -49,10 +48,11 @@ import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
@@ -61,6 +61,7 @@ import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.util.InteractionUtil;
 
 @Disabled("Relying party demo account not yet available for v3")
 @SmartIdDemoIntegrationTest
@@ -91,7 +92,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initAnonymousDeviceLinkAuthentication() {
-                AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
+                DeviceLinkAuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
                 DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initAnonymousDeviceLinkAuthentication(request);
 
@@ -103,7 +104,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDeviceLinkAuthentication_withDocumentNumber() {
-                AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
+                DeviceLinkAuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
                 DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkAuthentication(request, "PNOEE-40504040001-MOCK-Q");
 
@@ -115,7 +116,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDeviceLinkAuthentication_withSemanticsIdentifier() {
-                AuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
+                DeviceLinkAuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
                 DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkAuthentication(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
@@ -125,18 +126,19 @@ class SmartIdRestIntegrationTest {
                 assertNotNull(sessionResponse.receivedAt());
             }
 
-            private static AuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
+            private static DeviceLinkAuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
                 var signatureParameters = new AcspV2SignatureProtocolParameters(
                         RpChallengeGenerator.generate(),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
-                return new AuthenticationSessionRequest(RELYING_PARTY_UUID,
+                return new DeviceLinkAuthenticationSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         "QUALIFIED",
                         SignatureProtocol.ACSP_V2,
                         signatureParameters,
-                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                        null,
+//                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))), // TODO - 11.09.25: fix
                         null,
                         null,
                         null);
@@ -183,7 +185,7 @@ class SmartIdRestIntegrationTest {
                         signatureProtocolParameters,
                         null,
                         null,
-                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
+                        InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
                         null,
                         null
                 );
@@ -209,7 +211,8 @@ class SmartIdRestIntegrationTest {
                         signatureProtocolParameters,
                         null,
                         null,
-                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
+                        null,
+//                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))), // TODO - 11.09.25: fix
                         null,
                         null
                 );
@@ -236,9 +239,7 @@ class SmartIdRestIntegrationTest {
 
                 NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
-                assertTrue(Pattern.matches(VERIFICATION_CODE_PATTERN, sessionResponse.getVc().getValue()));
-                assertEquals("alphaNumeric4", sessionResponse.getVc().getType());
+                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.sessionID()));
             }
 
             @Test
@@ -247,26 +248,25 @@ class SmartIdRestIntegrationTest {
 
                 NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, "PNOEE-40504040001-MOCK-Q");
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
-                assertTrue(Pattern.matches(VERIFICATION_CODE_PATTERN, sessionResponse.getVc().getValue()));
-                assertEquals("alphaNumeric4", sessionResponse.getVc().getType());
+                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.sessionID()));
             }
 
-            private static AuthenticationSessionRequest toAuthenticationRequest() {
+            private static NotificationAuthenticationSessionRequest toAuthenticationRequest() {
                 var signatureParameters = new AcspV2SignatureProtocolParameters(
                         RpChallengeGenerator.generate(),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
-                return new AuthenticationSessionRequest(RELYING_PARTY_UUID,
+                return new NotificationAuthenticationSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         "QUALIFIED",
-                        SignatureProtocol.ACSP_V2,
+                        SignatureProtocol.ACSP_V2.name(),
                         signatureParameters,
-                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                        null,
+//                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))), // TODO - 11.09.25: fix
                         new RequestProperties(true),
                         null,
-                        null
+                        "numeric4"
                 );
             }
         }
@@ -321,7 +321,7 @@ class SmartIdRestIntegrationTest {
                         signatureProtocolParameters,
                         null,
                         null,
-                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
+                        InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
                         null,
                         null
                 );

@@ -39,8 +39,8 @@ import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.util.DeviceLinkUtil;
 import ee.sk.smartid.util.SetUtil;
+import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -267,7 +267,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
                 rawDigestParams,
                 linkedSessionID,
                 nonce,
-                DeviceLinkUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(interactions),
                 shareIpAddress != null ? new RequestProperties(shareIpAddress) : null,
                 capabilities);
     }

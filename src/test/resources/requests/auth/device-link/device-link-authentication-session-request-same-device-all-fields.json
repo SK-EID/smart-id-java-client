@@ -10,5 +10,9 @@
     }
   },
   "certificateLevel": "QUALIFIED",
-  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbj8ifV0="
+  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbj8ifV0=",
+  "requestProperties": {
+    "shareMdClientIpAddress": true
+  },
+  "initialCallbackUrl": "https://example.com/callback"
 }

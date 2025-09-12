@@ -28,9 +28,13 @@ package ee.sk.smartid.rest.dao;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 
+/**
+ * Interaction types that can be used in notification-based flows
+ */
 public enum NotificationInteractionFlow implements InteractionFlow {
 
-    VERIFICATION_CODE_CHOICE("verificationCodeChoice"),
+    DISPLAY_TEXT_AND_PIN("displayTextAndPIN"),
+    CONFIRMATION_MESSAGE("confirmationMessage"),
     CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE("confirmationMessageAndVerificationCodeChoice");
 
     private final String code;

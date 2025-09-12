@@ -58,7 +58,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.HashAlgorithm;
-import ee.sk.smartid.InteractionUtil;
 import ee.sk.smartid.SignatureProtocol;
 import ee.sk.smartid.SmartIdRestServiceStubs;
 import ee.sk.smartid.exception.SessionNotFoundException;
@@ -69,14 +68,15 @@ import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFound
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -90,6 +90,7 @@ import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.util.InteractionUtil;
 
 class SmartIdRestConnectorTest {
 
@@ -326,6 +327,7 @@ class SmartIdRestConnectorTest {
     class SemanticsIdentifierDeviceLinkAuthentication {
 
         private static final String AUTHENTICATION_WITH_PERSON_CODE_PATH = "/authentication/device-link/etsi/PNOEE-30303039914";
+        private static final SemanticsIdentifier SEMANTICS_IDENTIFIER = new SemanticsIdentifier("PNOEE-30303039914");
 
         private SmartIdRestConnector connector;
 
@@ -335,30 +337,109 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initDeviceLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
+        void initDeviceLinkAuthentication_qrCodeFlow_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH,
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
 
             Instant start = Instant.now();
-            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-30303039914"));
+            var deviceLinkAuthenticationSessionRequest = toDeviceLinkAuthenticationSessionRequest(null, null);
+            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(deviceLinkAuthenticationSessionRequest, SEMANTICS_IDENTIFIER);
             Instant end = Instant.now();
 
             assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
         }
 
         @Test
-        void initDeviceLinkAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/device-link-authentication-session-request.json");
-                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-48010010101"));
-            });
+        void initDeviceLinkAuthentication_sameDeviceOnlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH,
+                    "requests/auth/device-link/device-link-authentication-session-request-same-device-only-required-fields.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            Instant start = Instant.now();
+            var deviceLinkAuthenticationSessionRequest = toDeviceLinkAuthenticationSessionRequest(null, "https://example.com/callback");
+            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(deviceLinkAuthenticationSessionRequest, SEMANTICS_IDENTIFIER);
+            Instant end = Instant.now();
+
+            assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
         }
 
         @Test
-        void initDeviceLinkAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/device-link-authentication-session-request.json");
-                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), new SemanticsIdentifier("PNOEE-30303039914"));
-            });
+        void initDeviceLinkAuthentication_sameDeviceAllFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH,
+                    "requests/auth/device-link/device-link-authentication-session-request-same-device-all-fields.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            Instant start = Instant.now();
+            var deviceLinkAuthenticationSessionRequest = toDeviceLinkAuthenticationSessionRequest(new RequestProperties(true), "https://example.com/callback");
+            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(deviceLinkAuthenticationSessionRequest, SEMANTICS_IDENTIFIER);
+            Instant end = Instant.now();
+
+            assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-invalid-request.json");
+
+            assertThrows(SmartIdClientException.class, () ->
+                    connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () ->
+                    connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_accountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(UserAccountNotFoundException.class, () ->
+                    connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_forbiddenForRP_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_suitableAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 471);
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_issueWithUserAccount_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 472);
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_apiClientBeingUsedIsOutdated_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 480);
+
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_systemUnderMaintenance_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 580);
+
+            assertThrows(ServerMaintenanceException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
         }
     }
 
@@ -367,6 +448,7 @@ class SmartIdRestConnectorTest {
     class DocumentNumberDeviceLinkAuthentication {
 
         private static final String AUTHENTICATION_WITH_DOCUMENT_NR_PATH = "/authentication/device-link/document/PNOEE-30303039914-MOCK-Q";
+        private static final String DOCUMENT_NUMBER = "PNOEE-30303039914-MOCK-Q";
 
         private SmartIdRestConnector connector;
 
@@ -378,31 +460,78 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkAuthentication() {
             SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH,
-                    "requests/device-link-authentication-session-request.json",
-                    "responses/device-link-authentication-session-response.json");
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
 
             Instant start = Instant.now();
-            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), "PNOEE-30303039914-MOCK-Q");
+            DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER);
             Instant end = Instant.now();
 
             assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
+        }
 
+        @Test
+        void initDeviceLinkAuthentication_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-invalid-request.json");
+
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-invalid-request.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () ->
+                    connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
         }
 
         @Test
         void initDeviceLinkAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/device-link-authentication-session-request.json");
-                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), "PNOEE-48010010101-MOCK-Q");
-            });
+            SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(UserAccountNotFoundException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), "PNOEE-48010010101-MOCK-Q"));
         }
 
         @Test
-        void initDeviceLinkAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/device-link-authentication-session-request.json");
-                connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(), "PNOEE-30303039914-MOCK-Q");
-            });
+        void initDeviceLinkAuthentication_forbiddenForRP_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_suitableAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 471);
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_issueWithUserAccount_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 472);
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_apiClientBeingUsedIsOutdated_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 480);
+
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initDeviceLinkAuthentication_systemUnderMaintenance_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 580);
+
+            assertThrows(ServerMaintenanceException.class,
+                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
         }
     }
 
@@ -420,34 +549,96 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initAnonymousDeviceLinkAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/device-link-authentication-session-request.json", "responses/device-link-authentication-session-response.json");
+        void initAnonymousDeviceLinkAuthentication_qrCodeFlow_ok() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(ANONYMOUS_AUTHENTICATION_PATH,
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
 
             Instant start = Instant.now();
-            DeviceLinkSessionResponse response = connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest());
+            DeviceLinkSessionResponse response = connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null));
             Instant end = Instant.now();
 
             assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
         }
 
         @Test
+        void initAnonymousDeviceLinkAuthentication_sameDeviceFlow_ok() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(ANONYMOUS_AUTHENTICATION_PATH,
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            Instant start = Instant.now();
+            DeviceLinkSessionResponse response = connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null));
+            Instant end = Instant.now();
+
+            assertResponseValues(response, "sessionToken", SESSION_SECRET, start, end);
+        }
+
+        @Test
+        void initAnonymousDeviceLinkAuthentication_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-invalid-request.json");
+
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
+        }
+
+        @Test
         void initAnonymousDeviceLinkAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/device-link-authentication-session-request.json");
-                connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest());
-            });
+            SmartIdRestServiceStubs.stubNotFoundResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(UserAccountNotFoundException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
         }
 
         @Test
         void initAnonymousDeviceLinkAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/device-link-authentication-session-request.json");
-                connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest());
-            });
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
+        }
+
+        @Test
+        void initAnonymousDeviceLinkAuthentication_forbiddenForRP_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
+        }
+
+        @Test
+        void initAnonymousDeviceLinkAuthentication_suitableAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 471);
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
+        }
+
+        @Test
+        void initAnonymousDeviceLinkAuthentication_issueWithUserAccount_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 472);
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
+        }
+
+        @Test
+        void initAnonymousDeviceLinkAuthentication_apiClientBeingUsedIsOutdated_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 480);
+
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
+        }
+
+        @Test
+        void initAnonymousDeviceLinkAuthentication_systemUnderMaintenance_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(ANONYMOUS_AUTHENTICATION_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 580);
+
+            assertThrows(ServerMaintenanceException.class,
+                    () -> connector.initAnonymousDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null)));
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18082)
     class SemanticsIdentifierNotificationAuthentication {
@@ -462,34 +653,95 @@ class SmartIdRestConnectorTest {
             connector = new SmartIdRestConnector("http://localhost:18082");
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request.json", "responses/notification-session-response.json");
-            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER);
+        void initNotificationAuthentication_onlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH,
+                    "requests/auth/notification/notification-authentication-session-request-only-required-fields.json",
+                    "responses/auth/notification/notification-session-response.json");
+
+            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(
+                    toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER);
 
             assertNotNull(response);
         }
 
         @Test
-        void initNotificationAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request.json");
-                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER);
-            });
+        void initNotificationAuthentication_allFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH,
+                    "requests/auth/notification/notification-authentication-session-request-all-fields.json",
+                    "responses/auth/notification/notification-session-response.json");
+
+            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(
+                    toNotificationAuthenticationSessionRequest(CertificateLevel.QUALIFIED, new RequestProperties(true)), SEMANTICS_IDENTIFIER);
+
+            assertNotNull(response);
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request.json");
-                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER);
-            });
+        void initNotificationAuthentication_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-invalid.json");
+
+            assertThrows(SmartIdClientException.class, () ->
+                    connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationAuthentication_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () ->
+                    connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationAuthentication_userAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json");
+
+            assertThrows(UserAccountNotFoundException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationAuthentication_forbiddenForRP_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationAuthentication_suitableAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 471);
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationAuthentication_issueWithUserAccount_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 472);
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationAuthentication_apiClientBeingUsedIsOutdated_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 480);
+
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationAuthentication_systemUnderMaintenance_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 580);
+
+            assertThrows(ServerMaintenanceException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-109")
     @Nested
     @WireMockTest(httpPort = 18083)
     class DocumentNumberNotificationAuthentication {
@@ -504,31 +756,101 @@ class SmartIdRestConnectorTest {
             connector = new SmartIdRestConnector("http://localhost:18083");
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationAuthentication() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request.json", "responses/notification-session-response.json");
+        void initNotificationAuthentication_onlyRequeriedFields_ok() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH,
+                    "requests/auth/notification/notification-authentication-session-request-only-required-fields.json",
+                    "responses/auth/notification/notification-session-response.json");
 
-            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), DOCUMENT_NUMBER);
+            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(
+                    toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER);
 
             assertNotNull(response);
         }
 
         @Test
-        void initNotificationAuthentication_userAccountNotFound_throwException() {
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request.json");
-                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), DOCUMENT_NUMBER);
-            });
+        void initNotificationAuthentication_allFields_ok() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH,
+                    "requests/auth/notification/notification-authentication-session-request-all-fields.json",
+                    "responses/auth/notification/notification-session-response.json");
+
+            NotificationAuthenticationSessionResponse response = connector.initNotificationAuthentication(
+                    toNotificationAuthenticationSessionRequest(CertificateLevel.QUALIFIED, new RequestProperties(true)), DOCUMENT_NUMBER);
+
+            assertNotNull(response);
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationAuthentication_requestIsUnauthorized_throwException() {
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request.json");
-                connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(), DOCUMENT_NUMBER);
-            });
+        void initNotificationAuthentication_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-invalid.json");
+
+            var authenticationRequest = new NotificationAuthenticationSessionRequest("00000000-0000-0000-0000-000000000000",
+                    "DEMO",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initNotificationAuthentication(authenticationRequest, DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationAuthentication_userAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json");
+
+            assertThrows(UserAccountNotFoundException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationAuthentication_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () ->
+                    connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationAuthentication_forbiddenForRP_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json");
+
+            assertThrows(RelyingPartyAccountConfigurationException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationAuthentication_suitableAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 471);
+
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationAuthentication_issueWithUserAccount_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 472);
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationAuthentication_apiClientBeingUsedIsOutdated_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 480);
+
+            assertThrows(SmartIdClientException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationAuthentication_systemUnderMaintenance_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-only-required-fields.json", 580);
+
+            assertThrows(ServerMaintenanceException.class,
+                    () -> connector.initNotificationAuthentication(toNotificationAuthenticationSessionRequest(null, null), DOCUMENT_NUMBER));
         }
     }
 
@@ -713,7 +1035,7 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initLinkedNotificationSignature_documentNotFound_throwException() {
+        void initLinkedNotificationSignature_accountNotFound_throwException() {
             SmartIdRestServiceStubs.stubNotFoundResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json");
 
             assertThrows(UserAccountNotFoundException.class,
@@ -721,7 +1043,7 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initLinkedNotificationSignature_accountNotFound_throwException() {
+        void initLinkedNotificationSignature_suitableAccountNotFound_throwException() {
             SmartIdRestServiceStubs.stubErrorResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json", 471);
 
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class,
@@ -729,7 +1051,17 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initLinkedNotificationSignature_ApiClientIsOutdated_throwException() {
+        void initLinkedNotificationSignature_issueWithUserAccount_throwException() {
+            SmartIdRestServiceStubs.stubErrorResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json", 472);
+
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> {
+                var linkedSignatureSessionRequest = toLinkedSignatureSessionRequest(CertificateLevel.QUALIFIED, "cmFuZG9tTm9uY2U=", new RequestProperties(true));
+                connector.initLinkedNotificationSignature(linkedSignatureSessionRequest, DOCUMENT_NUMBER);
+            });
+        }
+
+        @Test
+        void initLinkedNotificationSignature_apiClientBeingUsedIsOutdated_throwException() {
             SmartIdRestServiceStubs.stubErrorResponse(LINKED_SIGNATURE_PATH, "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json", 480);
 
             assertThrows(SmartIdClientException.class,
@@ -1195,41 +1527,41 @@ class SmartIdRestConnectorTest {
         }
     }
 
-    private static AuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
+    private static DeviceLinkAuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest(RequestProperties requestProperties,
+                                                                                                   String initialCallbackUrl) {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(
                 Base64.toBase64String("a".repeat(32).getBytes()),
                 "rsassa-pss",
                 new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
-
-        return new AuthenticationSessionRequest(
+        return new DeviceLinkAuthenticationSessionRequest(
                 "00000000-0000-0000-0000-000000000000",
                 "DEMO",
-                "QUALIFIED",
+                CertificateLevel.QUALIFIED.name(),
                 SignatureProtocol.ACSP_V2,
                 signatureProtocolParameters,
-                InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                requestProperties,
                 null,
-                null,
-                null
+                initialCallbackUrl
         );
     }
 
-    private static AuthenticationSessionRequest toNotificationAuthenticationSessionRequest() {
+    private static NotificationAuthenticationSessionRequest toNotificationAuthenticationSessionRequest(CertificateLevel certificateLevel, RequestProperties requestProperties) {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(
                 Base64.toBase64String("a".repeat(32).getBytes()),
                 "rsassa-pss",
                 new SignatureAlgorithmParameters("SHA-512"));
 
-        return new AuthenticationSessionRequest(
+        return new NotificationAuthenticationSessionRequest(
                 "00000000-0000-0000-0000-000000000000",
                 "DEMO",
-                "QUALIFIED",
-                SignatureProtocol.ACSP_V2,
+                certificateLevel != null ? certificateLevel.name() : null,
+                SignatureProtocol.ACSP_V2.name(),
                 signatureProtocolParameters,
-                InteractionUtil.encodeInteractionsAsBase64(List.of(NotificationInteraction.verificationCodeChoice("Verify the code"))),
+                InteractionUtil.encodeToBase64(List.of(NotificationInteraction.confirmationMessage("Login?"))),
+                requestProperties,
                 null,
-                null,
-                null
+                "numeric4"
         );
     }
 
@@ -1249,7 +1581,7 @@ class SmartIdRestConnectorTest {
                 protocolParameters,
                 null,
                 null,
-                InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign the document"))),
+                InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign the document"))),
                 null,
                 null);
     }
@@ -1258,7 +1590,7 @@ class SmartIdRestConnectorTest {
         var protocolParameters = new RawDigestSignatureProtocolParameters("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
                 "rsassa-pss",
                 new SignatureAlgorithmParameters("SHA-512"));
-        var interaction = DeviceLinkInteraction.displayTextAndPIN("Verify the code");
+        var interaction = NotificationInteraction.displayTextAndPIN("Verify the code");
         return new SignatureSessionRequest("00000000-0000-0000-0000-000000000000",
                 "DEMO",
                 null,
@@ -1266,7 +1598,7 @@ class SmartIdRestConnectorTest {
                 protocolParameters,
                 null,
                 null,
-                InteractionUtil.encodeInteractionsAsBase64(List.of(interaction)),
+                InteractionUtil.encodeToBase64(List.of(interaction)),
                 null,
                 null
         );

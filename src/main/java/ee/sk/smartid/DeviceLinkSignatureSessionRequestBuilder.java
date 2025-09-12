@@ -41,8 +41,8 @@ import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.util.DeviceLinkUtil;
 import ee.sk.smartid.util.SetUtil;
+import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -276,7 +276,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
                 signatureProtocolParameters,
                 nonce != null ? nonce : null,
                 capabilities,
-                DeviceLinkUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(interactions),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 initialCallbackUrl);
     }

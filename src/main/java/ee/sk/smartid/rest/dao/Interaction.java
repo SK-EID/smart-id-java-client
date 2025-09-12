@@ -29,6 +29,7 @@ package ee.sk.smartid.rest.dao;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
+// TODO - 12.09.25: rework this class and its subclasses
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class Interaction {
 
@@ -70,6 +71,7 @@ public abstract class Interaction {
 
     protected abstract void validateInteractionsDisplayText200();
 
+    // TODO - 12.09.25: update exception messages
     protected void validateDisplayText60() {
         if (getDisplayText60() == null) {
             throw new SmartIdClientException("displayText60 cannot be null for AllowedInteractionOrder of type " + getType());
@@ -82,6 +84,7 @@ public abstract class Interaction {
         }
     }
 
+    // TODO - 12.09.25: update exception messages
     protected void validateDisplayText200() {
         if (getDisplayText200() == null) {
             throw new SmartIdClientException("displayText200 cannot be null for AllowedInteractionOrder of type " + getType());

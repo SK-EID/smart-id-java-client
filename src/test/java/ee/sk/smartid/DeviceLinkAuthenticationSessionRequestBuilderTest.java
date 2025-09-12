@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -64,7 +65,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -85,19 +86,14 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         void initAuthenticationSession_ok() throws Exception {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .initAuthenticationSession();
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
+            DeviceLinkSessionResponse response = builder.initAuthenticationSession();
 
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
             assertEquals("DEMO", request.relyingPartyName());
@@ -116,21 +112,14 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CertificateLevelArgumentProvider.class)
         void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withCertificateLevel(certificateLevel)
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .initAuthenticationSession();
+            toDeviceLinkRequestBuilder(b -> b.withCertificateLevel(certificateLevel)).initAuthenticationSession();
 
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedValue, request.certificateLevel());
         }
@@ -138,21 +127,15 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @EnumSource
         void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withSignatureAlgorithm(signatureAlgorithm)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
+            toDeviceLinkRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm))
                     .initAuthenticationSession();
 
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
             assertTrue(Pattern.matches(BASE64_PATTERN, request.signatureProtocolParameters().rpChallenge()));
@@ -160,20 +143,14 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         void initAuthenticationSession_ipQueryingNotUsed_doNotCreatedRequestProperties_ok() {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .initAuthenticationSession();
+            toBaseDeviceLinkRequestBuilder().initAuthenticationSession();
 
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertNull(request.requestProperties());
         }
@@ -181,21 +158,15 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ValueSource(booleans = {true, false})
         void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class)))
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
                     .thenReturn(createDynamicLinkAuthenticationResponse());
 
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .withShareMdClientIpAddress(ipRequested)
+            toDeviceLinkRequestBuilder(b -> b.withShareMdClientIpAddress(ipRequested))
                     .initAuthenticationSession();
 
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertNotNull(request.requestProperties());
             assertEquals(ipRequested, request.requestProperties().shareMdClientIpAddress());
@@ -205,210 +176,134 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CapabilitiesArgumentProvider.class)
         void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
 
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .withCapabilities(capabilities)
-                    .initAuthenticationSession();
+            toDeviceLinkRequestBuilder(b -> b.withCapabilities(capabilities)).initAuthenticationSession();
 
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
             assertEquals(expectedCapabilities, request.capabilities());
         }
 
         @Test
         void initAuthenticationSession_initialCallbackUrlIsValid_ok() {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInitialCallbackUrl("https://example.com/callback"));
 
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .withInitialCallbackUrl("https://valid.example.com/path")
-                    .initAuthenticationSession();
+            builder.initAuthenticationSession();
 
-            ArgumentCaptor<AuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(AuthenticationSessionRequest.class);
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
-            AuthenticationSessionRequest request = requestCaptor.getValue();
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals("https://valid.example.com/path", request.initialCallbackUrl());
+            assertEquals("https://example.com/callback", request.initialCallbackUrl());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID(relyingPartyUUID)
-                            .withRelyingPartyName("DEMO")
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withRelyingPartyUUID(relyingPartyUUID));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'relyingPartyUUID' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_relyingPartyNameIsEmpty_throwException(String relyingPartyName) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName(relyingPartyName)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withRelyingPartyName(relyingPartyName));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'relyingPartyName' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_rpChallengeIsEmpty_throwException(String rpChallenge) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(rpChallenge)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withRpChallenge(rpChallenge));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'rpChallenge' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidRpChallengeArgumentProvider.class)
         void initAuthenticationSession_rpChallengeIsInvalid_throwException(String rpChallenge, String expectedException) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(rpChallenge)
-                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withRpChallenge(rpChallenge));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals(expectedException, exception.getMessage());
         }
 
         @Test
         void initAuthenticationSession_signatureAlgorithmIsSetToNull_throwException() {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withSignatureAlgorithm(null)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withSignatureAlgorithm(null));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'signatureAlgorithm' must be set", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<DeviceLinkInteraction> interactions) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                            .withInteractions(interactions)
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInteractions(interactions));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'interactions' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(DuplicateInteractionsProvider.class)
         void initAuthenticationSession_duplicateInteractions_throwException(List<DeviceLinkInteraction> duplicateInteractions) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                            .withInteractions(duplicateInteractions)
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInteractions(duplicateInteractions));
 
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'interactions' cannot contain duplicate types", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidInteractionsProvider.class)
         public void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(DeviceLinkInteraction interaction, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                            .withInteractions(List.of(interaction))
-                            .initAuthenticationSession());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInteractions(List.of(interaction)));
+
+            var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
             assertEquals(expectedException, exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidInitialCallbackUrlArgumentProvider.class)
         void initAuthenticationSession_initialCallbackUrlIsInvalid_throwException(String url, String expectedErrorMessage) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log in")))
-                            .withInitialCallbackUrl(url)
-                            .initAuthenticationSession()
-            );
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInitialCallbackUrl(url));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals(expectedErrorMessage, exception.getMessage());
         }
 
         @Test
         void initAuthenticationSession_signatureAlgorithmParametersIsNull_throwException() {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withHashAlgorithm(null)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession()
-            );
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withHashAlgorithm(null));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'hashAlgorithm' must be set", exception.getMessage());
         }
 
         @Test
         void initAuthenticationSession_signatureAlgorithmParametersHashAlgorithmIsNull_throwException() {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withHashAlgorithm(null)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .initAuthenticationSession()
-            );
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withHashAlgorithm(null));
 
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'hashAlgorithm' must be set", exception.getMessage());
         }
 
         @Test
         void initAuthenticationSession_bothSemanticsIdentifierAndDocumentNumberSet_throwException() {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withRpChallenge(generateBase64String("a".repeat(32)))
-                            .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                            .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                            .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
-                            .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
-                            .initAuthenticationSession()
-            );
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b ->
+                    b.withDocumentNumber("PNOEE-48010010101-MOCK-Q")
+                            .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
 
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Only one of 'semanticsIdentifier' or 'documentNumber' may be set", exception.getMessage());
         }
 
@@ -420,84 +315,77 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
     }
 
+    private DeviceLinkAuthenticationSessionRequestBuilder toDeviceLinkRequestBuilder(UnaryOperator<DeviceLinkAuthenticationSessionRequestBuilder> builder) {
+        return builder.apply(toBaseDeviceLinkRequestBuilder());
+    }
+
+    private DeviceLinkAuthenticationSessionRequestBuilder toBaseDeviceLinkRequestBuilder() {
+        return new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withRpChallenge(generateBase64String("a".repeat(32)))
+                .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")));
+    }
+
     @Nested
     class ValidateRequiredResponseParameters {
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse(sessionId, null, null, null);
-                when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
+            var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse(sessionId, null, null, null);
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
-                initAuthentication();
-            });
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initAuthenticationSession);
             assertEquals("Device link authentication session initialisation response field 'sessionID' is missing or empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionTokenIsNotPresentInTheResponse_throwException(String sessionToken) {
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", sessionToken, null, null);
-                when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(deviceLinkAuthenticationSessionResponse);
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
+            var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", sessionToken, null, null);
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(deviceLinkAuthenticationSessionResponse);
 
-                initAuthentication();
-            });
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initAuthenticationSession);
             assertEquals("Device link authentication session initialisation response field 'sessionToken' is missing or empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", generateBase64String("sessionToken"), sessionSecret, null);
-                when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
+            var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", generateBase64String("sessionToken"), sessionSecret, null);
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
 
-                initAuthentication();
-            });
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initAuthenticationSession);
             assertEquals("Device link authentication session initialisation response field 'sessionSecret' is missing or empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_deviceLinkBaseIsMissingOrBlank_throwException(String deviceLinkBaseValue) {
-            var exception = assertThrows(UnprocessableSmartIdResponseException.class, () -> {
-                var response = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000",generateBase64String("sessionToken"), generateBase64String("sessionSecret"), deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue) );
-                when(connector.initAnonymousDeviceLinkAuthentication(any(AuthenticationSessionRequest.class))).thenReturn(response);
-                initAuthentication();
-            });
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
+            var response = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", generateBase64String("sessionToken"), generateBase64String("sessionSecret"), deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(response);
 
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initAuthenticationSession);
             assertEquals("Device link authentication session initialisation response field 'deviceLinkBase' is missing or empty", exception.getMessage());
-        }
-
-        private void initAuthentication() {
-            new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withRpChallenge(generateBase64String("a".repeat(32)))
-                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                    .initAuthenticationSession();
         }
     }
 
     @Test
     void initAuthenticationSession_withSemanticsIdentifier() {
-        when(connector.initDeviceLinkAuthentication(any(AuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
+        when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
                 .thenReturn(createDynamicLinkAuthenticationResponse());
+        DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
 
-        new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withRpChallenge(generateBase64String("a".repeat(32)))
-                .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
-                .initAuthenticationSession();
+        builder.initAuthenticationSession();
 
         ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
-        verify(connector).initDeviceLinkAuthentication(any(AuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
+        verify(connector).initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
         SemanticsIdentifier capturedSemanticsIdentifier = semanticsIdentifierCaptor.getValue();
 
         assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
@@ -505,20 +393,14 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
     @Test
     void initAuthenticationSession_withDocumentNumber() {
-        when(connector.initDeviceLinkAuthentication(any(AuthenticationSessionRequest.class), any(String.class)))
+        when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(String.class)))
                 .thenReturn(createDynamicLinkAuthenticationResponse());
+        DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withDocumentNumber("PNOEE-48010010101-MOCK-Q"));
 
-        new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withRpChallenge(generateBase64String("a".repeat(32)))
-                .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")))
-                .withDocumentNumber("PNOEE-48010010101-MOCK-Q")
-                .initAuthenticationSession();
+        builder.initAuthenticationSession();
 
         ArgumentCaptor<String> documentNumberCaptor = ArgumentCaptor.forClass(String.class);
-        verify(connector).initDeviceLinkAuthentication(any(AuthenticationSessionRequest.class), documentNumberCaptor.capture());
+        verify(connector).initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), documentNumberCaptor.capture());
         String capturedDocumentNumber = documentNumberCaptor.getValue();
 
         assertEquals("PNOEE-48010010101-MOCK-Q", capturedDocumentNumber);

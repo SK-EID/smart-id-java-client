@@ -75,7 +75,7 @@ import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
 import ee.sk.smartid.rest.SessionStatusPoller;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
@@ -85,7 +85,7 @@ import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.util.DeviceLinkUtil;
+import ee.sk.smartid.util.InteractionUtil;
 
 @Disabled("Replace relying party UUID and name with your own values in setup")
 @SmartIdDemoIntegrationTest
@@ -133,7 +133,7 @@ public class ReadmeIntegrationTest {
                 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
                 // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
-                AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+                DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
                 // Use sessionID to start polling for session status
                 String sessionId = authenticationSessionResponse.sessionID();
@@ -207,7 +207,7 @@ public class ReadmeIntegrationTest {
                 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
                 // Get authentication session request used for starting the authentication session and use it later to validate sessions status response
-                AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+                DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
                 // Use sessionID to start polling for session status
                 String sessionId = authenticationSessionResponse.sessionID();
@@ -279,7 +279,7 @@ public class ReadmeIntegrationTest {
                 // Init authentication session
                 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
                 // Get AuthenticationSessionRequest after the request is made and store for validations
-                AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+                DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
                 String sessionId = authenticationSessionResponse.sessionID();
                 // SessionID is used to query sessions status later
@@ -350,7 +350,7 @@ public class ReadmeIntegrationTest {
                         .withCertificateLevel(CertificateLevel.QSCD)
                         .withSignableData(signableData)
                         .withDocumentNumber(documentNumber)
-                        .withInteractions(signatureInteractions)
+//                        .withInteractions(signatureInteractions)
                         .initSignatureSession();
 
                 // Process the signature response
@@ -375,7 +375,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(DeviceLinkUtil.encodeToBase64(signatureInteractions))
+                        .withInteractions(InteractionUtil.encodeToBase64(signatureInteractions))
                         .buildDeviceLink(sessionSecret);
 
                 // Return URI to be used with QR-code generation library on the frontend side
@@ -478,7 +478,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(DeviceLinkUtil.encodeToBase64(signatureInteractions))
+                        .withInteractions(InteractionUtil.encodeToBase64(signatureInteractions))
                         .buildDeviceLink(sessionSecret);
                 // Display QR-code to the user
 
@@ -526,16 +526,12 @@ public class ReadmeIntegrationTest {
                     .withDocumentNumber(documentNumber)
                     .withRandomChallenge(rpChallenge)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-                    .withAllowedInteractionsOrder(Collections.singletonList(
-                            NotificationInteraction.verificationCodeChoice("Log in?")
-                    ))
+                    .withInteractions(Collections.singletonList(
+                            NotificationInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
-            String sessionId = authenticationSessionResponse.getSessionID();
+            String sessionId = authenticationSessionResponse.sessionID();
             // SessionID is used to query sessions status later
-
-            String verificationCode = authenticationSessionResponse.getVc().getValue();
-            // Display the verification code to the user for confirmation
 
             // Get the session status poller
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -568,7 +564,7 @@ public class ReadmeIntegrationTest {
                     "40504040001"); // identifier (according to country and identity type reference)
 
             // For security reasons a new hash value must be created for each new authentication request
-            String rpChallenge = RpChallengeGenerator.generate();
+            String rpChallenge = RpChallengeGenerator.generate(); // TODO - 10.09.25: generate random challenge and verification code
             // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
 
@@ -577,16 +573,12 @@ public class ReadmeIntegrationTest {
                     .withSemanticsIdentifier(semanticIdentifier)
                     .withRandomChallenge(rpChallenge)
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
-                    .withAllowedInteractionsOrder(Collections.singletonList(
-                            NotificationInteraction.verificationCodeChoice("Log in?")
-                    ))
+                    .withInteractions(Collections.singletonList(
+                            NotificationInteraction.displayTextAndPIN("Log in?")))
                     .initAuthenticationSession();
 
-            String sessionId = authenticationSessionResponse.getSessionID();
+            String sessionId = authenticationSessionResponse.sessionID();
             // SessionID is used to query sessions status later
-
-            String verificationCode = authenticationSessionResponse.getVc().getValue();
-            // Display the verification code to the user for confirmation
 
             // Get the session status poller
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -690,7 +682,7 @@ public class ReadmeIntegrationTest {
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
                     .withAllowedInteractionsOrder(List.of(
-                            NotificationInteraction.verificationCodeChoice("Please sign the document"))
+                            NotificationInteraction.confirmationMessage("Please sign the document"))
                     )
                     .initSignatureSession();
 

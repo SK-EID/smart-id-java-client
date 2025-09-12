@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.util;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,27 +26,38 @@ package ee.sk.smartid;
  * #L%
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.rest.dao.Interaction;
-
-import org.bouncycastle.util.encoders.Base64;
-
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.Interaction;
+
+/**
+ * Utility class for interactions related actions
+ */
 public class InteractionUtil {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private InteractionUtil() {
     }
 
-    public static String encodeInteractionsAsBase64(List<? extends Interaction> interactions) {
+    /**
+     * Encodes list of interactions to Base64 string
+     *
+     * @param interactions list of interactions
+     * @return base64 encoded string
+     * @throws SmartIdClientException if unable to encode interactions
+     */
+    public static String encodeToBase64(List<? extends Interaction> interactions) {
         try {
-            String json = objectMapper.writeValueAsString(interactions);
-            return Base64.toBase64String(json.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to encode interactions to Base64", e);
+            String json = mapper.writeValueAsString(interactions);
+            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        } catch (JsonProcessingException ex) {
+            throw new SmartIdClientException("Unable to encode interactions to Base64", ex);
         }
     }
 }

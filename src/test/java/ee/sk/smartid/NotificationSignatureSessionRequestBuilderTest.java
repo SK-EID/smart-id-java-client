@@ -77,7 +77,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         builder = new NotificationSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
+                .withAllowedInteractionsOrder(List.of(NotificationInteraction.displayTextAndPIN("Sign?")))
                 .withSignableData(new SignableData("Test data".getBytes()));
     }
 

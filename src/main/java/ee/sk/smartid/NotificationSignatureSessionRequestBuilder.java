@@ -44,7 +44,7 @@ import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
-import ee.sk.smartid.util.NotificationUtil;
+import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
 public class NotificationSignatureSessionRequestBuilder {
@@ -60,7 +60,7 @@ public class NotificationSignatureSessionRequestBuilder {
     private CertificateLevel certificateLevel;
     private String nonce;
     private Set<String> capabilities;
-    private List<NotificationInteraction> allowedInteractionsOrder;
+    private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private SignatureAlgorithm signatureAlgorithm;
     private DigestInput digestInput;
@@ -158,7 +158,7 @@ public class NotificationSignatureSessionRequestBuilder {
      * @return this builder
      */
     public NotificationSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<NotificationInteraction> allowedInteractionsOrder) {
-        this.allowedInteractionsOrder = allowedInteractionsOrder;
+        this.interactions = allowedInteractionsOrder;
         return this;
     }
 
@@ -254,7 +254,7 @@ public class NotificationSignatureSessionRequestBuilder {
                 signatureProtocolParameters,
                 nonce,
                 capabilities,
-                NotificationUtil.encodeToBase64(allowedInteractionsOrder),
+                InteractionUtil.encodeToBase64(interactions),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 null
         );
@@ -275,10 +275,10 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private void validateAllowedInteractions() {
-        if (allowedInteractionsOrder == null || allowedInteractionsOrder.isEmpty()) {
+        if (interactions == null || interactions.isEmpty()) {
             throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
         }
-        allowedInteractionsOrder.forEach(Interaction::validate);
+        interactions.forEach(Interaction::validate);
     }
 
     private void validateResponseParameters(NotificationSignatureSessionResponse response) {

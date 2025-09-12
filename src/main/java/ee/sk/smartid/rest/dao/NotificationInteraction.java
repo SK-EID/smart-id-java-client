@@ -26,19 +26,27 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
+import static ee.sk.smartid.rest.dao.NotificationInteractionFlow.CONFIRMATION_MESSAGE;
 import static ee.sk.smartid.rest.dao.NotificationInteractionFlow.CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE;
-import static ee.sk.smartid.rest.dao.NotificationInteractionFlow.VERIFICATION_CODE_CHOICE;
+import static ee.sk.smartid.rest.dao.NotificationInteractionFlow.DISPLAY_TEXT_AND_PIN;
 
+// TODO - 12.09.25: rework this class
 public class NotificationInteraction extends Interaction {
 
     public NotificationInteraction(NotificationInteractionFlow notificationInteractionFlow) {
         this.type = notificationInteractionFlow;
     }
 
-    public static NotificationInteraction verificationCodeChoice(String displayText60) {
-        var interaction = new NotificationInteraction(VERIFICATION_CODE_CHOICE);
+    public static NotificationInteraction displayTextAndPIN(String displayText60) {
+        var interaction = new NotificationInteraction(DISPLAY_TEXT_AND_PIN);
         interaction.displayText60 = displayText60;
         return interaction;
+    }
+
+    public static NotificationInteraction confirmationMessage(String displayText200) {
+        var notificationInteraction = new NotificationInteraction(CONFIRMATION_MESSAGE);
+        notificationInteraction.displayText200 = displayText200;
+        return notificationInteraction;
     }
 
     public static NotificationInteraction confirmationMessageAndVerificationCodeChoice(String displayText200) {
@@ -49,14 +57,14 @@ public class NotificationInteraction extends Interaction {
 
     @Override
     protected void validateInteractionsDisplayText60() {
-        if (getType() == VERIFICATION_CODE_CHOICE) {
+        if (getType() == DISPLAY_TEXT_AND_PIN) {
             validateDisplayText60();
         }
     }
 
     @Override
     protected void validateInteractionsDisplayText200() {
-        if (getType() == CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE) {
+        if (getType() == CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE || getType() == CONFIRMATION_MESSAGE) {
             validateDisplayText200();
         }
     }

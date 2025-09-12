@@ -26,7 +26,6 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
@@ -34,24 +33,22 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.rest.dao.VerificationCode;
+import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
- * Class for building a notification authentication session request
+ * Class for building a notification-based authentication session request
  */
 public class NotificationAuthenticationSessionRequestBuilder {
 
@@ -64,7 +61,6 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private AuthenticationCertificateLevel certificateLevel;
     private String rpChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
-    private String nonce;
     private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
@@ -138,24 +134,13 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the nonce
+     * Sets the interactions
      *
-     * @param nonce the nonce
+     * @param interactions the notification interactions
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withNonce(String nonce) {
-        this.nonce = nonce;
-        return this;
-    }
-
-    /**
-     * Sets the allowed interactions order
-     *
-     * @param allowedInteractionsOrder the allowed interactions order
-     * @return this builder
-     */
-    public NotificationAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<NotificationInteraction> allowedInteractionsOrder) {
-        this.interactions = allowedInteractionsOrder;
+    public NotificationAuthenticationSessionRequestBuilder withInteractions(List<NotificationInteraction> interactions) {
+        this.interactions = interactions;
         return this;
     }
 
@@ -219,14 +204,14 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @return init session response
      */
     public NotificationAuthenticationSessionResponse initAuthenticationSession() {
-        validateRequestParameters();
-        AuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
+        validateRequestParameters(); // TODO - 11.09.25: update validation message
+        NotificationAuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
         NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(notificationAuthenticationSessionResponse);
         return notificationAuthenticationSessionResponse;
     }
 
-    private NotificationAuthenticationSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
+    private NotificationAuthenticationSessionResponse initAuthenticationSession(NotificationAuthenticationSessionRequest authenticationRequest) {
         if (semanticsIdentifier != null) {
             return connector.initNotificationAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
@@ -246,7 +231,6 @@ public class NotificationAuthenticationSessionRequestBuilder {
             throw new SmartIdClientException("Parameter relyingPartyName must be set");
         }
         validateSignatureParameters();
-        validateNonce();
         validateAllowedInteractionOrder();
     }
 
@@ -276,20 +260,6 @@ public class NotificationAuthenticationSessionRequestBuilder {
         }
     }
 
-    private void validateNonce() {
-        if (nonce == null) {
-            return;
-        }
-        if (nonce.isEmpty()) {
-            logger.error("Parameter nonce value has to be at least 1 character long");
-            throw new SmartIdClientException("Parameter nonce value has to be at least 1 character long");
-        }
-        if (nonce.length() > 30) {
-            logger.error("Nonce cannot be longer that 30 chars");
-            throw new SmartIdClientException("Nonce cannot be longer that 30 chars");
-        }
-    }
-
     private void validateAllowedInteractionOrder() {
         if (interactions == null || interactions.isEmpty()) {
             logger.error("Parameter allowedInteractionsOrder must be set");
@@ -298,59 +268,29 @@ public class NotificationAuthenticationSessionRequestBuilder {
         interactions.forEach(Interaction::validate);
     }
 
-    private AuthenticationSessionRequest createAuthenticationRequest() {
+    private NotificationAuthenticationSessionRequest createAuthenticationRequest() {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(rpChallenge,
                 signatureAlgorithm.getAlgorithmName(),
                 new SignatureAlgorithmParameters("SHA-512"));
 
-        return new AuthenticationSessionRequest(
+        return new NotificationAuthenticationSessionRequest(
                 relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
-                SignatureProtocol.ACSP_V2,
+                SignatureProtocol.ACSP_V2.name(),
                 signatureProtocolParameters,
-                encodeInteractionsToBase64(interactions),
+                InteractionUtil.encodeToBase64(interactions),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 capabilities,
-                nonce
+                "numeric4" // TODO - 10.09.25: turn into an enum
         );
     }
 
     private void validateResponseParameters(NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse) {
-        if (StringUtil.isEmpty(notificationAuthenticationSessionResponse.getSessionID())) {
+        if (StringUtil.isEmpty(notificationAuthenticationSessionResponse.sessionID())) {
             logger.error("Session ID is missing from the response");
             throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
         }
-
-        VerificationCode verificationCode = notificationAuthenticationSessionResponse.getVc();
-        if (verificationCode == null) {
-            logger.error("VC object is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC object is missing from the response");
-        }
-
-        String vcType = verificationCode.getType();
-        if (StringUtil.isEmpty(vcType)) {
-            logger.error("VC type is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC type is missing from the response");
-        }
-
-        if (!VerificationCode.ALPHA_NUMERIC_4.equals(vcType)) {
-            logger.error("Unsupported VC type: {}", vcType);
-            throw new UnprocessableSmartIdResponseException("Unsupported VC type: " + vcType);
-        }
-
-        if (StringUtil.isEmpty(verificationCode.getValue())) {
-            logger.error("VC value is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC value is missing from the response");
-        }
     }
 
-    private String encodeInteractionsToBase64(List<NotificationInteraction> interactions) {
-        try {
-            var mapper = new ObjectMapper();
-            return Base64.getEncoder().encodeToString(mapper.writeValueAsString(interactions).getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException e) {
-            throw new SmartIdClientException("Unable to encode interactions to base64", e);
-        }
-    }
 }

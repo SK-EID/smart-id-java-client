@@ -46,7 +46,7 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithm;
@@ -56,6 +56,7 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.util.InteractionUtil;
 
 class AuthenticationResponseValidatorTest {
 
@@ -77,7 +78,7 @@ class AuthenticationResponseValidatorTest {
     void validate() {
         String rpChallenge = "";
         SessionStatus sessionStatus = new SessionStatus();
-        AuthenticationSessionRequest authenticationSessionRequest = toAuthenticationSessionRequest("QUALIFIED");
+        DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = toAuthenticationSessionRequest("QUALIFIED");
         AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo", null);
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -210,14 +211,14 @@ class AuthenticationResponseValidatorTest {
         return sessionStatus;
     }
 
-    private static AuthenticationSessionRequest toAuthenticationSessionRequest(String certificateLevel) {
-        return new AuthenticationSessionRequest(
+    private static DeviceLinkAuthenticationSessionRequest toAuthenticationSessionRequest(String certificateLevel) {
+        return new DeviceLinkAuthenticationSessionRequest(
                 "00000000-0000-0000-0000-000000000001",
                 "DEMO",
                 certificateLevel,
                 SignatureProtocol.ACSP_V2,
                 new AcspV2SignatureProtocolParameters("rpChallenge", SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
-                InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
                 null,
                 null,
                 null);
