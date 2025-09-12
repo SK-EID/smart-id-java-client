@@ -30,11 +30,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
@@ -53,8 +49,6 @@ import ee.sk.smartid.util.StringUtil;
  * Class for building a notification-based authentication session request
  */
 public class NotificationAuthenticationSessionRequestBuilder {
-
-    private static final Logger logger = LoggerFactory.getLogger(NotificationAuthenticationSessionRequestBuilder.class);
 
     private final SmartIdConnector connector;
 
@@ -116,6 +110,8 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * Sets the random challenge
      * <p>
      * The provided random challenge must be a Base64 encoded string
+     * <p>
+     * Use {@link ee.sk.smartid.RpChallengeGenerator#generate()} to generate a valid random challenge
      *
      * @param randomChallenge the signature protocol parameters
      * @return this builder
@@ -218,7 +214,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @return init session response
      */
     public NotificationAuthenticationSessionResponse initAuthenticationSession() {
-        validateRequestParameters(); // TODO - 11.09.25: update validation message
+        validateRequestParameters();
         NotificationAuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
         NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(notificationAuthenticationSessionResponse);
@@ -231,21 +227,19 @@ public class NotificationAuthenticationSessionRequestBuilder {
         } else if (documentNumber != null) {
             return connector.initNotificationAuthentication(authenticationRequest, documentNumber);
         } else {
-            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set.");
+            throw new SmartIdRequestSetupException("Either documentNumber or semanticsIdentifier must be set.");
         }
     }
 
     private void validateRequestParameters() {
         if (StringUtil.isEmpty(relyingPartyUUID)) {
-            logger.error("Parameter relyingPartyUUID must be set");
-            throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyName)) {
-            logger.error("Parameter relyingPartyName must be set");
-            throw new SmartIdClientException("Parameter relyingPartyName must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
         }
         validateSignatureParameters();
-        validateAllowedInteractionOrder();
+        validateInteractions();
     }
 
     private void validateSignatureParameters() {
@@ -268,10 +262,9 @@ public class NotificationAuthenticationSessionRequestBuilder {
         }
     }
 
-    private void validateAllowedInteractionOrder() {
+    private void validateInteractions() {
         if (interactions == null || interactions.isEmpty()) {
-            logger.error("Parameter allowedInteractionsOrder must be set");
-            throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         interactions.forEach(Interaction::validate);
     }

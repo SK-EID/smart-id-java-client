@@ -72,62 +72,78 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         connector = mock(SmartIdConnector.class);
     }
 
+    @Test
+    void initAuthenticationSession_ok() {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder = toBaseNotificationAuthenticationSessionRequestBuilder();
+
+        builder.initAuthenticationSession();
+
+        ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
+        verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
+        NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
+
+        assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
+        assertEquals("DEMO", request.relyingPartyName());
+        assertEquals(SignatureProtocol.ACSP_V2.name(), request.signatureProtocol());
+        assertNotNull(request.signatureProtocolParameters());
+        assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
+        assertNotNull(request.interactions());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(CertificateLevelArgumentProvider.class)
+    void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withCertificateLevel(certificateLevel));
+
+        builder.initAuthenticationSession();
+
+        ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
+        verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
+        NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
+
+        assertEquals(expectedValue, request.certificateLevel());
+    }
+
+    @ParameterizedTest
+    @EnumSource
+    void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
+
+        builder.initAuthenticationSession();
+
+        ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
+        verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
+        NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
+
+        assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
+    }
+
+    @ParameterizedTest
+    @EnumSource
+    void initAuthenticationSession_hashAlgorithm_ok(HashAlgorithm expectedHashAlgorithm) {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder =
+                toNotificationAuthenticationSessionRequestBuilder(b -> b.withHashAlgorithm(expectedHashAlgorithm));
+
+        builder.initAuthenticationSession();
+
+        ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
+        verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
+        NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
+
+        assertEquals(expectedHashAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
+    }
+
     @Nested
     class ValidateRequiredRequestParameters {
-
-        @Test
-        void initAuthenticationSession_ok() {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(createNotificationAuthenticationResponse());
-            NotificationAuthenticationSessionRequestBuilder builder = toBaseNotificationAuthenticationSessionRequestBuilder();
-
-            builder.initAuthenticationSession();
-
-            ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
-            verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
-            NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
-            assertEquals("DEMO", request.relyingPartyName());
-            assertEquals(SignatureProtocol.ACSP_V2.name(), request.signatureProtocol());
-            assertNotNull(request.signatureProtocolParameters());
-            assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
-            assertNotNull(request.interactions());
-        }
-
-        @ParameterizedTest
-        @ArgumentsSource(CertificateLevelArgumentProvider.class)
-        void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(createNotificationAuthenticationResponse());
-            NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withCertificateLevel(certificateLevel));
-
-            builder.initAuthenticationSession();
-
-            ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
-            verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
-            NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertEquals(expectedValue, request.certificateLevel());
-        }
-
-        @ParameterizedTest
-        @EnumSource
-        void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(createNotificationAuthenticationResponse());
-            NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm));
-
-            builder.initAuthenticationSession();
-
-            ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
-            verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
-            NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertEquals(signatureAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithm());
-        }
 
         @ParameterizedTest
         @ValueSource(booleans = {true, false})
         void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(createNotificationAuthenticationResponse());
+            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
             NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withShareMdClientIpAddress(ipRequested));
 
             builder.initAuthenticationSession();
@@ -143,7 +159,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CapabilitiesArgumentProvider.class)
         void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(createNotificationAuthenticationResponse());
+            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
             NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withCapabilities(capabilities));
 
             builder.initAuthenticationSession();
@@ -157,7 +173,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
 
         @Test
         void initAuthenticationSession_withSemanticsIdentifier() {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(createNotificationAuthenticationResponse());
+            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(toNotificationAuthenticationResponse());
             NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(
                     b -> b.withDocumentNumber(null).withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
 
@@ -177,7 +193,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     toNotificationAuthenticationSessionRequestBuilder(b -> b.withRelyingPartyUUID(relyingPartyUUID));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
-            assertEquals("Parameter relyingPartyUUID must be set", exception.getMessage());
+            assertEquals("Value for 'relyingPartyUUID' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -187,7 +203,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     toNotificationAuthenticationSessionRequestBuilder(b -> b.withRelyingPartyName(relyingPartyName));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
-            assertEquals("Parameter relyingPartyName must be set", exception.getMessage());
+            assertEquals("Value for 'relyingPartyName' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -219,14 +235,23 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             assertEquals("Value for 'signatureAlgorithm' must be set", exception.getMessage());
         }
 
+        @Test
+        void initAuthenticationSession_hashAlgorithmIsSetToNull_throwException() {
+            NotificationAuthenticationSessionRequestBuilder builder =
+                    toNotificationAuthenticationSessionRequestBuilder(b -> b.withHashAlgorithm(null));
+
+            var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
+            assertEquals("Value for 'hashAlgorithm' must be set", exception.getMessage());
+        }
+
         @ParameterizedTest
-        @NullAndEmptySource
-        void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<NotificationInteraction> interactions) {
+        @NullAndEmptySource // TODO - 12.09.25: fix name
+        void initAuthenticationSession_interactionsAreEmpty_throwException(List<NotificationInteraction> interactions) {
             NotificationAuthenticationSessionRequestBuilder builder =
                     toNotificationAuthenticationSessionRequestBuilder(b -> b.withInteractions(interactions));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
-            assertEquals("Parameter allowedInteractionsOrder must be set", exception.getMessage());
+            assertEquals("Value for 'interactions' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -249,19 +274,6 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         }
     }
 
-    private NotificationAuthenticationSessionRequestBuilder toNotificationAuthenticationSessionRequestBuilder(UnaryOperator<NotificationAuthenticationSessionRequestBuilder> builder) {
-        return builder.apply(toBaseNotificationAuthenticationSessionRequestBuilder());
-    }
-
-    private NotificationAuthenticationSessionRequestBuilder toBaseNotificationAuthenticationSessionRequestBuilder() {
-        return new NotificationAuthenticationSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withRandomChallenge(generateBase64String("a".repeat(32)))
-                .withInteractions(Collections.singletonList(NotificationInteraction.displayTextAndPIN("Verify the code")))
-                .withDocumentNumber("PNOEE-1234567890-MOCK-Q");
-    }
-
     @Nested
     class ValidateRequiredResponseParameters {
 
@@ -277,7 +289,20 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         }
     }
 
-    private NotificationAuthenticationSessionResponse createNotificationAuthenticationResponse() {
+    private NotificationAuthenticationSessionRequestBuilder toNotificationAuthenticationSessionRequestBuilder(UnaryOperator<NotificationAuthenticationSessionRequestBuilder> builder) {
+        return builder.apply(toBaseNotificationAuthenticationSessionRequestBuilder());
+    }
+
+    private NotificationAuthenticationSessionRequestBuilder toBaseNotificationAuthenticationSessionRequestBuilder() {
+        return new NotificationAuthenticationSessionRequestBuilder(connector)
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withRandomChallenge(generateBase64String("a".repeat(32)))
+                .withInteractions(Collections.singletonList(NotificationInteraction.displayTextAndPIN("Verify the code")))
+                .withDocumentNumber("PNOEE-1234567890-MOCK-Q");
+    }
+
+    private NotificationAuthenticationSessionResponse toNotificationAuthenticationResponse() {
         return new NotificationAuthenticationSessionResponse("00000000-0000-0000-0000-000000000000");
     }
 
@@ -326,7 +351,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
                     Arguments.of(Named.of("provided text is null", NotificationInteraction.displayTextAndPIN(null)),
-                            "displayText60 cannot be null for AllowedInteractionOrder of type DISPLAY_TEXT_AND_PIN"),
+                            "displayText60 cannot be null for AllowedInteractionOrder of type DISPLAY_TEXT_AND_PIN"), // TODO - 13.09.25: update exception messages
                     Arguments.of(Named.of("provided text is longer than allowed 60", NotificationInteraction.displayTextAndPIN("a".repeat(61))),
                             "displayText60 must not be longer than 60 characters"),
                     Arguments.of(Named.of("provided text is null", NotificationInteraction.confirmationMessage(null)),

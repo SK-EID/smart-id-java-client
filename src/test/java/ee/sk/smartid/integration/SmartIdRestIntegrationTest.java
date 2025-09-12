@@ -137,8 +137,7 @@ class SmartIdRestIntegrationTest {
                         "QUALIFIED",
                         SignatureProtocol.ACSP_V2,
                         signatureParameters,
-                        null,
-//                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))), // TODO - 11.09.25: fix
+                        InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
                         null,
                         null,
                         null);
@@ -211,8 +210,7 @@ class SmartIdRestIntegrationTest {
                         signatureProtocolParameters,
                         null,
                         null,
-                        null,
-//                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))), // TODO - 11.09.25: fix
+                        InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!"))),
                         null,
                         null
                 );
@@ -262,8 +260,7 @@ class SmartIdRestIntegrationTest {
                         "QUALIFIED",
                         SignatureProtocol.ACSP_V2.name(),
                         signatureParameters,
-                        null,
-//                        InteractionUtil.encodeInteractionsAsBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))), // TODO - 11.09.25: fix
+                        InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
                         new RequestProperties(true),
                         null,
                         "numeric4"
