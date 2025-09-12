@@ -197,7 +197,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     toNotificationAuthenticationSessionRequestBuilder(b -> b.withRandomChallenge(randomChallenge));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
-            assertEquals("Parameter randomChallenge must be set", exception.getMessage());
+            assertEquals("Value for 'rpChallenge' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -216,7 +216,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     toNotificationAuthenticationSessionRequestBuilder(b -> b.withSignatureAlgorithm(null));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
-            assertEquals("Parameter signatureAlgorithm must be set", exception.getMessage());
+            assertEquals("Value for 'signatureAlgorithm' must be set", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -273,7 +273,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             NotificationAuthenticationSessionRequestBuilder builder = toBaseNotificationAuthenticationSessionRequestBuilder();
 
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initAuthenticationSession);
-            assertEquals("Session ID is missing from the response", exception.getMessage());
+            assertEquals("Notification-based authentication session initialisation response field 'sessionID' is missing or empty", exception.getMessage());
         }
     }
 
@@ -311,12 +311,12 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(
-                    Arguments.of(Named.of("provided string is not in Base64 format", "invalid value"),
-                            "Parameter randomChallenge is not a valid Base64 encoded string"),
-                    Arguments.of(Named.of("provided value sizes is less than allowed", Base64.toBase64String("a".repeat(31).getBytes())),
-                            "Size of parameter randomChallenge must be between 32 and 64 bytes"),
-                    Arguments.of(Named.of("provided value sizes exceeds max range value", Base64.toBase64String("a".repeat(65).getBytes())),
-                            "Size of parameter randomChallenge must be between 32 and 64 bytes")
+                    Arguments.of(Named.of("provided string is not in Base64 encoded", "invalid value"),
+                            "Value for 'rpChallenge' must be Base64-encoded string"),
+                    Arguments.of(Named.of("provided value sizes is less than allowed", Base64.toBase64String("a".repeat(30).getBytes())),
+                            "Value for 'rpChallenge' must have length between 44 and 88 characters"),
+                    Arguments.of(Named.of("provided value sizes exceeds max range value", Base64.toBase64String("a".repeat(67).getBytes())),
+                            "Value for 'rpChallenge' must have length between 44 and 88 characters")
             );
         }
     }

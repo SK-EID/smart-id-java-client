@@ -7,7 +7,7 @@
     "rpChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
     "signatureAlgorithm": "rsassa-pss",
     "signatureAlgorithmParameters": {
-      "hashAlgorithm": "SHA-512"
+      "hashAlgorithm": "SHA3-512"
     }
   },
   "interactions": "W3sidHlwZSI6ImNvbmZpcm1hdGlvbk1lc3NhZ2UiLCJkaXNwbGF5VGV4dDIwMCI6IkxvZ2luPyJ9XQ==",

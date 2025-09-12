@@ -64,6 +64,7 @@ import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.FileTrustedCAStoreBuilder;
 import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.QrCodeGenerator;
+import ee.sk.smartid.RpChallenge;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
@@ -74,6 +75,7 @@ import ee.sk.smartid.SignatureValueValidatorImpl;
 import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
+import ee.sk.smartid.VerificationCodeCalculator;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
@@ -116,7 +118,7 @@ public class ReadmeIntegrationTest {
             @Test
             void anonymousAuthentication_withApp2App() {
                 // For security reasons a new hash value must be created for each new authentication request
-                String rpChallenge = RpChallengeGenerator.generate();
+                String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
                 // Store generated rpChallenge only on backend side. Do not expose it to the client side.
                 // Used for validating authentication sessions status OK response
 
@@ -191,7 +193,7 @@ public class ReadmeIntegrationTest {
                         "40504040001"); // identifier (according to country and identity type reference)
 
                 // For security reasons a new random challenge must be created for each new authentication request
-                String rpChallenge = RpChallengeGenerator.generate();
+                String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
                 // Store generated rpChallenge only backend side. Do not expose it to the client side.
                 // Used for validating authentication sessions status OK response
 
@@ -264,7 +266,7 @@ public class ReadmeIntegrationTest {
                 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
                 // For security reasons a new random challenge must be created for each new authentication request
-                String rpChallenge = RpChallengeGenerator.generate();
+                String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
                 // Store generated rpChallenge only on backend side. Do not expose it to the client side.
                 // Used for validating authentication session status OK response
 
@@ -516,15 +518,18 @@ public class ReadmeIntegrationTest {
         void authentication_withDocumentNumber() {
             String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
-            // For security reasons a new hash value must be created for each new authentication request
-            String rpChallenge = RpChallengeGenerator.generate();
+            // For security reasons a new RpChallenge must be created for each new authentication request
+            RpChallenge rpChallenge = RpChallengeGenerator.generate();
             // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
+
+            // Generate verification code to be displayed to the user
+            String verificationCode = VerificationCodeCalculator.calculate(rpChallenge.value());
 
             NotificationAuthenticationSessionResponse authenticationSessionResponse = smartIdClient
                     .createNotificationAuthentication()
                     .withDocumentNumber(documentNumber)
-                    .withRandomChallenge(rpChallenge)
+                    .withRandomChallenge(rpChallenge.toBase64EncodedValue())
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
                             NotificationInteraction.displayTextAndPIN("Log in?")))
@@ -563,15 +568,18 @@ public class ReadmeIntegrationTest {
                     SemanticsIdentifier.CountryCode.LT, // 2 character ISO 3166-1 alpha-2 country code
                     "40504040001"); // identifier (according to country and identity type reference)
 
-            // For security reasons a new hash value must be created for each new authentication request
-            String rpChallenge = RpChallengeGenerator.generate(); // TODO - 10.09.25: generate random challenge and verification code
+            // For security reasons a new RpChallenge must be created for each new authentication request
+            RpChallenge rpChallenge = RpChallengeGenerator.generate();
             // Store generated rpChallenge only on backend side. Do not expose it to the client side.
             // Used for validating authentication sessions status OK response
+
+            // Generate verification code to be displayed to the user
+            String verificationCode = VerificationCodeCalculator.calculate(rpChallenge.value());
 
             NotificationAuthenticationSessionResponse authenticationSessionResponse = smartIdClient
                     .createNotificationAuthentication()
                     .withSemanticsIdentifier(semanticIdentifier)
-                    .withRandomChallenge(rpChallenge)
+                    .withRandomChallenge(rpChallenge.toBase64EncodedValue())
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
                             NotificationInteraction.displayTextAndPIN("Log in?")))

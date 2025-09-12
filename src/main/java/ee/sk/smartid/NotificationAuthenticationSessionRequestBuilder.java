@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.Interaction;
@@ -44,6 +45,7 @@ import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.rest.dao.VerificationCodeType;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
@@ -61,6 +63,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private AuthenticationCertificateLevel certificateLevel;
     private String rpChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
     private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
@@ -130,6 +133,17 @@ public class NotificationAuthenticationSessionRequestBuilder {
      */
     public NotificationAuthenticationSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
         this.signatureAlgorithm = signatureAlgorithm;
+        return this;
+    }
+
+    /**
+     * Sets the hash algorithm
+     *
+     * @param hashAlgorithm the hash algorithm
+     * @return this builder
+     */
+    public NotificationAuthenticationSessionRequestBuilder withHashAlgorithm(HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
         return this;
     }
 
@@ -236,27 +250,21 @@ public class NotificationAuthenticationSessionRequestBuilder {
 
     private void validateSignatureParameters() {
         if (StringUtil.isEmpty(rpChallenge)) {
-            logger.error("Parameter randomChallenge must be set");
-            throw new SmartIdClientException("Parameter randomChallenge must be set");
+            throw new SmartIdRequestSetupException("Value for 'rpChallenge' cannot be empty");
         }
-        byte[] challenge = getDecodedRandomChallenge();
-        if (challenge.length < 32 || challenge.length > 64) {
-            logger.error("Size of parameter randomChallenge must be between 32 and 64 bytes");
-            throw new SmartIdClientException("Size of parameter randomChallenge must be between 32 and 64 bytes");
+        try {
+            Base64.getDecoder().decode(rpChallenge);
+        } catch (IllegalArgumentException e) {
+            throw new SmartIdRequestSetupException("Value for 'rpChallenge' must be Base64-encoded string", e);
+        }
+        if (rpChallenge.length() < 44 || rpChallenge.length() > 88) {
+            throw new SmartIdRequestSetupException("Value for 'rpChallenge' must have length between 44 and 88 characters");
         }
         if (signatureAlgorithm == null) {
-            logger.error("Parameter signatureAlgorithm must be set");
-            throw new SmartIdClientException("Parameter signatureAlgorithm must be set");
+            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
         }
-    }
-
-    private byte[] getDecodedRandomChallenge() {
-        Base64.Decoder decoder = Base64.getDecoder();
-        try {
-            return decoder.decode(rpChallenge);
-        } catch (IllegalArgumentException e) {
-            logger.error("Parameter randomChallenge is not a valid Base64 encoded string");
-            throw new SmartIdClientException("Parameter randomChallenge is not a valid Base64 encoded string");
+        if (hashAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Value for 'hashAlgorithm' must be set");
         }
     }
 
@@ -271,7 +279,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private NotificationAuthenticationSessionRequest createAuthenticationRequest() {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(rpChallenge,
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters("SHA-512"));
+                new SignatureAlgorithmParameters(hashAlgorithm.getAlgorithmName()));
 
         return new NotificationAuthenticationSessionRequest(
                 relyingPartyUUID,
@@ -282,15 +290,13 @@ public class NotificationAuthenticationSessionRequestBuilder {
                 InteractionUtil.encodeToBase64(interactions),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 capabilities,
-                "numeric4" // TODO - 10.09.25: turn into an enum
+                VerificationCodeType.NUMERIC4.getValue()
         );
     }
 
     private void validateResponseParameters(NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse) {
         if (StringUtil.isEmpty(notificationAuthenticationSessionResponse.sessionID())) {
-            logger.error("Session ID is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Notification-based authentication session initialisation response field 'sessionID' is missing or empty");
         }
     }
-
 }

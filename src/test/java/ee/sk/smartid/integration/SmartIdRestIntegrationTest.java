@@ -128,7 +128,7 @@ class SmartIdRestIntegrationTest {
 
             private static DeviceLinkAuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest() {
                 var signatureParameters = new AcspV2SignatureProtocolParameters(
-                        RpChallengeGenerator.generate(),
+                        RpChallengeGenerator.generate().toBase64EncodedValue(),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
@@ -253,7 +253,7 @@ class SmartIdRestIntegrationTest {
 
             private static NotificationAuthenticationSessionRequest toAuthenticationRequest() {
                 var signatureParameters = new AcspV2SignatureProtocolParameters(
-                        RpChallengeGenerator.generate(),
+                        RpChallengeGenerator.generate().toBase64EncodedValue(),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 

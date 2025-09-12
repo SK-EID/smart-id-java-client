@@ -1550,7 +1550,7 @@ class SmartIdRestConnectorTest {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(
                 Base64.toBase64String("a".repeat(32).getBytes()),
                 "rsassa-pss",
-                new SignatureAlgorithmParameters("SHA-512"));
+                new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
         return new NotificationAuthenticationSessionRequest(
                 "00000000-0000-0000-0000-000000000000",

@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,39 +30,40 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 class RpChallengeGeneratorTest {
 
     @Test
     void generate_defaultValueUsed() {
-        String challenge = RpChallengeGenerator.generate();
+        RpChallenge challenge = RpChallengeGenerator.generate();
 
         assertNotNull(challenge);
-        byte[] decodeChallenge = Base64.decode(challenge);
-        assertEquals(64, decodeChallenge.length);
+        assertEquals(64, challenge.value().length);
     }
 
     @ParameterizedTest
     @ValueSource(ints = {32, 43, 59, 64})
     void generate_providedValuesAreInAllowedRange(int allowedValue) {
-        String challenge = RpChallengeGenerator.generate(allowedValue);
+        RpChallenge challenge = RpChallengeGenerator.generate(allowedValue);
+
         assertNotNull(challenge);
-        byte[] decodeChallenge = Base64.decode(challenge);
-        assertEquals(allowedValue, decodeChallenge.length);
+        assertEquals(allowedValue, challenge.value().length);
     }
 
     @Test
     void generate_providedValueIsLessThanAllowed_throwException() {
-        assertThrows(IllegalArgumentException.class, () -> RpChallengeGenerator.generate(31));
+        var ex = assertThrows(SmartIdClientException.class, () -> RpChallengeGenerator.generate(31));
+        assertEquals("Length must be between 32 and 64", ex.getMessage());
     }
 
     @Test
     void generate_providedValueIsMoreThanAllowed_throwException() {
-        assertThrows(IllegalArgumentException.class, () -> RpChallengeGenerator.generate(65));
+        var ex = assertThrows(SmartIdClientException.class, () -> RpChallengeGenerator.generate(65));
+        assertEquals("Length must be between 32 and 64", ex.getMessage());
     }
-
 }
