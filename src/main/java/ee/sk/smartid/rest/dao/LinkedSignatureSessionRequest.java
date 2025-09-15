@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L
@@ -26,38 +26,18 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
+import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.Interaction;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-/**
- * Utility class for interactions related actions
- */
-public class DeviceLinkUtil {
-
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private DeviceLinkUtil() {
-    }
-
-    /**
-     * Encodes list of interactions to Base64 string
-     *
-     * @param interactions list of interactions
-     * @return base64 encoded string
-     * @throws SmartIdClientException if unable to encode interactions
-     */
-    public static String encodeToBase64(List<? extends Interaction> interactions) {
-        try {
-            String json = mapper.writeValueAsString(interactions);
-            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException ex) {
-            throw new SmartIdClientException("Unable to encode interactions to Base64", ex);
-        }
-    }
+public record LinkedSignatureSessionRequest(String relyingPartyUUID,
+                                            String relyingPartyName,
+                                            @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,
+                                            String signatureProtocol,
+                                            RawDigestSignatureProtocolParameters signatureProtocolParameters,
+                                            String linkedSessionID,
+                                            @JsonInclude(JsonInclude.Include.NON_EMPTY) String nonce,
+                                            String interactions,
+                                            @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
+                                            @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities) {
 }

@@ -79,6 +79,17 @@ public class SmartIdClient {
     }
 
     /**
+     * Creates a new builder for creating a linked notification signature session request.
+     *
+     * @return a builder for creating a new linked notification signature session request
+     */
+    public LinkedNotificationSignatureSessionRequestBuilder createLinkedNotificationSignature() {
+        return new LinkedNotificationSignatureSessionRequestBuilder(getSmartIdConnector())
+                .withRelyingPartyUUID(relyingPartyUUID)
+                .withRelyingPartyName(relyingPartyName);
+    }
+
+    /**
      * Creates a new builder for creating a notification certificate choice session request.
      *
      * @return a builder for creating a new notification certificate choice session request

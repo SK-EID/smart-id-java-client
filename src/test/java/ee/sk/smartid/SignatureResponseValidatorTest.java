@@ -90,6 +90,16 @@ class SignatureResponseValidatorTest {
         assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
     }
 
+    @ParameterizedTest
+    @EnumSource(FlowType.class)
+    void validate_flowTypesAreSupported(FlowType flowType) {
+        SessionStatus sessionStatus = toQualifiedSignatureSessionStatus("RAW_DIGEST_SIGNATURE", "rsassa-pss", flowType);
+        sessionStatus.setSignatureProtocol("RAW_DIGEST_SIGNATURE");
+
+        SignatureResponse response = signatureResponseValidator.validate(sessionStatus, CertificateLevel.QUALIFIED);
+        assertEquals("OK", response.getEndResult());
+    }
+
     @Test
     void validate_nqSigning_ok() {
         SessionStatus sessionStatus = toNqignatureSessionStatus();
@@ -491,7 +501,15 @@ class SignatureResponseValidatorTest {
         }
     }
 
-    private static SessionStatus toQualifiedSignatureSessionStatus(String signatureProtocol, String signatureAlgorithm) {
+
+    private static SessionStatus toQualifiedSignatureSessionStatus(String signatureProtocol,
+                                                                   String signatureAlgorithm) {
+        return toQualifiedSignatureSessionStatus(signatureProtocol, signatureAlgorithm, FlowType.QR);
+    }
+
+    private static SessionStatus toQualifiedSignatureSessionStatus(String signatureProtocol,
+                                                                   String signatureAlgorithm,
+                                                                   FlowType flowType) {
         var sessionResult = new SessionResult();
         sessionResult.setEndResult("OK");
         sessionResult.setDocumentNumber("PNOEE-12345678901");
@@ -501,7 +519,7 @@ class SignatureResponseValidatorTest {
         sessionCertificate.setValue(CertificateUtil.getEncodedCertificateData(SIGN_CERT));
 
         var params = toSessionSignatureAlgorithmParams();
-        var sessionSignature = toSessionSignature("expectedDigest", signatureAlgorithm, params);
+        var sessionSignature = toSessionSignature("expectedDigest", signatureAlgorithm, params, flowType);
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setState("COMPLETE");
@@ -524,7 +542,7 @@ class SignatureResponseValidatorTest {
         sessionCertificate.setValue(CertificateUtil.getEncodedCertificateData(NQ_SIGNING_CERTIFICATE));
 
         var params = toSessionSignatureAlgorithmParams();
-        var sessionSignature = toSessionSignature(NQ_SIGNATURE_VALUE, SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), params);
+        var sessionSignature = toSessionSignature(NQ_SIGNATURE_VALUE, SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), params, FlowType.QR);
 
         var sessionStatus = new SessionStatus();
         sessionStatus.setState("COMPLETE");
@@ -539,14 +557,15 @@ class SignatureResponseValidatorTest {
 
     private static SessionSignature toSessionSignature(String signatureValue,
                                                        String signatureAlgorithm,
-                                                       SessionSignatureAlgorithmParameters params) {
+                                                       SessionSignatureAlgorithmParameters params,
+                                                       FlowType flowType) {
         var sessionSignature = new SessionSignature();
         sessionSignature.setValue(signatureValue);
         sessionSignature.setSignatureAlgorithm(signatureAlgorithm);
         sessionSignature.setSignatureAlgorithmParameters(params);
         sessionSignature.setServerRandom("serverRandomValue");
         sessionSignature.setUserChallenge("QWxwaGFFenItMTIzNDU2Nzg5MDEyMzQ1Njc4OTAx");
-        sessionSignature.setFlowType("QR");
+        sessionSignature.setFlowType(flowType.getDescription());
         return sessionSignature;
     }
 

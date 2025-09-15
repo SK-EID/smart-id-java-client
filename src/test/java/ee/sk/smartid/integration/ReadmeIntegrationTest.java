@@ -78,6 +78,7 @@ import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationInteraction;
@@ -736,6 +737,81 @@ public class ReadmeIntegrationTest {
 
             // Validate the certificate
             certificateValidator.validate(certResponse.certificate());
+        }
+    }
+
+    @Nested
+    class LinkedNotificationBasedSignatureSession {
+
+        @Test
+        void signing_withQrCode() {
+            DeviceLinkSessionResponse certificateChoiceSessionResponse = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .initCertificateChoice();
+
+            // Next steps:
+            // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
+            // - Start querying sessions status
+
+            // Use sessionID to start polling for session status
+            String certificateChoiceSessionId = certificateChoiceSessionResponse.sessionID();
+            // Following values are used for generating device link or QR-code
+            String sessionToken = certificateChoiceSessionResponse.sessionToken();
+            // Store sessionSecret only on backend side. Do not expose it to the client side.
+            String sessionSecret = certificateChoiceSessionResponse.sessionSecret();
+            URI deviceLinkBase = certificateChoiceSessionResponse.deviceLinkBase();
+            // Will be used to calculate elapsed time being used in dynamic link and in authCode
+            Instant responseReceivedAt = certificateChoiceSessionResponse.receivedAt();
+
+            // Build the  device link URI
+            // This base URI will be used for QR code or App2App flows
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase(deviceLinkBase.toString())
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                    .withSessionToken(sessionToken)
+                    .withLang("est")
+                    .buildDeviceLink(sessionSecret);
+
+            // Return URI to be used with QR-code generation library on the frontend side
+            // or create QR-code data-URI from device link and return that to the client side
+            String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+            // Use sessionId to poll for certificate choice session status updates
+            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+            SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
+
+            // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
+            assertEquals("COMPLETED", certificateSessionStatus.getState());
+
+            // Validate the certificate choice response
+            CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(new FileTrustedCAStoreBuilder().build());
+            CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
+            CertificateChoiceResponse certificateChoiceResponse = certificateChoiceResponseValidator.validate(certificateSessionStatus);
+
+            // For example construct DataToSign using digidoc4j library and queried certificate
+            // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
+
+            // Create the signable data from DataToSign
+            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
+
+            // Start the linked notification signature session using the sessionID from the certificate choice session
+            LinkedSignatureSessionResponse signatureSessionResponse = smartIdClient.createLinkedNotificationSignature()
+                    .withDocumentNumber(certificateChoiceResponse.getDocumentNumber())
+                    .withLinkedSessionID(certificateChoiceSessionId)
+                    .withSignableData(signableData)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")))
+                    .initSignatureSession();
+
+            // Use sessionId to poll for signature session status updates
+            SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionResponse.sessionID());
+            assertEquals("COMPLETED", signatureSessionStatus.getState());
+
+            // Validate signature response
+            SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
+            SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
+
+            assertNotNull(signatureResponse.getSignatureValue());
         }
     }
 

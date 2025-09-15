@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid.rest.dao;
 
 /*-
  * #%L
@@ -26,38 +26,13 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.Interaction;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * Utility class for interactions related actions
+ * Response for linked notification based signature session initiation.
+ *
+ * @param sessionID The session ID
  */
-public class DeviceLinkUtil {
-
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private DeviceLinkUtil() {
-    }
-
-    /**
-     * Encodes list of interactions to Base64 string
-     *
-     * @param interactions list of interactions
-     * @return base64 encoded string
-     * @throws SmartIdClientException if unable to encode interactions
-     */
-    public static String encodeToBase64(List<? extends Interaction> interactions) {
-        try {
-            String json = mapper.writeValueAsString(interactions);
-            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException ex) {
-            throw new SmartIdClientException("Unable to encode interactions to Base64", ex);
-        }
-    }
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record LinkedSignatureSessionResponse(String sessionID) {
 }
