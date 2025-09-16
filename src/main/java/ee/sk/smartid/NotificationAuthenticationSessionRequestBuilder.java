@@ -30,18 +30,17 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.rest.dao.VerificationCodeType;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
@@ -222,12 +221,15 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     private NotificationAuthenticationSessionResponse initAuthenticationSession(NotificationAuthenticationSessionRequest authenticationRequest) {
+        if (semanticsIdentifier != null && documentNumber != null) {
+            throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
+        } else
         if (semanticsIdentifier != null) {
             return connector.initNotificationAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
             return connector.initNotificationAuthentication(authenticationRequest, documentNumber);
         } else {
-            throw new SmartIdRequestSetupException("Either documentNumber or semanticsIdentifier must be set.");
+            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set.");
         }
     }
 
@@ -266,7 +268,9 @@ public class NotificationAuthenticationSessionRequestBuilder {
         if (interactions == null || interactions.isEmpty()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
-        interactions.forEach(Interaction::validate);
+        if (interactions.stream().map(NotificationInteraction::type).distinct().count() != interactions.size()) {
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
+        }
     }
 
     private NotificationAuthenticationSessionRequest createAuthenticationRequest() {
@@ -280,7 +284,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
                 certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.ACSP_V2.name(),
                 signatureProtocolParameters,
-                InteractionUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 capabilities,
                 VerificationCodeType.NUMERIC4.getValue()

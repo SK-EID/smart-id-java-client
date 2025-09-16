@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid.common.notification.interactions;
 
 /*-
  * #%L
@@ -26,38 +26,32 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.common.InteractionType;
 
 /**
- * Utility class for interactions related actions
+ * Interaction types that can be used in notification-based authentication and signing requests
  */
-public class InteractionUtil {
+public enum NotificationInteractionType implements InteractionType {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    DISPLAY_TEXT_AND_PIN("displayTextAndPIN", 60),
+    CONFIRMATION_MESSAGE("confirmationMessage", 200),
+    CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE("confirmationMessageAndVerificationCodeChoice", 200);
 
-    private InteractionUtil() {
+    private final String code;
+    private final int maxLength;
+
+    NotificationInteractionType(String code, int maxLength) {
+        this.code = code;
+        this.maxLength = maxLength;
     }
 
-    /**
-     * Encodes list of interactions to Base64-encoded string
-     *
-     * @param interactions list of interactions
-     * @return base64 encoded string
-     * @throws SmartIdClientException if unable to encode interactions
-     */
-    public static String encodeToBase64(List<Interaction> interactions) {
-        try {
-            String json = mapper.writeValueAsString(interactions);
-            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException ex) {
-            throw new SmartIdClientException("Unable to encode interactions to Base64", ex);
-        }
+    @Override
+    public String getCode() {
+        return code;
+    }
+
+    @Override
+    public int getMaxLength() {
+        return maxLength;
     }
 }

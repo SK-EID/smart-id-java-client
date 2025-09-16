@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid.util;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,38 +26,24 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
+import java.util.stream.Stream;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.Interaction;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
 
-/**
- * Utility class for interactions related actions
- */
-public class InteractionUtil {
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class DuplicateNotificationInteractionArgumentProvider implements ArgumentsProvider {
 
-    private InteractionUtil() {
-    }
-
-    /**
-     * Encodes list of interactions to Base64-encoded string
-     *
-     * @param interactions list of interactions
-     * @return base64 encoded string
-     * @throws SmartIdClientException if unable to encode interactions
-     */
-    public static String encodeToBase64(List<Interaction> interactions) {
-        try {
-            String json = mapper.writeValueAsString(interactions);
-            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException ex) {
-            throw new SmartIdClientException("Unable to encode interactions to Base64", ex);
-        }
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+        return Stream.of(
+                        List.of(NotificationInteraction.displayTextAndPin("Enter your PIN."),
+                                NotificationInteraction.displayTextAndPin("Enter your PIN.")),
+                        List.of(NotificationInteraction.displayTextAndPin("Provide your PIN"),
+                                NotificationInteraction.displayTextAndPin("Enter your PIN.")))
+                .map(Arguments::of);
     }
 }

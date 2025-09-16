@@ -340,7 +340,7 @@ public class DeviceLinkBuilder {
         if (sessionType != SessionType.CERTIFICATE_CHOICE && StringUtil.isEmpty(digest)) {
             throw new SmartIdClientException("digest must be set for AUTH or SIGN flows");
         }
-        // TODO - 07.09.25: add interactions validation when only for certificate choice case should not be provided, otherwise required
+        // TODO - 07.09.25: add interactions validation when only for certificate choice case should not be provided, otherwise required, fix in SLIB-110
         if (StringUtil.isEmpty(unprotectedLink)) {
             throw new SmartIdClientException("unprotected device-link must not be empty");
         }

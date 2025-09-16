@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid.common;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid.util;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,38 +26,35 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.Interaction;
 
 /**
- * Utility class for interactions related actions
+ * Mapper form converting between different interaction representations
  */
-public class InteractionUtil {
+public final class InteractionsMapper {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    private InteractionUtil() {
+    private InteractionsMapper() {
     }
 
     /**
-     * Encodes list of interactions to Base64-encoded string
+     * Converts from any SmartIdInteraction to Interaction
      *
-     * @param interactions list of interactions
-     * @return base64 encoded string
-     * @throws SmartIdClientException if unable to encode interactions
+     * @param interaction the interaction to be converted
+     * @return interaction to be used in REST request
      */
-    public static String encodeToBase64(List<Interaction> interactions) {
-        try {
-            String json = mapper.writeValueAsString(interactions);
-            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException ex) {
-            throw new SmartIdClientException("Unable to encode interactions to Base64", ex);
-        }
+    public static <T extends SmartIdInteraction> Interaction from(T interaction) {
+        return new Interaction(interaction.type().getCode(), interaction.displayText60(), interaction.displayText200());
+    }
+
+    /**
+     * Converts from any list of SmartIdInteraction to list of Interaction
+     *
+     * @param interactions the interactions to be converted
+     * @return list of interactions to be used in REST request
+     */
+    public static List<Interaction> from(List<? extends SmartIdInteraction> interactions) {
+        return interactions.stream().map(InteractionsMapper::from).toList();
     }
 }

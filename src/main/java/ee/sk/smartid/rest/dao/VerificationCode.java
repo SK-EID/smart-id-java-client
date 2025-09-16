@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VerificationCode implements Serializable {
 
+    @Deprecated // TODO - 16.09.25: will be removed with notification-based signature flow changes
     public static final String ALPHA_NUMERIC_4 = "alphaNumeric4";
 
     private String type;

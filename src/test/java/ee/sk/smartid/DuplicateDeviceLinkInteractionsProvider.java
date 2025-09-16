@@ -1,10 +1,10 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,29 +26,25 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.List;
+import java.util.stream.Stream;
 
-/**
- * Interaction types that can be used in notification-based flows
- */
-public enum NotificationInteractionFlow implements InteractionFlow {
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
 
-    DISPLAY_TEXT_AND_PIN("displayTextAndPIN"),
-    CONFIRMATION_MESSAGE("confirmationMessage"),
-    CONFIRMATION_MESSAGE_AND_VERIFICATION_CODE_CHOICE("confirmationMessageAndVerificationCodeChoice");
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 
-    private final String code;
+public class DuplicateDeviceLinkInteractionsProvider implements ArgumentsProvider {
 
-    NotificationInteractionFlow(String code) {
-        this.code = code;
-    }
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+        var interaction1 = DeviceLinkInteraction.displayTextAndPin("Enter your PIN.");
+        var interaction2 = DeviceLinkInteraction.displayTextAndPin("Enter your PIN.");
 
-    @JsonValue
-    public String getCode() {
-        return code;
-    }
-
-    public boolean is(String typeCodeString) {
-        return this.getCode().equals(typeCodeString);
+        return Stream.of(
+                Arguments.of(List.of(interaction1, interaction1)),
+                Arguments.of(List.of(interaction1, interaction2))
+        );
     }
 }

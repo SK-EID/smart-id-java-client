@@ -60,6 +60,7 @@ import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.CertificateValidator;
 import ee.sk.smartid.CertificateValidatorImpl;
 import ee.sk.smartid.DeviceLinkAuthenticationSessionRequestBuilder;
+import ee.sk.smartid.DeviceLinkSignatureSessionRequestBuilder;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.FileTrustedCAStoreBuilder;
 import ee.sk.smartid.HashAlgorithm;
@@ -76,18 +77,18 @@ import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
 import ee.sk.smartid.VerificationCodeCalculator;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
 @Disabled("Replace relying party UUID and name with your own values in setup")
 @SmartIdDemoIntegrationTest
@@ -129,7 +130,7 @@ public class ReadmeIntegrationTest {
                         .withRpChallenge(rpChallenge)
                         .withInitialCallbackUrl("https://example.com/callback")
                         .withInteractions(Collections.singletonList(
-                                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                                DeviceLinkInteraction.displayTextAndPin("Log in?")
                         ));
                 // Init authentication session
                 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
@@ -144,7 +145,7 @@ public class ReadmeIntegrationTest {
                 // Store sessionSecret only on backend side. Do not expose it to the client side.
                 String sessionSecret = authenticationSessionResponse.sessionSecret();
                 URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
-                // Will be used to calculate elapsed time being used in dynamic link and in authCode
+                // Will be used to calculate elapsed time being used in device link and in authCode
                 Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
                 // Next steps:
@@ -202,7 +203,7 @@ public class ReadmeIntegrationTest {
                         .withSemanticsIdentifier(semanticsIdentifier)
                         .withRpChallenge(rpChallenge)
                         .withInteractions(Collections.singletonList(
-                                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                                DeviceLinkInteraction.displayTextAndPin("Log in?")
                         ));
 
                 // Init authentication session
@@ -218,7 +219,7 @@ public class ReadmeIntegrationTest {
                 // Store sessionSecret only on backend side. Do not expose it to the client side.
                 String sessionSecret = authenticationSessionResponse.sessionSecret();
                 URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
-                // Will be used to calculate elapsed time being used in dynamic link and in authCode
+                // Will be used to calculate elapsed time being used in device link
                 Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
                 // Next steps:
@@ -275,7 +276,7 @@ public class ReadmeIntegrationTest {
                         .withDocumentNumber(documentNumber)
                         .withRpChallenge(rpChallenge)
                         .withInteractions(Collections.singletonList(
-                                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                                DeviceLinkInteraction.displayTextAndPin("Log in?")
                         ));
 
                 // Init authentication session
@@ -346,14 +347,16 @@ public class ReadmeIntegrationTest {
                 // Create the signable data from DataToSign
                 var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
 
-                // Build the dynamic link signature request
-                List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document"));
-                DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
+                // Build the device link signature request
+                List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document"));
+                var deviceLinkSignatureSessionRequestBuilder = smartIdClient.createDeviceLinkSignature()
                         .withCertificateLevel(CertificateLevel.QSCD)
                         .withSignableData(signableData)
                         .withDocumentNumber(documentNumber)
-//                        .withInteractions(signatureInteractions)
-                        .initSignatureSession();
+                        .withInteractions(signatureInteractions);
+                DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
+                // Get SignatureSessionRequest after the request is made and store for validations
+                SignatureSessionRequest signatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
 
                 // Process the signature response
                 String signatureSessionId = signatureSessionResponse.sessionID();
@@ -363,13 +366,14 @@ public class ReadmeIntegrationTest {
                 Instant receivedAt = signatureSessionResponse.receivedAt();
                 URI deviceLinkBase = signatureSessionResponse.deviceLinkBase();
 
-                // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
+                // Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
                 // Start querying sessions status
 
                 // Calculate elapsed seconds from response received time
                 long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
                 // Generate auth code
                 URI deviceLink = smartIdClient.createDynamicContent()
+                        .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.SIGNATURE)
@@ -377,7 +381,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(InteractionUtil.encodeToBase64(signatureInteractions))
+                        .withInteractions(signatureSessionRequest.interactions())
                         .buildDeviceLink(sessionSecret);
 
                 // Return URI to be used with QR-code generation library on the frontend side
@@ -449,14 +453,18 @@ public class ReadmeIntegrationTest {
                         SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
                         "40504040001"); // identifier (according to country and identity type reference)
 
-                // Build the dynamic link signature request
-                List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document"));
-                DeviceLinkSessionResponse signatureSessionResponse = smartIdClient.createDeviceLinkSignature()
+                // Build the device link signature request
+                List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document"));
+                DeviceLinkSignatureSessionRequestBuilder deviceLinkSignatureSessionRequestBuilder = smartIdClient.createDeviceLinkSignature()
                         .withCertificateLevel(CertificateLevel.QUALIFIED)
                         .withSignableData(signableData)
                         .withSemanticsIdentifier(semanticsIdentifier)
-                        .withInteractions(signatureInteractions)
-                        .initSignatureSession();
+                        .withInteractions(signatureInteractions);
+
+                // Init signature session
+                DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
+                // Get SignatureSessionRequest after the request is made and store for validations
+                SignatureSessionRequest request = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
 
                 // Process the signature response
                 String signatureSessionId = signatureSessionResponse.sessionID();
@@ -466,7 +474,7 @@ public class ReadmeIntegrationTest {
                 String sessionSecret = signatureSessionResponse.sessionSecret();
                 Instant receivedAt = signatureSessionResponse.receivedAt();
 
-                // Generate QR-code or dynamic link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
+                // Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
                 // Start querying sessions status
 
                 // Calculate elapsed seconds from response received time
@@ -480,7 +488,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(InteractionUtil.encodeToBase64(signatureInteractions))
+                        .withInteractions(request.interactions()) // interactions string must be the same as in the signature session request
                         .buildDeviceLink(sessionSecret);
                 // Display QR-code to the user
 
@@ -532,7 +540,7 @@ public class ReadmeIntegrationTest {
                     .withRandomChallenge(rpChallenge.toBase64EncodedValue())
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
-                            NotificationInteraction.displayTextAndPIN("Log in?")))
+                            NotificationInteraction.displayTextAndPin("Log in?")))
                     .initAuthenticationSession();
 
             String sessionId = authenticationSessionResponse.sessionID();
@@ -551,7 +559,7 @@ public class ReadmeIntegrationTest {
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
             AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
-                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: authentication request will be fixed with notification-based authentication changes
+                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: authentication request will be fixed with notification-based authentication changes, fix in SLIB-110
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
@@ -582,7 +590,7 @@ public class ReadmeIntegrationTest {
                     .withRandomChallenge(rpChallenge.toBase64EncodedValue())
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
-                            NotificationInteraction.displayTextAndPIN("Log in?")))
+                            NotificationInteraction.displayTextAndPin("Log in?")))
                     .initAuthenticationSession();
 
             String sessionId = authenticationSessionResponse.sessionID();
@@ -600,7 +608,7 @@ public class ReadmeIntegrationTest {
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
             AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
-                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes
+                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes, fix in SLIB-110
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
@@ -760,7 +768,7 @@ public class ReadmeIntegrationTest {
             // Store sessionSecret only on backend side. Do not expose it to the client side.
             String sessionSecret = certificateChoiceSessionResponse.sessionSecret();
             URI deviceLinkBase = certificateChoiceSessionResponse.deviceLinkBase();
-            // Will be used to calculate elapsed time being used in dynamic link and in authCode
+            // Will be used to calculate elapsed time being used in device link and in authCode
             Instant responseReceivedAt = certificateChoiceSessionResponse.receivedAt();
 
             // Build the  device link URI
@@ -800,7 +808,7 @@ public class ReadmeIntegrationTest {
                     .withDocumentNumber(certificateChoiceResponse.getDocumentNumber())
                     .withLinkedSessionID(certificateChoiceSessionId)
                     .withSignableData(signableData)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign it!")))
                     .initSignatureSession();
 
             // Use sessionId to poll for signature session status updates

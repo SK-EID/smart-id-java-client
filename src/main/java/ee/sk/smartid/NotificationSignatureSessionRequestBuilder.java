@@ -32,11 +32,12 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.Interaction;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
@@ -254,7 +255,7 @@ public class NotificationSignatureSessionRequestBuilder {
                 signatureProtocolParameters,
                 nonce,
                 capabilities,
-                InteractionUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 null
         );
@@ -278,7 +279,9 @@ public class NotificationSignatureSessionRequestBuilder {
         if (interactions == null || interactions.isEmpty()) {
             throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
         }
-        interactions.forEach(Interaction::validate);
+        if (interactions.stream().map(NotificationInteraction::type).distinct().count() != interactions.size()) {
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
+        }
     }
 
     private void validateResponseParameters(NotificationSignatureSessionResponse response) {

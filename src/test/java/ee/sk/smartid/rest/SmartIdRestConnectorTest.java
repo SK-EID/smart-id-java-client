@@ -60,6 +60,8 @@ import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.SignatureProtocol;
 import ee.sk.smartid.SmartIdRestServiceStubs;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteractionType;
+import ee.sk.smartid.common.notification.interactions.NotificationInteractionType;
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
 import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
@@ -72,14 +74,13 @@ import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
@@ -1539,7 +1540,7 @@ class SmartIdRestConnectorTest {
                 CertificateLevel.QUALIFIED.name(),
                 SignatureProtocol.ACSP_V2,
                 signatureProtocolParameters,
-                InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Log in?", null))),
                 requestProperties,
                 null,
                 initialCallbackUrl
@@ -1558,7 +1559,7 @@ class SmartIdRestConnectorTest {
                 certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.ACSP_V2.name(),
                 signatureProtocolParameters,
-                InteractionUtil.encodeToBase64(List.of(NotificationInteraction.confirmationMessage("Login?"))),
+                InteractionUtil.encodeToBase64(List.of(new Interaction(NotificationInteractionType.CONFIRMATION_MESSAGE.getCode(), null, "Login?"))),
                 requestProperties,
                 null,
                 "numeric4"
@@ -1581,7 +1582,7 @@ class SmartIdRestConnectorTest {
                 protocolParameters,
                 null,
                 null,
-                InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign the document"))),
+                InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Sign the document", null))),
                 null,
                 null);
     }
@@ -1590,7 +1591,7 @@ class SmartIdRestConnectorTest {
         var protocolParameters = new RawDigestSignatureProtocolParameters("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
                 "rsassa-pss",
                 new SignatureAlgorithmParameters("SHA-512"));
-        var interaction = NotificationInteraction.displayTextAndPIN("Verify the code");
+        var interaction = new Interaction(NotificationInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Verify the code", null);
         return new SignatureSessionRequest("00000000-0000-0000-0000-000000000000",
                 "DEMO",
                 null,

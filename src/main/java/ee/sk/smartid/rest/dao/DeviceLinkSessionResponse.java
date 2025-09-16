@@ -49,9 +49,7 @@ public record DeviceLinkSessionResponse(String sessionID,
                                         String sessionToken,
                                         String sessionSecret,
                                         URI deviceLinkBase,
-                                        Instant receivedAt
-
-) implements Serializable {
+                                        Instant receivedAt) implements Serializable {
 
     @JsonCreator
     public DeviceLinkSessionResponse(@JsonProperty("sessionID") String sessionID,

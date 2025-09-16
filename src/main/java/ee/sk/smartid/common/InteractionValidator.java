@@ -1,10 +1,10 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.common;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,30 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-public interface InteractionFlow {
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
+import ee.sk.smartid.util.StringUtil;
 
-    String getCode();
+/**
+ * Validator for interactions
+ */
+public final class InteractionValidator {
 
-    boolean is(String typeCodeString);
+    private InteractionValidator() {
+    }
+
+    /**
+     * Validates that the text is set and does not exceed the maximum length defined by the type
+     *
+     * @param type the type to be validated
+     * @param text the text to be validated
+     * @param <T>  implementation of InteractionType
+     */
+    public static <T extends InteractionType> void validate(T type, String text) {
+        if (StringUtil.isEmpty(text)) {
+            throw new SmartIdRequestSetupException(String.format("Value for '%s' must be set when type is '%s'", "displayText" + type.getMaxLength(), type));
+        }
+        if (text.length() > type.getMaxLength()) {
+            throw new SmartIdRequestSetupException(String.format("Value for '%s' must not exceed %d characters", "displayText" + type.getMaxLength(), type.getMaxLength()));
+        }
+    }
 }

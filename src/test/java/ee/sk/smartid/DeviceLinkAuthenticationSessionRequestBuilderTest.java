@@ -61,13 +61,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 
 class DeviceLinkAuthenticationSessionRequestBuilderTest {
@@ -85,28 +86,47 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
     class ValidateRequiredRequestParameters {
 
         @Test
-        void initAuthenticationSession_ok() throws Exception {
+        void initAuthenticationSession_anonymousAuthentication_ok() throws Exception {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
-
             DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
-            DeviceLinkSessionResponse response = builder.initAuthenticationSession();
+
+            builder.initAuthenticationSession();
 
             ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
             verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
             DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
 
-            assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
-            assertEquals("DEMO", request.relyingPartyName());
-            assertEquals("QUALIFIED", request.certificateLevel());
-            assertEquals(SignatureProtocol.ACSP_V2, request.signatureProtocol());
-            assertNotNull(request.signatureProtocolParameters());
-            assertNotNull(request.signatureProtocolParameters().rpChallenge());
-            assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
-            assertNotNull(request.interactions());
-            assertTrue(Pattern.matches(BASE64_PATTERN, request.signatureProtocolParameters().rpChallenge()));
+            assertAuthenticationSessionRequest(request);
+        }
 
-            DeviceLinkInteraction[] parsed = parseInteractionsFromBase64(request.interactions());
-            assertTrue(Stream.of(parsed).anyMatch(i -> i.getType().is("displayTextAndPIN")));
+        @Test
+        void initAuthenticationSession_withDocumentNumber_ok() {
+            when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(String.class)))
+                    .thenReturn(createDynamicLinkAuthenticationResponse());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withDocumentNumber("PNOEE-48010010101-MOCK-Q"));
+
+            builder.initAuthenticationSession();
+
+            ArgumentCaptor<String> documentNumberCaptor = ArgumentCaptor.forClass(String.class);
+            verify(connector).initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), documentNumberCaptor.capture());
+            String capturedDocumentNumber = documentNumberCaptor.getValue();
+
+            assertEquals("PNOEE-48010010101-MOCK-Q", capturedDocumentNumber);
+        }
+
+        @Test
+        void initAuthenticationSession_withSemanticsIdentifier() {
+            when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
+                    .thenReturn(createDynamicLinkAuthenticationResponse());
+            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
+
+            builder.initAuthenticationSession();
+
+            ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
+            verify(connector).initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
+            SemanticsIdentifier capturedSemanticsIdentifier = semanticsIdentifierCaptor.getValue();
+
+            assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
         }
 
         @ParameterizedTest
@@ -255,21 +275,12 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @ArgumentsSource(DuplicateInteractionsProvider.class)
+        @ArgumentsSource(DuplicateDeviceLinkInteractionsProvider.class)
         void initAuthenticationSession_duplicateInteractions_throwException(List<DeviceLinkInteraction> duplicateInteractions) {
             DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInteractions(duplicateInteractions));
 
             var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'interactions' cannot contain duplicate types", exception.getMessage());
-        }
-
-        @ParameterizedTest
-        @ArgumentsSource(InvalidInteractionsProvider.class)
-        public void initAuthenticationSession_allowedInteractionsOrderIsInvalid_throwException(DeviceLinkInteraction interaction, String expectedException) {
-            DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInteractions(List.of(interaction)));
-
-            var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
-            assertEquals(expectedException, exception.getMessage());
         }
 
         @ParameterizedTest
@@ -306,26 +317,6 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
             assertEquals("Only one of 'semanticsIdentifier' or 'documentNumber' may be set", exception.getMessage());
         }
-
-        private DeviceLinkInteraction[] parseInteractionsFromBase64(String base64EncodedJson) throws Exception {
-            byte[] decodedBytes = Base64.decode(base64EncodedJson);
-            String json = new String(decodedBytes, StandardCharsets.UTF_8);
-            var mapper = new ObjectMapper();
-            return mapper.readValue(json, DeviceLinkInteraction[].class);
-        }
-    }
-
-    private DeviceLinkAuthenticationSessionRequestBuilder toDeviceLinkRequestBuilder(UnaryOperator<DeviceLinkAuthenticationSessionRequestBuilder> builder) {
-        return builder.apply(toBaseDeviceLinkRequestBuilder());
-    }
-
-    private DeviceLinkAuthenticationSessionRequestBuilder toBaseDeviceLinkRequestBuilder() {
-        return new DeviceLinkAuthenticationSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withRpChallenge(generateBase64String("a".repeat(32)))
-                .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPIN("Log into internet banking system")));
     }
 
     @Nested
@@ -377,33 +368,36 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
     }
 
     @Test
-    void initAuthenticationSession_withSemanticsIdentifier() {
-        when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
-                .thenReturn(createDynamicLinkAuthenticationResponse());
-        DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
+    void getAuthenticationSessionRequest_ok() throws Exception {
+        when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+        DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
 
         builder.initAuthenticationSession();
+        DeviceLinkAuthenticationSessionRequest request = builder.getAuthenticationSessionRequest();
 
-        ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
-        verify(connector).initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
-        SemanticsIdentifier capturedSemanticsIdentifier = semanticsIdentifierCaptor.getValue();
-
-        assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
+        assertAuthenticationSessionRequest(request);
     }
 
     @Test
-    void initAuthenticationSession_withDocumentNumber() {
-        when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(String.class)))
-                .thenReturn(createDynamicLinkAuthenticationResponse());
-        DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withDocumentNumber("PNOEE-48010010101-MOCK-Q"));
+    void getAuthenticationSessionRequest_authenticationNotInitialized_throwsException() {
+        when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+        DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
 
-        builder.initAuthenticationSession();
+        var ex = assertThrows(SmartIdClientException.class, builder::getAuthenticationSessionRequest);
+        assertEquals("Authentication session request has not been initialized yet", ex.getMessage());
+    }
 
-        ArgumentCaptor<String> documentNumberCaptor = ArgumentCaptor.forClass(String.class);
-        verify(connector).initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), documentNumberCaptor.capture());
-        String capturedDocumentNumber = documentNumberCaptor.getValue();
+    private DeviceLinkAuthenticationSessionRequestBuilder toDeviceLinkRequestBuilder(UnaryOperator<DeviceLinkAuthenticationSessionRequestBuilder> builder) {
+        return builder.apply(toBaseDeviceLinkRequestBuilder());
+    }
 
-        assertEquals("PNOEE-48010010101-MOCK-Q", capturedDocumentNumber);
+    private DeviceLinkAuthenticationSessionRequestBuilder toBaseDeviceLinkRequestBuilder() {
+        return new DeviceLinkAuthenticationSessionRequestBuilder(connector)
+                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
+                .withRelyingPartyName("DEMO")
+                .withRpChallenge(generateBase64String("a".repeat(32)))
+                .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPin("Log into internet banking system")));
     }
 
     private DeviceLinkSessionResponse createDynamicLinkAuthenticationResponse() {
@@ -415,6 +409,28 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
     private static String generateBase64String(String text) {
         return Base64.toBase64String(text.getBytes());
+    }
+
+    private void assertAuthenticationSessionRequest(DeviceLinkAuthenticationSessionRequest request) throws Exception {
+        assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
+        assertEquals("DEMO", request.relyingPartyName());
+        assertEquals("QUALIFIED", request.certificateLevel());
+        assertEquals(SignatureProtocol.ACSP_V2, request.signatureProtocol());
+        assertNotNull(request.signatureProtocolParameters());
+        assertNotNull(request.signatureProtocolParameters().rpChallenge());
+        assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
+        assertNotNull(request.interactions());
+        assertTrue(Pattern.matches(BASE64_PATTERN, request.signatureProtocolParameters().rpChallenge()));
+
+        Interaction[] parsed = parseInteractionsFromBase64(request.interactions());
+        assertTrue(Stream.of(parsed).anyMatch(i -> i.type().equals("displayTextAndPIN")));
+    }
+
+    private Interaction[] parseInteractionsFromBase64(String base64EncodedJson) throws Exception {
+        byte[] decodedBytes = Base64.decode(base64EncodedJson);
+        String json = new String(decodedBytes, StandardCharsets.UTF_8);
+        var mapper = new ObjectMapper();
+        return mapper.readValue(json, Interaction[].class);
     }
 
     private static class CertificateLevelArgumentProvider implements ArgumentsProvider {
@@ -449,35 +465,6 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                             "Value for 'rpChallenge' must have length between 44 and 88 characters"),
                     Arguments.of(Named.of("provided value sizes exceeds max range value", Base64.toBase64String("a".repeat(67).getBytes())),
                             "Value for 'rpChallenge' must have length between 44 and 88 characters")
-            );
-        }
-    }
-
-    private static class DuplicateInteractionsProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            var interaction1 = DeviceLinkInteraction.displayTextAndPIN("Log in.");
-            var interaction2 = DeviceLinkInteraction.displayTextAndPIN("Log in.");
-
-            return Stream.of(
-                    Arguments.of(List.of(interaction1, interaction1)),
-                    Arguments.of(List.of(interaction1, interaction2))
-            );
-        }
-    }
-
-    private static class InvalidInteractionsProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(Named.of("provided text is null", DeviceLinkInteraction.displayTextAndPIN(null)),
-                            "displayText60 cannot be null for AllowedInteractionOrder of type DISPLAY_TEXT_AND_PIN"),
-                    Arguments.of(Named.of("provided text is longer than allowed 60", DeviceLinkInteraction.displayTextAndPIN("a".repeat(61))),
-                            "displayText60 must not be longer than 60 characters"),
-                    Arguments.of(Named.of("provided text is null", DeviceLinkInteraction.confirmationMessage(null)),
-                            "displayText200 cannot be null for AllowedInteractionOrder of type CONFIRMATION_MESSAGE"),
-                    Arguments.of(Named.of("provided text is longer than allowed 200", DeviceLinkInteraction.confirmationMessage("a".repeat(201))),
-                            "displayText200 must not be longer than 200 characters")
             );
         }
     }

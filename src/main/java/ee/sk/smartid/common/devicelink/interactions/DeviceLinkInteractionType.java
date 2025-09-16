@@ -1,10 +1,10 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.common.devicelink.interactions;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,25 +26,31 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import ee.sk.smartid.common.InteractionType;
 
-public enum DeviceLinkInteractionFlow implements InteractionFlow {
+/**
+ * Device link interaction types that can be used in device link based authentication and signing requests
+ */
+public enum DeviceLinkInteractionType implements InteractionType {
 
-    DISPLAY_TEXT_AND_PIN("displayTextAndPIN"),
-    CONFIRMATION_MESSAGE("confirmationMessage");
+    DISPLAY_TEXT_AND_PIN("displayTextAndPIN", 60),
+    CONFIRMATION_MESSAGE("confirmationMessage", 200);
 
     private final String code;
+    private final int maxLength;
 
-    DeviceLinkInteractionFlow(String code) {
+    DeviceLinkInteractionType(String code, int maxLength) {
         this.code = code;
+        this.maxLength = maxLength;
     }
 
-    @JsonValue
+    @Override
     public String getCode() {
         return code;
     }
 
-    public boolean is(String typeCodeString) {
-        return this.getCode().equals(typeCodeString);
+    @Override
+    public int getMaxLength() {
+        return maxLength;
     }
 }

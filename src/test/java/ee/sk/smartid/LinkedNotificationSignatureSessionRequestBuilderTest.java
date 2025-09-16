@@ -48,11 +48,10 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
-import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 
@@ -86,7 +85,7 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
                 .withDocumentNumber(DOCUMENT_NUMBER)
                 .withSignableData(new SignableData("Test data".getBytes()))
                 .withLinkedSessionID("10000000-0000-0000-0000-000000000000")
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")));
+                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign?")));
         when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER))).thenReturn(new LinkedSignatureSessionResponse("20000000-0000-0000-0000-000000000000"));
 
         LinkedSignatureSessionResponse response = builder.initSignatureSession();
@@ -223,11 +222,11 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
             assertEquals("Value for 'interactions' cannot be empty", ex.getMessage());
         }
 
-        @Test
-        void initSignatureSession_interactionsContainDuplicates_throwException() {
+        @ParameterizedTest
+        @ArgumentsSource(DuplicateDeviceLinkInteractionsProvider.class)
+        void initSignatureSession_interactionsContainDuplicates_throwException(List<DeviceLinkInteraction> interactions) {
             var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b ->
-                    b.withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?"),
-                            DeviceLinkInteraction.displayTextAndPIN("Sign again?"))));
+                    b.withInteractions(interactions));
 
             var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'interactions' cannot contain duplicate types", ex.getMessage());
@@ -254,6 +253,6 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
                 .withDocumentNumber(DOCUMENT_NUMBER)
                 .withSignableData(new SignableData("Test data".getBytes()))
                 .withLinkedSessionID("10000000-0000-0000-0000-000000000000")
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")));
+                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign?")));
     }
 }

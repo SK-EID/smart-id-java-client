@@ -29,11 +29,11 @@ package ee.sk.smartid;
 import java.util.List;
 import java.util.Set;
 
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
-import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
@@ -251,7 +251,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
         if (interactions == null || interactions.isEmpty()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
-        if (interactions.stream().map(Interaction::getType).distinct().count() != interactions.size()) {
+        if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
         }
     }
@@ -267,7 +267,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
                 rawDigestParams,
                 linkedSessionID,
                 nonce,
-                InteractionUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
                 shareIpAddress != null ? new RequestProperties(shareIpAddress) : null,
                 capabilities);
     }

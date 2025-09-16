@@ -46,18 +46,17 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.util.InteractionUtil;
 
 class SmartIdClientTest {
 
@@ -170,7 +169,7 @@ class SmartIdClientTest {
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
                     .initAuthenticationSession();
 
             assertNotNull(response.sessionID());
@@ -190,7 +189,7 @@ class SmartIdClientTest {
                     .withDocumentNumber(DOCUMENT_NUMBER)
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
                     .initAuthenticationSession();
 
             assertNotNull(response.sessionID());
@@ -210,7 +209,7 @@ class SmartIdClientTest {
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
                     .initAuthenticationSession();
 
             assertNotNull(response.sessionID());
@@ -235,7 +234,7 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
                     .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
                     .initSignatureSession();
@@ -257,7 +256,7 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -277,7 +276,7 @@ class SmartIdClientTest {
             var signableHash = new SignableHash("a".repeat(32).getBytes());
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
                     .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
                     .initSignatureSession();
@@ -299,7 +298,7 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -446,7 +445,7 @@ class SmartIdClientTest {
                     .withSignableData(new SignableData("Test data".getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withLinkedSessionID("10000000-0000-000-000-000000000000")
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign?")))
                     .initSignatureSession();
 
             assertNotNull(response);
@@ -465,7 +464,7 @@ class SmartIdClientTest {
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
                     .withLinkedSessionID("10000000-0000-000-000-000000000000")
                     .withNonce("cmFuZG9tTm9uY2U=")
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign?")))
                     .withShareMdClientIpAddress(true)
                     .initSignatureSession();
 
@@ -512,7 +511,7 @@ class SmartIdClientTest {
             DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient.createDeviceLinkAuthentication()
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512)
                     .withInitialCallbackUrl(INITIAL_CALLBACK_URL);
             DeviceLinkSessionResponse response = builder.initAuthenticationSession();
@@ -542,7 +541,7 @@ class SmartIdClientTest {
             DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient.createDeviceLinkAuthentication()
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512);
             DeviceLinkSessionResponse response = builder.initAuthenticationSession();
             DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
@@ -573,7 +572,7 @@ class SmartIdClientTest {
             DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient.createDeviceLinkAuthentication()
                     .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
                     .withHashAlgorithm(HashAlgorithm.SHA3_512);
             DeviceLinkSessionResponse response = builder.initAuthenticationSession();
             DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
@@ -614,7 +613,7 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
                     .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
                     .initSignatureSession();
@@ -643,7 +642,7 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -673,7 +672,7 @@ class SmartIdClientTest {
 
             DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign document?")))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 

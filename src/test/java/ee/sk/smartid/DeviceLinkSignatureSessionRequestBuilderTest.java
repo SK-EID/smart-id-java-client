@@ -56,11 +56,11 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
@@ -192,7 +192,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @ParameterizedTest
     @EnumSource(HashAlgorithm.class)
-    void initSignatureSession_withSignablData(HashAlgorithm hashAlgorithm) {
+    void initSignatureSession_withSignableData(HashAlgorithm hashAlgorithm) {
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var signableData = new SignableData("Test hash".getBytes(), hashAlgorithm);
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignableData(signableData));
@@ -338,7 +338,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @ArgumentsSource(DuplicateInteractionsProvider.class)
+        @ArgumentsSource(DuplicateDeviceLinkInteractionsProvider.class)
         void initSignatureSession_duplicateInteractions_shouldThrowException(List<DeviceLinkInteraction> duplicateInteractions) {
             var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withInteractions(duplicateInteractions));
 
@@ -444,7 +444,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
                 .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()));
     }
 
@@ -480,18 +480,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     Arguments.of("http://example.com"),
                     Arguments.of("https://example.com|test"),
                     Arguments.of("ftp://example.com")
-            );
-        }
-    }
-
-    static class DuplicateInteractionsProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            var interaction1 = DeviceLinkInteraction.displayTextAndPIN("Sign this.");
-            var interaction2 = DeviceLinkInteraction.displayTextAndPIN("Sign this again.");
-            return Stream.of(
-                    Arguments.of(List.of(interaction1, interaction1)),
-                    Arguments.of(List.of(interaction1, interaction2))
             );
         }
     }

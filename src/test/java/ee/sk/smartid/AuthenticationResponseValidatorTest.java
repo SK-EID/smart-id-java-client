@@ -42,12 +42,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteractionType;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.SessionCertificate;
 import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithm;
 import ee.sk.smartid.rest.dao.SessionMaskGenAlgorithmParameters;
@@ -218,7 +219,7 @@ class AuthenticationResponseValidatorTest {
                 certificateLevel,
                 SignatureProtocol.ACSP_V2,
                 new AcspV2SignatureProtocolParameters("rpChallenge", SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName())),
-                InteractionUtil.encodeToBase64(List.of(DeviceLinkInteraction.displayTextAndPIN("Log in?"))),
+                InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Log in?", null))),
                 null,
                 null,
                 null);

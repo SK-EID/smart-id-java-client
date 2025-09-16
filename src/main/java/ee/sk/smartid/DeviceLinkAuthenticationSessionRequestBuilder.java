@@ -30,15 +30,15 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
@@ -312,11 +312,10 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         validateNoDuplicateInteractions();
-        interactions.forEach(DeviceLinkInteraction::validate);
     }
 
     private void validateNoDuplicateInteractions() {
-        if (interactions.stream().map(Interaction::getType).distinct().count() != interactions.size()) {
+        if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
         }
     }
@@ -338,7 +337,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
                 certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.ACSP_V2,
                 signatureProtocolParameters,
-                InteractionUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 capabilities,
                 initialCallbackUrl
@@ -360,7 +359,6 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         if (deviceLinkAuthenticationSessionResponse.deviceLinkBase() == null
                 || deviceLinkAuthenticationSessionResponse.deviceLinkBase().toString().isBlank()) {
             throw new UnprocessableSmartIdResponseException("Device link authentication session initialisation response field 'deviceLinkBase' is missing or empty");
-
         }
     }
 }
