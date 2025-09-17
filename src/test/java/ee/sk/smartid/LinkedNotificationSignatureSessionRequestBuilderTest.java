@@ -31,18 +31,22 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
@@ -86,6 +90,40 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
 
         LinkedSignatureSessionResponse response = builder.initSignatureSession();
         assertEquals("20000000-0000-0000-0000-000000000000", response.sessionID());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"  "})
+    void initSignatureSession_withCapabilitiesSetToEmpty_ok(String capabilities) {
+        LinkedNotificationSignatureSessionRequestBuilder builder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withCapabilities(capabilities));
+        when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER)))
+                .thenReturn(new LinkedSignatureSessionResponse("20000000-0000-0000-0000-000000000000"));
+
+        LinkedSignatureSessionResponse response = builder.initSignatureSession();
+        assertEquals("20000000-0000-0000-0000-000000000000", response.sessionID());
+
+        ArgumentCaptor<LinkedSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(LinkedSignatureSessionRequest.class);
+        verify(connector).initLinkedNotificationSignature(requestCaptor.capture(), eq(DOCUMENT_NUMBER));
+        LinkedSignatureSessionRequest request = requestCaptor.getValue();
+        assertEquals(0, request.capabilities().size());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(CapabilitiesArgumentProvider.class)
+    void initSignatureSession_withCapabilities_ok(String[] capabilities, Set<String> expectedRequestCapabilities) {
+        LinkedNotificationSignatureSessionRequestBuilder builder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withCapabilities(capabilities));
+        when(connector.initLinkedNotificationSignature(any(LinkedSignatureSessionRequest.class), eq(DOCUMENT_NUMBER)))
+                .thenReturn(new LinkedSignatureSessionResponse("20000000-0000-0000-0000-000000000000"));
+
+        LinkedSignatureSessionResponse response = builder.initSignatureSession();
+
+        assertEquals("20000000-0000-0000-0000-000000000000", response.sessionID());
+
+        ArgumentCaptor<LinkedSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(LinkedSignatureSessionRequest.class);
+        verify(connector).initLinkedNotificationSignature(requestCaptor.capture(), eq(DOCUMENT_NUMBER));
+        LinkedSignatureSessionRequest request = requestCaptor.getValue();
+        assertEquals(expectedRequestCapabilities, request.capabilities());
     }
 
     @Nested
@@ -151,7 +189,7 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
 
         @Test
         void initSignatureSession_signatureAlgorithmIsSetToNull_throwException() {
-            var linkedNotificationSignatureSessionRequestBuilder =  toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(null));
+            var linkedNotificationSignatureSessionRequestBuilder = toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(null));
 
             var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'signatureAlgorithm' must be set", ex.getMessage());

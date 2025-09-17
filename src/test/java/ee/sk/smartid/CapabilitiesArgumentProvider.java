@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid;
 
 /*-
  * #%L
@@ -26,41 +26,23 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-/**
- * Utility class to handle string operations
- */
-public final class StringUtil {
+import java.util.Set;
+import java.util.stream.Stream;
 
-    private StringUtil() {
-    }
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
 
-    /**
-     * Checks that given CharSequence is not null and not empty
-     *
-     * @param cs the CharSequence to check
-     * @return true if the CharSequence is not null and not empty, false otherwise
-     */
-    public static boolean isNotEmpty(final CharSequence cs) {
-        return cs != null && !cs.isEmpty();
-    }
+public class CapabilitiesArgumentProvider implements ArgumentsProvider {
 
-    /**
-     * Checks that given CharSequence is null or empty
-     *
-     * @param cs the CharSequence to check
-     * @return true if the CharSequence is null or empty, false otherwise
-     */
-    public static boolean isEmpty(final CharSequence cs) {
-        return cs == null || cs.isEmpty();
-    }
-
-    /**
-     * Checks that given string is not null and not empty
-     *
-     * @param input the value to check
-     * @return String if the input is not null and not empty, empty string otherwise
-     */
-    public static String orEmpty(String input) {
-        return input == null ? "" : input;
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+        return Stream.of(
+                Arguments.of(new String[]{"capability1", "capability2"}, Set.of("capability1", "capability2")),
+                Arguments.of(new String[]{"capability1"}, Set.of("capability1")),
+                Arguments.of(new String[]{"capability1", "capability1"}, Set.of("capability1")),
+                Arguments.of(new String[]{"capability1", null}, Set.of("capability1")),
+                Arguments.of(new String[]{null, "capability1"}, Set.of("capability1"))
+        );
     }
 }
