@@ -33,7 +33,7 @@ import java.util.Arrays;
  */
 public enum TrailerField {
 
-    OXBC("0xbc", 1);
+    BC("0xbc", 1);
 
     private final String value;
     private final int pssSpecValue;

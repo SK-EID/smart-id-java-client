@@ -26,41 +26,30 @@ package ee.sk.smartid.util;
  * #L%
  */
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
- * Utility class to handle string operations
+ * Utility class for Set operations.
  */
-public final class StringUtil {
+public final class SetUtil {
 
-    private StringUtil() {
+    private SetUtil() {
     }
 
     /**
-     * Checks that given CharSequence is not null and not empty
+     * Converts an array to a Set, filtering out null or empty values.
      *
-     * @param cs the CharSequence to check
-     * @return true if the CharSequence is not null and not empty, false otherwise
+     * @param array array to be converted
+     * @return a set of non-null, non-empty trimmed strings
      */
-    public static boolean isNotEmpty(final CharSequence cs) {
-        return cs != null && !cs.isEmpty();
-    }
-
-    /**
-     * Checks that given CharSequence is null or empty
-     *
-     * @param cs the CharSequence to check
-     * @return true if the CharSequence is null or empty, false otherwise
-     */
-    public static boolean isEmpty(final CharSequence cs) {
-        return cs == null || cs.isEmpty();
-    }
-
-    /**
-     * Checks that given string is not null and not empty
-     *
-     * @param input the value to check
-     * @return String if the input is not null and not empty, empty string otherwise
-     */
-    public static String orEmpty(String input) {
-        return input == null ? "" : input;
+    public static Set<String> toSet(String[] array) {
+        return Arrays.stream(array)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(StringUtil::isNotEmpty)
+                .collect(Collectors.toSet());
     }
 }

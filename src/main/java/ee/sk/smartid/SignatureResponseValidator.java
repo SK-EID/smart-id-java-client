@@ -114,7 +114,7 @@ public class SignatureResponseValidator {
         rsaSsaPssParams.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
         rsaSsaPssParams.setMaskHashAlgorithm(HashAlgorithm.fromString(signatureAlgorithmParameters.getMaskGenAlgorithm().getParameters().getHashAlgorithm()).orElse(null));
         rsaSsaPssParams.setSaltLength(signatureAlgorithmParameters.getSaltLength());
-        rsaSsaPssParams.setTrailerField(TrailerField.OXBC);
+        rsaSsaPssParams.setTrailerField(TrailerField.BC);
         signatureResponse.setRsaSsaPssParameters(rsaSsaPssParams);
 
         signatureResponse.setFlowType(FlowType.fromString(sessionSignature.getFlowType()));
@@ -309,9 +309,9 @@ public class SignatureResponseValidator {
         }
 
         if (!hashAlgorithm.get().equals(mgfHashAlgorithm.get())) {
-            logger.error("Signature session status field field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value. Expected {}, got {}",
+            logger.error("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value. Expected {}, got {}",
                     hashAlgorithm.get().getAlgorithmName(), mgfHashAlgorithm.get().getAlgorithmName());
-            throw new UnprocessableSmartIdResponseException("Signature session status field field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value");
+            throw new UnprocessableSmartIdResponseException("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value");
         }
 
         if (sessionSignatureAlgorithmParameters.getSaltLength() == null) {
@@ -329,7 +329,7 @@ public class SignatureResponseValidator {
             throw new UnprocessableSmartIdResponseException("Signature status field `signature.signatureAlgorithmParameters.trailerField` is empty");
         }
 
-        if (!TrailerField.OXBC.getValue().equals(sessionSignatureAlgorithmParameters.getTrailerField())) {
+        if (!TrailerField.BC.getValue().equals(sessionSignatureAlgorithmParameters.getTrailerField())) {
             logger.error("Signature status field `signature.signatureAlgorithmParameters.trailerField` has invalid value: {}", sessionSignatureAlgorithmParameters.getTrailerField());
             throw new UnprocessableSmartIdResponseException("Signature status field `signature.signatureAlgorithmParameters.trailerField` has unsupported value");
         }

@@ -210,6 +210,23 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     }
 
     @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"  "})
+    void initSignatureSession_withCapabilitiesSetToEmpty_ok(String capabilities) {
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withCapabilities(capabilities));
+        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class)))
+                .thenReturn(mockSignatureSessionResponse());
+
+        DeviceLinkSessionResponse response = deviceLinkSessionRequestBuilder.initSignatureSession();
+        assertEquals("test-session-id", response.sessionID());
+
+        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
+        SignatureSessionRequest request = requestCaptor.getValue();
+        assertEquals(0, request.capabilities().size());
+    }
+
+    @ParameterizedTest
     @ArgumentsSource(CapabilitiesArgumentProvider.class)
     void initSignatureSession_withCapabilities(String[] capabilities, Set<String> expectedCapabilities) {
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
@@ -445,17 +462,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     Arguments.of(null, null),
                     Arguments.of(CertificateLevel.ADVANCED, "ADVANCED"),
                     Arguments.of(CertificateLevel.QUALIFIED, "QUALIFIED")
-            );
-        }
-    }
-
-    private static class CapabilitiesArgumentProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(new String[]{"QUALIFIED", "ADVANCED"}, Set.of("QUALIFIED", "ADVANCED")),
-                    Arguments.of(new String[]{"QUALIFIED"}, Set.of("QUALIFIED")),
-                    Arguments.of(new String[]{}, Set.of())
             );
         }
     }

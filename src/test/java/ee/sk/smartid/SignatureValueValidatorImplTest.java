@@ -103,7 +103,7 @@ class SignatureValueValidatorImplTest {
         rsaSsaPssParameters.setMaskGenAlgorithm(MaskGenAlgorithm.ID_MGF1);
         rsaSsaPssParameters.setMaskHashAlgorithm(HashAlgorithm.SHA_512);
         rsaSsaPssParameters.setSaltLength(HashAlgorithm.SHA_512.getOctetLength());
-        rsaSsaPssParameters.setTrailerField(TrailerField.OXBC);
+        rsaSsaPssParameters.setTrailerField(TrailerField.BC);
         return rsaSsaPssParameters;
     }
 

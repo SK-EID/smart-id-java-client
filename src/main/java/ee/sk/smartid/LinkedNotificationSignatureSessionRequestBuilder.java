@@ -40,6 +40,7 @@ import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.util.DeviceLinkUtil;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -146,7 +147,6 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
 
     /**
      * Sets the signature algorithm.
-     * .
      *
      * @param signatureAlgorithm The signature algorithm
      * @return this builder
@@ -207,7 +207,7 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
      * @return this builder
      */
     public LinkedNotificationSignatureSessionRequestBuilder withCapabilities(String... capabilities) {
-        this.capabilities = Set.of(capabilities);
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 
@@ -238,6 +238,9 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
         }
         if (digestInput == null) {
             throw new SmartIdRequestSetupException("Value for 'digestInput' must be set with SignableData or with SignableHash");
+        }
+        if (signatureAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
         }
         if (StringUtil.isEmpty(linkedSessionID)) {
             throw new SmartIdRequestSetupException("Value for 'linkedSessionID' cannot be empty");

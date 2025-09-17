@@ -30,6 +30,20 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Linked signature session request
+ *
+ * @param relyingPartyUUID            Required. Relying party UUID
+ * @param relyingPartyName            Required. Relying party name
+ * @param certificateLevel            Certificate level. Possible values: QSCD, QUALIFIED, ADVANCED,
+ * @param signatureProtocol           Required. Signature protocol. Only RAW_DIGEST_SIGNATURE is supported for signing.
+ * @param signatureProtocolParameters Required. RAW_DIGEST_SIGNATURE signature protocol parameters
+ * @param linkedSessionID             Required. ID of the anonymous certificate choice session to be linked with this signature session.
+ * @param nonce                       Random value to cancel out idempotence of the request.
+ * @param interactions                Required. Device link interactions should be used.
+ * @param requestProperties           Additional properties for the request
+ * @param capabilities                Capabilities that should be used only when agreed with the Smart-ID provider.
+ */
 public record LinkedSignatureSessionRequest(String relyingPartyUUID,
                                             String relyingPartyName,
                                             @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,

@@ -184,7 +184,7 @@ class AuthenticationResponseValidatorTest {
 
         var sessionSignatureAlgorithmParameters = new SessionSignatureAlgorithmParameters();
         sessionSignatureAlgorithmParameters.setHashAlgorithm(HashAlgorithm.SHA3_512.getAlgorithmName());
-        sessionSignatureAlgorithmParameters.setTrailerField(TrailerField.OXBC.getValue());
+        sessionSignatureAlgorithmParameters.setTrailerField(TrailerField.BC.getValue());
         sessionSignatureAlgorithmParameters.setSaltLength(HashAlgorithm.SHA3_512.getOctetLength());
         sessionSignatureAlgorithmParameters.setMaskGenAlgorithm(maskGenAlgorithm);
 

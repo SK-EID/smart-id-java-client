@@ -459,7 +459,7 @@ class SignatureResponseValidatorTest {
                 sessionStatus.getSignature().getSignatureAlgorithmParameters().getMaskGenAlgorithm().getParameters().setHashAlgorithm("SHA-256");
 
                 var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> signatureResponseValidator.validate(sessionStatus, CertificateLevel.QUALIFIED));
-                assertEquals("Signature session status field field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value", ex.getMessage());
+                assertEquals("Signature session status field 'signature.signatureAlgorithmParameters.maskGenAlgorithm.parameters.hashAlgorithm' value does not match 'signature.signatureAlgorithmParameters.hashAlgorithm' value", ex.getMessage());
             }
 
             @Test

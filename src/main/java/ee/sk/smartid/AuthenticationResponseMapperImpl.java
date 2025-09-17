@@ -244,7 +244,7 @@ public class AuthenticationResponseMapperImpl implements AuthenticationResponseM
         if (StringUtil.isEmpty(signatureAlgorithmParameters.getTrailerField())) {
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' is empty");
         }
-        if (!TrailerField.OXBC.getValue().equals(signatureAlgorithmParameters.getTrailerField())) {
+        if (!TrailerField.BC.getValue().equals(signatureAlgorithmParameters.getTrailerField())) {
             logger.error("Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' has invalid value: {}", signatureAlgorithmParameters.getTrailerField());
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithmParameters.trailerField' has unsupported value");
         }
