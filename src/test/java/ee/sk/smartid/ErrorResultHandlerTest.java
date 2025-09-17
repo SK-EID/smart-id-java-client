@@ -46,7 +46,7 @@ class ErrorResultHandlerTest {
     @Test
     void handle_nullInput() {
         var smartIdClientException = assertThrows(SmartIdClientException.class, () -> ErrorResultHandler.handle(null));
-        assertEquals("Session end result is not provided", smartIdClientException.getMessage());
+        assertEquals("Parameter 'sessionResult' is not provided", smartIdClientException.getMessage());
     }
 
     @ParameterizedTest

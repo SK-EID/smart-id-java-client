@@ -7,6 +7,7 @@ Changes mentioned under 3.1.x version have not been published yet. Will be relea
 ## [3.1.14] - 2025-09-17
 - Updated notification-based authentication session request creation to be usable with Smart-ID API v3.1
 - Removed verificationCodeChoice interactions and related handling
+- Removed AuthenticationHash.
 
 ## [3.1.13] - 2025-09-08
 - Added endpoint for creating linked signature session `POST /v3/signature/notification/linked/{document-number}`.

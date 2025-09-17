@@ -54,13 +54,17 @@ public class ErrorResultHandler {
      * Handles the session result and throws an appropriate exception
      *
      * @param sessionResult the session result to handle
-     * @throws UserActionException
-     * @throws UserAccountException
-     * @throws UnprocessableSmartIdResponseException
+     * @throws SmartIdClientException                when input parameter sessionResult is null
+     * @throws UserActionException                   sub-exceptions based on end result
+     * @throws UserAccountException                  sub-exceptions based on end result
+     * @throws ProtocolFailureException              when there was a error in the process (e.g shcema name incorrect)
+     * @throws ExpectedLinkedSessionException        when different session type was started than expected
+     * @throws SmartIdServerException                when technical error occurred on server side
+     * @throws UnprocessableSmartIdResponseException when unexpected end result was received
      */
     public static void handle(SessionResult sessionResult) {
         if (sessionResult == null) {
-            throw new SmartIdClientException("Session end result is not provided");
+            throw new SmartIdClientException("Parameter 'sessionResult' is not provided");
         }
         switch (sessionResult.getEndResult()) {
             case "USER_REFUSED" -> throw new UserRefusedException();
