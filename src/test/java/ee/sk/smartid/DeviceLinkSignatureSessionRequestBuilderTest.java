@@ -244,7 +244,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
+    void initSignatureSession_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
 
@@ -258,6 +258,31 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
 
+    @Test
+    void getSignatureSessionRequest_ok() {
+        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
+
+        DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
+        SignatureSessionRequest signatureSessionRequest = deviceLinkSessionRequestBuilder.getSignatureSessionRequest();
+        assertNotNull(signature);
+
+        assertEquals("test-relying-party-uuid", signatureSessionRequest.relyingPartyUUID());
+        assertEquals("DEMO", signatureSessionRequest.relyingPartyName());
+        assertEquals("RAW_DIGEST_SIGNATURE", signatureSessionRequest.signatureProtocol());
+        assertNotNull(signatureSessionRequest.signatureProtocolParameters());
+        assertNotNull(signatureSessionRequest.interactions());
+    }
+
+    @Test
+    void getSignatureSessionRequest_sessionNotStarted_throwException() {
+        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
+
+        var ex = assertThrows(SmartIdClientException.class, deviceLinkSessionRequestBuilder::getSignatureSessionRequest);
+        assertEquals("Signature session has not been initiated yet", ex.getMessage());
+    }
+
     @Nested
     class ErrorCases {
 
@@ -267,7 +292,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withDocumentNumber(documentNumber).withSemanticsIdentifier(null));
 
             var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
-            assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed.", ex.getMessage());
+            assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed", ex.getMessage());
         }
 
         @Test

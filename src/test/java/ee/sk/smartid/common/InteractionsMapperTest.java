@@ -66,7 +66,7 @@ class InteractionsMapperTest {
 
     @Test
     void from_notificationInteraction() {
-        NotificationInteraction deviceLinkInteraction = new NotificationInteraction(NotificationInteractionType.DISPLAY_TEXT_AND_PIN.DISPLAY_TEXT_AND_PIN, "Log in?", null);
+        NotificationInteraction deviceLinkInteraction = new NotificationInteraction(NotificationInteractionType.DISPLAY_TEXT_AND_PIN, "Log in?", null);
         Interaction interaction = InteractionsMapper.from(deviceLinkInteraction);
 
         assertEquals(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), interaction.type());

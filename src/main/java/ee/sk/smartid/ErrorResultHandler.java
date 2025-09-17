@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,11 +26,13 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.UserAccountException;
+import ee.sk.smartid.exception.UserActionException;
 import ee.sk.smartid.exception.permanent.ExpectedLinkedSessionException;
 import ee.sk.smartid.exception.permanent.ProtocolFailureException;
-import ee.sk.smartid.exception.permanent.SmartIdServerException;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdServerException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
@@ -39,7 +41,6 @@ import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageExceptio
 import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
-import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
 import ee.sk.smartid.rest.dao.SessionResult;
 import ee.sk.smartid.util.StringUtil;
@@ -49,6 +50,14 @@ import ee.sk.smartid.util.StringUtil;
  */
 public class ErrorResultHandler {
 
+    /**
+     * Handles the session result and throws an appropriate exception
+     *
+     * @param sessionResult the session result to handle
+     * @throws UserActionException
+     * @throws UserAccountException
+     * @throws UnprocessableSmartIdResponseException
+     */
     public static void handle(SessionResult sessionResult) {
         if (sessionResult == null) {
             throw new SmartIdClientException("Session end result is not provided");
@@ -74,7 +83,6 @@ public class ErrorResultHandler {
         }
         switch (sessionResult.getDetails().getInteraction()) {
             case "displayTextAndPIN" -> throw new UserRefusedDisplayTextAndPinException();
-            case "verificationCodeChoice" -> throw new UserRefusedVerificationChoiceException();
             case "confirmationMessage" -> throw new UserRefusedConfirmationMessageException();
             case "confirmationMessageAndVerificationCodeChoice" -> throw new UserRefusedConfirmationMessageWithVerificationChoiceException();
             default -> throw new UnprocessableSmartIdResponseException("Unexpected interaction type: " + sessionResult.getDetails().getInteraction());

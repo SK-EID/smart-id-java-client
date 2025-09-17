@@ -42,6 +42,7 @@ import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -106,17 +107,17 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the random challenge
+     * Sets the RP challenge
      * <p>
-     * The provided random challenge must be a Base64 encoded string
+     * The provided rpChallenge must be a Base64 encoded string
      * <p>
-     * Use {@link ee.sk.smartid.RpChallengeGenerator#generate()} to generate a valid random challenge
+     * Use {@link ee.sk.smartid.RpChallengeGenerator#generate()} to generate a valid RP challenge
      *
-     * @param randomChallenge the signature protocol parameters
+     * @param rpChallenge RP challenge in Base64 encoded format
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withRandomChallenge(String randomChallenge) {
-        this.rpChallenge = randomChallenge;
+    public NotificationAuthenticationSessionRequestBuilder withRpChallenge(String rpChallenge) {
+        this.rpChallenge = rpChallenge;
         return this;
     }
 
@@ -171,7 +172,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @return this builder
      */
     public NotificationAuthenticationSessionRequestBuilder withCapabilities(String... capabilities) {
-        this.capabilities = Set.of(capabilities);
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 
@@ -229,7 +230,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
         } else if (documentNumber != null) {
             return connector.initNotificationAuthentication(authenticationRequest, documentNumber);
         } else {
-            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set.");
+            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set");
         }
     }
 

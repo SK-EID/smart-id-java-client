@@ -357,7 +357,7 @@ class SmartIdClientTest {
 
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
-                    .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withInteractions(List.of(NotificationInteraction.confirmationMessage("Login?")))
                     .initAuthenticationSession();
 
@@ -372,7 +372,7 @@ class SmartIdClientTest {
 
             NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withRandomChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
                     .withInteractions(List.of(NotificationInteraction.confirmationMessage("Login?")))
                     .initAuthenticationSession();
 

@@ -158,6 +158,7 @@ public class NotificationSignatureSessionRequestBuilder {
      * @param allowedInteractionsOrder the allowed interactions order
      * @return this builder
      */
+    @Deprecated // TODO - 17.09.25: fix in SLIB-116
     public NotificationSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<NotificationInteraction> allowedInteractionsOrder) {
         this.interactions = allowedInteractionsOrder;
         return this;

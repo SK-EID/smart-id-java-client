@@ -41,8 +41,8 @@ import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -266,9 +266,9 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      * @return the signature request that was used to initiate the session
      * @throws SmartIdClientException if called before initSignatureSession()
      */
-    public SignatureSessionRequest getSignatureSessionRequest() { // TODO - 15.09.25: create tests
+    public SignatureSessionRequest getSignatureSessionRequest() {
         if (signatureSessionRequest == null) {
-            throw new SmartIdClientException("Signature session has not been initiated yet.");
+            throw new SmartIdClientException("Signature session has not been initiated yet");
         }
         return signatureSessionRequest;
     }
@@ -279,7 +279,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         } else if (semanticsIdentifier != null) {
             return connector.initDeviceLinkSignature(request, semanticsIdentifier);
         } else {
-            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed.");
+            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed");
         }
     }
 

@@ -26,23 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
+import static org.bouncycastle.util.encoders.Base64.*;
+
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
-import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
-import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
-
-public class UserRefusedInteractionArgumentsProvider implements ArgumentsProvider {
-
+public class InvalidRpChallengeArgumentProvider implements ArgumentsProvider {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
         return Stream.of(
-                Arguments.of("displayTextAndPIN", UserRefusedDisplayTextAndPinException.class),
-                Arguments.of("confirmationMessage", UserRefusedConfirmationMessageException.class),
-                Arguments.of("confirmationMessageAndVerificationCodeChoice", UserRefusedConfirmationMessageWithVerificationChoiceException.class));
+                Arguments.of(Named.of("provided string is not in Base64 format", "invalid value"),
+                        "Value for 'rpChallenge' must be Base64-encoded string"),
+                Arguments.of(Named.of("provided value sizes is less than allowed", toBase64String("a".repeat(30).getBytes())),
+                        "Value for 'rpChallenge' must have length between 44 and 88 characters"),
+                Arguments.of(Named.of("provided value sizes exceeds max range value", toBase64String("a".repeat(67).getBytes())),
+                        "Value for 'rpChallenge' must have length between 44 and 88 characters")
+        );
     }
 }

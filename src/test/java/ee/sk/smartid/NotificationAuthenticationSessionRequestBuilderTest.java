@@ -73,7 +73,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
     }
 
     @Test
-    void initAuthenticationSession_ok() {
+    void initAuthenticationSession_withDocumentNumber_ok() {
         when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
         NotificationAuthenticationSessionRequestBuilder builder = toBaseNotificationAuthenticationSessionRequestBuilder();
 
@@ -89,6 +89,37 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         assertNotNull(request.signatureProtocolParameters());
         assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
         assertNotNull(request.interactions());
+    }
+
+    @Test
+    void initAuthenticationSession_withSemanticsIdentifier() {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(
+                b -> b.withDocumentNumber(null).withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
+
+        builder.initAuthenticationSession();
+
+        ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
+        verify(connector).initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
+        SemanticsIdentifier capturedSemanticsIdentifier = semanticsIdentifierCaptor.getValue();
+
+        assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void initAuthenticationSession_ipQueryingProvided_ok(boolean ipRequested) {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withShareMdClientIpAddress(ipRequested));
+
+        builder.initAuthenticationSession();
+
+        ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
+        verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
+        NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
+
+        assertNotNull(request.requestProperties());
+        assertEquals(ipRequested, request.requestProperties().shareMdClientIpAddress());
     }
 
     @ParameterizedTest
@@ -137,54 +168,41 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         assertEquals(expectedHashAlgorithm.getAlgorithmName(), request.signatureProtocolParameters().signatureAlgorithmParameters().hashAlgorithm());
     }
 
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"  "})
+    void initSignatureSession_withCapabilitiesSetToEmpty_ok(String capabilities) {
+        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withCapabilities(capabilities));
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class)))
+                .thenReturn(toNotificationAuthenticationResponse());
+
+        NotificationAuthenticationSessionResponse response = builder.initAuthenticationSession();
+        assertEquals("00000000-0000-0000-0000-000000000000", response.sessionID());
+
+        ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
+        verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
+        NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
+        assertEquals(0, request.capabilities().size());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(CapabilitiesArgumentProvider.class)
+    void initSignatureSession_withCapabilities_ok(String[] capabilities, Set<String> expectedRequestCapabilities) {
+        NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withCapabilities(capabilities));
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class)))
+                .thenReturn(toNotificationAuthenticationResponse());
+
+        NotificationAuthenticationSessionResponse response = builder.initAuthenticationSession();
+        assertEquals("00000000-0000-0000-0000-000000000000", response.sessionID());
+
+        ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
+        verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
+        NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
+        assertEquals(expectedRequestCapabilities, request.capabilities());
+    }
+
     @Nested
     class ValidateRequiredRequestParameters {
-
-        @ParameterizedTest
-        @ValueSource(booleans = {true, false})
-        void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
-            NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withShareMdClientIpAddress(ipRequested));
-
-            builder.initAuthenticationSession();
-
-            ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
-            verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
-            NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertNotNull(request.requestProperties());
-            assertEquals(ipRequested, request.requestProperties().shareMdClientIpAddress());
-        }
-
-        @ParameterizedTest
-        @ArgumentsSource(CapabilitiesArgumentProvider.class)
-        void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
-            NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(b -> b.withCapabilities(capabilities));
-
-            builder.initAuthenticationSession();
-
-            ArgumentCaptor<NotificationAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationAuthenticationSessionRequest.class);
-            verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
-            NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
-
-            assertEquals(expectedCapabilities, request.capabilities());
-        }
-
-        @Test
-        void initAuthenticationSession_withSemanticsIdentifier() {
-            when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(toNotificationAuthenticationResponse());
-            NotificationAuthenticationSessionRequestBuilder builder = toNotificationAuthenticationSessionRequestBuilder(
-                    b -> b.withDocumentNumber(null).withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
-
-            builder.initAuthenticationSession();
-
-            ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
-            verify(connector).initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), semanticsIdentifierCaptor.capture());
-            SemanticsIdentifier capturedSemanticsIdentifier = semanticsIdentifierCaptor.getValue();
-
-            assertEquals("PNOEE-48010010101", capturedSemanticsIdentifier.getIdentifier());
-        }
 
         @ParameterizedTest
         @NullAndEmptySource
@@ -208,19 +226,19 @@ class NotificationAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initAuthenticationSession_randomChallengeIsEmpty_throwException(String randomChallenge) {
+        void initAuthenticationSession_rpChallengeIsEmpty_throwException(String rpChallenge) {
             NotificationAuthenticationSessionRequestBuilder builder =
-                    toNotificationAuthenticationSessionRequestBuilder(b -> b.withRandomChallenge(randomChallenge));
+                    toNotificationAuthenticationSessionRequestBuilder(b -> b.withRpChallenge(rpChallenge));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
             assertEquals("Value for 'rpChallenge' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
-        @ArgumentsSource(InvalidRandomChallengeArgumentProvider.class)
-        void initAuthenticationSession_randomChallengeIsInvalid_throwException(String randomChallenge, String expectedException) {
+        @ArgumentsSource(InvalidRpChallengeArgumentProvider.class)
+        void initAuthenticationSession_rpChallengeIsInvalid_throwException(String rpChallenge, String expectedException) {
             NotificationAuthenticationSessionRequestBuilder builder =
-                    toNotificationAuthenticationSessionRequestBuilder(b -> b.withRandomChallenge(randomChallenge));
+                    toNotificationAuthenticationSessionRequestBuilder(b -> b.withRpChallenge(rpChallenge));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
             assertEquals(expectedException, exception.getMessage());
@@ -270,7 +288,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     toNotificationAuthenticationSessionRequestBuilder(b -> b.withDocumentNumber(null).withSemanticsIdentifier(null));
 
             var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
-            assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set.", exception.getMessage());
+            assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set", exception.getMessage());
         }
 
         @Test
@@ -308,7 +326,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         return new NotificationAuthenticationSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                 .withRelyingPartyName("DEMO")
-                .withRandomChallenge(generateBase64String("a".repeat(32)))
+                .withRpChallenge(generateBase64String("a".repeat(32)))
                 .withInteractions(Collections.singletonList(NotificationInteraction.displayTextAndPin("Verify the code")))
                 .withDocumentNumber("PNOEE-1234567890-MOCK-Q");
     }
@@ -328,31 +346,6 @@ class NotificationAuthenticationSessionRequestBuilderTest {
                     Arguments.of(null, Named.of("expected certificate level", null)),
                     Arguments.of(AuthenticationCertificateLevel.ADVANCED, "ADVANCED"),
                     Arguments.of(AuthenticationCertificateLevel.QUALIFIED, "QUALIFIED")
-            );
-        }
-    }
-
-    private static class CapabilitiesArgumentProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(new String[0], Collections.emptySet()),
-                    Arguments.of(new String[]{"ADVANCED"}, Set.of("ADVANCED")),
-                    Arguments.of(new String[]{"ADVANCED", "QUALIFIED"}, Set.of("ADVANCED", "QUALIFIED"))
-            );
-        }
-    }
-
-    private static class InvalidRandomChallengeArgumentProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(Named.of("provided string is not in Base64 encoded", "invalid value"),
-                            "Value for 'rpChallenge' must be Base64-encoded string"),
-                    Arguments.of(Named.of("provided value sizes is less than allowed", Base64.toBase64String("a".repeat(30).getBytes())),
-                            "Value for 'rpChallenge' must have length between 44 and 88 characters"),
-                    Arguments.of(Named.of("provided value sizes exceeds max range value", Base64.toBase64String("a".repeat(67).getBytes())),
-                            "Value for 'rpChallenge' must have length between 44 and 88 characters")
             );
         }
     }

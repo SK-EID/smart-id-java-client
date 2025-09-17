@@ -43,6 +43,7 @@ import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -181,7 +182,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * @return this builder
      */
     public DeviceLinkAuthenticationSessionRequestBuilder withCapabilities(String... capabilities) {
-        this.capabilities = Set.of(capabilities);
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 

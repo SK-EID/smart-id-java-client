@@ -194,6 +194,21 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {" "})
+        void initAuthenticationSession_capabilities_ok(String capabilities) {
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+
+            toDeviceLinkRequestBuilder(b -> b.withCapabilities(capabilities)).initAuthenticationSession();
+
+            ArgumentCaptor<DeviceLinkAuthenticationSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkAuthenticationSessionRequest.class);
+            verify(connector).initAnonymousDeviceLinkAuthentication(requestCaptor.capture());
+            DeviceLinkAuthenticationSessionRequest request = requestCaptor.getValue();
+
+            assertEquals(0, request.capabilities().size());
+        }
+
+        @ParameterizedTest
         @ArgumentsSource(CapabilitiesArgumentProvider.class)
         void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
@@ -267,7 +282,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initAuthenticationSession_allowedInteractionsOrderIsEmpty_throwException(List<DeviceLinkInteraction> interactions) {
+        void initAuthenticationSession_interactionsIsEmpty_throwException(List<DeviceLinkInteraction> interactions) {
             DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInteractions(interactions));
 
             var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
@@ -440,31 +455,6 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                     Arguments.of(null, Named.of("expected certificate level", null)),
                     Arguments.of(AuthenticationCertificateLevel.ADVANCED, "ADVANCED"),
                     Arguments.of(AuthenticationCertificateLevel.QUALIFIED, "QUALIFIED")
-            );
-        }
-    }
-
-    private static class CapabilitiesArgumentProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(new String[0], Collections.emptySet()),
-                    Arguments.of(new String[]{"ADVANCED"}, Set.of("ADVANCED")),
-                    Arguments.of(new String[]{"ADVANCED", "QUALIFIED"}, Set.of("ADVANCED", "QUALIFIED"))
-            );
-        }
-    }
-
-    private static class InvalidRpChallengeArgumentProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(Named.of("provided string is not in Base64 format", "invalid value"),
-                            "Value for 'rpChallenge' must be Base64-encoded string"),
-                    Arguments.of(Named.of("provided value sizes is less than allowed", Base64.toBase64String("a".repeat(30).getBytes())),
-                            "Value for 'rpChallenge' must have length between 44 and 88 characters"),
-                    Arguments.of(Named.of("provided value sizes exceeds max range value", Base64.toBase64String("a".repeat(67).getBytes())),
-                            "Value for 'rpChallenge' must have length between 44 and 88 characters")
             );
         }
     }
