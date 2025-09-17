@@ -146,7 +146,6 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
 
     /**
      * Sets the signature algorithm.
-     * .
      *
      * @param signatureAlgorithm The signature algorithm
      * @return this builder
@@ -235,6 +234,9 @@ public class LinkedNotificationSignatureSessionRequestBuilder {
         }
         if (StringUtil.isEmpty(documentNumber)) {
             throw new SmartIdRequestSetupException("Value for 'documentNumber' cannot be empty");
+        }
+        if (signatureAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
         }
         if (digestInput == null) {
             throw new SmartIdRequestSetupException("Value for 'digestInput' must be set with SignableData or with SignableHash");

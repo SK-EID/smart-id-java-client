@@ -149,6 +149,14 @@ class LinkedNotificationSignatureSessionRequestBuilderTest {
             assertEquals("Value for 'digestInput' has been already set with SignableHash", ex.getMessage());
         }
 
+        @Test
+        void initSignatureSession_signatureAlgorithmIsSetToNull_throwException() {
+            var linkedNotificationSignatureSessionRequestBuilder =  toLinkedNotificationSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(null));
+
+            var ex = assertThrows(SmartIdRequestSetupException.class, linkedNotificationSignatureSessionRequestBuilder::initSignatureSession);
+            assertEquals("Value for 'signatureAlgorithm' must be set", ex.getMessage());
+        }
+
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_linkedSessionIDIsEmpty_throwException(String linkedSessionID) {
