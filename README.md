@@ -207,7 +207,7 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         // to use anonymous authentication, do not set semantics identifier or document number
         .withRpChallenge(rpChallenge)
         .withInteractions(Collections.singletonList(
-                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ));
 
 // Initiate authentication session
@@ -256,7 +256,7 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .withSemanticsIdentifier(semanticsIdentifier)
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withInteractions(Collections.singletonList(
-                DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ));
 
 // Initiate authentication session
@@ -298,7 +298,7 @@ DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
         .withDocumentNumber(documentNumber)
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withInteractions(Collections.singletonList(
-            DeviceLinkInteraction.displayTextAndPIN("Log in?")
+                DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ));
 
 // Initiate authentication session
@@ -380,7 +380,7 @@ DeviceLinkSessionResponse signatureResponse = client.createDeviceLinkSignature()
     .withSignableData(signableData)
     .withSemanticsIdentifier(semanticsIdentifier)
     .withHashAlgorithm(HashAlgorithm.SHA_512)
-    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the <document-name>"))) // Display text should be concise and specific.
     .withInitialCallbackUrl("https://example.com/callback") // Only needed for same-device flows(Web2App, App2App)
     .initSignatureSession();
 
@@ -413,7 +413,7 @@ DeviceLinkSessionResponse signatureResponse = smartIdClient.createDeviceLinkSign
     .withSignableData(signableData)
     .withDocumentNumber(documentNumber)
     .withHashAlgorithm(HashAlgorithm.SHA_512)
-    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the <document-name>"))) // Display text should be concise and specific.
     .initSignatureSession();
 
 // Process the signature response
@@ -465,7 +465,7 @@ DeviceLinkSessionResponse authenticationSessionResponse = client
         .withRpChallenge(rpChallenge)
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED) // Certificate level can either be "QUALIFIED" or "ADVANCED"
         .withInteractions(Collections.singletonList(
-            DynamicLinkInteraction.displayTextAndPin("Log in?")
+            DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ))
         // setting property to request the IP-address of the user's device
         .withShareMdClientIpAddress(true)
@@ -486,7 +486,7 @@ Description: The RP's first choice is `confirmationMessage`; if not available, t
 ```java
 builder.withInteractions(List.of(
     DeviceLinkInteraction.confirmationMessage("Up to 200 characters of text here.."),
-    DeviceLinkInteraction.displayTextAndPIN("Up to 60 characters of text here..")
+    DeviceLinkInteraction.displayTextAndPin("Up to 60 characters of text here..")
 ))
 ```
 
@@ -523,14 +523,18 @@ Device link can be generated for 3 use cases: QR-code, web link to Smart-ID app,
 * `lang`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
 * `digest`: Base64-encoded digest or rpChallenge from session-init. Required for `auth` and `sign` flows.
 * `relyingPartyNameBase64`: Base64-encoded relying party name, used for authentication sessions. It is used to calculate the authCode.
+* `interactions`: Base64-encoded JSON string of an array of interaction objects, used to calculate the authCode.
 * `initialCallbackUrl`: Optional. Initial callback URL to be used for the dynamic link. It must match the regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded.
 
 ```java
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
+
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
+DeviceLinkAuthenticationSessionRequest sessionRequest; // request used for starting the authentication or signing session. For example authentication session request is used.
 // Calculate elapsed seconds since session response
 long elapsedSeconds = Duration.between(session.receivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
-URI deviceLink = new DeviceLinkBuilder()
+URI deviceLink = smartIdClient.createDynamicContent()
         .withDeviceLinkBase(sessionResponse.deviceLinkBase())
         .withDeviceLinkType(DeviceLinkType.QR_CODE)
         .withSessionType(SessionType.AUTHENTICATION)
@@ -538,6 +542,7 @@ URI deviceLink = new DeviceLinkBuilder()
         .withElapsedSeconds(elapsedSeconds)
         .withLang("eng")
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+        .withInteractions(sessionRequest.interactions()) // interactions from the authentication or signing session request, should be empty when used with device link certificate choice session
         .buildDeviceLink(sessionResponse.sessionSecret());
 ```
 
@@ -545,6 +550,7 @@ URI deviceLink = new DeviceLinkBuilder()
 
 ```java
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
+DeviceLinkAuthenticationSessionRequest sessionRequest; // request used for starting the authentication or signing session. For example authentication session request is used.
 // Build final device link URI with authCode
 URI deviceLink = new DeviceLinkBuilder()
         .withSchemeName("smart-id-demo") // override default scheme name to use demo environment
@@ -554,6 +560,7 @@ URI deviceLink = new DeviceLinkBuilder()
         .withSessionToken(sessionResponse.sessionToken())
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+        .withInteractions(sessionRequest.interactions()) // interactions from the authentication or signing session request, should be empty when used with device link certificate choice session
         .withInitialCallbackUrl("https://your-app/callback")
         .buildDeviceLink(sessionResponse.sessionSecret());
 ```
@@ -570,6 +577,7 @@ Generated QR code will have error correction level low.
 
 ```java
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
+DeviceLinkAuthenticationSessionRequest sessionRequest; // request used for starting the authentication or signing session. For example authentication session request is used.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
@@ -581,6 +589,7 @@ URI deviceLink = new DeviceLinkBuilder()
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withElapsedSeconds(elapsedSeconds)
+        .withInteractions(sessionRequest.interactions()) // interactions from the authentication or signing session request, should be empty when used with device link certificate choice session
         .buildDeviceLink(sessionResponse.sessionSecret());
 
 // Generate QR code image from device link URI
@@ -598,6 +607,7 @@ The width and height of 1159px produce a QR code with a module size of 19px.
 
 ```java
 DeviceLinkSessionResponse sessionResponse; // response from the session initiation query.
+DeviceLinkAuthenticationSessionRequest sessionRequest; // request used for starting the authentication or signing session. For example authentication session request is used.
 // Calculate elapsed seconds from response received time
 long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
 // Build final device link URI with authCode
@@ -609,12 +619,13 @@ URI deviceLink = new DeviceLinkBuilder()
         .withLang("est") // override language
         .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
         .withElapsedSeconds(elapsedSeconds)
+        .withInteractions(sessionRequest.interactions()) // interactions from the authentication or signing session request, should be empty when used with device link certificate choice session
         .buildDeviceLink(sessionResponse.sessionSecret());
 
 // Create QR-code with height and width of 570px and quiet area of 2 modules.
 BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toString(), 570, 570, 2);
-String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
 // Return Data URI to frontend and display the QR-code
+String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
 ```
 
 ## Session status request handling for v3.1
@@ -815,7 +826,7 @@ The session status response may return various error codes indicating the outcom
 * `USER_REFUSED_CERT_CHOICE`: User has multiple accounts and pressed Cancel on device choice screen.
 * `USER_REFUSED_INTERACTION`: User pressed Cancel on the interaction screen. `interaction` field in the result details contains info which interaction
   was canceled.
-    * `displayTextAndPIN` - User pressed Cancel on PIN screen (either during displayTextAndPIN or verificationCodeChoice flow).
+    * `displayTextAndPIN` - User pressed Cancel on PIN screen during displayTextAndPIN flow.
     * `confirmationMessage` - User cancelled on confirmationMessage screen.
     * `confirmationMessageAndVerificationCodeChoice` - User cancelled on confirmationMessageAndVerificationCodeChoice screen.
 * `PROTOCOL_FAILURE`: An error occurred in the signing protocol.
@@ -952,7 +963,7 @@ LinkedSignatureSessionResponse signatureSessionResponse = smartIdClient.createLi
         .withDocumentNumber(certificateChoiceResponse.getDocumentNumber())
         .withLinkedSessionID(certificateChoiceSessionResponse.sessionID())
         .withSignableData(new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256))
-        .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Sign it!")))
+        .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the <document-name>"))) // Display text should be concise and specific.
         .initSignatureSession();
 
 // SessionID is used to query sessions status later
@@ -1020,7 +1031,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
         .withInteractions(Collections.singletonList(
-                NotificationInteraction.displayTextAndPin("Log in?")
+                NotificationInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ))
         .initAuthenticationSession();
 
@@ -1052,7 +1063,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
         .withInteractions(Collections.singletonList(
-            NotificationInteraction.displayTextAndPin("Log in?")))
+            NotificationInteraction.displayTextAndPin("Logging into <app-name>")))  // Display text should be concise and specific.
         .initAuthenticationSession();
 
 // SessionID can be used to query sessions status later
@@ -1149,7 +1160,7 @@ NotificationSignatureSessionResponse signatureSessionResponse = client.createNot
     .withSignableData(signableData)
     .withSemanticsIdentifier(semanticsIdentifier)
     .withAllowedInteractionsOrder(List.of(
-        NotificationInteraction.confirmationMessage("Please sign the document")))
+        NotificationInteraction.confirmationMessage("Please sign the <document-name>"))) // Display text should be concise and specific.
     .initSignatureSession();
 
 // Process the querying sessions status response
@@ -1177,7 +1188,7 @@ NotificationSignatureSessionResponse signatureResponse = client.createNotificati
     .withSignableData(signableData)
     .withDocumentNumber(documentNumber)
     .withAllowedInteractionsOrder(List.of(
-        NotificationInteraction.confirmationMessage("Please sign the document")))
+            NotificationInteraction.confirmationMessage("Please sign the <document-name>"))) // Display text should be concise and specific.
     .initSignatureSession();
 
 // Process the signature response
@@ -1229,7 +1240,7 @@ NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.cr
         .withSignableData(signableData)
         .withSemanticsIdentifier(semanticsIdentifier)
         .withInteractions(Collections.singletonList(
-                NotificationInteraction.confirmationMessage("Please sign the document")
+                NotificationInteraction.confirmationMessage("Please sign the <document-name>") // Display text should be concise and specific.
         ))
         // if request is made again in 15 seconds, the idempotent behaviour applies and same response with same values will be returned
         // set nonce to override idempotent behaviour
@@ -1251,7 +1262,7 @@ NotificationAuthenticationSessionResponse authenticationSessionResponse = client
         .withRpChallenge(rpChallenge.toBase64EncodedValue())
         .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
         .withInteractions(Collections.singletonList(
-                NotificationInteraction.displayTextAndPin("Log in?")
+                NotificationInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
         ))
         // setting property to request the IP-address of the user's device
         .withShareMdClientIpAddress(true)
