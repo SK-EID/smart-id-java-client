@@ -59,7 +59,7 @@ This library supports Smart-ID API v3.1.
       * [Linked notification-based signature session](#linked-notification-based-signature-session)
         * [Example of initiating a linked notification-based signature session](#example-of-initiating-a-linked-notification-based-signature-session)
     * [Notification-based flows](#notification-based-flows)
-        * [Differences between notification-based and dynamic link flows](#differences-between-notification-based-and-device-link-flows)
+        * [Differences between notification-based and device link flows](#differences-between-notification-based-and-device-link-flows)
         * [Notification-based authentication session](#notification-based-authentication-session)
           * [Examples of initiating notification authentication session](#examples-of-initiating-a-notification-based-authentication-session)
               * [Initiating notification authentication session with document number](#initiating-a-notification-based-authentication-session-with-document-number)
@@ -114,7 +114,7 @@ Changes introduced with new library versions are described in [CHANGELOG.md](CHA
 # How to use API v3.1
 
 Support for Smart-ID API v3.1 has been added to the library. The code for v3.1 is located under the ee.sk.smartid package.
-This version introduces new dynamic link and notification-based flows for authentication, certificate choice and signing.
+This version introduces new device link and notification-based flows for authentication, certificate choice and signing.
 
 NB! v2 API classes are removed.
 
@@ -436,7 +436,7 @@ Handle exceptions appropriately. The Java client provides specific exceptions fo
 
 ```java
 try {
-    DynamicLinkSessionResponse response = builder.init*Session();
+    DeviceLinkSessionResponse response = builder.init*Session();
 } catch (UserAccountNotFoundException e) {
     System.out.println("User account not found.");
 } catch (RelyingPartyAccountConfigurationException e) {
@@ -515,16 +515,16 @@ Device link can be generated for 3 use cases: QR-code, web link to Smart-ID app,
 
 * `schemeName` : Controls which Smart-ID environment is targeted. Default value is `smart-id`.
 * `deviceLinkBase`: Value of `deviceLinkBase` returned in session-init response.
-* `version`: Version of the dynamic link. Only allowed value is `"1.0"`.
-* `deviceLinkType`: Type of the dynamic link. Possible values are `QR`, `Web2App`, `App2App`.
-* `sessionType`: Type of the sessions the dynamic link is for. Possible values are `auth`, `sign`, `cert`.
+* `version`: Version of the device link. Only allowed value is `"1.0"`.
+* `deviceLinkType`: Type of the device link. Possible values are `QR`, `Web2App`, `App2App`.
+* `sessionType`: Type of the sessions the device link is for. Possible values are `auth`, `sign`, `cert`.
 * `sessionToken`: Token from the session response.
 * `elapsedSeconds`: Seconds since the session-init response was received – only for `QR_CODE`
-* `lang`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a dynamic link
+* `lang`: User language. Default value is `eng`. Is used to set language of the fallback page. Fallback page is used for cases when the app is not installed or some other problem occurs with opening a device link
 * `digest`: Base64-encoded digest or rpChallenge from session-init. Required for `auth` and `sign` flows.
 * `relyingPartyNameBase64`: Base64-encoded relying party name, used for authentication sessions. It is used to calculate the authCode.
 * `interactions`: Base64-encoded JSON string of an array of interaction objects, used to calculate the authCode.
-* `initialCallbackUrl`: Optional. Initial callback URL to be used for the dynamic link. It must match the regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded.
+* `initialCallbackUrl`: Optional. Initial callback URL used for the same device(Web2App or App2App) device link flows. It must match the regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded.
 
 ```java
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;

@@ -87,7 +87,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         void initAuthenticationSession_anonymousAuthentication_ok() throws Exception {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(toDeviceLinkAuthenticationResponse());
             DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
 
             builder.initAuthenticationSession();
@@ -102,7 +102,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @Test
         void initAuthenticationSession_withDocumentNumber_ok() {
             when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(String.class)))
-                    .thenReturn(createDynamicLinkAuthenticationResponse());
+                    .thenReturn(toDeviceLinkAuthenticationResponse());
             DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withDocumentNumber("PNOEE-48010010101-MOCK-Q"));
 
             builder.initAuthenticationSession();
@@ -117,7 +117,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @Test
         void initAuthenticationSession_withSemanticsIdentifier() {
             when(connector.initDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class), any(SemanticsIdentifier.class)))
-                    .thenReturn(createDynamicLinkAuthenticationResponse());
+                    .thenReturn(toDeviceLinkAuthenticationResponse());
             DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101")));
 
             builder.initAuthenticationSession();
@@ -133,7 +133,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ArgumentsSource(CertificateLevelArgumentProvider.class)
         void initAuthenticationSession_certificateLevel_ok(AuthenticationCertificateLevel certificateLevel, String expectedValue) {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
-                    .thenReturn(createDynamicLinkAuthenticationResponse());
+                    .thenReturn(toDeviceLinkAuthenticationResponse());
 
             toDeviceLinkRequestBuilder(b -> b.withCertificateLevel(certificateLevel)).initAuthenticationSession();
 
@@ -148,7 +148,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @EnumSource
         void initAuthenticationSession_signatureAlgorithm_ok(SignatureAlgorithm signatureAlgorithm) {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
-                    .thenReturn(createDynamicLinkAuthenticationResponse());
+                    .thenReturn(toDeviceLinkAuthenticationResponse());
 
             toDeviceLinkRequestBuilder(b -> b.withSignatureAlgorithm(signatureAlgorithm))
                     .initAuthenticationSession();
@@ -164,7 +164,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @Test
         void initAuthenticationSession_ipQueryingNotUsed_doNotCreatedRequestProperties_ok() {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
-                    .thenReturn(createDynamicLinkAuthenticationResponse());
+                    .thenReturn(toDeviceLinkAuthenticationResponse());
 
             toBaseDeviceLinkRequestBuilder().initAuthenticationSession();
 
@@ -179,7 +179,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ValueSource(booleans = {true, false})
         void initAuthenticationSession_ipQueryingRequired_ok(boolean ipRequested) {
             when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class)))
-                    .thenReturn(createDynamicLinkAuthenticationResponse());
+                    .thenReturn(toDeviceLinkAuthenticationResponse());
 
             toDeviceLinkRequestBuilder(b -> b.withShareMdClientIpAddress(ipRequested))
                     .initAuthenticationSession();
@@ -197,7 +197,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         @ValueSource(strings = {" "})
         void initAuthenticationSession_capabilities_ok(String capabilities) {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(toDeviceLinkAuthenticationResponse());
 
             toDeviceLinkRequestBuilder(b -> b.withCapabilities(capabilities)).initAuthenticationSession();
 
@@ -211,7 +211,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(CapabilitiesArgumentProvider.class)
         void initAuthenticationSession_capabilities_ok(String[] capabilities, Set<String> expectedCapabilities) {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(toDeviceLinkAuthenticationResponse());
 
             toDeviceLinkRequestBuilder(b -> b.withCapabilities(capabilities)).initAuthenticationSession();
 
@@ -224,7 +224,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
         @Test
         void initAuthenticationSession_initialCallbackUrlIsValid_ok() {
-            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(toDeviceLinkAuthenticationResponse());
             DeviceLinkAuthenticationSessionRequestBuilder builder = toDeviceLinkRequestBuilder(b -> b.withInitialCallbackUrl("https://example.com/callback"));
 
             builder.initAuthenticationSession();
@@ -341,8 +341,8 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
             DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
-            var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse(sessionId, null, null, null);
-            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+            var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse(sessionId, null, null, null);
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(deviceLinkAuthenticationSessionResponse);
 
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initAuthenticationSession);
             assertEquals("Device link authentication session initialisation response field 'sessionID' is missing or empty", exception.getMessage());
@@ -363,8 +363,8 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         @NullAndEmptySource
         void initAuthenticationSession_sessionSecretIsNotPresentInTheResponse_throwException(String sessionSecret) {
             DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
-            var dynamicLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", generateBase64String("sessionToken"), sessionSecret, null);
-            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(dynamicLinkAuthenticationSessionResponse);
+            var deviceLinkAuthenticationSessionResponse = new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000", generateBase64String("sessionToken"), sessionSecret, null);
+            when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(deviceLinkAuthenticationSessionResponse);
 
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initAuthenticationSession);
             assertEquals("Device link authentication session initialisation response field 'sessionSecret' is missing or empty", exception.getMessage());
@@ -384,7 +384,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
     @Test
     void getAuthenticationSessionRequest_ok() throws Exception {
-        when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+        when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(toDeviceLinkAuthenticationResponse());
         DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
 
         builder.initAuthenticationSession();
@@ -395,7 +395,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
 
     @Test
     void getAuthenticationSessionRequest_authenticationNotInitialized_throwsException() {
-        when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(createDynamicLinkAuthenticationResponse());
+        when(connector.initAnonymousDeviceLinkAuthentication(any(DeviceLinkAuthenticationSessionRequest.class))).thenReturn(toDeviceLinkAuthenticationResponse());
         DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
 
         var ex = assertThrows(SmartIdClientException.class, builder::getAuthenticationSessionRequest);
@@ -415,7 +415,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
                 .withInteractions(Collections.singletonList(DeviceLinkInteraction.displayTextAndPin("Log into internet banking system")));
     }
 
-    private DeviceLinkSessionResponse createDynamicLinkAuthenticationResponse() {
+    private DeviceLinkSessionResponse toDeviceLinkAuthenticationResponse() {
         return new DeviceLinkSessionResponse("00000000-0000-0000-0000-000000000000",
                 generateBase64String("sessionToken"),
                 generateBase64String("sessionSecret"),

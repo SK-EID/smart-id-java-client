@@ -138,7 +138,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
 
     @Override
     public DeviceLinkSessionResponse initDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
-        logger.debug("Starting dynamic link authentication session with semantics identifier");
+        logger.debug("Starting device link authentication session with semantics identifier");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(DEVICE_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
