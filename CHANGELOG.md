@@ -4,6 +4,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Changes mentioned under 3.1.x version have not been published yet. Will be released when v3.1 is stable.
 
+## [3.1.14] - 2025-09-17
+- Updated notification-based authentication session request creation to be usable with Smart-ID API v3.1
+- Removed verificationCodeChoice interactions and related handling
+- Removed AuthenticationHash.
+
 ## [3.1.13] - 2025-09-08
 - Added endpoint for creating linked signature session `POST /v3/signature/notification/linked/{document-number}`.
 - Added builder to create linked signature session request `LinkedSignatureSessionRequestBuilder`.

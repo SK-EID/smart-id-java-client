@@ -36,8 +36,9 @@ import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
@@ -148,7 +149,7 @@ public interface SmartIdConnector extends Serializable {
      * @param authenticationRequest The device link authentication session request
      * @return The device link authentication session response
      */
-    DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest);
+    DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest);
 
     /**
      * Create authentication session with device link using semantics identifier
@@ -157,7 +158,7 @@ public interface SmartIdConnector extends Serializable {
      * @param semanticsIdentifier   The semantics identifier
      * @return The device link authentication session response
      */
-    DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
+    DeviceLinkSessionResponse initDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Create authentication session with device link using document number
@@ -166,7 +167,7 @@ public interface SmartIdConnector extends Serializable {
      * @param documentNumber        The document number
      * @return The device link authentication session response
      */
-    DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
+    DeviceLinkSessionResponse initDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest, String documentNumber);
 
     /**
      * Create authentication session with notification using semantics identifier
@@ -175,7 +176,7 @@ public interface SmartIdConnector extends Serializable {
      * @param semanticsIdentifier   The semantics identifier
      * @return The notification authentication session response
      */
-    NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
+    NotificationAuthenticationSessionResponse initNotificationAuthentication(NotificationAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Create authentication session with notification using document number
@@ -184,5 +185,5 @@ public interface SmartIdConnector extends Serializable {
      * @param documentNumber        The document number
      * @return The notification authentication session response
      */
-    NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber);
+    NotificationAuthenticationSessionResponse initNotificationAuthentication(NotificationAuthenticationSessionRequest authenticationRequest, String documentNumber);
 }

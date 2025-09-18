@@ -44,13 +44,14 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFoundException;
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
@@ -136,8 +137,8 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
-        logger.debug("Starting dynamic link authentication session with semantics identifier");
+    public DeviceLinkSessionResponse initDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
+        logger.debug("Starting device link authentication session with semantics identifier");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(DEVICE_LINK_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
                 .path(semanticsIdentifier.getIdentifier())
@@ -146,7 +147,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber) {
+    public DeviceLinkSessionResponse initDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest, String documentNumber) {
         logger.debug("Starting device link authentication session with document number");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(DEVICE_LINK_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)
@@ -156,7 +157,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(AuthenticationSessionRequest authenticationRequest) {
+    public DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest) {
         logger.debug("Starting anonymous device link authentication session");
         URI uri = UriBuilder.fromUri(endpointUrl)
                 .path(ANONYMOUS_DEVICE_LINK_AUTHENTICATION_PATH)
@@ -165,7 +166,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
+    public NotificationAuthenticationSessionResponse initNotificationAuthentication(NotificationAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(NOTIFICATION_AUTHENTICATION_WITH_SEMANTIC_IDENTIFIER_PATH)
@@ -175,7 +176,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public NotificationAuthenticationSessionResponse initNotificationAuthentication(AuthenticationSessionRequest authenticationRequest, String documentNumber) {
+    public NotificationAuthenticationSessionResponse initNotificationAuthentication(NotificationAuthenticationSessionRequest authenticationRequest, String documentNumber) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(NOTIFICATION_AUTHENTICATION_WITH_DOCUMENT_NUMBER_PATH)

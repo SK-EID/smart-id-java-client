@@ -1,10 +1,10 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,25 +26,30 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import org.bouncycastle.util.encoders.Base64;
 
-public enum DeviceLinkInteractionFlow implements InteractionFlow {
+/**
+ * Represents an RP challenge
+ *
+ * @param value a byte array of representing the challenge
+ */
+public record RpChallenge(byte[] value) {
 
-    DISPLAY_TEXT_AND_PIN("displayTextAndPIN"),
-    CONFIRMATION_MESSAGE("confirmationMessage");
-
-    private final String code;
-
-    DeviceLinkInteractionFlow(String code) {
-        this.code = code;
+    /**
+     * Returns a copy of the challenge value
+     *
+     * @return a byte array representing the challenge
+     */
+    public byte[] value() {
+        return value.clone();
     }
 
-    @JsonValue
-    public String getCode() {
-        return code;
-    }
-
-    public boolean is(String typeCodeString) {
-        return this.getCode().equals(typeCodeString);
+    /**
+     * Returns the Base64 encoded representation of the challenge value
+     *
+     * @return a Base64 encoded string representing the challenge
+     */
+    public String toBase64EncodedValue() {
+        return Base64.toBase64String(value);
     }
 }

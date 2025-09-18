@@ -29,19 +29,19 @@ package ee.sk.smartid;
 import java.util.List;
 import java.util.Set;
 
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
-import ee.sk.smartid.util.DeviceLinkUtil;
+import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
@@ -66,6 +66,8 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
     private String initialCallbackUrl;
     private DigestInput digestInput;
+
+    private SignatureSessionRequest signatureSessionRequest;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -252,7 +254,23 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
         DeviceLinkSessionResponse deviceLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
         validateResponseParameters(deviceLinkSignatureSessionResponse);
+        this.signatureSessionRequest = signatureSessionRequest;
         return deviceLinkSignatureSessionResponse;
+    }
+
+    /**
+     * Gets the SignatureSessionRequest that was used to initiate the signature session.
+     * <p>
+     * This method can only be called after {@link #initSignatureSession()} has been invoked.
+     *
+     * @return the signature request that was used to initiate the session
+     * @throws SmartIdClientException if called before initSignatureSession()
+     */
+    public SignatureSessionRequest getSignatureSessionRequest() {
+        if (signatureSessionRequest == null) {
+            throw new SmartIdClientException("Signature session has not been initiated yet");
+        }
+        return signatureSessionRequest;
     }
 
     private DeviceLinkSessionResponse initSignatureSession(SignatureSessionRequest request) {
@@ -261,7 +279,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         } else if (semanticsIdentifier != null) {
             return connector.initDeviceLinkSignature(request, semanticsIdentifier);
         } else {
-            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed.");
+            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed");
         }
     }
 
@@ -276,7 +294,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
                 signatureProtocolParameters,
                 nonce != null ? nonce : null,
                 capabilities,
-                DeviceLinkUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 initialCallbackUrl);
     }
@@ -306,8 +324,9 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         if (interactions == null || interactions.isEmpty()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
-        validateNoDuplicateInteractions();
-        interactions.forEach(DeviceLinkInteraction::validate);
+        if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
+        }
     }
 
     private void validateInitialCallbackUrl() {
@@ -331,9 +350,4 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         }
     }
 
-    private void validateNoDuplicateInteractions() {
-        if (interactions.stream().map(Interaction::getType).distinct().count() != interactions.size()) {
-            throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
-        }
-    }
 }

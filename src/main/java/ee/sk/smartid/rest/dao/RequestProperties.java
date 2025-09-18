@@ -30,5 +30,10 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Additional request properties
+ *
+ * @param shareMdClientIpAddress Set if the client's device IP address should be provided in sessions status response
+ */
 public record RequestProperties(@JsonInclude(JsonInclude.Include.NON_NULL) Boolean shareMdClientIpAddress) implements Serializable {
 }

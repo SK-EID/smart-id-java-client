@@ -34,14 +34,22 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Response of session creation for device link flows
+ *
+ * @param sessionID      Required. The unique identifier of the session.
+ * @param sessionToken   Required. The token of the session.
+ * @param sessionSecret  Required.
+ * @param deviceLinkBase Required. Base URI for generating device link
+ * @param receivedAt     Timestamp when the response was received
+ */
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DeviceLinkSessionResponse(String sessionID,
                                         String sessionToken,
                                         String sessionSecret,
                                         URI deviceLinkBase,
-                                        Instant receivedAt
-
-) implements Serializable {
+                                        Instant receivedAt) implements Serializable {
 
     @JsonCreator
     public DeviceLinkSessionResponse(@JsonProperty("sessionID") String sessionID,

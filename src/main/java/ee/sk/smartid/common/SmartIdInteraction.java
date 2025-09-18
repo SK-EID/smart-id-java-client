@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid.common;
 
 /*-
  * #%L
@@ -26,25 +26,29 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
+/**
+ * Interaction to be used in authentication and signing requests
+ */
+public interface SmartIdInteraction {
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
+    /**
+     * Gets the interaction type
+     *
+     * @return the interaction type
+     */
+    InteractionType type();
 
-public class NotificationUtil {
+    /**
+     * Gets the text to be displayed on the device screen (maximum length 60 characters).
+     *
+     * @return the text to be displayed on the device screen (maximum length 60 characters).
+     */
+    String displayText60();
 
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    public static String encodeToBase64(List<NotificationInteraction> interactions) {
-        try {
-            String json = mapper.writeValueAsString(interactions);
-            return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException e) {
-            throw new SmartIdClientException("Unable to encode interactions to base64", e);
-        }
-    }
+    /**
+     * Gets the text to be displayed on the device screen (maximum length 200 characters).
+     *
+     * @return the text to be displayed on the device screen (maximum length 200 characters).
+     */
+    String displayText200();
 }

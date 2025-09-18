@@ -56,11 +56,11 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
@@ -192,7 +192,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @ParameterizedTest
     @EnumSource(HashAlgorithm.class)
-    void initSignatureSession_withSignablData(HashAlgorithm hashAlgorithm) {
+    void initSignatureSession_withSignableData(HashAlgorithm hashAlgorithm) {
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var signableData = new SignableData("Test hash".getBytes(), hashAlgorithm);
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignableData(signableData));
@@ -244,7 +244,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     }
 
     @Test
-    void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
+    void initSignatureSession_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
         when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
 
@@ -258,6 +258,31 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
 
+    @Test
+    void getSignatureSessionRequest_ok() {
+        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
+
+        DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
+        SignatureSessionRequest signatureSessionRequest = deviceLinkSessionRequestBuilder.getSignatureSessionRequest();
+        assertNotNull(signature);
+
+        assertEquals("test-relying-party-uuid", signatureSessionRequest.relyingPartyUUID());
+        assertEquals("DEMO", signatureSessionRequest.relyingPartyName());
+        assertEquals("RAW_DIGEST_SIGNATURE", signatureSessionRequest.signatureProtocol());
+        assertNotNull(signatureSessionRequest.signatureProtocolParameters());
+        assertNotNull(signatureSessionRequest.interactions());
+    }
+
+    @Test
+    void getSignatureSessionRequest_sessionNotStarted_throwException() {
+        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
+
+        var ex = assertThrows(SmartIdClientException.class, deviceLinkSessionRequestBuilder::getSignatureSessionRequest);
+        assertEquals("Signature session has not been initiated yet", ex.getMessage());
+    }
+
     @Nested
     class ErrorCases {
 
@@ -267,7 +292,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
             var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withDocumentNumber(documentNumber).withSemanticsIdentifier(null));
 
             var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
-            assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed.", ex.getMessage());
+            assertEquals("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed", ex.getMessage());
         }
 
         @Test
@@ -338,7 +363,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
         }
 
         @ParameterizedTest
-        @ArgumentsSource(DuplicateInteractionsProvider.class)
+        @ArgumentsSource(DuplicateDeviceLinkInteractionsProvider.class)
         void initSignatureSession_duplicateInteractions_shouldThrowException(List<DeviceLinkInteraction> duplicateInteractions) {
             var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withInteractions(duplicateInteractions));
 
@@ -444,7 +469,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
                 .withSemanticsIdentifier(SEMANTICS_IDENTIFIER)
-                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPIN("Please sign the document")))
+                .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document")))
                 .withSignableData(new SignableData("Test data".getBytes()));
     }
 
@@ -480,18 +505,6 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     Arguments.of("http://example.com"),
                     Arguments.of("https://example.com|test"),
                     Arguments.of("ftp://example.com")
-            );
-        }
-    }
-
-    static class DuplicateInteractionsProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            var interaction1 = DeviceLinkInteraction.displayTextAndPIN("Sign this.");
-            var interaction2 = DeviceLinkInteraction.displayTextAndPIN("Sign this again.");
-            return Stream.of(
-                    Arguments.of(List.of(interaction1, interaction1)),
-                    Arguments.of(List.of(interaction1, interaction2))
             );
         }
     }

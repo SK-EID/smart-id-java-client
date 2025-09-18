@@ -1,10 +1,10 @@
-package ee.sk.smartid.exception.useraction;
+package ee.sk.smartid;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,25 @@ package ee.sk.smartid.exception.useraction;
  * #L%
  */
 
-public class UserRefusedVerificationChoiceException extends UserRefusedException {
-    public UserRefusedVerificationChoiceException() {
-        super("User cancelled verificationCodeChoice screen");
+import java.util.List;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
+
+public class DuplicateDeviceLinkInteractionsProvider implements ArgumentsProvider {
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+        var interaction1 = DeviceLinkInteraction.displayTextAndPin("Enter your PIN.");
+        var interaction2 = DeviceLinkInteraction.displayTextAndPin("Enter your PIN.");
+
+        return Stream.of(
+                Arguments.of(List.of(interaction1, interaction1)),
+                Arguments.of(List.of(interaction1, interaction2))
+        );
     }
 }

@@ -35,7 +35,6 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
 import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageWithVerificationChoiceException;
 import ee.sk.smartid.exception.useraction.UserRefusedDisplayTextAndPinException;
-import ee.sk.smartid.exception.useraction.UserRefusedVerificationChoiceException;
 
 public class UserRefusedInteractionArgumentsProvider implements ArgumentsProvider {
 
@@ -44,7 +43,6 @@ public class UserRefusedInteractionArgumentsProvider implements ArgumentsProvide
         return Stream.of(
                 Arguments.of("displayTextAndPIN", UserRefusedDisplayTextAndPinException.class),
                 Arguments.of("confirmationMessage", UserRefusedConfirmationMessageException.class),
-                Arguments.of("verificationCodeChoice", UserRefusedVerificationChoiceException.class),
                 Arguments.of("confirmationMessageAndVerificationCodeChoice", UserRefusedConfirmationMessageWithVerificationChoiceException.class));
     }
 }

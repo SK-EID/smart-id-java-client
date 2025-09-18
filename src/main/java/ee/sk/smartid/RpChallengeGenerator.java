@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,10 +28,10 @@ package ee.sk.smartid;
 
 import java.security.SecureRandom;
 
-import org.bouncycastle.util.encoders.Base64;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 /**
- * Utility class for generating RP challenges in Base64 format
+ * Utility class for generating RP challenge
  */
 public class RpChallengeGenerator {
 
@@ -42,28 +42,28 @@ public class RpChallengeGenerator {
     }
 
     /**
-     * Generates a RP challenge with a maximum length of 64 bytes
+     * Generates an RP challenge with a maximum length of 64 bytes
      *
-     * @return RP challenge in Base64 format
+     * @return RP challenge
      */
-    public static String generate() {
+    public static RpChallenge generate() {
         byte[] randBytes = new byte[MAX_LENGTH];
         new SecureRandom().nextBytes(randBytes);
-        return Base64.toBase64String(randBytes);
+        return new RpChallenge(randBytes);
     }
 
     /**
-     * Generates a RP challenge with specified length
+     * Generates an RP challenge with specified length
      *
      * @param length length of the challenge
-     * @return RP challenge in Base64 format
+     * @return RP challenge
      */
-    public static String generate(int length) {
+    public static RpChallenge generate(int length) {
         if (length < MIN_LENGTH || length > MAX_LENGTH) {
-            throw new IllegalArgumentException("Length must be between " + MIN_LENGTH + " and " + MAX_LENGTH);
+            throw new SmartIdClientException("Length must be between " + MIN_LENGTH + " and " + MAX_LENGTH);
         }
         byte[] randBytes = getRandomBytes(length);
-        return Base64.toBase64String(randBytes);
+        return new RpChallenge(randBytes);
     }
 
     private static byte[] getRandomBytes(int length) {

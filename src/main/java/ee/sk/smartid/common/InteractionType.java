@@ -1,10 +1,10 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.common;
 
 /*-
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,9 +26,22 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-public interface InteractionFlow {
+/**
+ * Representations of interaction types that can be used in authentication and signing requests
+ */
+public interface InteractionType {
 
+    /**
+     * Provides the interaction type as value that can be used in the Smart ID API
+     *
+     * @return code representing the interaction type
+     */
     String getCode();
 
-    boolean is(String typeCodeString);
+    /**
+        * Provides the maximum length of the display text for this interaction type
+     *
+     * @return maximum length of the display text
+     */
+    int getMaxLength();
 }

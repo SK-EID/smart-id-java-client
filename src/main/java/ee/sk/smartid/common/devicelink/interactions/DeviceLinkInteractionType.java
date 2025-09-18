@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.common.devicelink.interactions;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,27 +26,31 @@ package ee.sk.smartid;
  * #L%
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.common.InteractionType;
 
-import org.bouncycastle.util.encoders.Base64;
+/**
+ * Device link interaction types that can be used in device link based authentication and signing requests
+ */
+public enum DeviceLinkInteractionType implements InteractionType {
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
+    DISPLAY_TEXT_AND_PIN("displayTextAndPIN", 60),
+    CONFIRMATION_MESSAGE("confirmationMessage", 200);
 
-public class InteractionUtil {
+    private final String code;
+    private final int maxLength;
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    private InteractionUtil() {
+    DeviceLinkInteractionType(String code, int maxLength) {
+        this.code = code;
+        this.maxLength = maxLength;
     }
 
-    public static String encodeInteractionsAsBase64(List<? extends Interaction> interactions) {
-        try {
-            String json = objectMapper.writeValueAsString(interactions);
-            return Base64.toBase64String(json.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to encode interactions to Base64", e);
-        }
+    @Override
+    public String getCode() {
+        return code;
+    }
+
+    @Override
+    public int getMaxLength() {
+        return maxLength;
     }
 }

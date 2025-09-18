@@ -4,7 +4,7 @@ package ee.sk.smartid.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,70 +27,15 @@ package ee.sk.smartid.rest.dao;
  */
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public abstract class Interaction {
-
-    protected InteractionFlow type;
-
-    protected String displayText60;
-    protected String displayText200;
-
-    public InteractionFlow getType() {
-        return type;
-    }
-
-    public void setType(DeviceLinkInteractionFlow type) {
-        this.type = type;
-    }
-
-    public String getDisplayText60() {
-        return displayText60;
-    }
-
-    public void setDisplayText60(String displayText60) {
-        this.displayText60 = displayText60;
-    }
-
-    public String getDisplayText200() {
-        return displayText200;
-    }
-
-    public void setDisplayText200(String displayText200) {
-        this.displayText200 = displayText200;
-    }
-
-    public void validate() {
-        validateInteractionsDisplayText60();
-        validateInteractionsDisplayText200();
-    }
-
-    protected abstract void validateInteractionsDisplayText60();
-
-    protected abstract void validateInteractionsDisplayText200();
-
-    protected void validateDisplayText60() {
-        if (getDisplayText60() == null) {
-            throw new SmartIdClientException("displayText60 cannot be null for AllowedInteractionOrder of type " + getType());
-        }
-        if (getDisplayText60().length() > 60) {
-            throw new SmartIdClientException("displayText60 must not be longer than 60 characters");
-        }
-        if (getDisplayText200() != null) {
-            throw new SmartIdClientException("displayText200 must be null for AllowedInteractionOrder of type " + getType());
-        }
-    }
-
-    protected void validateDisplayText200() {
-        if (getDisplayText200() == null) {
-            throw new SmartIdClientException("displayText200 cannot be null for AllowedInteractionOrder of type " + getType());
-        }
-        if (getDisplayText200().length() > 200) {
-            throw new SmartIdClientException("displayText200 must not be longer than 200 characters");
-        }
-        if (getDisplayText60() != null) {
-            throw new SmartIdClientException("displayText60 must be null for AllowedInteractionOrder of type " + getType());
-        }
-    }
+/**
+ * Interaction to be used in authentication and signing requests
+ *
+ * @param type           Required. The interaction type
+ * @param displayText60  Requirement depends on the type. The text to be displayed on the device screen (maximum length 60 characters).
+ * @param displayText200 Requirement depends on the type. the text to be displayed on the device screen (maximum length 200 characters).
+ */
+public record Interaction(String type,
+                          @JsonInclude(JsonInclude.Include.NON_EMPTY) String displayText60,
+                          @JsonInclude(JsonInclude.Include.NON_EMPTY) String displayText200) {
 }

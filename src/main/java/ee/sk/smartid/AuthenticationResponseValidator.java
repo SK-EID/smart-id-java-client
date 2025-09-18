@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
@@ -98,7 +98,7 @@ public class AuthenticationResponseValidator {
      * @return the authentication identity
      */
     public AuthenticationIdentity validate(SessionStatus sessionStatus,
-                                           AuthenticationSessionRequest authenticationSessionRequest,
+                                           DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
                                            String schemaName) {
         return validate(sessionStatus, authenticationSessionRequest, schemaName, null);
     }
@@ -113,7 +113,7 @@ public class AuthenticationResponseValidator {
      * @return the authentication identity
      */
     public AuthenticationIdentity validate(SessionStatus sessionStatus,
-                                           AuthenticationSessionRequest authenticationSessionRequest,
+                                           DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
                                            String schemaName,
                                            String brokeredRpName) {
         validateInputs(sessionStatus, authenticationSessionRequest, schemaName);
@@ -160,7 +160,7 @@ public class AuthenticationResponseValidator {
     }
 
     private void validateSignature(AuthenticationResponse authenticationResponse,
-                                   AuthenticationSessionRequest authenticationSessionRequest,
+                                   DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
                                    String schemaName,
                                    String brokeredRpName) {
         byte[] payload = constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
@@ -171,7 +171,7 @@ public class AuthenticationResponseValidator {
     }
 
     private byte[] constructPayload(AuthenticationResponse authenticationResponse,
-                                    AuthenticationSessionRequest authenticationSessionRequest,
+                                    DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
                                     String schemaName,
                                     String brokeredRpName) {
         String[] payload = {
@@ -192,7 +192,7 @@ public class AuthenticationResponseValidator {
                 .getBytes(StandardCharsets.UTF_8);
     }
 
-    private static void validateInputs(SessionStatus sessionStatus, AuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
+    private static void validateInputs(SessionStatus sessionStatus, DeviceLinkAuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
         if (sessionStatus == null) {
             throw new SmartIdClientException("Parameter 'sessionStatus' is not provided");
         }
@@ -204,7 +204,7 @@ public class AuthenticationResponseValidator {
         }
     }
 
-    private static byte[] calculateInteractionsDigest(AuthenticationSessionRequest authenticationSessionRequest) {
+    private static byte[] calculateInteractionsDigest(DeviceLinkAuthenticationSessionRequest authenticationSessionRequest) {
         byte[] interactions = authenticationSessionRequest.interactions().getBytes(StandardCharsets.UTF_8);
         return DigestCalculator.calculateDigest(interactions, HashAlgorithm.SHA_256);
     }

@@ -30,19 +30,20 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkInteraction;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.util.DeviceLinkUtil;
+import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -67,7 +68,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     private String documentNumber;
     private String initialCallbackUrl;
 
-    private AuthenticationSessionRequest authenticationSessionRequest;
+    private DeviceLinkAuthenticationSessionRequest authenticationSessionRequest;
 
     /**
      * Constructs a new DeviceLinkAuthenticationSessionRequestBuilder with the given Smart-ID connector
@@ -181,7 +182,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * @return this builder
      */
     public DeviceLinkAuthenticationSessionRequestBuilder withCapabilities(String... capabilities) {
-        this.capabilities = Set.of(capabilities);
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 
@@ -242,7 +243,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      */
     public DeviceLinkSessionResponse initAuthenticationSession() {
         validateRequestParameters();
-        AuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
+        DeviceLinkAuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
         DeviceLinkSessionResponse deviceLinkAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(deviceLinkAuthenticationSessionResponse);
         this.authenticationSessionRequest = authenticationRequest;
@@ -255,14 +256,14 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      * @return the authentication session request
      * @throws SmartIdClientException when session is not yet initialized and method is called
      */
-    public AuthenticationSessionRequest getAuthenticationSessionRequest() {
+    public DeviceLinkAuthenticationSessionRequest getAuthenticationSessionRequest() {
         if (authenticationSessionRequest == null) {
             throw new SmartIdClientException("Authentication session request has not been initialized yet");
         }
         return authenticationSessionRequest;
     }
 
-    private DeviceLinkSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
+    private DeviceLinkSessionResponse initAuthenticationSession(DeviceLinkAuthenticationSessionRequest authenticationRequest) {
         if (semanticsIdentifier != null && documentNumber != null) {
             throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
         }
@@ -312,11 +313,10 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         validateNoDuplicateInteractions();
-        interactions.forEach(DeviceLinkInteraction::validate);
     }
 
     private void validateNoDuplicateInteractions() {
-        if (interactions.stream().map(Interaction::getType).distinct().count() != interactions.size()) {
+        if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
         }
     }
@@ -327,18 +327,18 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         }
     }
 
-    private AuthenticationSessionRequest createAuthenticationRequest() {
+    private DeviceLinkAuthenticationSessionRequest createAuthenticationRequest() {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(rpChallenge,
                 signatureAlgorithm.getAlgorithmName(),
                 new SignatureAlgorithmParameters(this.hashAlgorithm.getAlgorithmName()));
 
-        return new AuthenticationSessionRequest(
+        return new DeviceLinkAuthenticationSessionRequest(
                 relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.ACSP_V2,
                 signatureProtocolParameters,
-                DeviceLinkUtil.encodeToBase64(interactions),
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 capabilities,
                 initialCallbackUrl
@@ -360,7 +360,6 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
         if (deviceLinkAuthenticationSessionResponse.deviceLinkBase() == null
                 || deviceLinkAuthenticationSessionResponse.deviceLinkBase().toString().isBlank()) {
             throw new UnprocessableSmartIdResponseException("Device link authentication session initialisation response field 'deviceLinkBase' is missing or empty");
-
         }
     }
 }

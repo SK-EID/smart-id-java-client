@@ -26,36 +26,29 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.AuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.rest.dao.VerificationCode;
+import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
- * Class for building a notification authentication session request
+ * Class for building a notification-based authentication session request
  */
 public class NotificationAuthenticationSessionRequestBuilder {
-
-    private static final Logger logger = LoggerFactory.getLogger(NotificationAuthenticationSessionRequestBuilder.class);
 
     private final SmartIdConnector connector;
 
@@ -64,7 +57,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private AuthenticationCertificateLevel certificateLevel;
     private String rpChallenge;
     private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
-    private String nonce;
+    private HashAlgorithm hashAlgorithm = HashAlgorithm.SHA3_512;
     private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
     private Set<String> capabilities;
@@ -114,15 +107,17 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the random challenge
+     * Sets the RP challenge
      * <p>
-     * The provided random challenge must be a Base64 encoded string
+     * The provided rpChallenge must be a Base64 encoded string
+     * <p>
+     * Use {@link ee.sk.smartid.RpChallengeGenerator#generate()} to generate a valid RP challenge
      *
-     * @param randomChallenge the signature protocol parameters
+     * @param rpChallenge RP challenge in Base64 encoded format
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withRandomChallenge(String randomChallenge) {
-        this.rpChallenge = randomChallenge;
+    public NotificationAuthenticationSessionRequestBuilder withRpChallenge(String rpChallenge) {
+        this.rpChallenge = rpChallenge;
         return this;
     }
 
@@ -138,24 +133,24 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     /**
-     * Sets the nonce
+     * Sets the hash algorithm
      *
-     * @param nonce the nonce
+     * @param hashAlgorithm the hash algorithm
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withNonce(String nonce) {
-        this.nonce = nonce;
+    public NotificationAuthenticationSessionRequestBuilder withHashAlgorithm(HashAlgorithm hashAlgorithm) {
+        this.hashAlgorithm = hashAlgorithm;
         return this;
     }
 
     /**
-     * Sets the allowed interactions order
+     * Sets the interactions
      *
-     * @param allowedInteractionsOrder the allowed interactions order
+     * @param interactions the notification interactions
      * @return this builder
      */
-    public NotificationAuthenticationSessionRequestBuilder withAllowedInteractionsOrder(List<NotificationInteraction> allowedInteractionsOrder) {
-        this.interactions = allowedInteractionsOrder;
+    public NotificationAuthenticationSessionRequestBuilder withInteractions(List<NotificationInteraction> interactions) {
+        this.interactions = interactions;
         return this;
     }
 
@@ -177,7 +172,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
      * @return this builder
      */
     public NotificationAuthenticationSessionRequestBuilder withCapabilities(String... capabilities) {
-        this.capabilities = Set.of(capabilities);
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 
@@ -220,137 +215,86 @@ public class NotificationAuthenticationSessionRequestBuilder {
      */
     public NotificationAuthenticationSessionResponse initAuthenticationSession() {
         validateRequestParameters();
-        AuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
+        NotificationAuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
         NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(notificationAuthenticationSessionResponse);
         return notificationAuthenticationSessionResponse;
     }
 
-    private NotificationAuthenticationSessionResponse initAuthenticationSession(AuthenticationSessionRequest authenticationRequest) {
+    private NotificationAuthenticationSessionResponse initAuthenticationSession(NotificationAuthenticationSessionRequest authenticationRequest) {
+        if (semanticsIdentifier != null && documentNumber != null) {
+            throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
+        } else
         if (semanticsIdentifier != null) {
             return connector.initNotificationAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
             return connector.initNotificationAuthentication(authenticationRequest, documentNumber);
         } else {
-            throw new SmartIdClientException("Either documentNumber or semanticsIdentifier must be set.");
+            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set");
         }
     }
 
     private void validateRequestParameters() {
         if (StringUtil.isEmpty(relyingPartyUUID)) {
-            logger.error("Parameter relyingPartyUUID must be set");
-            throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyName)) {
-            logger.error("Parameter relyingPartyName must be set");
-            throw new SmartIdClientException("Parameter relyingPartyName must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
         }
         validateSignatureParameters();
-        validateNonce();
-        validateAllowedInteractionOrder();
+        validateInteractions();
     }
 
     private void validateSignatureParameters() {
         if (StringUtil.isEmpty(rpChallenge)) {
-            logger.error("Parameter randomChallenge must be set");
-            throw new SmartIdClientException("Parameter randomChallenge must be set");
+            throw new SmartIdRequestSetupException("Value for 'rpChallenge' cannot be empty");
         }
-        byte[] challenge = getDecodedRandomChallenge();
-        if (challenge.length < 32 || challenge.length > 64) {
-            logger.error("Size of parameter randomChallenge must be between 32 and 64 bytes");
-            throw new SmartIdClientException("Size of parameter randomChallenge must be between 32 and 64 bytes");
+        try {
+            Base64.getDecoder().decode(rpChallenge);
+        } catch (IllegalArgumentException e) {
+            throw new SmartIdRequestSetupException("Value for 'rpChallenge' must be Base64-encoded string", e);
+        }
+        if (rpChallenge.length() < 44 || rpChallenge.length() > 88) {
+            throw new SmartIdRequestSetupException("Value for 'rpChallenge' must have length between 44 and 88 characters");
         }
         if (signatureAlgorithm == null) {
-            logger.error("Parameter signatureAlgorithm must be set");
-            throw new SmartIdClientException("Parameter signatureAlgorithm must be set");
+            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
+        }
+        if (hashAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Value for 'hashAlgorithm' must be set");
         }
     }
 
-    private byte[] getDecodedRandomChallenge() {
-        Base64.Decoder decoder = Base64.getDecoder();
-        try {
-            return decoder.decode(rpChallenge);
-        } catch (IllegalArgumentException e) {
-            logger.error("Parameter randomChallenge is not a valid Base64 encoded string");
-            throw new SmartIdClientException("Parameter randomChallenge is not a valid Base64 encoded string");
-        }
-    }
-
-    private void validateNonce() {
-        if (nonce == null) {
-            return;
-        }
-        if (nonce.isEmpty()) {
-            logger.error("Parameter nonce value has to be at least 1 character long");
-            throw new SmartIdClientException("Parameter nonce value has to be at least 1 character long");
-        }
-        if (nonce.length() > 30) {
-            logger.error("Nonce cannot be longer that 30 chars");
-            throw new SmartIdClientException("Nonce cannot be longer that 30 chars");
-        }
-    }
-
-    private void validateAllowedInteractionOrder() {
+    private void validateInteractions() {
         if (interactions == null || interactions.isEmpty()) {
-            logger.error("Parameter allowedInteractionsOrder must be set");
-            throw new SmartIdClientException("Parameter allowedInteractionsOrder must be set");
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
-        interactions.forEach(Interaction::validate);
+        if (interactions.stream().map(NotificationInteraction::type).distinct().count() != interactions.size()) {
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
+        }
     }
 
-    private AuthenticationSessionRequest createAuthenticationRequest() {
+    private NotificationAuthenticationSessionRequest createAuthenticationRequest() {
         var signatureProtocolParameters = new AcspV2SignatureProtocolParameters(rpChallenge,
                 signatureAlgorithm.getAlgorithmName(),
-                new SignatureAlgorithmParameters("SHA-512"));
+                new SignatureAlgorithmParameters(hashAlgorithm.getAlgorithmName()));
 
-        return new AuthenticationSessionRequest(
+        return new NotificationAuthenticationSessionRequest(
                 relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
-                SignatureProtocol.ACSP_V2,
+                SignatureProtocol.ACSP_V2.name(),
                 signatureProtocolParameters,
-                encodeInteractionsToBase64(interactions),
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
                 this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
                 capabilities,
-                nonce
+                VerificationCodeType.NUMERIC4.getValue()
         );
     }
 
     private void validateResponseParameters(NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse) {
-        if (StringUtil.isEmpty(notificationAuthenticationSessionResponse.getSessionID())) {
-            logger.error("Session ID is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
-        }
-
-        VerificationCode verificationCode = notificationAuthenticationSessionResponse.getVc();
-        if (verificationCode == null) {
-            logger.error("VC object is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC object is missing from the response");
-        }
-
-        String vcType = verificationCode.getType();
-        if (StringUtil.isEmpty(vcType)) {
-            logger.error("VC type is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC type is missing from the response");
-        }
-
-        if (!VerificationCode.ALPHA_NUMERIC_4.equals(vcType)) {
-            logger.error("Unsupported VC type: {}", vcType);
-            throw new UnprocessableSmartIdResponseException("Unsupported VC type: " + vcType);
-        }
-
-        if (StringUtil.isEmpty(verificationCode.getValue())) {
-            logger.error("VC value is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC value is missing from the response");
-        }
-    }
-
-    private String encodeInteractionsToBase64(List<NotificationInteraction> interactions) {
-        try {
-            var mapper = new ObjectMapper();
-            return Base64.getEncoder().encodeToString(mapper.writeValueAsString(interactions).getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException e) {
-            throw new SmartIdClientException("Unable to encode interactions to base64", e);
+        if (StringUtil.isEmpty(notificationAuthenticationSessionResponse.sessionID())) {
+            throw new UnprocessableSmartIdResponseException("Notification-based authentication session initialisation response field 'sessionID' is missing or empty");
         }
     }
 }

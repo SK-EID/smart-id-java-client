@@ -38,21 +38,21 @@ import ee.sk.smartid.rest.dao.Interaction;
 /**
  * Utility class for interactions related actions
  */
-public class DeviceLinkUtil {
+public class InteractionUtil {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    private DeviceLinkUtil() {
+    private InteractionUtil() {
     }
 
     /**
-     * Encodes list of interactions to Base64 string
+     * Encodes list of interactions to Base64-encoded string
      *
      * @param interactions list of interactions
      * @return base64 encoded string
      * @throws SmartIdClientException if unable to encode interactions
      */
-    public static String encodeToBase64(List<? extends Interaction> interactions) {
+    public static String encodeToBase64(List<Interaction> interactions) {
         try {
             String json = mapper.writeValueAsString(interactions);
             return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));

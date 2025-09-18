@@ -55,10 +55,10 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.mockito.ArgumentCaptor;
 
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.NotificationInteraction;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
@@ -77,7 +77,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         builder = new NotificationSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withAllowedInteractionsOrder(List.of(NotificationInteraction.verificationCodeChoice("Verify the code")))
+                .withAllowedInteractionsOrder(List.of(NotificationInteraction.displayTextAndPin("Sign?")))
                 .withSignableData(new SignableData("Test data".getBytes()));
     }
 

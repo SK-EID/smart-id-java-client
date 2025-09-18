@@ -28,6 +28,13 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
+/**
+ * ACSP_V2 signature protocol parameters
+ *
+ * @param rpChallenge                  Required. The RP challenge in Base64 encoding
+ * @param signatureAlgorithm           Required. The signature algorithm. Only supported value is rsassa-pss
+ * @param signatureAlgorithmParameters Required. The signature algorithm parameters
+ */
 public record AcspV2SignatureProtocolParameters(String rpChallenge,
                                                 String signatureAlgorithm,
                                                 SignatureAlgorithmParameters signatureAlgorithmParameters) implements Serializable {

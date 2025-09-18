@@ -1,6 +1,7 @@
 {
   "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
   "relyingPartyName": "DEMO",
+  "certificateLevel": "QUALIFIED",
   "signatureProtocol": "ACSP_V2",
   "signatureProtocolParameters": {
     "rpChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
@@ -9,6 +10,9 @@
       "hashAlgorithm": "SHA3-512"
     }
   },
-  "certificateLevel": "QUALIFIED",
-  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbj8ifV0="
+  "interactions": "W3sidHlwZSI6ImNvbmZpcm1hdGlvbk1lc3NhZ2UiLCJkaXNwbGF5VGV4dDIwMCI6IkxvZ2luPyJ9XQ==",
+  "requestProperties": {
+    "shareMdClientIpAddress": true
+  },
+  "vcType": "numeric4"
 }
