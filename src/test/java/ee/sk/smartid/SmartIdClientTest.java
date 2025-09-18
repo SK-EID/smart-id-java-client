@@ -57,6 +57,7 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
+import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
 class SmartIdClientTest {
 
@@ -611,12 +612,13 @@ class SmartIdClientTest {
 
             var signableHash = new SignableHash("a".repeat(32).getBytes());
 
-            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
+            DeviceLinkSignatureSessionRequestBuilder builder = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash)
-                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
-                    .initSignatureSession();
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL);
+            DeviceLinkSessionResponse response = builder.initSignatureSession();
+            SignatureSessionRequest request = builder.getSignatureSessionRequest();
 
             URI deviceLink = smartIdClient.createDynamicContent()
                     .withSchemeName("smart-id-demo")
@@ -626,6 +628,7 @@ class SmartIdClientTest {
                     .withSessionToken(response.sessionToken())
                     .withLang("eng")
                     .withDigest(signableHash.getDigestInBase64())
+                    .withInteractions(request.interactions())
                     .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
                     .buildDeviceLink(response.sessionSecret());
 
@@ -640,11 +643,12 @@ class SmartIdClientTest {
 
             var signableHash = new SignableHash("a".repeat(32).getBytes());
 
-            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
+            DeviceLinkSignatureSessionRequestBuilder builder = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
-                    .withSignableHash(signableHash)
-                    .initSignatureSession();
+                    .withSignableHash(signableHash);
+            DeviceLinkSessionResponse response = builder.initSignatureSession();
+            SignatureSessionRequest request = builder.getSignatureSessionRequest();
 
             Duration elapsed = Duration.between(response.receivedAt(), Instant.now());
 
@@ -657,6 +661,7 @@ class SmartIdClientTest {
                     .withSessionToken(response.sessionToken())
                     .withLang("eng")
                     .withDigest(signableHash.getDigestInBase64())
+                    .withInteractions(request.interactions())
                     .buildDeviceLink(response.sessionSecret());
 
             assertUri(qrCodeUri, SessionType.SIGNATURE, DeviceLinkType.QR_CODE, response.sessionToken());
@@ -670,11 +675,12 @@ class SmartIdClientTest {
 
             var signableHash = new SignableHash("a".repeat(32).getBytes());
 
-            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
+            DeviceLinkSignatureSessionRequestBuilder builder = smartIdClient.createDeviceLinkSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
-                    .withSignableHash(signableHash)
-                    .initSignatureSession();
+                    .withSignableHash(signableHash);
+            DeviceLinkSessionResponse response = builder.initSignatureSession();
+            SignatureSessionRequest request = builder.getSignatureSessionRequest();
 
             Duration elapsed = Duration.between(response.receivedAt(), Instant.now());
             URI qrCodeUri = smartIdClient.createDynamicContent()
@@ -686,6 +692,7 @@ class SmartIdClientTest {
                     .withSessionToken(response.sessionToken())
                     .withLang("eng")
                     .withDigest(signableHash.getDigestInBase64())
+                    .withInteractions(request.interactions())
                     .buildDeviceLink(response.sessionSecret());
 
             String qrCodeDataUri = QrCodeGenerator.generateDataUri(qrCodeUri.toString());

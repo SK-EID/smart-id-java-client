@@ -28,6 +28,8 @@ package ee.sk.smartid;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 import javax.crypto.Mac;
@@ -230,7 +232,7 @@ public class DeviceLinkBuilder {
         UriBuilder uriBuilder = UriBuilder.fromUri(deviceLinkBase).queryParam("deviceLinkType", deviceLinkType.getValue());
         addElapsedSecondsIfQrCode(uriBuilder);
         uriBuilder.queryParam("sessionToken", sessionToken).queryParam("sessionType", sessionType.getValue())
-                  .queryParam("version", version).queryParam("lang", lang);
+                .queryParam("version", version).queryParam("lang", lang);
         return uriBuilder.build();
     }
 
@@ -251,14 +253,17 @@ public class DeviceLinkBuilder {
     private void addElapsedSecondsIfQrCode(UriBuilder uriBuilder) {
         if (elapsedSeconds != null) {
             if (deviceLinkType != DeviceLinkType.QR_CODE) {
-                throw new SmartIdClientException("elapsedSeconds is only valid for QR_CODE deviceLinkType");
+                throw new SmartIdClientException("Parameter 'elapsedSeconds' should only be used when 'deviceLinkType' is QR_CODE");
             }
             uriBuilder.queryParam("elapsedSeconds", elapsedSeconds);
         }
     }
 
     private String generateAuthCode(String unprotectedLink, String sessionSecret) {
-        validateAuthCodeParams(unprotectedLink);
+        if (StringUtil.isEmpty(sessionSecret)) {
+            throw new SmartIdClientException("Parameter 'sessionSecret' cannot be empty");
+        }
+        validateAuthCodeParams();
         return calculateAuthCode(buildPayload(unprotectedLink), sessionSecret);
     }
 
@@ -289,60 +294,68 @@ public class DeviceLinkBuilder {
             mac.init(new SecretKeySpec(Base64.getDecoder().decode(base64Key), "HmacSHA256"));
             byte[] hmac = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(hmac);
-        } catch (Exception e) {
-            throw new SmartIdClientException("Failed to calculate authCode", e);
+        } catch (InvalidKeyException | NoSuchAlgorithmException | IllegalArgumentException ex) {
+            throw new SmartIdClientException("Failed to calculate authCode", ex);
         }
     }
 
     private void validateInputParameters() {
         if (StringUtil.isEmpty(deviceLinkBase)) {
-            throw new SmartIdClientException("Parameter deviceLinkBase must be set");
+            throw new SmartIdClientException("Parameter 'deviceLinkBase' cannot be empty");
         }
         if (StringUtil.isEmpty(version)) {
-            throw new SmartIdClientException("Parameter version must be set");
+            throw new SmartIdClientException("Parameter 'version' cannot be empty");
         }
         if (!ALLOWED_VERSION.equals(version)) {
             throw new SmartIdClientException("Only version 1.0 is allowed");
         }
         if (deviceLinkType == null) {
-            throw new SmartIdClientException("Parameter deviceLinkType must be set");
+            throw new SmartIdClientException("Parameter 'deviceLinkType' must be set");
         }
         if (sessionType == null) {
-            throw new SmartIdClientException("Parameter sessionType must be set");
+            throw new SmartIdClientException("Parameter 'sessionType' must be set");
         }
         if (StringUtil.isEmpty(sessionToken)) {
-            throw new SmartIdClientException("Parameter sessionToken must be set");
+            throw new SmartIdClientException("Parameter 'sessionToken' cannot be empty");
         }
         if (deviceLinkType == DeviceLinkType.QR_CODE && elapsedSeconds == null) {
-            throw new SmartIdClientException("elapsedSeconds must be set for QR_CODE deviceLinkType");
+            throw new SmartIdClientException("Parameter 'elapsedSeconds' must be set when 'deviceLinkType' is QR_CODE");
         }
         if (StringUtil.isEmpty(lang)) {
-            throw new SmartIdClientException("Parameter lang must be set");
+            throw new SmartIdClientException("Parameter 'lang' must be set");
         }
     }
 
-    private void validateAuthCodeParams(String unprotectedLink) {
+    private void validateAuthCodeParams() {
         if (StringUtil.isEmpty(schemeName)) {
-            throw new SmartIdClientException("Parameter schemeName must be set");
+            throw new SmartIdClientException("Parameter 'schemeName' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyNameBase64)) {
-            throw new SmartIdClientException("Parameter relyingPartyName must be set");
+            throw new SmartIdClientException("Parameter 'relyingPartyName' cannot be empty");
         }
 
         boolean hasCallback = StringUtil.isNotEmpty(initialCallbackUrl);
         if (deviceLinkType == DeviceLinkType.QR_CODE && hasCallback) {
-            throw new SmartIdClientException("initialCallbackUrl must be empty for QR_CODE flow");
+            throw new SmartIdClientException("Parameter 'initialCallbackUrl' must be empty when 'deviceLinkType' is QR_CODE");
         }
         if ((deviceLinkType == DeviceLinkType.APP_2_APP || deviceLinkType == DeviceLinkType.WEB_2_APP) && !hasCallback) {
-            throw new SmartIdClientException("initialCallbackUrl must be provided for same-device flows");
+            throw new SmartIdClientException("Parameter 'initialCallbackUrl' must be provided when 'deviceLinkType' is APP_2_APP or WEB_2_APP");
         }
-
-        if (sessionType != SessionType.CERTIFICATE_CHOICE && StringUtil.isEmpty(digest)) {
-            throw new SmartIdClientException("digest must be set for AUTH or SIGN flows");
+        if (sessionType != SessionType.CERTIFICATE_CHOICE) {
+            if (StringUtil.isEmpty(digest)) {
+                throw new SmartIdClientException("Parameter 'digest' must be set when 'sessionType' is AUTHENTICATION or SIGNATURE");
+            }
+            if (StringUtil.isEmpty(interactions)) {
+                throw new SmartIdClientException("Parameter 'interactions' must be set when 'sessionType' is AUTHENTICATION or SIGNATURE");
+            }
         }
-        // TODO - 07.09.25: add interactions validation when only for certificate choice case should not be provided, otherwise required, fix in SLIB-110
-        if (StringUtil.isEmpty(unprotectedLink)) {
-            throw new SmartIdClientException("unprotected device-link must not be empty");
+        if (sessionType == SessionType.CERTIFICATE_CHOICE) {
+            if (StringUtil.isNotEmpty(digest)) {
+                throw new SmartIdClientException("Parameter 'digest' must be empty when 'sessionType' is CERTIFICATE_CHOICE");
+            }
+            if (StringUtil.isNotEmpty(interactions)) {
+                throw new SmartIdClientException("Parameter 'interactions' must be empty when 'sessionType' is CERTIFICATE_CHOICE");
+            }
         }
     }
 }

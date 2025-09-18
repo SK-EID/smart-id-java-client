@@ -117,7 +117,7 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(ELAPSED_SECONDS)
                             .createUnprotectedUri()
             );
-            assertEquals("Parameter deviceLinkBase must be set", ex.getMessage());
+            assertEquals("Parameter 'deviceLinkBase' cannot be empty", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -136,7 +136,7 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(ELAPSED_SECONDS)
                             .createUnprotectedUri()
             );
-            assertEquals("Parameter version must be set", ex.getMessage());
+            assertEquals("Parameter 'version' cannot be empty", ex.getMessage());
         }
 
         @Test
@@ -153,7 +153,7 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(ELAPSED_SECONDS)
                             .createUnprotectedUri()
             );
-            assertEquals("Parameter deviceLinkType must be set", ex.getMessage());
+            assertEquals("Parameter 'deviceLinkType' must be set", ex.getMessage());
         }
 
         @Test
@@ -169,7 +169,7 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(ELAPSED_SECONDS)
                             .createUnprotectedUri()
             );
-            assertEquals("Parameter sessionType must be set", ex.getMessage());
+            assertEquals("Parameter 'sessionType' must be set", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -187,7 +187,7 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(ELAPSED_SECONDS)
                             .createUnprotectedUri()
             );
-            assertEquals("Parameter sessionToken must be set", ex.getMessage());
+            assertEquals("Parameter 'sessionToken' cannot be empty", ex.getMessage());
         }
 
         @Test
@@ -203,7 +203,7 @@ class DeviceLinkBuilderTest {
                             .withLang(LANGUAGE)
                             .createUnprotectedUri()
             );
-            assertEquals("elapsedSeconds must be set for QR_CODE deviceLinkType", ex.getMessage());
+            assertEquals("Parameter 'elapsedSeconds' must be set when 'deviceLinkType' is QR_CODE", ex.getMessage());
         }
 
         @ParameterizedTest
@@ -221,7 +221,7 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(ELAPSED_SECONDS)
                             .createUnprotectedUri()
             );
-            assertEquals("Parameter lang must be set", ex.getMessage());
+            assertEquals("Parameter 'lang' must be set", ex.getMessage());
         }
 
         @Test
@@ -238,7 +238,7 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(ELAPSED_SECONDS)
                             .createUnprotectedUri()
             );
-            assertEquals("elapsedSeconds is only valid for QR_CODE deviceLinkType", ex.getMessage());
+            assertEquals("Parameter 'elapsedSeconds' should only be used when 'deviceLinkType' is QR_CODE", ex.getMessage());
         }
     }
 
@@ -254,13 +254,13 @@ class DeviceLinkBuilderTest {
                     .withSessionType(sessionType)
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withBrokeredRpName(BROKERED_RP)
-                    .withInteractions(BASE64_INTERACTIONS) // // TODO - 07.09.25: fix this, if certificate choice then it should be empty
                     .withLang(LANGUAGE)
                     .withElapsedSeconds(1L)
                     .withRelyingPartyName(RELYING_PARTY_NAME);
 
             if (sessionType != SessionType.CERTIFICATE_CHOICE) {
-                builder.withDigest(BASE64_DIGEST);
+                builder.withDigest(BASE64_DIGEST)
+                        .withInteractions(BASE64_INTERACTIONS);
             }
 
             URI uri = builder.buildDeviceLink(SESSION_SECRET);
@@ -282,10 +282,30 @@ class DeviceLinkBuilderTest {
                             .withElapsedSeconds(1L)
                             .withDigest(BASE64_DIGEST)
                             .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .withInteractions(BASE64_INTERACTIONS)
                             .buildDeviceLink(SESSION_SECRET)
             ).get("authCode");
 
             assertThat(authCode, matchesPattern(AUTH_CODE_PATTERN));
+        }
+
+        @Test
+        void buildDeviceLink_sameDeviceFlowWithCallback_ok() {
+            URI uri = new DeviceLinkBuilder()
+                    .withDeviceLinkBase(DEVICE_LINK_BASE)
+                    .withSessionToken(SESSION_TOKEN)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                    .withBrokeredRpName(BROKERED_RP)
+                    .withInteractions(BASE64_INTERACTIONS)
+                    .withLang(LANGUAGE)
+                    .withInitialCallbackUrl(CALLBACK_URL)
+                    .withDigest(BASE64_DIGEST)
+                    .withRelyingPartyName(RELYING_PARTY_NAME)
+                    .buildDeviceLink(SESSION_SECRET);
+
+            Map<String, String> params = toQueryParamsMap(uri);
+            assertThat(params.get("authCode"), matchesPattern(AUTH_CODE_PATTERN));
         }
 
         @ParameterizedTest
@@ -304,7 +324,7 @@ class DeviceLinkBuilderTest {
                             .withRelyingPartyName(RELYING_PARTY_NAME)
                             .buildDeviceLink(SESSION_SECRET)
             );
-            assertEquals("Parameter schemeName must be set", ex.getMessage());
+            assertEquals("Parameter 'schemeName' cannot be empty", ex.getMessage());
         }
 
         @Test
@@ -322,16 +342,57 @@ class DeviceLinkBuilderTest {
                             .withDigest(BASE64_DIGEST)
                             .buildDeviceLink(SESSION_SECRET)
             );
-            assertEquals("Parameter relyingPartyName must be set", ex.getMessage());
+            assertEquals("Parameter 'relyingPartyName' cannot be empty", ex.getMessage());
         }
 
-        @Test
-        void buildDeviceLink_missingDigestForAuth_throwsException() {
+        @ParameterizedTest
+        @NullAndEmptySource
+        void buildDeviceLink_missingDigestForAuthentication_throwsException(String digest) {
             var ex = assertThrows(SmartIdClientException.class, () ->
                     new DeviceLinkBuilder()
                             .withDeviceLinkBase(DEVICE_LINK_BASE)
                             .withSessionToken(SESSION_TOKEN)
                             .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withDigest(digest)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter 'digest' must be set when 'sessionType' is AUTHENTICATION or SIGNATURE", ex.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void buildDeviceLink_missingDigestForSignature_throwsException(String digest) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.SIGNATURE)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withDigest(digest)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter 'digest' must be set when 'sessionType' is AUTHENTICATION or SIGNATURE", ex.getMessage());
+        }
+
+        @Test
+        void buildDeviceLink_certificateChoiceAndDigestIsSet_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                            .withDigest(BASE64_DIGEST)
                             .withDeviceLinkType(DeviceLinkType.QR_CODE)
                             .withBrokeredRpName(BROKERED_RP)
                             .withInteractions(BASE64_INTERACTIONS)
@@ -340,7 +401,7 @@ class DeviceLinkBuilderTest {
                             .withRelyingPartyName(RELYING_PARTY_NAME)
                             .buildDeviceLink(SESSION_SECRET)
             );
-            assertEquals("digest must be set for AUTH or SIGN flows", ex.getMessage());
+            assertEquals("Parameter 'digest' must be empty when 'sessionType' is CERTIFICATE_CHOICE", ex.getMessage());
         }
 
         @Test
@@ -360,7 +421,7 @@ class DeviceLinkBuilderTest {
                             .withInitialCallbackUrl(CALLBACK_URL)
                             .buildDeviceLink(SESSION_SECRET)
             );
-            assertEquals("initialCallbackUrl must be empty for QR_CODE flow", exception.getMessage());
+            assertEquals("Parameter 'initialCallbackUrl' must be empty when 'deviceLinkType' is QR_CODE", exception.getMessage());
         }
 
         @ParameterizedTest
@@ -379,55 +440,69 @@ class DeviceLinkBuilderTest {
                             .withRelyingPartyName(RELYING_PARTY_NAME)
                             .buildDeviceLink(SESSION_SECRET)
             );
-            assertEquals("initialCallbackUrl must be provided for same-device flows", exception.getMessage());
+            assertEquals("Parameter 'initialCallbackUrl' must be provided when 'deviceLinkType' is APP_2_APP or WEB_2_APP", exception.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void buildDeviceLink_interactionsMissingForAuthentication_throwsException(String interactions) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.AUTHENTICATION)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withDigest(BASE64_DIGEST)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(interactions)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter 'interactions' must be set when 'sessionType' is AUTHENTICATION or SIGNATURE", ex.getMessage());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void buildDeviceLink_interactionsMissingForSignature_throwsException(String interactions) {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.SIGNATURE)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withDigest(BASE64_DIGEST)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(interactions)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter 'interactions' must be set when 'sessionType' is AUTHENTICATION or SIGNATURE", ex.getMessage());
         }
 
         @Test
-        void buildDeviceLink_withEmptyUnprotectedUri_shouldThrowException() {
-            var builder = new DeviceLinkBuilder() {
-                @Override
-                public URI createUnprotectedUri() {
-                    return URI.create("");
-                }
-            };
-
-            builder
-                    .withSessionType(SessionType.AUTHENTICATION)
-                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
-                    .withBrokeredRpName(BROKERED_RP)
-                    .withInteractions(BASE64_INTERACTIONS)
-                    .withElapsedSeconds(1L)
-                    .withDeviceLinkBase(DEVICE_LINK_BASE)
-                    .withSessionToken(SESSION_TOKEN)
-                    .withLang(LANGUAGE)
-                    .withDigest(BASE64_DIGEST)
-                    .withRelyingPartyName(RELYING_PARTY_NAME);
-
-            var exception = assertThrows(SmartIdClientException.class, () -> builder.buildDeviceLink(SESSION_SECRET));
-            assertEquals("unprotected device-link must not be empty", exception.getMessage());
+        void buildDeviceLink_interactionsSetForCertificateChoice_throwsException() {
+            var ex = assertThrows(SmartIdClientException.class, () ->
+                    new DeviceLinkBuilder()
+                            .withDeviceLinkBase(DEVICE_LINK_BASE)
+                            .withSessionToken(SESSION_TOKEN)
+                            .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                            .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                            .withBrokeredRpName(BROKERED_RP)
+                            .withInteractions(BASE64_INTERACTIONS)
+                            .withLang(LANGUAGE)
+                            .withElapsedSeconds(1L)
+                            .withRelyingPartyName(RELYING_PARTY_NAME)
+                            .buildDeviceLink(SESSION_SECRET)
+            );
+            assertEquals("Parameter 'interactions' must be empty when 'sessionType' is CERTIFICATE_CHOICE", ex.getMessage());
         }
 
         @Test
-        void buildDeviceLink_sameDeviceFlowWithCallback() {
-            URI uri = new DeviceLinkBuilder()
-                    .withDeviceLinkBase(DEVICE_LINK_BASE)
-                    .withSessionToken(SESSION_TOKEN)
-                    .withSessionType(SessionType.AUTHENTICATION)
-                    .withDeviceLinkType(DeviceLinkType.APP_2_APP)
-                    .withBrokeredRpName(BROKERED_RP)
-                    .withInteractions(BASE64_INTERACTIONS)
-                    .withLang(LANGUAGE)
-                    .withInitialCallbackUrl(CALLBACK_URL)
-                    .withDigest(BASE64_DIGEST)
-                    .withRelyingPartyName(RELYING_PARTY_NAME)
-                    .buildDeviceLink(SESSION_SECRET);
-
-            Map<String, String> params = toQueryParamsMap(uri);
-            assertThat(params.get("authCode"), matchesPattern(AUTH_CODE_PATTERN));
-        }
-
-        @Test
-        void calculateAuthCode_invalidBase64Key_shouldThrowException() {
+        void buildDeviceLink_invalidBase64Key_shouldThrowException() {
             var builder = new DeviceLinkBuilder()
                     .withDeviceLinkBase(DEVICE_LINK_BASE)
                     .withSessionToken(SESSION_TOKEN)
@@ -444,6 +519,26 @@ class DeviceLinkBuilderTest {
 
             assertEquals("Failed to calculate authCode", exception.getMessage());
             assertThat(exception.getCause(), org.hamcrest.Matchers.instanceOf(IllegalArgumentException.class));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void buildDeviceLink_sessionSecretIsEmpty_throwException(String sessionSecret) {
+            var builder = new DeviceLinkBuilder()
+                    .withDeviceLinkBase(DEVICE_LINK_BASE)
+                    .withSessionToken(SESSION_TOKEN)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withBrokeredRpName(BROKERED_RP)
+                    .withInteractions(BASE64_INTERACTIONS)
+                    .withLang(LANGUAGE)
+                    .withElapsedSeconds(1L)
+                    .withDigest(BASE64_DIGEST)
+                    .withRelyingPartyName(RELYING_PARTY_NAME);
+
+            var exception = assertThrows(SmartIdClientException.class, () -> builder.buildDeviceLink(sessionSecret));
+
+            assertEquals("Parameter 'sessionSecret' cannot be empty", exception.getMessage());
         }
     }
 
