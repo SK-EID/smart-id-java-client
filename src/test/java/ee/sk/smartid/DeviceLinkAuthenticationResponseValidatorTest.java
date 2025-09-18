@@ -59,19 +59,19 @@ import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.util.InteractionUtil;
 
-class AuthenticationResponseValidatorTest {
+class DeviceLinkAuthenticationResponseValidatorTest {
 
     private static final String CA_CERT = FileUtil.readFileToString("test-certs/ca-cert.pem.crt");
     private static final String AUTH_CERT = FileUtil.readFileToString("test-certs/auth-cert-40504040001.pem.crt");
     private static final String SIGN_CERT = FileUtil.readFileToString("test-certs/sign-cert-40504040001.pem.crt");
 
-    private AuthenticationResponseValidator authenticationResponseValidator;
+    private DeviceLinkAuthenticationResponseValidator deviceLinkAuthenticationResponseValidator;
 
     @BeforeEach
     void setUp() {
         TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().withOcspEnabled(false).build();
         CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
-        authenticationResponseValidator = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
+        deviceLinkAuthenticationResponseValidator = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
     }
 
     @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
@@ -80,7 +80,7 @@ class AuthenticationResponseValidatorTest {
         String rpChallenge = "";
         SessionStatus sessionStatus = new SessionStatus();
         DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = toAuthenticationSessionRequest("QUALIFIED");
-        AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo", null);
+        AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo", null);
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
@@ -98,7 +98,7 @@ class AuthenticationResponseValidatorTest {
         sessionStatus.setCert(cert);
 
         var authenticationSessionRequest = toAuthenticationSessionRequest("ADVANCED");
-        AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo", null);
+        AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo", null);
 
         assertEquals("40504040001", authenticationIdentity.getIdentityCode());
         assertEquals("OK", authenticationIdentity.getGivenName());
@@ -112,27 +112,27 @@ class AuthenticationResponseValidatorTest {
 
         @Test
         void validate_sessionStatusNotProvided_throwException() {
-            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(null, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+            var ex = assertThrows(SmartIdClientException.class, () -> deviceLinkAuthenticationResponseValidator.validate(null, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
             assertEquals("Parameter 'sessionStatus' is not provided", ex.getMessage());
         }
 
         @Test
         void validate_authenticationSessionRequestIsNotProvided_throwException() {
-            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), null, "smart-id-demo", null));
+            var ex = assertThrows(SmartIdClientException.class, () -> deviceLinkAuthenticationResponseValidator.validate(new SessionStatus(), null, "smart-id-demo", null));
             assertEquals("Parameter 'authenticationSessionRequest' is not provided", ex.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void validate_emptySchemaNameIsProvided_throwException(String schemaName) {
-            var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), schemaName, null));
+            var ex = assertThrows(SmartIdClientException.class, () -> deviceLinkAuthenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), schemaName, null));
             assertEquals("Parameter 'schemaName' is not provided", ex.getMessage());
         }
     }
 
     @Test
     void validate_sessionStatusResultIsNotProvided_throwException() {
-        var ex = assertThrows(SmartIdClientException.class, () -> authenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
+        var ex = assertThrows(SmartIdClientException.class, () -> deviceLinkAuthenticationResponseValidator.validate(new SessionStatus(), toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo", null));
         assertEquals("Authentication session status field 'result' is empty", ex.getMessage());
     }
 
@@ -143,7 +143,7 @@ class AuthenticationResponseValidatorTest {
         void validate_certificateLevelLowerThanRequested_throwException() {
             var sessionStatus = toSessionsStatus(AUTH_CERT, "ADVANCED", "");
 
-            var ex = assertThrows(CertificateLevelMismatchException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
+            var ex = assertThrows(CertificateLevelMismatchException.class, () -> deviceLinkAuthenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
             assertEquals("Signer's certificate is below requested certificate level", ex.getMessage());
         }
@@ -152,7 +152,7 @@ class AuthenticationResponseValidatorTest {
         void validate_certificateCannotBeUsedForAuthentication_throwException() {
             var sessionStatus = toSessionsStatus(SIGN_CERT, "QUALIFIED", "");
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> deviceLinkAuthenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
             assertEquals("Provided certificate cannot be used for authentication", ex.getMessage());
         }
@@ -166,7 +166,7 @@ class AuthenticationResponseValidatorTest {
         void validate_invalidSignature_throwException() {
             var sessionStatus = toSessionsStatus(AUTH_CERT, "QUALIFIED", toBase64("invalidSignature"));
 
-            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> authenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> deviceLinkAuthenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
             assertEquals("Signature value validation failed", ex.getMessage());
         }

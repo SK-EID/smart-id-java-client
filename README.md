@@ -737,14 +737,14 @@ AuthenticationResponseValidator depends on CertificateValidator. Checkout [setti
 
 ```java
 // Set up AuthenticationResponseValidator with the CertificateValidator
-AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+DeviceLinkAuthenticationResponseValidator deviceLinkAuthenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
 
 // Create authentication request builder
 DeviceLinkAuthenticationSessionRequestBuilder authenticationRequestBuilder =  smartIdClient.createDeviceLinkAuthentication()...;
 // Initialize session
 DeviceLinkSessionResponse sessionResponse = authenticationRequestBuilder.initAuthenticationSession();
 // Get request used for starting the authentication session and use it later to validate sessions status response
-AuthenticationSessionRequest authenticationSessionRequest = authenticationRequestBuilder.getAuthenticationSessionRequest();
+DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = authenticationRequestBuilder.getAuthenticationSessionRequest();
 
 // get sessions result
 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -753,7 +753,7 @@ SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.ses
 // validate sessions state is completed
 if("COMPLETE".equals(sessionStatus.getState())){
     // validate the session status response with authentication session request and return authentication identity
-    AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+    AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 }
 ```
 

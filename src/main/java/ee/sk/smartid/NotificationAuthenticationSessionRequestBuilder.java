@@ -33,6 +33,7 @@ import java.util.Set;
 import ee.sk.smartid.common.InteractionsMapper;
 import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
@@ -63,6 +64,8 @@ public class NotificationAuthenticationSessionRequestBuilder {
     private Set<String> capabilities;
     private SemanticsIdentifier semanticsIdentifier;
     private String documentNumber;
+
+    private NotificationAuthenticationSessionRequest notificationAuthenticationSessionRequest;
 
     /**
      * Constructs a new NotificationAuthenticationSessionRequestBuilder with the given Smart-ID connector
@@ -218,14 +221,26 @@ public class NotificationAuthenticationSessionRequestBuilder {
         NotificationAuthenticationSessionRequest authenticationRequest = createAuthenticationRequest();
         NotificationAuthenticationSessionResponse notificationAuthenticationSessionResponse = initAuthenticationSession(authenticationRequest);
         validateResponseParameters(notificationAuthenticationSessionResponse);
+        this.notificationAuthenticationSessionRequest = authenticationRequest;
         return notificationAuthenticationSessionResponse;
+    }
+
+    /**
+     * Returns the built authentication session request
+     *
+     * @return the built authentication session request
+     */
+    public NotificationAuthenticationSessionRequest getNotificationAuthenticationSessionRequest() {
+        if (notificationAuthenticationSessionRequest == null) {
+            throw new SmartIdClientException("Notification-based authentication session has not been initialized yet"); // TODO - 17.09.25: review
+        }
+        return notificationAuthenticationSessionRequest;
     }
 
     private NotificationAuthenticationSessionResponse initAuthenticationSession(NotificationAuthenticationSessionRequest authenticationRequest) {
         if (semanticsIdentifier != null && documentNumber != null) {
             throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
-        } else
-        if (semanticsIdentifier != null) {
+        } else if (semanticsIdentifier != null) {
             return connector.initNotificationAuthentication(authenticationRequest, semanticsIdentifier);
         } else if (documentNumber != null) {
             return connector.initNotificationAuthentication(authenticationRequest, documentNumber);

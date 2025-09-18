@@ -52,18 +52,20 @@ import org.junit.jupiter.api.Test;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.AuthenticationResponseValidator;
 import ee.sk.smartid.CertificateByDocumentNumberResult;
 import ee.sk.smartid.CertificateChoiceResponse;
 import ee.sk.smartid.CertificateChoiceResponseValidator;
 import ee.sk.smartid.CertificateLevel;
 import ee.sk.smartid.CertificateValidator;
 import ee.sk.smartid.CertificateValidatorImpl;
+import ee.sk.smartid.DeviceLinkAuthenticationResponseValidator;
 import ee.sk.smartid.DeviceLinkAuthenticationSessionRequestBuilder;
 import ee.sk.smartid.DeviceLinkSignatureSessionRequestBuilder;
 import ee.sk.smartid.DeviceLinkType;
 import ee.sk.smartid.FileTrustedCAStoreBuilder;
 import ee.sk.smartid.HashAlgorithm;
+import ee.sk.smartid.NotificationAuthenticationResponseValidator;
+import ee.sk.smartid.NotificationAuthenticationSessionRequestBuilder;
 import ee.sk.smartid.QrCodeGenerator;
 import ee.sk.smartid.RpChallenge;
 import ee.sk.smartid.RpChallengeGenerator;
@@ -83,6 +85,7 @@ import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
@@ -175,9 +178,9 @@ public class ReadmeIntegrationTest {
                 // Set up AuthenticationResponseValidator
                 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
-                AuthenticationResponseValidator authenticationResponseValidator = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
+                DeviceLinkAuthenticationResponseValidator deviceLinkAuthenticationResponseValidator = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
                 // Validate the certificate and signature, then map the authentication response to the user's identity
-                AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
+                AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
 
                 assertEquals("40504040001", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
@@ -255,7 +258,7 @@ public class ReadmeIntegrationTest {
                 // Validate the response and return user's identity
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
-                AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
+                AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                         .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
                 assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -322,7 +325,7 @@ public class ReadmeIntegrationTest {
                 // Validate the certificate and signature, then map the authentication response to the user's identity
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
-                AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
+                AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                         .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
                 assertEquals("40504040001", authenticationIdentity.getIdentityCode());
@@ -537,14 +540,18 @@ public class ReadmeIntegrationTest {
             // Generate verification code to be displayed to the user
             String verificationCode = VerificationCodeCalculator.calculate(rpChallenge.value());
 
-            NotificationAuthenticationSessionResponse authenticationSessionResponse = smartIdClient
+            NotificationAuthenticationSessionRequestBuilder builder = smartIdClient
                     .createNotificationAuthentication()
                     .withDocumentNumber(documentNumber)
                     .withRpChallenge(rpChallenge.toBase64EncodedValue())
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
-                            NotificationInteraction.displayTextAndPin("Log in?")))
-                    .initAuthenticationSession();
+                            NotificationInteraction.displayTextAndPin("Log in?")));
+            // Init authentication session
+            NotificationAuthenticationSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+            // Get notification-based authentication session request used for starting the authentication session
+            // and use it later to validate sessions status response
+            NotificationAuthenticationSessionRequest authenticationSessionRequest = builder.getNotificationAuthenticationSessionRequest();
 
             // SessionID is used to query sessions status later
             String sessionId = authenticationSessionResponse.sessionID();
@@ -561,8 +568,9 @@ public class ReadmeIntegrationTest {
             // validate the sessions status and return user's identity
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
-            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
-                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: authentication request will be fixed with notification-based authentication changes, fix in SLIB-110
+            AuthenticationIdentity authenticationIdentity =
+                    NotificationAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
+                            .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
@@ -587,14 +595,18 @@ public class ReadmeIntegrationTest {
             // Generate verification code to be displayed to the user
             String verificationCode = VerificationCodeCalculator.calculate(rpChallenge.value());
 
-            NotificationAuthenticationSessionResponse authenticationSessionResponse = smartIdClient
-                    .createNotificationAuthentication()
+            NotificationAuthenticationSessionRequestBuilder builder = smartIdClient.createNotificationAuthentication()
                     .withSemanticsIdentifier(semanticIdentifier)
                     .withRpChallenge(rpChallenge.toBase64EncodedValue())
                     .withCertificateLevel(AuthenticationCertificateLevel.QUALIFIED)
                     .withInteractions(Collections.singletonList(
-                            NotificationInteraction.displayTextAndPin("Log in?")))
-                    .initAuthenticationSession();
+                            NotificationInteraction.displayTextAndPin("Log in?")));
+
+            // Init authentication session
+            NotificationAuthenticationSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+            // Get notification-based authentication session request used for starting the authentication session
+            // and use it later to validate sessions status response
+            NotificationAuthenticationSessionRequest authenticationSessionRequest = builder.getNotificationAuthenticationSessionRequest();
 
             // SessionID is used to query sessions status later
             String sessionId = authenticationSessionResponse.sessionID();
@@ -610,8 +622,9 @@ public class ReadmeIntegrationTest {
 
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
-            AuthenticationIdentity authenticationIdentity = AuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
-                    .validate(sessionStatus, null, "smart-id-demo"); // TODO - 02.07.25: will be fixed with notification-based authentication changes, fix in SLIB-110
+            AuthenticationIdentity authenticationIdentity =
+                    NotificationAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
+                            .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());

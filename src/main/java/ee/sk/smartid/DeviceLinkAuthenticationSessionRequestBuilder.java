@@ -258,7 +258,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      */
     public DeviceLinkAuthenticationSessionRequest getAuthenticationSessionRequest() {
         if (authenticationSessionRequest == null) {
-            throw new SmartIdClientException("Authentication session request has not been initialized yet");
+            throw new SmartIdClientException("Device link authentication session has not been initialized yet");
         }
         return authenticationSessionRequest;
     }
