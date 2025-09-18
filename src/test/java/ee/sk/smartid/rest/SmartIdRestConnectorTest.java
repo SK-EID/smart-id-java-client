@@ -344,7 +344,7 @@ class SmartIdRestConnectorTest {
                     "responses/auth/device-link/device-link-authentication-session-response.json");
 
             Instant start = Instant.now();
-            var deviceLinkAuthenticationSessionRequest = toDeviceLinkAuthenticationSessionRequest(null, null);
+            var deviceLinkAuthenticationSessionRequest = toQrAuthenticationSessionRequest();
             DeviceLinkSessionResponse response = connector.initDeviceLinkAuthentication(deviceLinkAuthenticationSessionRequest, SEMANTICS_IDENTIFIER);
             Instant end = Instant.now();
 
@@ -384,7 +384,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubBadRequestResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-invalid-request.json");
 
             assertThrows(SmartIdClientException.class, () ->
-                    connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
 
         @Test
@@ -392,7 +392,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubUnauthorizedResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
 
             assertThrows(RelyingPartyAccountConfigurationException.class, () ->
-                    connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
 
         @Test
@@ -400,7 +400,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubNotFoundResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
 
             assertThrows(UserAccountNotFoundException.class, () ->
-                    connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
 
         @Test
@@ -408,7 +408,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubForbiddenResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json");
 
             assertThrows(RelyingPartyAccountConfigurationException.class,
-                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    () -> connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
 
         @Test
@@ -416,7 +416,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 471);
 
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class,
-                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    () -> connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
 
         @Test
@@ -424,7 +424,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 472);
 
             assertThrows(PersonShouldViewSmartIdPortalException.class,
-                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    () -> connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
 
         @Test
@@ -432,7 +432,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 480);
 
             assertThrows(SmartIdClientException.class,
-                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    () -> connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
 
         @Test
@@ -440,7 +440,7 @@ class SmartIdRestConnectorTest {
             SmartIdRestServiceStubs.stubErrorResponse(AUTHENTICATION_WITH_PERSON_CODE_PATH, "requests/auth/device-link/device-link-authentication-session-request-qr-code.json", 580);
 
             assertThrows(ServerMaintenanceException.class,
-                    () -> connector.initDeviceLinkAuthentication(toDeviceLinkAuthenticationSessionRequest(null, null), SEMANTICS_IDENTIFIER));
+                    () -> connector.initDeviceLinkAuthentication(toQrAuthenticationSessionRequest(), SEMANTICS_IDENTIFIER));
         }
     }
 
@@ -1526,6 +1526,10 @@ class SmartIdRestConnectorTest {
 
             assertThrows(ServerMaintenanceException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
         }
+    }
+
+    private DeviceLinkAuthenticationSessionRequest toQrAuthenticationSessionRequest() {
+        return toDeviceLinkAuthenticationSessionRequest(null, null);
     }
 
     private static DeviceLinkAuthenticationSessionRequest toDeviceLinkAuthenticationSessionRequest(RequestProperties requestProperties,
