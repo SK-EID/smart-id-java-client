@@ -399,7 +399,7 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
         DeviceLinkAuthenticationSessionRequestBuilder builder = toBaseDeviceLinkRequestBuilder();
 
         var ex = assertThrows(SmartIdClientException.class, builder::getAuthenticationSessionRequest);
-        assertEquals("Authentication session request has not been initialized yet", ex.getMessage());
+        assertEquals("Device link authentication session has not been initialized yet", ex.getMessage());
     }
 
     private DeviceLinkAuthenticationSessionRequestBuilder toDeviceLinkRequestBuilder(UnaryOperator<DeviceLinkAuthenticationSessionRequestBuilder> builder) {

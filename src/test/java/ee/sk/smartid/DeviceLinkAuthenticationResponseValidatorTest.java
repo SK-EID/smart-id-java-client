@@ -154,7 +154,7 @@ class DeviceLinkAuthenticationResponseValidatorTest {
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> deviceLinkAuthenticationResponseValidator.validate(sessionStatus, toAuthenticationSessionRequest("QUALIFIED"), "smart-id-demo"));
 
-            assertEquals("Provided certificate cannot be used for authentication", ex.getMessage());
+            assertEquals("Certificate does not contain required qualified certificate policy OIDs", ex.getMessage());
         }
 
     }

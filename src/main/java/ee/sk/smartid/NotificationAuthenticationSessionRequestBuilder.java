@@ -230,9 +230,9 @@ public class NotificationAuthenticationSessionRequestBuilder {
      *
      * @return the built authentication session request
      */
-    public NotificationAuthenticationSessionRequest getNotificationAuthenticationSessionRequest() {
+    public NotificationAuthenticationSessionRequest getAuthenticationSessionRequest() {
         if (notificationAuthenticationSessionRequest == null) {
-            throw new SmartIdClientException("Notification-based authentication session has not been initialized yet"); // TODO - 17.09.25: review
+            throw new SmartIdClientException("Notification-based authentication session has not been initialized yet");
         }
         return notificationAuthenticationSessionRequest;
     }

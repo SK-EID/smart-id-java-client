@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -83,12 +83,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         verify(connector).initNotificationAuthentication(requestCaptor.capture(), any(String.class));
         NotificationAuthenticationSessionRequest request = requestCaptor.getValue();
 
-        assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
-        assertEquals("DEMO", request.relyingPartyName());
-        assertEquals(SignatureProtocol.ACSP_V2.name(), request.signatureProtocol());
-        assertNotNull(request.signatureProtocolParameters());
-        assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
-        assertNotNull(request.interactions());
+        assertAuthenticationSessionRequest(request);
     }
 
     @Test
@@ -318,6 +313,26 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         }
     }
 
+    @Test
+    void getAuthenticationSessionRequest_ok() {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder = toBaseNotificationAuthenticationSessionRequestBuilder();
+
+        builder.initAuthenticationSession();
+        NotificationAuthenticationSessionRequest request = builder.getAuthenticationSessionRequest();
+
+        assertAuthenticationSessionRequest(request);
+    }
+
+    @Test
+    void getAuthenticationSessionRequest_authenticationNotInitialized_throwsException() {
+        when(connector.initNotificationAuthentication(any(NotificationAuthenticationSessionRequest.class), any(String.class))).thenReturn(toNotificationAuthenticationResponse());
+        NotificationAuthenticationSessionRequestBuilder builder = toBaseNotificationAuthenticationSessionRequestBuilder();
+
+        var ex = assertThrows(SmartIdClientException.class, builder::getAuthenticationSessionRequest);
+        assertEquals("Notification-based authentication session has not been initialized yet", ex.getMessage());
+    }
+
     private NotificationAuthenticationSessionRequestBuilder toNotificationAuthenticationSessionRequestBuilder(UnaryOperator<NotificationAuthenticationSessionRequestBuilder> builder) {
         return builder.apply(toBaseNotificationAuthenticationSessionRequestBuilder());
     }
@@ -337,6 +352,15 @@ class NotificationAuthenticationSessionRequestBuilderTest {
 
     private static String generateBase64String(String text) {
         return Base64.toBase64String(text.getBytes());
+    }
+
+    private static void assertAuthenticationSessionRequest(NotificationAuthenticationSessionRequest request) {
+        assertEquals("00000000-0000-0000-0000-000000000000", request.relyingPartyUUID());
+        assertEquals("DEMO", request.relyingPartyName());
+        assertEquals(SignatureProtocol.ACSP_V2.name(), request.signatureProtocol());
+        assertNotNull(request.signatureProtocolParameters());
+        assertEquals("rsassa-pss", request.signatureProtocolParameters().signatureAlgorithm());
+        assertNotNull(request.interactions());
     }
 
     private static class CertificateLevelArgumentProvider implements ArgumentsProvider {

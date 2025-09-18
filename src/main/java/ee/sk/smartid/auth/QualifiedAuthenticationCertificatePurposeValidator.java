@@ -54,6 +54,7 @@ public class QualifiedAuthenticationCertificatePurposeValidator implements Authe
         validateCertificateCanBeUsedForAuthentication(certificate);
     }
 
+    // TODO - 18.09.25: improve exception messages to be more specific about auth
     private void validateCertificateHasQualifiedSmartIdAuthCertificatePolicies(X509Certificate certificate) {
         Set<String> certificatePolicyOids = CertificateAttributeUtil.getCertificatePolicy(certificate);
         if (certificatePolicyOids.isEmpty()) {

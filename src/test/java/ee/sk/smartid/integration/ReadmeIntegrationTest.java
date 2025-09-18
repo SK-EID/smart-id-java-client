@@ -551,7 +551,7 @@ public class ReadmeIntegrationTest {
             NotificationAuthenticationSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
             // Get notification-based authentication session request used for starting the authentication session
             // and use it later to validate sessions status response
-            NotificationAuthenticationSessionRequest authenticationSessionRequest = builder.getNotificationAuthenticationSessionRequest();
+            NotificationAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
             // SessionID is used to query sessions status later
             String sessionId = authenticationSessionResponse.sessionID();
@@ -606,7 +606,7 @@ public class ReadmeIntegrationTest {
             NotificationAuthenticationSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
             // Get notification-based authentication session request used for starting the authentication session
             // and use it later to validate sessions status response
-            NotificationAuthenticationSessionRequest authenticationSessionRequest = builder.getNotificationAuthenticationSessionRequest();
+            NotificationAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
 
             // SessionID is used to query sessions status later
             String sessionId = authenticationSessionResponse.sessionID();
