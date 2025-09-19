@@ -277,7 +277,7 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private void validateAllowedInteractions() {
-        if (interactions == null || interactions.isEmpty()) {
+        if (interactions == null || InteractionUtil.isEmpty(interactions)) {
             throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
         }
         if (interactions.stream().map(NotificationInteraction::type).distinct().count() != interactions.size()) {

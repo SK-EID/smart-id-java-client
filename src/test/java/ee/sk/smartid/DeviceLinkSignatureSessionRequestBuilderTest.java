@@ -38,6 +38,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -355,8 +356,16 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void initSignatureSession_whenInteractionsIsNullOrEmpty(List<DeviceLinkInteraction> interactions) {
+        void initSignatureSession_whenInteractionsIsNullOrEmpty_throwException(List<DeviceLinkInteraction> interactions) {
             var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withInteractions(interactions));
+
+            var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
+            assertEquals("Value for 'interactions' cannot be empty", ex.getMessage());
+        }
+
+        @Test
+        void initSignatureSession_interactionsListWithNullValue_throwException() {
+            var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withInteractions(Collections.singletonList(null)));
 
             var ex = assertThrows(SmartIdRequestSetupException.class, deviceLinkSessionRequestBuilder::initSignatureSession);
             assertEquals("Value for 'interactions' cannot be empty", ex.getMessage());

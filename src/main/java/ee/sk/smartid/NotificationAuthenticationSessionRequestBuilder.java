@@ -281,7 +281,7 @@ public class NotificationAuthenticationSessionRequestBuilder {
     }
 
     private void validateInteractions() {
-        if (interactions == null || interactions.isEmpty()) {
+        if (interactions == null || InteractionUtil.isEmpty(interactions)) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         if (interactions.stream().map(NotificationInteraction::type).distinct().count() != interactions.size()) {

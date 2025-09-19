@@ -309,13 +309,9 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateInteractions() {
-        if (interactions == null || interactions.isEmpty()) {
+        if (interactions == null || InteractionUtil.isEmpty(interactions)) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
-        validateNoDuplicateInteractions();
-    }
-
-    private void validateNoDuplicateInteractions() {
         if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
         }

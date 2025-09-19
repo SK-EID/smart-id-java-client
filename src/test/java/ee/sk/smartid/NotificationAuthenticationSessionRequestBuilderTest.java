@@ -267,6 +267,15 @@ class NotificationAuthenticationSessionRequestBuilderTest {
             assertEquals("Value for 'interactions' cannot be empty", exception.getMessage());
         }
 
+        @Test
+        void initAuthenticationSession_interactions_throwException() {
+            NotificationAuthenticationSessionRequestBuilder builder =
+                    toNotificationAuthenticationSessionRequestBuilder(b -> b.withInteractions(Collections.singletonList(null)));
+
+            var exception = assertThrows(SmartIdClientException.class, builder::initAuthenticationSession);
+            assertEquals("Value for 'interactions' cannot be empty", exception.getMessage());
+        }
+
         @ParameterizedTest
         @ArgumentsSource(DuplicateNotificationInteractionArgumentProvider.class)
         void initAuthenticationSession_duplicateInteractionsProvided_throwException(List<NotificationInteraction> interactions) {

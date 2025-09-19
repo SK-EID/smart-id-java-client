@@ -321,7 +321,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private void validateInteractions() {
-        if (interactions == null || interactions.isEmpty()) {
+        if (interactions == null || InteractionUtil.isEmpty(interactions)) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {

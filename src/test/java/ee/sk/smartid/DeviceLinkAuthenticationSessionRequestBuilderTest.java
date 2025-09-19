@@ -289,6 +289,15 @@ class DeviceLinkAuthenticationSessionRequestBuilderTest {
             assertEquals("Value for 'interactions' cannot be empty", exception.getMessage());
         }
 
+        @Test
+        void initAuthenticationSession_interactionsIsEmpty_throwException() {
+            DeviceLinkAuthenticationSessionRequestBuilder builder =
+                    toDeviceLinkRequestBuilder(b -> b.withInteractions(Collections.singletonList(null)));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initAuthenticationSession);
+            assertEquals("Value for 'interactions' cannot be empty", exception.getMessage());
+        }
+
         @ParameterizedTest
         @ArgumentsSource(DuplicateDeviceLinkInteractionsProvider.class)
         void initAuthenticationSession_duplicateInteractions_throwException(List<DeviceLinkInteraction> duplicateInteractions) {
