@@ -34,10 +34,9 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 /**
  * Represents the authentication response after a successful authentication sessions status response was received.
- *
- * <p>Use with {@link DeviceLinkAuthenticationResponseValidator} to validate the certificate and the signature.
+ * <p>
+ * Use with {@link DeviceLinkAuthenticationResponseValidator} to validate the auth certificate and signature.
  */
-// TODO - 18.09.25: update javadoc
 public class AuthenticationResponse {
 
     private String endResult;

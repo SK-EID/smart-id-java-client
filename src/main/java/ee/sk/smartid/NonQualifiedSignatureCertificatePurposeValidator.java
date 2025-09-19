@@ -27,11 +27,8 @@ package ee.sk.smartid;
  */
 
 import java.security.cert.X509Certificate;
-import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import ee.sk.smartid.common.certifiate.NonQualifiedSmartIdCertificateValidator;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.util.CertificateAttributeUtil;
 
@@ -45,27 +42,10 @@ import ee.sk.smartid.util.CertificateAttributeUtil;
  */
 public class NonQualifiedSignatureCertificatePurposeValidator implements SignatureCertificatePurposeValidator {
 
-    private static final Logger logger = LoggerFactory.getLogger(NonQualifiedSignatureCertificatePurposeValidator.class);
-
-    private static final Set<String> NONQUALIFIED_CERTIFICATE_POLICY_OIDS = Set.of("1.3.6.1.4.1.10015.17.1", "0.4.0.2042.1.1");
-
     @Override
     public void validate(X509Certificate certificate) {
-        validateCertificateHasNonQualifiedSmartIdCertificatePolicies(certificate);
+        NonQualifiedSmartIdCertificateValidator.validate(certificate);
         validateCertificateCanBeUsedForSigning(certificate);
-    }
-
-    private static void validateCertificateHasNonQualifiedSmartIdCertificatePolicies(X509Certificate certificate) {
-        Set<String> certificatePolicyOids = CertificateAttributeUtil.getCertificatePolicy(certificate);
-        if (certificatePolicyOids.isEmpty()) {
-            throw new UnprocessableSmartIdResponseException("Certificate does not have certificate policy OIDs");
-        }
-        if (!certificatePolicyOids.containsAll(NONQUALIFIED_CERTIFICATE_POLICY_OIDS)) {
-            logger.error("Non-qualified certificate policy OIDs are missing. Provided certificate policy OIDs: {}. Required: {} ",
-                    String.join(", ", certificatePolicyOids),
-                    String.join(", ", NONQUALIFIED_CERTIFICATE_POLICY_OIDS));
-            throw new UnprocessableSmartIdResponseException("Certificate does not contain required non-qualified certificate policy OIDs");
-        }
     }
 
     private static void validateCertificateCanBeUsedForSigning(X509Certificate certificate) {

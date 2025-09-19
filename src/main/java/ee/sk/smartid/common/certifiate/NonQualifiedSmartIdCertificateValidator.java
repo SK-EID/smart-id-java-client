@@ -1,4 +1,4 @@
-package ee.sk.smartid.auth;
+package ee.sk.smartid.common.certifiate;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid.auth;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -32,46 +32,41 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.common.certifiate.SmartIdAuthenticationCertificateValidator;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.CertificateAttributeUtil;
 
 /**
- * Validates that the authentication certificate is a qualified Smart-ID certificate and can be used for authentication.
+ * Validator for non-qualified Smart-ID certificates. Can be used for both authentication and signing certificates.
  * <p>
  * Values used for validation are based on Certificate and OCSP Profile for Smart-ID document.
  * * @see <a href="https://www.skidsolutions.eu/resources/profiles/">https://www.skidsolutions.eu/resources/profiles/</a>
- * * Chapter 2.2.2 Variable Extensions and section Smart-ID Qualified Authentication
- * * Chapter 2.2.3 Certificate Policy and section PolicyIdentifier (authentication) for Qualified profile
- * <p>
- * * Throws {@link ee.sk.smartid.exception.UnprocessableSmartIdResponseException} if validation fails.
+ * * Chapter 2.2.3 Certificate Policy and section PolicyIdentifier (digital signature) and (authentification) for Non-Qualified profile
  */
-public class QualifiedAuthenticationCertificatePurposeValidator implements AuthenticationCertificatePurposeValidator {
+public final class NonQualifiedSmartIdCertificateValidator {
 
-    private final Logger logger = LoggerFactory.getLogger(QualifiedAuthenticationCertificatePurposeValidator.class);
+    private static final Logger logger = LoggerFactory.getLogger(NonQualifiedSmartIdCertificateValidator.class);
 
-    private static final Set<String> QUALIFIED_CERTIFICATE_POLICY_OIDS = Set.of("1.3.6.1.4.1.10015.17.2", "0.4.0.2042.1.2");
+    private static final Set<String> NON_QUALIFIED_CERTIFICATE_POLICY_OIDS = Set.of("1.3.6.1.4.1.10015.17.1", "0.4.0.2042.1.1");
 
-    @Override
-    public void validate(X509Certificate certificate) {
-        if (certificate == null) {
-            throw new SmartIdClientException("Parameter 'certificate' is not provided");
-        }
-        validateCertificateIsQualifiedSmartIdCertificate(certificate);
-        SmartIdAuthenticationCertificateValidator.validate(certificate);
+    private NonQualifiedSmartIdCertificateValidator() {
     }
 
-    private void validateCertificateIsQualifiedSmartIdCertificate(X509Certificate certificate) {
+    /**
+     * Validates that the provided certificate is a non-qualified Smart-ID certificate.
+     *
+     * @param certificate the certificate to validate
+     * @throws UnprocessableSmartIdResponseException if the certificate is not a non-qualified Smart-ID certificate
+     */
+    public static void validate(X509Certificate certificate) {
         Set<String> certificatePolicyOids = CertificateAttributeUtil.getCertificatePolicy(certificate);
         if (certificatePolicyOids.isEmpty()) {
-            throw new UnprocessableSmartIdResponseException("Certificate does not have certificate policy OIDs and is not a qualified Smart-ID authentication certificate");
+            throw new UnprocessableSmartIdResponseException("Certificate does not have certificate policy OIDs and is not a non-qualified Smart-ID certificate");
         }
-        if (!certificatePolicyOids.containsAll(QUALIFIED_CERTIFICATE_POLICY_OIDS)) {
+        if (!certificatePolicyOids.containsAll(NON_QUALIFIED_CERTIFICATE_POLICY_OIDS)) {
             logger.error("Qualified certificate policy OIDs are missing. Provided certificate policy OIDs: {}. Required: {} ",
                     String.join(", ", certificatePolicyOids),
-                    String.join(", ", QUALIFIED_CERTIFICATE_POLICY_OIDS));
-            throw new UnprocessableSmartIdResponseException("Certificate is not a qualified Smart-ID authentication certificate");
+                    String.join(", ", NON_QUALIFIED_CERTIFICATE_POLICY_OIDS));
+            throw new UnprocessableSmartIdResponseException("Certificate is not a non-qualified Smart-ID certificate");
         }
     }
 }

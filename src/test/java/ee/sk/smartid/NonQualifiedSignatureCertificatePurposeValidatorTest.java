@@ -76,7 +76,7 @@ class NonQualifiedSignatureCertificatePurposeValidatorTest {
         X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(certificate));
-        assertEquals("Certificate does not have certificate policy OIDs", ex.getMessage());
+        assertEquals("Certificate does not have certificate policy OIDs and is not a non-qualified Smart-ID certificate", ex.getMessage());
     }
 
     @Test
@@ -90,7 +90,7 @@ class NonQualifiedSignatureCertificatePurposeValidatorTest {
         X509Certificate certificate = InvalidCertificateGenerator.createCertificate(policies, null, null);
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(certificate));
-        assertEquals("Certificate does not contain required non-qualified certificate policy OIDs", ex.getMessage());
+        assertEquals("Certificate is not a non-qualified Smart-ID certificate", ex.getMessage());
     }
 
     @ParameterizedTest

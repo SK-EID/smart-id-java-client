@@ -30,6 +30,10 @@ import java.security.cert.X509Certificate;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
+/**
+ * Interface for validating whether a given X509 certificate is suitable for digital signing purposes.
+ * Implementations should check certificate properties and throw an exception if the certificate is not valid for signing.
+ */
 public interface SignatureCertificatePurposeValidator {
 
     /**

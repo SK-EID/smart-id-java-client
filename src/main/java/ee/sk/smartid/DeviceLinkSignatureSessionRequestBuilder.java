@@ -46,7 +46,7 @@ import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
- * Builder class for creating device link signature session
+ * Builder for creating a device-link signature session
  */
 public class DeviceLinkSignatureSessionRequestBuilder {
 
@@ -321,7 +321,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private void validateInteractions() {
-        if (interactions == null || InteractionUtil.isEmpty(interactions)) {
+        if (InteractionUtil.isEmpty(interactions)) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {

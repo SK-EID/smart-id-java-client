@@ -41,7 +41,6 @@ import ee.sk.smartid.util.StringUtil;
 /**
  * Validates authentication response and converts it to {@link AuthenticationIdentity}
  */
-// TODO - 18.09.25: add tests
 public class NotificationAuthenticationResponseValidator {
 
     private final CertificateValidator certificateValidator;

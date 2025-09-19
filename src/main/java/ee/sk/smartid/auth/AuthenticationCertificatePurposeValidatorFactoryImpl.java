@@ -28,7 +28,16 @@ package ee.sk.smartid.auth;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 
-// TODO - 18.09.25: javadoc
+/**
+ * Factory implementation for creating {@link AuthenticationCertificatePurposeValidator}
+ * instances based on the provided {@link AuthenticationCertificateLevel}.
+ * <p>
+ * Returns a validator suitable for the certificate level:
+ * <ul>
+ *   <li>{@code QUALIFIED} - returns {@link QualifiedAuthenticationCertificatePurposeValidator}</li>
+ *   <li>{@code ADVANCED} - returns {@link NonQualifiedAuthenticationCertificatePurposeValidator}</li>
+ * </ul>
+ */
 public class AuthenticationCertificatePurposeValidatorFactoryImpl implements AuthenticationCertificatePurposeValidatorFactory {
 
     @Override

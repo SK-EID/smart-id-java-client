@@ -48,6 +48,9 @@ import ee.sk.smartid.rest.dao.VerificationCode;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
 
+/**
+ * Builder for creating a notification-based signature session
+ */
 public class NotificationSignatureSessionRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationSignatureSessionRequestBuilder.class);
@@ -277,7 +280,7 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private void validateAllowedInteractions() {
-        if (interactions == null || InteractionUtil.isEmpty(interactions)) {
+        if (InteractionUtil.isEmpty(interactions)) {
             throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
         }
         if (interactions.stream().map(NotificationInteraction::type).distinct().count() != interactions.size()) {

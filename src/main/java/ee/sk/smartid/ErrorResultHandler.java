@@ -57,7 +57,7 @@ public class ErrorResultHandler {
      * @throws SmartIdClientException                when input parameter sessionResult is null
      * @throws UserActionException                   sub-exceptions based on end result
      * @throws UserAccountException                  sub-exceptions based on end result
-     * @throws ProtocolFailureException              when there was a error in the process (e.g shcema name incorrect)
+     * @throws ProtocolFailureException              when there was an error in the process (e.g. shcema name is incorrect)
      * @throws ExpectedLinkedSessionException        when different session type was started than expected
      * @throws SmartIdServerException                when technical error occurred on server side
      * @throws UnprocessableSmartIdResponseException when unexpected end result was received

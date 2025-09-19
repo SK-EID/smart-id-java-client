@@ -55,7 +55,7 @@ class SignatureResponseValidatorTest {
 
     private static final String SIGN_CERT = FileUtil.readFileToString("test-certs/sign-cert-40504040001.pem.crt");
 
-    // // TODO - 31.08.25: replace these values when the test accounts are available
+    // TODO - 31.08.25: replace these values when the test accounts are available
     private static final String NQ_SIGNING_CERTIFICATE = FileUtil.readFileToString("test-certs/nq-signing-cert.pem");
     private static final String NQ_SIGNATURE_VALUE = "NVGdK0YNpyKWEK5YhyrZt0rjtczzlsSi9tw2KS8iw13cZbiPwCr1/v35By7KkGtZ7fY+s9ebG9NbiIldnJ+wtqgjI4ZlDMRsoepgMsNPQD66kAPObUylv7NdZ41O0i/RB8DUYHcd5RHnYhqN9wPdd4iNtzfkMhqlJsZLT4cYOV1cNIfQSQnHOekA8Qbq1CASt2i7i8cIQ2v5+CfFwmSBdkZGrInVlbptLK4pKpX7kYjzQ9sq+1ua9A+6ZHBE/nCdw/Oa0jXsnM3E1KDDQzSO5qafkW4LzEpGvaRn4lRXPxPmgg0m7z5TEZa0VXhBPr9qvBI7SDQDov4OMUku6WyKdEb+4qC9lR+u+T2drpPe4W9vdKodzjL/kalMyHITW4bfl9szMSdz0EF6oDUjwkNyzaUdms8kODLOkWKHMQjLK7/s00VHbt9i0uHERdUwU78XsnTBjw6oM0R1/WVdPu7FOzF/nETOZiWmziycieFj4Y2hhaPn2S/PmGqXcNpWipXw2kdVNRL+Kn7ryiz4ojXp7U2+0ZUi2r6nyt/AR/hbowSwbCn8tKFssDTZacYSsjhdpcyD6tsy3yc7tQqSHXAgAIy3k6EFqvM0ehIO0HAGCsyY4iVUjDluz4Bd3jurERFtu6GnLwGpX8fPh/CgvQh8O1XwI23cwe/Ojn6i7J155TL107kczNv1pD8oppTAd7Oe8bZCI7YDqEhFGwMpEeiSb80V5Deg3LwCYlQtenl04vFol+9Vij22RJpVvssTi0fJ8Vxgzm3Xtoak/R0U9fHiFsGB/eVrM3h27twztYwU49ti/ZYs/7Ow+RZGq7Kbr6KXyxdh9j7Mva5x5NBr2x6kJFBbJKjj0o+FRZJX6YTraup975+Oxvp13WICAPTtdNvRCkVoXKFOFjG040b4TFsPdny+iY3PBx4wTef/b4GX22MlAjVtBgw4x+XRoPO9F6X5wYFlw2UPLY0vPltWOXarR/AyXqyxBigiS/Sho090pH7nD6YZ2s7bp9jnqtWnzqWb";
 

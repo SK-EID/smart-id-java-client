@@ -38,7 +38,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.Interaction;
 
 /**
- * Utility class for interactions related actions
+ * Utility for interactions related actions
  */
 public class InteractionUtil {
 
@@ -70,6 +70,6 @@ public class InteractionUtil {
      * @return true if the list is empty or contains only null values, false otherwise
      */
     public static boolean isEmpty(List<? extends SmartIdInteraction> interactions) {
-        return interactions.stream().filter(Objects::nonNull).toList().isEmpty();
+        return interactions == null || interactions.stream().filter(Objects::nonNull).toList().isEmpty();
     }
 }

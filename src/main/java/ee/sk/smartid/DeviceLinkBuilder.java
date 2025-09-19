@@ -40,7 +40,7 @@ import ee.sk.smartid.util.StringUtil;
 import jakarta.ws.rs.core.UriBuilder;
 
 /**
- * Builds Smart-ID device link URI.
+ * Builder for creating Smart-ID device-link URI.
  */
 public class DeviceLinkBuilder {
 

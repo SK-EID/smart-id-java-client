@@ -12,10 +12,10 @@ package ee.sk.smartid.auth;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,9 +28,16 @@ package ee.sk.smartid.auth;
 
 import ee.sk.smartid.AuthenticationCertificateLevel;
 
-// TODO - 18.09.25: javadoc
+/**
+ * Factory interface for creating {@link AuthenticationCertificatePurposeValidator} instances
+ */
 public interface AuthenticationCertificatePurposeValidatorFactory {
 
-    // TODO - 18.09.25: javadoc
+    /**
+     * Creates an {@link AuthenticationCertificatePurposeValidator} for the specified certificate level.
+     *
+     * @param certificateLevel the level of the authentication certificate
+     * @return an instance of {@link AuthenticationCertificatePurposeValidator} suitable for the given level
+     */
     AuthenticationCertificatePurposeValidator create(AuthenticationCertificateLevel certificateLevel);
 }
