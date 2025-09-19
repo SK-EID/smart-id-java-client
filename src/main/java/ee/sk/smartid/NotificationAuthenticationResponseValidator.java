@@ -39,7 +39,7 @@ import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
 /**
- * Validates authentication response and converts it to {@link AuthenticationIdentity}
+ * Validates notification-based authentication session status
  */
 public class NotificationAuthenticationResponseValidator {
 

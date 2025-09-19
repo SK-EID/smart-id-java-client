@@ -26,7 +26,7 @@ It is recommended to start using device-link authentication flows from Smart-ID 
 1. Replace generating authentication hash with generating RP challenge using `RpChallengeGenerator.generate()`
 2. [Create device-link authentication builder and set values](README.md#examples-of-initiating-a-device-link-authentication-session) and start authentication session by calling build-method `initAuthenticationSession()`
 3. Replace showing verification code with showing device link or QR-code. Recommended to use device link for same device and QR-code for cross-device authentication.
-   - [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. Link and QR-code should be recreated after every second.
+   - [Create device link or QR-code](README.md#generating-qr-code-or-device-link) from values in session response and display it to the user. QR-code should be recreated after every second.
 4. Querying session status can be done in parallel while displaying device content. Check out [session status poller](README.md#example-of-using-session-status-poller-to-query-final-sessions-status). `ee.sk.smartid.SmartIdClient` provides method `getSessionsStatusPoller()` to get version specific session status poller.
 5. When session status state is `COMPLETE` polling will be stopped and [response should be checked](README.md#example-of-validating-the-authentication-sessions-response) with `AuthenticationResponseValidator`. It will validate required fields, certificate and signature value in sessions status, and it will also handler errors.
 6. If everything is ok `AuthenticationIdentity` will be returned. AuthenticationIdentity is same as used for V2.
