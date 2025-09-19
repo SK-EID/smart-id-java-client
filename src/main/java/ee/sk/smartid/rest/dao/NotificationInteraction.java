@@ -1,5 +1,3 @@
-package ee.sk.smartid;
-
 /*-
  * #%L
  * Smart ID sample Java client
@@ -12,10 +10,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,22 +23,3 @@ package ee.sk.smartid;
  * THE SOFTWARE.
  * #L%
  */
-
-import java.security.cert.X509Certificate;
-
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-
-/**
- * Interface for validating whether a given X509 certificate is suitable for digital signing purposes.
- * Implementations should check certificate properties and throw an exception if the certificate is not valid for signing.
- */
-public interface SignatureCertificatePurposeValidator {
-
-    /**
-     * Validates that the provided certificate is suitable for digital signing
-     *
-     * @param certificate certificate to validate
-     * @throws UnprocessableSmartIdResponseException when the certificate is not suitable for digital signing
-     */
-    void validate(X509Certificate certificate);
-}

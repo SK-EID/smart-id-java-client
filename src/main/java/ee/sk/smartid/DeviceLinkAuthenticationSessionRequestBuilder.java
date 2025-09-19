@@ -47,7 +47,7 @@ import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
- * Class for building a device link authentication session request
+ * Builder for creating a device-link authentication session
  */
 public class DeviceLinkAuthenticationSessionRequestBuilder {
 
@@ -258,7 +258,7 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
      */
     public DeviceLinkAuthenticationSessionRequest getAuthenticationSessionRequest() {
         if (authenticationSessionRequest == null) {
-            throw new SmartIdClientException("Authentication session request has not been initialized yet");
+            throw new SmartIdClientException("Device link authentication session has not been initialized yet");
         }
         return authenticationSessionRequest;
     }
@@ -309,13 +309,9 @@ public class DeviceLinkAuthenticationSessionRequestBuilder {
     }
 
     private void validateInteractions() {
-        if (interactions == null || interactions.isEmpty()) {
+        if (InteractionUtil.isEmpty(interactions)) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
-        validateNoDuplicateInteractions();
-    }
-
-    private void validateNoDuplicateInteractions() {
         if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
         }

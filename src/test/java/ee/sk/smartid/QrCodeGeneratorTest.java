@@ -162,6 +162,7 @@ class QrCodeGeneratorTest {
                 .withElapsedSeconds(1L)
                 .withRelyingPartyName("DEMO")
                 .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+                .withInteractions("interactions")
                 .withLang("ENG");
 
         return linkBuilder.buildDeviceLink("B98ODiVCebRedSwdTk51zFSaGYyHtY1H2A0ocAi3/Ps=");

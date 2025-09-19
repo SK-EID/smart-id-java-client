@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.auth;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,21 +26,25 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.security.cert.X509Certificate;
-
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.AuthenticationCertificateLevel;
 
 /**
- * Interface for validating whether a given X509 certificate is suitable for digital signing purposes.
- * Implementations should check certificate properties and throw an exception if the certificate is not valid for signing.
+ * Factory implementation for creating {@link AuthenticationCertificatePurposeValidator}
+ * instances based on the provided {@link AuthenticationCertificateLevel}.
+ * <p>
+ * Returns a validator suitable for the certificate level:
+ * <ul>
+ *   <li>{@code QUALIFIED} - returns {@link QualifiedAuthenticationCertificatePurposeValidator}</li>
+ *   <li>{@code ADVANCED} - returns {@link NonQualifiedAuthenticationCertificatePurposeValidator}</li>
+ * </ul>
  */
-public interface SignatureCertificatePurposeValidator {
+public class AuthenticationCertificatePurposeValidatorFactoryImpl implements AuthenticationCertificatePurposeValidatorFactory {
 
-    /**
-     * Validates that the provided certificate is suitable for digital signing
-     *
-     * @param certificate certificate to validate
-     * @throws UnprocessableSmartIdResponseException when the certificate is not suitable for digital signing
-     */
-    void validate(X509Certificate certificate);
+    @Override
+    public AuthenticationCertificatePurposeValidator create(AuthenticationCertificateLevel certificateLevel) {
+        return switch (certificateLevel) {
+            case QUALIFIED -> new QualifiedAuthenticationCertificatePurposeValidator();
+            case ADVANCED -> new NonQualifiedAuthenticationCertificatePurposeValidator();
+        };
+    }
 }

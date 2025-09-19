@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.auth;
 
 /*-
  * #%L
@@ -26,21 +26,18 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.security.cert.X509Certificate;
-
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.AuthenticationCertificateLevel;
 
 /**
- * Interface for validating whether a given X509 certificate is suitable for digital signing purposes.
- * Implementations should check certificate properties and throw an exception if the certificate is not valid for signing.
+ * Factory interface for creating {@link AuthenticationCertificatePurposeValidator} instances
  */
-public interface SignatureCertificatePurposeValidator {
+public interface AuthenticationCertificatePurposeValidatorFactory {
 
     /**
-     * Validates that the provided certificate is suitable for digital signing
+     * Creates an {@link AuthenticationCertificatePurposeValidator} for the specified certificate level.
      *
-     * @param certificate certificate to validate
-     * @throws UnprocessableSmartIdResponseException when the certificate is not suitable for digital signing
+     * @param certificateLevel the level of the authentication certificate
+     * @return an instance of {@link AuthenticationCertificatePurposeValidator} suitable for the given level
      */
-    void validate(X509Certificate certificate);
+    AuthenticationCertificatePurposeValidator create(AuthenticationCertificateLevel certificateLevel);
 }

@@ -25,8 +25,8 @@ This library supports Smart-ID API v3.1.
         * [Device link authentication session](#device-link-authentication-session)
           * [Examples of authentication session](#examples-of-initiating-a-device-link-authentication-session)
             * [Initiating an anonymous authentication session](#initiating-an-anonymous-authentication-session)
-            * [Initiating a dynamic-link authentication session with semantics identifier](#initiating-a-device-link-authentication-session-with-semantics-identifier)
-            * [Initiating a dynamic-link authentication session with document number](#initiating-a-device-link-authentication-session-with-document-number)
+            * [Initiating a device link-based authentication session with semantics identifier](#initiating-a-device-link-authentication-session-with-semantics-identifier)
+            * [Initiating a device link-based authentication session with document number](#initiating-a-device-link-authentication-session-with-document-number)
         * [Device-link signature session](#device-link-signature-session)
           * [Examples of initiating a device-link signature session](#examples-of-initiating-a-device-link-signature-session)
               * [Initiating a device-link signature session using semantics identifier](#initiating-a-device-link-signature-session-with-semantics-identifier)
@@ -48,6 +48,8 @@ This library supports Smart-ID API v3.1.
         * [Validating sessions status response](#validating-session-status-response)
           * [Setting up CertificateValidator](#set-up-certificatevalidator)
           * [Example of validating authentication session response](#example-of-validating-the-authentication-sessions-response)
+            * [Example of validating device link-based authentication session status](#device-link-based-authentication-session-status-validation)
+            * [Example of validating notification-based authentication session status](#notification-based-authentication-session-status-validation)
           * [Example of validating certificate session response](#example-of-validating-the-certificate-choice-session-response)
           * [Example of validating the signature](#example-of-validating-the-signature-session-response)
           * [Error handling for session status](#error-handling-for-session-status)
@@ -59,7 +61,7 @@ This library supports Smart-ID API v3.1.
       * [Linked notification-based signature session](#linked-notification-based-signature-session)
         * [Example of initiating a linked notification-based signature session](#example-of-initiating-a-linked-notification-based-signature-session)
     * [Notification-based flows](#notification-based-flows)
-        * [Differences between notification-based and device link flows](#differences-between-notification-based-and-device-link-flows)
+        * [Differences between notification-based, device link-based flows and linked flows](#differences-between-notification-based-device-link-based-and-linked-flows)
         * [Notification-based authentication session](#notification-based-authentication-session)
           * [Examples of initiating notification authentication session](#examples-of-initiating-a-notification-based-authentication-session)
               * [Initiating notification authentication session with document number](#initiating-a-notification-based-authentication-session-with-document-number)
@@ -127,7 +129,7 @@ import ee.sk.smartid.SmartIdConnector;
 
 ## Test accounts for testing
 
-[Test accounts for testing](https://github.com/SK-EID/smart-id-documentation/wiki/Environment-technical-parameters#test-accounts-for-automated-testing)
+[Test accounts for testing](https://sk-eid.github.io/smart-id-documentation/test_accounts.html)
 
 
 ## Logging
@@ -142,13 +144,16 @@ logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 
 ## Setting up SmartIdClient for v3.1
 
+[Configure to use with Smart-ID Demo environment](https://sk-eid.github.io/smart-id-documentation/environments.html#_demo)
+NB! Smart-ID Basic level accounts (certificate level ADVANCED) are not supported for DEMO
+
 ```java 
 InputStream is = SmartIdClient.class.getResourceAsStream("demo_server_trusted_ssl_certs.jks");
 KeyStore trustStore = KeyStore.getInstance("JKS");
 trustStore.load(is, "changeit".toCharArray());
 
 var smartIdClient = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+client.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
 client.setRelyingPartyName("DEMO");
 client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 client.setTrustStore(trustStore);
@@ -631,7 +636,7 @@ String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "pn
 ## Session status request handling for v3.1
 
 The Smart-ID v3.1 API includes new session status request path for retrieving session results. 
-Session status request is to be used for dynamic-link and notification-based flows.
+Session status request is to be used for device link-based and notification-based flows.
 
 ### Session status response
 
@@ -672,7 +677,7 @@ if("COMPLETE".equalsIgnoreCase(sessionStatus.getState())){
 
 #### Example of querying sessions status only once
 The following example shows how to use the SessionStatusPoller to only query the sessions status single time.
-NB! If using this method for dynamic-link flows. Make sure the pollingSleepTimeout is not set or does not impact generating the dynamic-content for every second.
+NB! If using this method for device link-based flows. Make sure the pollingSleepTimeout is not set or does not impact generating the QR-code for every second.
 
 ```java
 *SessionResponse sessionResponse;
@@ -733,18 +738,20 @@ CertificateValidator certificateValidator = new CertificateValidatorImpl(trusted
 
 #### Example of validating the authentication sessions response:
 
-AuthenticationResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator) 
+##### Device link-based authentication session status validation
+
+DeviceLinkAuthenticationResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator) 
 
 ```java
 // Set up AuthenticationResponseValidator with the CertificateValidator
-AuthenticationResponseValidator authenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+DeviceLinkAuthenticationResponseValidator deviceLinkAuthenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
 
 // Create authentication request builder
 DeviceLinkAuthenticationSessionRequestBuilder authenticationRequestBuilder =  smartIdClient.createDeviceLinkAuthentication()...;
 // Initialize session
 DeviceLinkSessionResponse sessionResponse = authenticationRequestBuilder.initAuthenticationSession();
 // Get request used for starting the authentication session and use it later to validate sessions status response
-AuthenticationSessionRequest authenticationSessionRequest = authenticationRequestBuilder.getAuthenticationSessionRequest();
+DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = authenticationRequestBuilder.getAuthenticationSessionRequest();
 
 // get sessions result
 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -753,7 +760,33 @@ SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.ses
 // validate sessions state is completed
 if("COMPLETE".equals(sessionStatus.getState())){
     // validate the session status response with authentication session request and return authentication identity
-    AuthenticationIdentity authenticationIdentity = authenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+    AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+}
+```
+
+##### Notification-based authentication session status validation
+
+NotificationAuthenticationResponseValidator depends on CertificateValidator. Checkout [setting up CertificateValidator](#set-up-certificatevalidator)
+
+```java
+// Set up AuthenticationResponseValidator with the CertificateValidator
+NotificationAuthenticationResponseValidator notificationAuthenticationResponseValidator = new AuthenticationResponseValidator(certificateValidator);
+
+// Create authentication request builder
+NotificationAuthenticationSessionRequestBuilder authenticationRequestBuilder =  smartIdClient.createDeviceLinkAuthentication()...;
+// Initialize session
+NotificationAuthenticationSessionResponse sessionResponse = authenticationRequestBuilder.initAuthenticationSession();
+// Get request used for starting the authentication session and use it later to validate sessions status response
+NotificationAuthenticationSessionRequest authenticationSessionRequest = authenticationRequestBuilder.getAuthenticationSessionRequest();
+
+// get sessions result
+SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionResponse.sessionID());
+
+// validate sessions state is completed
+if("COMPLETE".equals(sessionStatus.getState())){
+    // validate the session status response with authentication session request and return authentication identity
+    AuthenticationIdentity authenticationIdentity = notificationAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
 }
 ```
 
@@ -931,6 +964,7 @@ Second part of the linked signature flow. Will be used to start the signature se
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
+* `certificateLevel`: Level of certificate requested. Possible values are ADVANCED, QUALIFIED or QSCD. Defaults to QUALIFIED.
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
 * `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
@@ -973,17 +1007,21 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 
 ## Notification-based flows
 
-### Differences between notification-based and device link flows
+### Differences between notification-based, device link-based and linked flows
 
 * `Notification-Based flow`
     * Push notifications: The user gets a notification directly on their Smart-ID app to proceed with the signing or authentication process.
     * Known users or devices: 
-      * Notification-based flows are more vulnerable to phishing attacks. It is recommended to use notification-based flows after the user has been identified by using dynamic-link flows.
+      * Notification-based flows are more vulnerable to phishing attacks. It is recommended to use notification-based flows after the user has been identified by using device link-based flows.
     * No dynamic updates: The process is straightforward, with no need to update links or use QR codes.
 * `Device Link flow`
     * Device links: Generates links for QR codes or Web2App/App2App links that the user interacts with to start the process.
-    * Authentication and certificate-choice support unknown users or devices: Useful when the user's identity or device is not known in advance.
+    * Anonymous authentication: the user's details are not required beforehand. RP validates the user after the Smart-ID authentication is completed.
     * Real-time updates: QR-code needs to be refreshed every second to ensure validity.
+* `Linked flow`
+  * Combination of anonymous certificate choice and notification-based signing: Starts with a device link-based certificate choice session followed by a notification-based signing session.
+  * QR-code or device link will be used only for the certificate choice part of the flow.
+  * Supports only device link-based interactions in the signature part of the flow.
 
 ### Notification-based authentication session
 
@@ -1018,7 +1056,7 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
 // For security reasons a rpChallenge must be created for each new authentication request
-RpChallenge rpChallenge = RandomChallenge.generate();
+RpChallenge rpChallenge = RpChallengeGenerator.generate();
 // Store generated rpChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
@@ -1050,7 +1088,7 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
 );
 
 // For security reasons a rpChallenge must be created for each new authentication request
-RpChallenge rpChallenge = RandomChallenge.generate();
+RpChallenge rpChallenge = RpChallengeGenerator.generate();
 // Store generated rpChallenge only on backend side. Do not expose it to the client side. 
 // Used for validating authentication sessions status OK response
 
@@ -1073,6 +1111,9 @@ String sessionId = authenticationSessionResponse.sessionID();
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Notification-based certificate choice session
+
+> [!CAUTION]
+> The notification-based certificate choice has not yet been updated to be used with Smart-ID API v3.1
 
 #### Request parameters
 
@@ -1111,6 +1152,9 @@ String sessionId = certificateChoiceSessionResponse.sessionID();
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
 ### Notification-based signature session
+
+> [!CAUTION]
+> The notification-based signature has not yet been updated to be used with Smart-ID API v3.1
 
 #### Request Parameters
 The request parameters for the notification-based signature session are as follows:

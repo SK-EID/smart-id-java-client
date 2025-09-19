@@ -1,4 +1,4 @@
-package ee.sk.smartid;
+package ee.sk.smartid.auth;
 
 /*-
  * #%L
@@ -29,28 +29,27 @@ package ee.sk.smartid;
 import java.security.cert.X509Certificate;
 
 import ee.sk.smartid.common.certifiate.NonQualifiedSmartIdCertificateValidator;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.util.CertificateAttributeUtil;
+import ee.sk.smartid.common.certifiate.SmartIdAuthenticationCertificateValidator;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 /**
- * Validates that the signature certificate is a nonqualified Smart-ID certificate and can be used for digital signing.
+ * Validator for non-qualified Smart-ID authentication certificates.
  * <p>
  * Values used for validation are based on Certificate and OCSP Profile for Smart-ID document.
  * * @see <a href="https://www.skidsolutions.eu/resources/profiles/">https://www.skidsolutions.eu/resources/profiles/</a>
  * * Chapter 2.2.2 Variable Extensions and section Smart-ID Non-Qualified Digital Signature
  * * Chapter 2.2.3 Certificate Policy and section PolicyIdentifier (digital signature) for Non-Qualified profile
+ * <p>
+ * Throws {@link ee.sk.smartid.exception.UnprocessableSmartIdResponseException} if validation fails.
  */
-public class NonQualifiedSignatureCertificatePurposeValidator implements SignatureCertificatePurposeValidator {
+public class NonQualifiedAuthenticationCertificatePurposeValidator implements AuthenticationCertificatePurposeValidator {
 
     @Override
     public void validate(X509Certificate certificate) {
-        NonQualifiedSmartIdCertificateValidator.validate(certificate);
-        validateCertificateCanBeUsedForSigning(certificate);
-    }
-
-    private static void validateCertificateCanBeUsedForSigning(X509Certificate certificate) {
-        if (!CertificateAttributeUtil.hasNonRepudiationKeyUsage(certificate)) {
-            throw new UnprocessableSmartIdResponseException("Certificate does not have Non-Repudiation set in 'KeyUsage' extension");
+        if (certificate == null) {
+            throw new SmartIdClientException("Parameter 'certificate' is not provided");
         }
+        NonQualifiedSmartIdCertificateValidator.validate(certificate);
+        SmartIdAuthenticationCertificateValidator.validate(certificate);
     }
 }
