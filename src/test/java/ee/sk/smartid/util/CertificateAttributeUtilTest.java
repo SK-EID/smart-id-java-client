@@ -102,7 +102,7 @@ public class CertificateAttributeUtilTest {
 
     @Test
     void getCertificatePolicy_certificatePolicyIsNotPresent_returnEmptySet() {
-        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
+        X509Certificate certificate = InvalidCertificateGenerator.builder().createCertificate();
 
         Set<String> certificatePolicy = CertificateAttributeUtil.getCertificatePolicy(certificate);
 
@@ -120,14 +120,9 @@ public class CertificateAttributeUtilTest {
 
     @Test
     void hasNonRepudiation_KeyUsageExtensionIsMissing() {
-        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
-
-        assertFalse(CertificateAttributeUtil.hasNonRepudiationKeyUsage(certificate));
-    }
-
-    @Test
-    void hasNonRepudiation_KeyUsageExtensionIsMising() {
-        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
+        X509Certificate certificate = InvalidCertificateGenerator.builder()
+                .withKeyUsage(null)
+                .createCertificate();
 
         assertFalse(CertificateAttributeUtil.hasNonRepudiationKeyUsage(certificate));
     }
