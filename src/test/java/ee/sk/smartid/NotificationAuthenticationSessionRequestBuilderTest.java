@@ -268,7 +268,7 @@ class NotificationAuthenticationSessionRequestBuilderTest {
         }
 
         @Test
-        void initAuthenticationSession_interactions_throwException() {
+        void initAuthenticationSession_interactionsIsListWithNullValue_throwException() {
             NotificationAuthenticationSessionRequestBuilder builder =
                     toNotificationAuthenticationSessionRequestBuilder(b -> b.withInteractions(Collections.singletonList(null)));
 
