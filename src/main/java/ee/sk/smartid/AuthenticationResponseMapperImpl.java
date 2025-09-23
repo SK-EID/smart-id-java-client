@@ -187,7 +187,7 @@ public class AuthenticationResponseMapperImpl implements AuthenticationResponseM
 
     private static void validateSignatureAlgorithmParameters(SessionSignature sessionSignature) {
         var signatureAlgorithmParameters = sessionSignature.getSignatureAlgorithmParameters();
-        if (sessionSignature.getSignatureAlgorithmParameters() == null) {
+        if (signatureAlgorithmParameters == null) {
             throw new UnprocessableSmartIdResponseException("Authentication session status field 'signature.signatureAlgorithmParameters' is missing");
         }
         if (StringUtil.isEmpty(signatureAlgorithmParameters.getHashAlgorithm())) {

@@ -29,7 +29,8 @@ package ee.sk.smartid;
 import java.util.Arrays;
 
 /**
- * TrailerField represents the value used in the trailer field of the Smart-ID authentication response and value necessary for generating the signature.
+ * TrailerField represents the value used in the trailer field of the Smart-ID authentication and signature response.
+ * The pssSpecValue necessary for generating the signature.
  */
 public enum TrailerField {
 
