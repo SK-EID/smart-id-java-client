@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -118,14 +118,6 @@ abstract class AuthenticationResponseValidator<T extends AuthenticationSessionRe
      */
     protected abstract AuthenticationCertificateLevel getRequestedCertificateLevel(T authenticationSessionRequest);
 
-    protected String toInteractionsBase64(String interactions) {
-        return Base64.getEncoder().encodeToString(calculateInteractionsDigest(interactions));
-    }
-
-    protected static String toBase64(String input) {
-        return Base64.getEncoder().encodeToString(input.getBytes(StandardCharsets.UTF_8));
-    }
-
     private void validateInputs(SessionStatus sessionStatus, T authenticationSessionRequest, String schemaName) {
         if (sessionStatus == null) {
             throw new SmartIdClientException("Parameter 'sessionStatus' is not provided");
@@ -146,12 +138,6 @@ abstract class AuthenticationResponseValidator<T extends AuthenticationSessionRe
         authenticationCertificatePurposeValidator.validate(authenticationResponse.getCertificate());
     }
 
-    private void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        if (!authenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
-            throw new CertificateLevelMismatchException();
-        }
-    }
-
     private void validateSignature(AuthenticationResponse authenticationResponse,
                                    T authenticationSessionRequest,
                                    String schemaName,
@@ -163,7 +149,21 @@ abstract class AuthenticationResponseValidator<T extends AuthenticationSessionRe
                 authenticationResponse.getRsaSsaPssSignatureParameters());
     }
 
-    private byte[] calculateInteractionsDigest(String interactions) {
+    protected static String toInteractionsBase64(String interactions) {
+        return Base64.getEncoder().encodeToString(calculateInteractionsDigest(interactions));
+    }
+
+    protected static String toBase64(String input) {
+        return Base64.getEncoder().encodeToString(input.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static byte[] calculateInteractionsDigest(String interactions) {
         return DigestCalculator.calculateDigest(interactions.getBytes(StandardCharsets.UTF_8), HashAlgorithm.SHA_256);
+    }
+
+    private static void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
+        if (!authenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
+            throw new CertificateLevelMismatchException();
+        }
     }
 }
