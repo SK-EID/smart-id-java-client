@@ -37,6 +37,7 @@ jobs:
         echo "[INFO] Artifact name: $artifact"
         ./mvnw versions:set -DnewVersion="$version"
         ./mvnw package -DskipTests
+        cd target
         rm -rf ee/sk/smartid/smart-id-java-client/$version
         mkdir -p ee/sk/smartid/smart-id-java-client/$version
         cp $artifact.jar  ee/sk/smartid/smart-id-java-client/$version/ 
