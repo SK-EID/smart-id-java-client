@@ -71,7 +71,7 @@ class QualifiedSignatureCertificatePurposeValidatorTest {
 
     @Test
     void validate_certificatePoliciesAreMissing_throwException() {
-        X509Certificate cert = InvalidCertificateGenerator.createCertificate(null, null, null);
+        X509Certificate cert = InvalidCertificateGenerator.builder().createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(cert));
         assertEquals("Certificate does not have certificate policy OIDs", ex.getMessage());
@@ -85,7 +85,7 @@ class QualifiedSignatureCertificatePurposeValidatorTest {
                 new DERSequence()
         );
         CertificatePolicies policies = InvalidCertificateGenerator.createCertificatePolicies(policyInfo);
-        X509Certificate cert = InvalidCertificateGenerator.createCertificate(policies, null, null);
+        X509Certificate cert = InvalidCertificateGenerator.builder().withPolicies(policies).createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(cert));
         assertEquals("Certificate does not contain required qualified certificate policy OIDs", ex.getMessage());
@@ -101,7 +101,7 @@ class QualifiedSignatureCertificatePurposeValidatorTest {
                 new ASN1ObjectIdentifier(QCP_N_QSCD_OID),
                 new DERSequence());
         CertificatePolicies policies = InvalidCertificateGenerator.createCertificatePolicies(skQPolicy, qcpNQscdPolicy);
-        X509Certificate cert = InvalidCertificateGenerator.createCertificate(policies, keyUsage, null);
+        X509Certificate cert = InvalidCertificateGenerator.builder().withPolicies(policies).withKeyUsage(keyUsage).createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(cert));
         assertEquals("Certificate does not have Non-Repudiation set in 'KeyUsage' extension", ex.getMessage());
@@ -116,14 +116,17 @@ class QualifiedSignatureCertificatePurposeValidatorTest {
                 new ASN1ObjectIdentifier(QCP_N_QSCD_OID),
                 new DERSequence());
         CertificatePolicies policies = InvalidCertificateGenerator.createCertificatePolicies(skQPolicy, qcpNQscdPolicy);
-        X509Certificate cert = InvalidCertificateGenerator.createCertificate(policies, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation), null);
+        X509Certificate cert = InvalidCertificateGenerator.builder()
+                .withPolicies(policies)
+                .withKeyUsage(new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation))
+                .createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(cert));
         assertEquals("Certificate does not have 'QCStatements' extension", ex.getMessage());
     }
 
     @Test
-    void validate_QsStatementsDoesNotHaveElectronicSigning_throwException() {
+    void validate_qsStatementsDoesNotHaveElectronicSigning_throwException() {
         PolicyInformation skQPolicy = new PolicyInformation(
                 new ASN1ObjectIdentifier(SK_QUALIFIED_POLICY_OID),
                 new DERSequence());
@@ -133,7 +136,11 @@ class QualifiedSignatureCertificatePurposeValidatorTest {
         CertificatePolicies policies = InvalidCertificateGenerator.createCertificatePolicies(skQPolicy, qcpNQscdPolicy);
 
         QCStatement qcStatement = new QCStatement(ETSIQCObjectIdentifiers.id_etsi_qct_eseal);
-        X509Certificate cert = InvalidCertificateGenerator.createCertificate(policies, new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation), qcStatement);
+        X509Certificate cert = InvalidCertificateGenerator.builder()
+                .withPolicies(policies)
+                .withKeyUsage(new KeyUsage(KeyUsage.digitalSignature | KeyUsage.nonRepudiation))
+                .withQcStatement(qcStatement)
+                .createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(cert));
         assertEquals("Certificate does not have electronic signature OID (0.4.0.1862.1.6.1) in QCStatements extension.", ex.getMessage());

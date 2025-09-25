@@ -69,7 +69,7 @@ public final class SmartIdAuthenticationCertificateValidator {
     // Extended key usage - 1.3.6.1.4.1.62306.5.7.0
     // KeyUsage - digitalSignature
     private static boolean isAfterApril2025Certificates(X509Certificate certificate) {
-        if (hasExtendedKey(certificate, "1.3.6.1.4.1.62306.5.7.0")) {
+        if (!hasExtendedKey(certificate, "1.3.6.1.4.1.62306.5.7.0")) {
             return false;
         }
         boolean[] keyUsage = certificate.getKeyUsage();
@@ -84,7 +84,7 @@ public final class SmartIdAuthenticationCertificateValidator {
     // Extended key usage -  1.3.6.1.5.5.7.3.2
     // Key Usage -  digitalSignature, keyEncipherment, dataEncipherment
     private static boolean isBeforeApril2025Certificates(X509Certificate certificate) {
-        if (hasExtendedKey(certificate, "1.3.6.1.5.5.7.3.2")) {
+        if (!hasExtendedKey(certificate, "1.3.6.1.5.5.7.3.2")) {
             return false;
         }
         boolean[] keyUsage = certificate.getKeyUsage();
@@ -103,11 +103,11 @@ public final class SmartIdAuthenticationCertificateValidator {
             List<String> extendedKeyUsage = certificate.getExtendedKeyUsage();
             if (extendedKeyUsage == null || extendedKeyUsage.stream().noneMatch(e -> e.equals(oid))) {
                 logger.debug("Certificate `{}` does not have extended key usage for authentication.", certificate.getSubjectX500Principal());
-                return true;
+                return false;
             }
         } catch (CertificateParsingException ex) {
             throw new UnprocessableSmartIdResponseException("Provided certificate for is incorrect and cannot be used for authentication", ex);
         }
-        return false;
+        return true;
     }
 }

@@ -52,5 +52,5 @@ public record NotificationAuthenticationSessionRequest(String relyingPartyUUID,
                                                        String interactions,
                                                        @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
                                                        @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
-                                                       String vcType) implements Serializable {
+                                                       String vcType) implements Serializable, AuthenticationSessionRequest {
 }

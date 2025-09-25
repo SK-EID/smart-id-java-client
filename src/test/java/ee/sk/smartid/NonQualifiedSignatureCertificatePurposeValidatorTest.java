@@ -73,7 +73,7 @@ class NonQualifiedSignatureCertificatePurposeValidatorTest {
 
     @Test
     void validate_certificatePoliciesAreMissing_throwException() {
-        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(null, null, null);
+        X509Certificate certificate = InvalidCertificateGenerator.builder().createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(certificate));
         assertEquals("Certificate does not have certificate policy OIDs and is not a non-qualified Smart-ID certificate", ex.getMessage());
@@ -87,7 +87,7 @@ class NonQualifiedSignatureCertificatePurposeValidatorTest {
                 new DERSequence()
         );
         CertificatePolicies policies = InvalidCertificateGenerator.createCertificatePolicies(policyInfo);
-        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(policies, null, null);
+        X509Certificate certificate = InvalidCertificateGenerator.builder().withPolicies(policies).createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(certificate));
         assertEquals("Certificate is not a non-qualified Smart-ID certificate", ex.getMessage());
@@ -105,7 +105,7 @@ class NonQualifiedSignatureCertificatePurposeValidatorTest {
                 new DERSequence()
         );
         CertificatePolicies policies = InvalidCertificateGenerator.createCertificatePolicies(skNQPolicy, ncpPolicy);
-        X509Certificate certificate = InvalidCertificateGenerator.createCertificate(policies, keyUsage, null);
+        X509Certificate certificate = InvalidCertificateGenerator.builder().withPolicies(policies).withKeyUsage(keyUsage).createCertificate();
 
         var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> validator.validate(certificate));
         assertEquals("Certificate does not have Non-Repudiation set in 'KeyUsage' extension", ex.getMessage());

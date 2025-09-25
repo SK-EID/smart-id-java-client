@@ -40,6 +40,7 @@ import java.util.Date;
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.x509.CertificatePolicies;
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.PolicyInformation;
@@ -53,60 +54,93 @@ public final class InvalidCertificateGenerator {
     private InvalidCertificateGenerator() {
     }
 
-    public static X509Certificate createCertificate(CertificatePolicies policies,
-                                                    KeyUsage keyUsage,
-                                                    QCStatement qcStatement) {
-        Security.addProvider(new BouncyCastleProvider());
-        KeyPair kp = createKeyPair();
-        X509V3CertificateGenerator certGen = getBaseX509Generator(kp);
-        if (policies != null) {
-            certGen.addExtension(Extension.certificatePolicies, false, policies);
-        }
-        if (keyUsage != null) {
-            certGen.addExtension(Extension.keyUsage, true, keyUsage);
-        }
-        if (qcStatement != null) {
-            certGen.addExtension(Extension.qCStatements, false, new DERSequence(qcStatement));
-        }
-        return generate(certGen, kp);
-    }
-
     public static CertificatePolicies createCertificatePolicies(PolicyInformation... policyInformations) {
         ASN1EncodableVector vec = new ASN1EncodableVector();
         vec.addAll(policyInformations);
         return CertificatePolicies.getInstance(new DERSequence(vec));
     }
 
-    private static KeyPair createKeyPair() {
-        try {
-            KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
-            kpg.initialize(2048);
-            return kpg.generateKeyPair();
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
-            throw new RuntimeException(e);
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private CertificatePolicies policies;
+        private ExtendedKeyUsage extendedKeyUsage;
+        private KeyUsage keyUsage;
+        private QCStatement qcStatement;
+
+        public Builder withPolicies(CertificatePolicies policies) {
+            this.policies = policies;
+            return this;
         }
-    }
 
-    private static X509V3CertificateGenerator getBaseX509Generator(KeyPair kp) {
-        X509Principal issuer = new X509Principal("CN=MyRootCA, O=MyOrg, C=US");
-        X509Principal subject = new X509Principal("CN=TestCert, O=MyOrg, C=US");
+        public Builder withExtendedKeyUsage(ExtendedKeyUsage extendedKeyUsage) {
+            this.extendedKeyUsage = extendedKeyUsage;
+            return this;
+        }
 
-        X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-        certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
-        certGen.setIssuerDN(issuer);
-        certGen.setNotBefore(new Date(System.currentTimeMillis() - 1000L * 60));
-        certGen.setNotAfter(new Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000));
-        certGen.setSubjectDN(subject);
-        certGen.setPublicKey(kp.getPublic());
-        certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
-        return certGen;
-    }
+        public Builder withKeyUsage(KeyUsage keyUsage) {
+            this.keyUsage = keyUsage;
+            return this;
+        }
 
-    private static X509Certificate generate(X509V3CertificateGenerator certGen, KeyPair kp) {
-        try {
-            return certGen.generateX509Certificate(kp.getPrivate(), "BC");
-        } catch (NoSuchProviderException | SignatureException | InvalidKeyException e) {
-            throw new RuntimeException(e);
+        public Builder withQcStatement(QCStatement qcStatement) {
+            this.qcStatement = qcStatement;
+            return this;
+        }
+
+        public X509Certificate createCertificate() {
+            Security.addProvider(new BouncyCastleProvider());
+            KeyPair kp = createKeyPair();
+            X509V3CertificateGenerator certGen = getBaseX509Generator(kp);
+            if (policies != null) {
+                certGen.addExtension(Extension.certificatePolicies, false, policies);
+            }
+            if (extendedKeyUsage != null) {
+                certGen.addExtension(Extension.extendedKeyUsage, false, extendedKeyUsage);
+            }
+            if (keyUsage != null) {
+                certGen.addExtension(Extension.keyUsage, true, keyUsage);
+            }
+            if (qcStatement != null) {
+                certGen.addExtension(Extension.qCStatements, false, new DERSequence(qcStatement));
+            }
+            return generate(certGen, kp);
+        }
+
+        private static KeyPair createKeyPair() {
+            try {
+                KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA", "BC");
+                kpg.initialize(2048);
+                return kpg.generateKeyPair();
+            } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private static X509V3CertificateGenerator getBaseX509Generator(KeyPair kp) {
+            X509Principal issuer = new X509Principal("CN=MyRootCA, O=MyOrg, C=US");
+            X509Principal subject = new X509Principal("CN=TestCert, O=MyOrg, C=US");
+
+            X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
+            certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
+            certGen.setIssuerDN(issuer);
+            certGen.setNotBefore(new Date(System.currentTimeMillis() - 1000L * 60));
+            certGen.setNotAfter(new Date(System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000));
+            certGen.setSubjectDN(subject);
+            certGen.setPublicKey(kp.getPublic());
+            certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
+            return certGen;
+        }
+
+        private static X509Certificate generate(X509V3CertificateGenerator certGen, KeyPair kp) {
+            try {
+                return certGen.generateX509Certificate(kp.getPrivate(), "BC");
+            } catch (NoSuchProviderException | SignatureException | InvalidKeyException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

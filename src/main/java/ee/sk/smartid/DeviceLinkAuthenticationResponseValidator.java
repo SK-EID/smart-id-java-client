@@ -27,26 +27,16 @@ package ee.sk.smartid;
  */
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
-import ee.sk.smartid.auth.AuthenticationCertificatePurposeValidator;
 import ee.sk.smartid.auth.AuthenticationCertificatePurposeValidatorFactory;
 import ee.sk.smartid.auth.AuthenticationCertificatePurposeValidatorFactoryImpl;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.CertificateLevelMismatchException;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
 /**
  * Validates authentication response and converts it to {@link AuthenticationIdentity}
  */
-public class DeviceLinkAuthenticationResponseValidator {
-
-    private final CertificateValidator certificateValidator;
-    private final SignatureValueValidator signatureValueValidator;
-    private final AuthenticationResponseMapper authenticationResponseMapper;
-    private final AuthenticationCertificatePurposeValidatorFactory authenticationCertificatePurposeValidatorFactory;
+public class DeviceLinkAuthenticationResponseValidator extends AuthenticationResponseValidator<DeviceLinkAuthenticationSessionRequest> {
 
     /**
      * Creates an instance of {@link DeviceLinkAuthenticationResponseValidator}
@@ -59,11 +49,8 @@ public class DeviceLinkAuthenticationResponseValidator {
     public DeviceLinkAuthenticationResponseValidator(CertificateValidator certificateValidator,
                                                      AuthenticationResponseMapper authenticationResponseMapper,
                                                      SignatureValueValidator signatureValueValidator,
-                                                     AuthenticationCertificatePurposeValidatorFactory authenticationCertificatePurposeValidator) {
-        this.certificateValidator = certificateValidator;
-        this.authenticationResponseMapper = authenticationResponseMapper;
-        this.signatureValueValidator = signatureValueValidator;
-        this.authenticationCertificatePurposeValidatorFactory = authenticationCertificatePurposeValidator;
+                                                     AuthenticationCertificatePurposeValidatorFactory authenticationCertificatePurposeValidatorFactory) {
+        super(certificateValidator, authenticationResponseMapper, authenticationCertificatePurposeValidatorFactory, signatureValueValidator);
     }
 
     /**
@@ -80,81 +67,27 @@ public class DeviceLinkAuthenticationResponseValidator {
                 new AuthenticationCertificatePurposeValidatorFactoryImpl());
     }
 
-    /**
-     * Validates the authentication session status and converts it to {@link AuthenticationIdentity}.
-     *
-     * @param sessionStatus                the session status
-     * @param authenticationSessionRequest the authentication session request
-     * @param schemaName                   the schema name
-     * @return the authentication identity
-     */
-    public AuthenticationIdentity validate(SessionStatus sessionStatus,
-                                           DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
-                                           String schemaName) {
-        return validate(sessionStatus, authenticationSessionRequest, schemaName, null);
+    @Override
+    protected AuthenticationCertificateLevel getRequestedCertificateLevel(DeviceLinkAuthenticationSessionRequest authenticationSessionRequest) {
+        return authenticationSessionRequest == null
+                ? AuthenticationCertificateLevel.QUALIFIED
+                : AuthenticationCertificateLevel.valueOf(authenticationSessionRequest.certificateLevel());
     }
 
-    /**
-     * Validates the authentication session status and converts it to {@link AuthenticationIdentity}.
-     *
-     * @param sessionStatus                the session status
-     * @param authenticationSessionRequest the authentication session request
-     * @param schemaName                   the schema name
-     * @param brokeredRpName               the brokered relying party name
-     * @return the authentication identity
-     */
-    public AuthenticationIdentity validate(SessionStatus sessionStatus,
-                                           DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
-                                           String schemaName,
-                                           String brokeredRpName) {
-        validateInputs(sessionStatus, authenticationSessionRequest, schemaName);
-        AuthenticationResponse authenticationResponse = authenticationResponseMapper.from(sessionStatus);
-        validateCertificate(authenticationResponse, AuthenticationCertificateLevel.valueOf(authenticationSessionRequest.certificateLevel()));
-        validateSignature(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
-        return AuthenticationIdentityMapper.from(authenticationResponse.getCertificate());
-    }
-
-    private void validateCertificate(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        validateCertificateLevel(authenticationResponse, requestedCertificateLevel);
-        certificateValidator.validate(authenticationResponse.getCertificate());
-        AuthenticationCertificatePurposeValidator purposeValidator =
-                authenticationCertificatePurposeValidatorFactory.create(authenticationResponse.getCertificateLevel());
-        purposeValidator.validate(authenticationResponse.getCertificate());
-    }
-
-    private void validateCertificateLevel(AuthenticationResponse authenticationResponse, AuthenticationCertificateLevel requestedCertificateLevel) {
-        if (authenticationResponse.getCertificateLevel() == null) {
-            throw new SmartIdClientException("Certificate level is not provided");
-        }
-        if (!authenticationResponse.getCertificateLevel().isSameLevelOrHigher(requestedCertificateLevel)) {
-            throw new CertificateLevelMismatchException();
-        }
-    }
-
-    private void validateSignature(AuthenticationResponse authenticationResponse,
-                                   DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
-                                   String schemaName,
-                                   String brokeredRpName) {
-        byte[] payload = constructPayload(authenticationResponse, authenticationSessionRequest, schemaName, brokeredRpName);
-        signatureValueValidator.validate(authenticationResponse.getSignatureValue(),
-                payload,
-                authenticationResponse.getCertificate(),
-                authenticationResponse.getRsaSsaPssSignatureParameters());
-    }
-
-    private byte[] constructPayload(AuthenticationResponse authenticationResponse,
-                                    DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
-                                    String schemaName,
-                                    String brokeredRpName) {
+    @Override
+    protected byte[] constructPayload(AuthenticationResponse authenticationResponse,
+                                      DeviceLinkAuthenticationSessionRequest authenticationSessionRequest,
+                                      String schemaName,
+                                      String brokeredRpName) {
         String[] payload = {
                 schemaName,
                 SignatureProtocol.ACSP_V2.name(),
                 authenticationResponse.getServerRandom(),
                 authenticationSessionRequest.signatureProtocolParameters().rpChallenge(),
                 StringUtil.orEmpty(authenticationResponse.getUserChallenge()),
-                Base64.getEncoder().encodeToString(authenticationSessionRequest.relyingPartyName().getBytes(StandardCharsets.UTF_8)),
-                StringUtil.isEmpty(brokeredRpName) ? "" : Base64.getEncoder().encodeToString(brokeredRpName.getBytes(StandardCharsets.UTF_8)),
-                Base64.getEncoder().encodeToString(calculateInteractionsDigest(authenticationSessionRequest)),
+                toBase64(authenticationSessionRequest.relyingPartyName()),
+                StringUtil.isEmpty(brokeredRpName) ? "" : toBase64(brokeredRpName),
+                toInteractionsBase64(authenticationSessionRequest.interactions()),
                 authenticationResponse.getInteractionTypeUsed(),
                 StringUtil.orEmpty(authenticationSessionRequest.initialCallbackUrl()),
                 authenticationResponse.getFlowType().getDescription()
@@ -162,22 +95,5 @@ public class DeviceLinkAuthenticationResponseValidator {
         return String
                 .join("|", payload)
                 .getBytes(StandardCharsets.UTF_8);
-    }
-
-    private static void validateInputs(SessionStatus sessionStatus, DeviceLinkAuthenticationSessionRequest authenticationSessionRequest, String schemaName) {
-        if (sessionStatus == null) {
-            throw new SmartIdClientException("Parameter 'sessionStatus' is not provided");
-        }
-        if (authenticationSessionRequest == null) {
-            throw new SmartIdClientException("Parameter 'authenticationSessionRequest' is not provided");
-        }
-        if (StringUtil.isEmpty(schemaName)) {
-            throw new SmartIdClientException("Parameter 'schemaName' is not provided");
-        }
-    }
-
-    private static byte[] calculateInteractionsDigest(DeviceLinkAuthenticationSessionRequest authenticationSessionRequest) {
-        byte[] interactions = authenticationSessionRequest.interactions().getBytes(StandardCharsets.UTF_8);
-        return DigestCalculator.calculateDigest(interactions, HashAlgorithm.SHA_256);
     }
 }

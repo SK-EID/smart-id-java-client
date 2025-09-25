@@ -53,5 +53,5 @@ public record DeviceLinkAuthenticationSessionRequest(String relyingPartyUUID,
                                                      String interactions,
                                                      @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties,
                                                      @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
-                                                     @JsonInclude(JsonInclude.Include.NON_NULL) String initialCallbackUrl) implements Serializable {
+                                                     @JsonInclude(JsonInclude.Include.NON_NULL) String initialCallbackUrl) implements Serializable, AuthenticationSessionRequest {
 }
