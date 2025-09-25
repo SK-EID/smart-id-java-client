@@ -38,7 +38,7 @@ jobs:
         ./mvnw versions:set -DnewVersion="$version"
         ./mvnw package -DskipTests
         rm -rf ee/sk/smartid/smart-id-java-client/$version
-        mkdir ee/sk/smartid/smart-id-java-client/$version
+        mkdir -p ee/sk/smartid/smart-id-java-client/$version
         cp $artifact.jar  ee/sk/smartid/smart-id-java-client/$version/ 
         cp $artifact-sources.jar  ee/sk/smartid/smart-id-java-client/$version/                                        
         cp $artifact-javadoc.jar  ee/sk/smartid/smart-id-java-client/$version/
