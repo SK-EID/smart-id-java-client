@@ -89,6 +89,16 @@ class DeviceLinkAuthenticationResponseValidatorTest {
         assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
     }
 
+    @Test
+    void validate_qrCodeWasUsedDoNotIncludeInitialCallbackUrlInSignatureValidation_ok(){
+        // TODO - 26.09.25: implement
+    }
+
+    @Test
+    void validate_initialCallbackUrlWasUsed_ok(){
+        // TODO - 26.09.25: implement
+    }
+
     @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
     @Test
     void validate_certificateLevelHigherThanRequested_ok() {

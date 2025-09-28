@@ -89,7 +89,7 @@ public class DeviceLinkAuthenticationResponseValidator extends AuthenticationRes
                 StringUtil.isEmpty(brokeredRpName) ? "" : toBase64(brokeredRpName),
                 toInteractionsBase64(authenticationSessionRequest.interactions()),
                 authenticationResponse.getInteractionTypeUsed(),
-                StringUtil.orEmpty(authenticationSessionRequest.initialCallbackUrl()),
+                authenticationResponse.getFlowType() == FlowType.QR ? "" : authenticationSessionRequest.initialCallbackUrl(), // TODO - 26.09.25: add tests
                 authenticationResponse.getFlowType().getDescription()
         };
         return String
