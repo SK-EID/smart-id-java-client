@@ -40,6 +40,7 @@ This library supports Smart-ID API v3.1.
             * [Generating QR-code](#generating-qr-code)
             * [Generate QR-code Data URI](#generate-qr-code-data-uri)
             * [Generate QR-code with custom height, width, quiet area and image format](#generate-qr-code-with-custom-height-width-quiet-area-and-image-format)  
+        * [Callback URL validation](#validating-callback-url)
     * [Querying sessions status](#session-status-request-handling-for-v31)
         * [Sessions status response](#session-status-response)
         * [Example of querying session status in v3.1](#examples-of-querying-session-status-in-v31)
@@ -329,6 +330,54 @@ Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 ```
 Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
+
+
+##### Initiating a device-link authentication session with document number for Web2App flow
+
+```java
+String documentNumber = "PNOLT-40504040001-MOCK-Q";
+
+// For security reasons a new rpChallenge must be created for each new authentication request
+RpChallenge rpChallenge = RpChallengeGenerator.generate();
+// Store generated rpChallenge only on backend side. Do not expose it to the client side. 
+// Used for validating OK authentication sessions status response
+
+// Generate callback URL to be used for same device flows(Web2App, App2App)
+CallbackUrl callbackUrl = CallbackUrlUtil.createCallbackUrl("your-app://callback");
+
+DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
+        .createDeviceLinkAuthentication()
+        .withDocumentNumber(documentNumber)
+        .withRpChallenge(rpChallenge.toBase64EncodedValue())
+        .withInteractions(Collections.singletonList(
+                DeviceLinkInteraction.displayTextAndPin("Logging into <app-name>") // Display text should be concise and specific.
+        ))
+        .withInitialCallbackUrl(callbackUrl.initialCallbackUri().toString()); // Set initial callback URL in the session request
+
+// Initiate authentication session
+DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
+
+// Get authentication session request used for starting the authentication session and use it later to validate sessions status response
+AuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+// Use sessionID to start polling for session status
+String sessionId = authenticationSessionResponse.sessionID();
+
+// Following values are used for generating device link or QR-code
+String sessionToken = authenticationSessionResponse.sessionToken();
+// Store sessionSecret only on backend side. Do not expose it to the client side.
+String sessionSecret = authenticationSessionResponse.sessionSecret();
+URI deviceLinkBase = authenticationSessionResponse.deviceLinkBase();
+// Will be used to calculate elapsed time being used in QR-code
+Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
+
+// Next steps:
+// - Generate QR-code or device link to be displayed to the user 
+// - Start querying sessions status
+```
+Jump to [Generate QR-code and device link](#generating-qr-code-or-device-link) to see how to generate QR-code or device link from the response.
+Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
+Jump to [Validate callback URL](#validating-callback-url) for more info about validating callback URL.
 
 ### Device-link signature session
 
@@ -632,6 +681,23 @@ BufferedImage qrCodeBufferedImage = QrCodeGenerator.generateImage(deviceLink.toS
 // Return Data URI to frontend and display the QR-code
 String qrCodeDataUri = QrCodeGenerator.convertToDataUri(qrCodeBufferedImage, "png");
 ```
+### Validating callback URL
+
+When using same device flows (Web2App or App2App) the initialCallbackUrl will be used by the Smart-ID app to redirect the user back to the Relying Party application.
+Received callback URL will contain additional query parameters that must be validated by the Relying Party.
+
+Example of received callback URL for authentication:
+`https://rp.example.com/callback-url?value=RrKjjT4aggzu27YBddX1bQ&sessionSecretDigest=U4CKK13H1XFiyBofev9asqrzIrY5_Gszi_nL_zDKkBc&userChallengeVerifier=XtPfaGa8JnGtYrJjboooUf0KfY9sMEHrWFpSQrsUv9c`
+
+Example of received callback URL for signature or certificate choice
+`https://rp.example.com/callback-url?value=RrKjjT4aggzu27YBddX1bQ&sessionSecretDigest=U4CKK13H1XFiyBofev9asqrzIrY5_Gszi_nL_zDKkBc`
+
+1. RP must verify that the user sessions has `callbackUrl.urlToken()` with same value as in query parameter `value`.
+2. RP must verify that the `sessionSecretDigest` query parameter matches the calculated digest created from session secret received in device link session init response.
+   For this library provides `CallbackUrlUtil.validateSessionSecretDigest(digestFromCallbackUrl, sessionSecret)`
+3. For authentication same device flow RP also must verify the `userChallengeVerifier` query parameter. This can be done when polling the session status has finished and session status response has to be
+   validated. `deviceLinkAuthenticationResponseValidator.validate(sessionStatus, authenticationSessionRequest, userChallengeVerifier, schemaName, brokeredRpName);`
+   Value to validate `userChallengeVerifier` is in the session status response `signature.userChallenge`.
 
 ## Session status request handling for v3.1
 

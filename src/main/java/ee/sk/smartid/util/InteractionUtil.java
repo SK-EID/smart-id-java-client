@@ -33,6 +33,8 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.sk.smartid.DigestCalculator;
+import ee.sk.smartid.HashAlgorithm;
 import ee.sk.smartid.common.SmartIdInteraction;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.dao.Interaction;
@@ -61,6 +63,17 @@ public class InteractionUtil {
         } catch (JsonProcessingException ex) {
             throw new SmartIdClientException("Unable to encode interactions to Base64", ex);
         }
+    }
+
+    /**
+     * Calculates SHA-256 digest of the interactions and encodes it to Base64
+     *
+     * @param interactions interactions string
+     * @return base64 encoded SHA-256 digest
+     */
+    public static String calculateDigest(String interactions){
+        byte[] digest = DigestCalculator.calculateDigest(interactions.getBytes(StandardCharsets.UTF_8), HashAlgorithm.SHA_256);
+        return Base64.getEncoder().encodeToString(digest);
     }
 
     /**
