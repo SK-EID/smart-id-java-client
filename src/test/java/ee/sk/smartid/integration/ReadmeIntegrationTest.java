@@ -184,8 +184,8 @@ public class ReadmeIntegrationTest {
                 assertEquals("COMPLETE", sessionStatus.getState());
 
                 // Receive callback from Smart-ID API
-                // TODO - 30.09.25: build example URL with correct query parameters
-                Map<String, String> queryParameters = Map.of("value", callbackUrl.urlToken(), "sessionSecretDigest", "asdjlaksdjklf", "userChallengeVerifier", "abachdfajklsfa"); // Extract query parameters from the callback URL received
+                // Extract query parameters from the callback URL received
+                Map<String, String> queryParameters = Map.of("value", callbackUrl.urlToken(), "sessionSecretDigest", "asdjlaksdjklf", "userChallengeVerifier", "abachdfajklsfa");
 
                 // Validate there is active user session in the application with matching url-token
                 String tokenInUrl = queryParameters.get("value");
@@ -810,6 +810,9 @@ public class ReadmeIntegrationTest {
             // Will be used to calculate elapsed time being used in device link and in authCode
             Instant responseReceivedAt = certificateChoiceSessionResponse.receivedAt();
 
+            // Calculate elapsed seconds from response received time
+            long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
+
             // Build the  device link URI
             // This base URI will be used for QR code or App2App flows
             URI deviceLink = smartIdClient.createDynamicContent()
@@ -817,6 +820,7 @@ public class ReadmeIntegrationTest {
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(sessionToken)
+                    .withElapsedSeconds(elapsedSeconds)
                     .withLang("est")
                     .buildDeviceLink(sessionSecret);
 

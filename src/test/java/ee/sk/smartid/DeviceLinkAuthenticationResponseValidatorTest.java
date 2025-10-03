@@ -74,7 +74,7 @@ class DeviceLinkAuthenticationResponseValidatorTest {
         deviceLinkAuthenticationResponseValidator = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
     }
 
-    @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
+    @Disabled("Will be fixed when testing with DEMO accounts will be possible")
     @Test
     void validate_ok() {
         String rpChallenge = "";
@@ -89,17 +89,19 @@ class DeviceLinkAuthenticationResponseValidatorTest {
         assertEquals(Optional.of(LocalDate.of(1905, 4, 4)), authenticationIdentity.getDateOfBirth());
     }
 
+    @Disabled
     @Test
     void validate_qrCodeWasUsedDoNotIncludeInitialCallbackUrlInSignatureValidation_ok() {
         // TODO - 26.09.25: implement with demo accounts
     }
 
+    @Disabled
     @Test
     void validate_initialCallbackUrlWasUsed_ok() {
         // TODO - 26.09.25: implement with demo accounts
     }
 
-    @Disabled("Can make this work when TEST numbers will be available in the DEMO env")
+    @Disabled("Will be fixed when testing with DEMO accounts will be possible")
     @Test
     void validate_certificateLevelHigherThanRequested_ok() {
         SessionStatus sessionStatus = new SessionStatus();
