@@ -30,7 +30,8 @@ import java.util.Base64;
 
 import ee.sk.smartid.DigestCalculator;
 import ee.sk.smartid.HashAlgorithm;
-import ee.sk.smartid.common.CallbackUrl;
+import ee.sk.smartid.common.devicelink.CallbackUrl;
+import ee.sk.smartid.common.devicelink.UrlSafeTokenGenerator;
 import ee.sk.smartid.exception.SessionSecretMismatchException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import jakarta.ws.rs.core.UriBuilder;

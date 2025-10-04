@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid.common.devicelink;
 
 /*-
  * #%L
