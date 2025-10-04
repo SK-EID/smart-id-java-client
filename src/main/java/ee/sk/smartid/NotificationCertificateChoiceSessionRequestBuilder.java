@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -153,13 +153,13 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
      */
     public NotificationCertificateChoiceSessionResponse initCertificateChoice() {
         validateRequestParameters();
-        CertificateChoiceSessionRequest request = createCertificateChoiceRequest();
+        NotificationCertificateChoiceSessionRequest request = createCertificateChoiceRequest();
         NotificationCertificateChoiceSessionResponse notificationCertificateChoiceSessionResponse = initCertificateChoiceSession(request);
         validateResponseParameters(notificationCertificateChoiceSessionResponse);
         return notificationCertificateChoiceSessionResponse;
     }
 
-    private NotificationCertificateChoiceSessionResponse initCertificateChoiceSession(CertificateChoiceSessionRequest request) {
+    private NotificationCertificateChoiceSessionResponse initCertificateChoiceSession(NotificationCertificateChoiceSessionRequest request) {
         if (semanticsIdentifier == null) {
             throw new SmartIdClientException("SemanticsIdentifier must be set.");
         }
@@ -178,16 +178,14 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
         validateNonce();
     }
 
-    private CertificateChoiceSessionRequest createCertificateChoiceRequest() {
-        return new CertificateChoiceSessionRequest(
+    private NotificationCertificateChoiceSessionRequest createCertificateChoiceRequest() {
+        return new NotificationCertificateChoiceSessionRequest(
                 relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
                 nonce,
                 capabilities,
-                shareMdClientIpAddress != null ? new RequestProperties(shareMdClientIpAddress) : null,
-                null
-        );
+                shareMdClientIpAddress != null ? new RequestProperties(shareMdClientIpAddress) : null);
     }
 
     private void validateNonce() {

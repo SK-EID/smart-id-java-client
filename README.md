@@ -1178,9 +1178,6 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 
 ### Notification-based certificate choice session
 
-> [!CAUTION]
-> The notification-based certificate choice has not yet been updated to be used with Smart-ID API v3.1
-
 #### Request parameters
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.

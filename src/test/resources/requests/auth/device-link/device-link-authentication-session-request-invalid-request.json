@@ -1,5 +1,5 @@
 {
-  "relyingPartyUUID": "00000000-0000-0000-0000-000000000000",
+  "relyingPartyUUID": "00000000-0000-4000-8000-000000000000",
   "relyingPartyName": "DEMO",
   "signatureProtocol": "ACSP_V2",
   "certificateLevel": "QUALIFIED",

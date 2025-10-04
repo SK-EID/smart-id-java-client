@@ -33,17 +33,18 @@ import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 
@@ -72,7 +73,7 @@ public interface SmartIdConnector extends Serializable {
      * @param request CertificateChoiceSessionRequest containing necessary parameters
      * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
      */
-    DeviceLinkSessionResponse initDeviceLinkCertificateChoice(CertificateChoiceSessionRequest request);
+    DeviceLinkSessionResponse initDeviceLinkCertificateChoice(DeviceLinkCertificateChoiceSessionRequest request);
 
     /**
      * Initiates a linked notification based signature session.
@@ -86,15 +87,15 @@ public interface SmartIdConnector extends Serializable {
      * Initiates a notification based certificate choice request.
      *
      * @param request             CertificateChoiceSessionRequest containing necessary parameters
-     * @param semanticsIdentifier The semantics identifier
+     * @param semanticsIdentifier The semantics identifier to be used for the session
      * @return NotificationCertificateChoiceSessionResponse containing sessionID
      */
-    NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+    NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(NotificationCertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Queries signing certificate by document number.
      *
-     * @param request CertificateByDocumentNumberRequest containing necessary parameters
+     * @param request        CertificateByDocumentNumberRequest containing necessary parameters
      * @param documentNumber The document number
      * @return CertificateResponse containing response state and certificate information.
      */

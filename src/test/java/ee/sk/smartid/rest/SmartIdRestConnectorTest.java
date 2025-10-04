@@ -34,6 +34,7 @@ import static ee.sk.smartid.SmartIdRestServiceStubs.stubNotFoundResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubPostErrorResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubPostRequestWithResponse;
 import static ee.sk.smartid.SmartIdRestServiceStubs.stubRequestWithResponse;
+import static ee.sk.smartid.SmartIdRestServiceStubs.stubStrictRequestWithResponse;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,15 +72,16 @@ import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalExceptio
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
@@ -785,7 +787,7 @@ class SmartIdRestConnectorTest {
         void initNotificationAuthentication_badRequest_throwException() {
             SmartIdRestServiceStubs.stubBadRequestResponse(AUTHENTICATION_WITH_DOCUMENT_NR_PATH, "requests/auth/notification/notification-authentication-session-request-invalid.json");
 
-            var authenticationRequest = new NotificationAuthenticationSessionRequest("00000000-0000-0000-0000-000000000000",
+            var authenticationRequest = new NotificationAuthenticationSessionRequest("00000000-0000-4000-8000-000000000000",
                     "DEMO",
                     null,
                     null,
@@ -872,7 +874,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice() {
             stubPostRequestWithResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             Instant start = Instant.now();
             DeviceLinkSessionResponse response = connector.initDeviceLinkCertificateChoice(request);
             Instant end = Instant.now();
@@ -882,7 +884,7 @@ class SmartIdRestConnectorTest {
 
         @Test
         void initDeviceLinkCertificateChoice_invalidCertificateLevel_throwsBadRequestException() {
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
@@ -893,7 +895,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_userAccountNotFound() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 404);
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             assertThrows(UserAccountNotFoundException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
@@ -901,7 +903,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_relyingPartyNoPermission() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 403);
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
@@ -909,7 +911,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_invalidRequest() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 400);
 
-            var request = new CertificateChoiceSessionRequest("", "", null, null, null, null, null);
+            var request = new DeviceLinkCertificateChoiceSessionRequest("", "", null, null, null, null, null);
 
             assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
@@ -918,7 +920,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 401);
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
             var exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkCertificateChoice(request));
             assertEquals("Request is unauthorized for URI http://localhost:18089/signature/certificate-choice/device-link/anonymous", exception.getMessage());
@@ -928,7 +930,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 471);
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
@@ -937,7 +939,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_throwsPersonShouldViewSmartIdPortalException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 472);
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
             assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
@@ -946,7 +948,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_throwsSmartIdClientException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 480);
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
             var exception = assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkCertificateChoice(request));
             assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
@@ -956,14 +958,14 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkCertificateChoice_throwsServerMaintenanceException() {
             stubPostErrorResponse(ANONYMOUS_CERTIFICATE_CHOICE_PATH, 580);
 
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+            DeviceLinkCertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
 
             assertThrows(ServerMaintenanceException.class, () -> connector.initDeviceLinkCertificateChoice(request));
         }
 
-        private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
-            return new CertificateChoiceSessionRequest(
-                    "00000000-0000-0000-0000-000000000000",
+        private static DeviceLinkCertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
+            return new DeviceLinkCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
                     "DEMO",
                     "ADVANCED",
                     null,
@@ -1088,7 +1090,7 @@ class SmartIdRestConnectorTest {
                     "2xN/gwSxWos+lJPQ/AeIlBXmdPRRlOfOD5+Ezz0FWWABd96mQNkR/b1/2wpAIGwS1SsW1oRVtdRVKYyV21yGWA==",
                     "rsassa-pss",
                     new SignatureAlgorithmParameters(HashAlgorithm.SHA_512.getAlgorithmName()));
-            return new LinkedSignatureSessionRequest("00000000-0000-0000-0000-000000000000",
+            return new LinkedSignatureSessionRequest("00000000-0000-4000-8000-000000000000",
                     "DEMO",
                     certificateLevel != null ? certificateLevel.name() : null,
                     "RAW_DIGEST_SIGNATURE",
@@ -1105,7 +1107,7 @@ class SmartIdRestConnectorTest {
     @WireMockTest(httpPort = 18089)
     class SemanticsIdentifierNotificationCertificateChoiceTests {
 
-        private static final String CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH = "/certificatechoice/notification/etsi/PNOEE-31111111111";
+        private static final String CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH = "/signature/certificate-choice/notification/etsi/PNOEE-31111111111";
         private static final SemanticsIdentifier SEMANTICS_IDENTIFIER = new SemanticsIdentifier("PNOEE-31111111111");
 
         private SmartIdRestConnector connector;
@@ -1117,10 +1119,17 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initCertificateChoice_withSemanticsIdentifier_successful() {
-            stubPostRequestWithResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "responses/notification-certificate-choice-session-response.json");
-
-            CertificateChoiceSessionRequest request = toCertificateChoiceSessionRequest();
+        void initCertificateChoice_onlyRequiredFields_successful() {
+            stubStrictRequestWithResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-only-required-fields.json",
+                    "responses/sign/notification/cert-choice/notification-certificate-choice-session-response.json");
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "DEMO",
+                    null,
+                    null,
+                    null,
+                    null);
             SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
             NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, semanticsIdentifier);
@@ -1130,33 +1139,142 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initCertificateChoice_userAccountNotFound_throwException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
-                    "requests/sign/notification/certificate-choice-session-request.json");
+        void initCertificateChoice_allFields_successful() {
+            stubStrictRequestWithResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-all-fields.json",
+                    "responses/sign/notification/cert-choice/notification-certificate-choice-session-response.json");
+            var request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "DEMO",
+                    "QUALIFIED",
+                    "cmFuZG9tTm9uY2U=",
+                    null,
+                    new RequestProperties(true));
+            SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
 
-            assertThrows(UserAccountNotFoundException.class,
-                    () -> connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), SEMANTICS_IDENTIFIER));
+            NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, semanticsIdentifier);
+
+            assertNotNull(response);
+            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
         }
 
         @Test
-        void initCertificateChoice_requestIsUnauthorized_throwException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
-                    "requests/sign/notification/certificate-choice-session-request.json");
+        void initCertificateChoice_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-invalid.json");
 
-            assertThrows(RelyingPartyAccountConfigurationException.class,
-                    () -> connector.initNotificationCertificateChoice(toCertificateChoiceSessionRequest(), SEMANTICS_IDENTIFIER));
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(SmartIdClientException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
         }
 
-        private static CertificateChoiceSessionRequest toCertificateChoiceSessionRequest() {
-            return new CertificateChoiceSessionRequest(
-                    "00000000-0000-0000-0000-000000000000",
+        @Test
+        void initCertificateChoice_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, "requests/sign/notification/cert-choice/certificate-choice-session-request-invalid-credentials.json");
+
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "NOT DEMO",
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initCertificateChoice_rpDoesNotHavePermission_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-only-required-fields.json");
+
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
                     "DEMO",
-                    "ADVANCED",
-                    "cmFuZG9tTm9uY2U=",
                     null,
                     null,
-                    null
-            );
+                    null,
+                    null);
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initCertificateChoice_userAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-only-required-fields.json");
+
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "DEMO",
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
+        }
+
+        // TODO - 04.10.25: 471
+        @Test
+        void initCertificateChoice_suitableAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 471);
+
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "NOT DEMO",
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
+        }
+
+        // TODO - 04.10.25: 472
+        @Test
+        void initCertificateChoice_userShouldCheckPortal_throwException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 472);
+
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "NOT DEMO",
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
+        }
+
+        // TODO - 04.10.25: 480
+        @Test
+        void initCertificateChoice_javaClientBeingUsedIsTooOld_throwException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 480);
+
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "NOT DEMO",
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(SmartIdClientException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
+        }
+
+        // TODO - 04.10.25: 580
+        @Test
+        void initCertificateChoice_systemUnderMaintenance_throwException() {
+            SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 580);
+
+            NotificationCertificateChoiceSessionRequest request = new NotificationCertificateChoiceSessionRequest(
+                    "00000000-0000-4000-8000-000000000000",
+                    "NOT DEMO",
+                    null,
+                    null,
+                    null,
+                    null);
+            assertThrows(ServerMaintenanceException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
         }
     }
 
@@ -1191,7 +1309,7 @@ class SmartIdRestConnectorTest {
         void getCertificateByDocumentNumber_certificateLevelNotSet_successful() {
             SmartIdRestServiceStubs.stubRequestWithResponse(CERTIFICATE_BY_DOCUMENT_NUMBER_PATH, "requests/sign/certificate-by-document-number-request-only-required-fields.json", "responses/certificate-by-document-number-response.json");
 
-            var certificateByDocumentNumberRequest = new CertificateByDocumentNumberRequest("00000000-0000-0000-0000-000000000000", "DEMO", null);
+            var certificateByDocumentNumberRequest = new CertificateByDocumentNumberRequest("00000000-0000-4000-8000-000000000000", "DEMO", null);
             CertificateResponse response = connector.getCertificateByDocumentNumber(DOCUMENT_NUMBER, certificateByDocumentNumberRequest);
 
             assertNotNull(response);
@@ -1539,7 +1657,7 @@ class SmartIdRestConnectorTest {
                 "rsassa-pss",
                 new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
         return new DeviceLinkAuthenticationSessionRequest(
-                "00000000-0000-0000-0000-000000000000",
+                "00000000-0000-4000-8000-000000000000",
                 "DEMO",
                 CertificateLevel.QUALIFIED.name(),
                 SignatureProtocol.ACSP_V2,
@@ -1558,7 +1676,7 @@ class SmartIdRestConnectorTest {
                 new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
 
         return new NotificationAuthenticationSessionRequest(
-                "00000000-0000-0000-0000-000000000000",
+                "00000000-0000-4000-8000-000000000000",
                 "DEMO",
                 certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.ACSP_V2.name(),
@@ -1571,7 +1689,7 @@ class SmartIdRestConnectorTest {
     }
 
     private static CertificateByDocumentNumberRequest toCertificateByDocumentNumberRequest() {
-        return new CertificateByDocumentNumberRequest("00000000-0000-0000-0000-000000000000", "DEMO", "ADVANCED");
+        return new CertificateByDocumentNumberRequest("00000000-0000-4000-8000-000000000000", "DEMO", "ADVANCED");
     }
 
     private static SignatureSessionRequest createSignatureSessionRequest() {

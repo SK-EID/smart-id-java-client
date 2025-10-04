@@ -49,12 +49,13 @@ import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteractionType;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
@@ -150,7 +151,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDeviceLinkCertificateChoice() {
-                var request = new CertificateChoiceSessionRequest(
+                var request = new DeviceLinkCertificateChoiceSessionRequest(
                         RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         null,
@@ -274,7 +275,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initNotificationCertificateChoice_withSemanticIdentifier() {
-                var request = new CertificateChoiceSessionRequest(RELYING_PARTY_NAME, RELYING_PARTY_UUID, null, null, null, null, null);
+                var request = new NotificationCertificateChoiceSessionRequest(RELYING_PARTY_NAME, RELYING_PARTY_UUID, null, null, null, null );
 
                 NotificationCertificateChoiceSessionResponse sessionResponse = smartIdConnector.initNotificationCertificateChoice(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
