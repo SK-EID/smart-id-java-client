@@ -96,7 +96,6 @@ import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.util.CallbackUrlUtil;
 
-@Disabled("Replace relying party UUID and name with your own values in setup")
 @SmartIdDemoIntegrationTest
 public class ReadmeIntegrationTest {
 
@@ -107,7 +106,7 @@ public class ReadmeIntegrationTest {
     @BeforeEach
     void setUp() {
         smartIdClient = new SmartIdClient();
-        smartIdClient.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        smartIdClient.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
         smartIdClient.setRelyingPartyName("DEMO");
         smartIdClient.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 
@@ -115,7 +114,7 @@ public class ReadmeIntegrationTest {
         smartIdClient.setTrustStore(keyStore);
     }
 
-    @Disabled("These test for created for test-accounts in demo, but these are not currently available device-link flows")
+    @Disabled("Testing with device-link demo accounts is not possible at the moment")
     @Nested
     class DeviceLinkBasedExamples {
 
@@ -689,6 +688,7 @@ public class ReadmeIntegrationTest {
             assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
         }
 
+        @Disabled("Not yet updated to work with v3.1")
         @Test
         void signature_withSemanticsIdentifier() {
             var semanticIdentifier = new SemanticsIdentifier(
@@ -787,6 +787,7 @@ public class ReadmeIntegrationTest {
         }
     }
 
+    @Disabled("Testing with device-link demo accounts is not possible at the moment")
     @Nested
     class LinkedNotificationBasedSignatureSession {
 
