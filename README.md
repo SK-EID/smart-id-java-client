@@ -1203,10 +1203,12 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
         SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
         "40504040001"); // identifier (according to country and identity type reference)
 
+// User requested certificate level to validate certificate choice session status OK response. 
+CertificateLevel requestedCertificateLevel = CertificateLevel.QSCD; // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
 NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
         .createNotificationCertificateChoice()
         .withSemanticsIdentifier(semanticsIdentifier)
-        .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+        .withCertificateLevel(requestedCertificateLevel) 
         .initCertificateChoice();
 
 String sessionId = certificateChoiceSessionResponse.sessionID();

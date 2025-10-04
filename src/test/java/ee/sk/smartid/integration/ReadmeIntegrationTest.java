@@ -662,10 +662,12 @@ public class ReadmeIntegrationTest {
                     SemanticsIdentifier.CountryCode.LT, // 2 character ISO 3166-1 alpha-2 country code
                     "40504040001"); // identifier (according to country and identity type reference)
 
+            // User requested certificate level to validate certificate choice session status OK response.
+            CertificateLevel requestedCertificateLevel = CertificateLevel.QSCD; // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
             NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
                     .createNotificationCertificateChoice()
                     .withSemanticsIdentifier(semanticsIdentifier)
-                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+                    .withCertificateLevel(requestedCertificateLevel)
                     .initCertificateChoice();
 
             String sessionId = certificateChoiceSessionResponse.getSessionID();
@@ -680,7 +682,7 @@ public class ReadmeIntegrationTest {
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
             CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
-            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus);
+            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus, requestedCertificateLevel);
 
             assertEquals("OK", response.getEndResult());
             assertEquals("PNOLT-40504040001-MOCK-Q", response.getDocumentNumber());
