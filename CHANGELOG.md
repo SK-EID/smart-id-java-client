@@ -4,6 +4,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Changes mentioned under 3.1.x version have not been published yet. Will be released when v3.1 is stable.
 
+## [3.1.15] - 2025-09-17 
+- Added CallbackUrlUtil to generate callback URL with token and provides method to validate sessionSecretDigest
+- Updated DeviceLinkAuthenticationResponseValidator to also validate userChallenge and userChallengeVerifier same device flows.
+
 ## [3.1.14] - 2025-09-17
 - Updated notification-based authentication session request creation to be usable with Smart-ID API v3.1
 - Removed verificationCodeChoice interactions and related handling

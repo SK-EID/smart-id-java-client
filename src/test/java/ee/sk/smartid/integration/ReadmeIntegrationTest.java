@@ -43,6 +43,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -79,6 +80,7 @@ import ee.sk.smartid.SmartIdClient;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
 import ee.sk.smartid.TrustedCACertStore;
 import ee.sk.smartid.VerificationCodeCalculator;
+import ee.sk.smartid.common.devicelink.CallbackUrl;
 import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
 import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.rest.SessionStatusPoller;
@@ -92,6 +94,7 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.util.CallbackUrlUtil;
 
 @Disabled("Replace relying party UUID and name with your own values in setup")
 @SmartIdDemoIntegrationTest
@@ -126,15 +129,20 @@ public class ReadmeIntegrationTest {
                 // Store generated rpChallenge only on backend side. Do not expose it to the client side.
                 // Used for validating authentication sessions status OK response
 
+                // Create initial callback URL.
+                // Store the url-token only on backend side. Do not expose it to the client side.
+                // The url-token will be used to validate the callback request received from Smart-ID API
+                CallbackUrl callbackUrl = CallbackUrlUtil.createCallbackUrl("https://example.com/callback");
+
                 // Setup builder
                 DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient
                         .createDeviceLinkAuthentication()
                         // to use anonymous authentication, do not set semantics identifier or document number
                         .withRpChallenge(rpChallenge)
-                        .withInitialCallbackUrl("https://example.com/callback")
                         .withInteractions(Collections.singletonList(
                                 DeviceLinkInteraction.displayTextAndPin("Log in?")
-                        ));
+                        ))
+                        .withInitialCallbackUrl(callbackUrl.initialCallbackUri().toString());
                 // Init authentication session
                 DeviceLinkSessionResponse authenticationSessionResponse = builder.initAuthenticationSession();
 
@@ -164,7 +172,7 @@ public class ReadmeIntegrationTest {
                         .withSessionToken(sessionToken)
                         .withDigest(rpChallenge)
                         .withLang("est")
-                        .withInitialCallbackUrl("https://example.com/callback")
+                        .withInitialCallbackUrl(callbackUrl.initialCallbackUri().toString())
                         .withInteractions(authenticationSessionRequest.interactions())
                         .buildDeviceLink(sessionSecret);
 
@@ -175,12 +183,26 @@ public class ReadmeIntegrationTest {
                 // Check that the session has completed successfully
                 assertEquals("COMPLETE", sessionStatus.getState());
 
+                // Receive callback from Smart-ID API
+                // Extract query parameters from the callback URL received
+                Map<String, String> queryParameters = Map.of("value", callbackUrl.urlToken(), "sessionSecretDigest", "asdjlaksdjklf", "userChallengeVerifier", "abachdfajklsfa");
+
+                // Validate there is active user session in the application with matching url-token
+                String tokenInUrl = queryParameters.get("value");
+
+                // Validate that sessionSecretDigest in the callback URL validates against sessionSecret from the init session response
+                CallbackUrlUtil.validateSessionSecretDigest(queryParameters.get("sessionSecretDigest"), sessionSecret);
+
                 // Set up AuthenticationResponseValidator
                 TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
                 DeviceLinkAuthenticationResponseValidator deviceLinkAuthenticationResponseValidator = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator);
                 // Validate the certificate and signature, then map the authentication response to the user's identity
-                AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(sessionStatus, builder.getAuthenticationSessionRequest(), "smart-id-demo");
+                AuthenticationIdentity authenticationIdentity = deviceLinkAuthenticationResponseValidator.validate(
+                        sessionStatus,
+                        builder.getAuthenticationSessionRequest(),
+                        queryParameters.get("userChallengeVerifier"),
+                        "smart-id-demo");
 
                 assertEquals("40504040001", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
@@ -259,7 +281,7 @@ public class ReadmeIntegrationTest {
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
                 AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
-                        .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+                        .validate(sessionStatus, authenticationSessionRequest, null, "smart-id-demo");
 
                 assertEquals("40504040001", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
@@ -326,7 +348,7 @@ public class ReadmeIntegrationTest {
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
                 CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(trustedCaCertStore);
                 AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
-                        .validate(sessionStatus, authenticationSessionRequest, "smart-id-demo");
+                        .validate(sessionStatus, authenticationSessionRequest, null, "smart-id-demo");
 
                 assertEquals("40504040001", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
@@ -788,6 +810,9 @@ public class ReadmeIntegrationTest {
             // Will be used to calculate elapsed time being used in device link and in authCode
             Instant responseReceivedAt = certificateChoiceSessionResponse.receivedAt();
 
+            // Calculate elapsed seconds from response received time
+            long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
+
             // Build the  device link URI
             // This base URI will be used for QR code or App2App flows
             URI deviceLink = smartIdClient.createDynamicContent()
@@ -795,6 +820,7 @@ public class ReadmeIntegrationTest {
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
                     .withSessionToken(sessionToken)
+                    .withElapsedSeconds(elapsedSeconds)
                     .withLang("est")
                     .buildDeviceLink(sessionSecret);
 

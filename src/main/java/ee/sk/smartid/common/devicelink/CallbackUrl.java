@@ -1,4 +1,4 @@
-package ee.sk.smartid.rest.dao;
+package ee.sk.smartid.common.devicelink;
 
 /*-
  * #%L
@@ -26,11 +26,13 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
+import java.net.URI;
+
 /**
- * Marker interface for authentication session requests.
- * <p>
- * Used to limit AuthenticationResponseValidator to
- * only use authentication session request for validations.
+ * Represents a callback URL with an associated URL-safe token.
+ *
+ * @param initialCallbackUri the full callback URI including the token as a query parameter
+ * @param urlToken           the generated URL-safe token
  */
-public interface AuthenticationSessionRequest {
+public record CallbackUrl(URI initialCallbackUri, String urlToken) {
 }
