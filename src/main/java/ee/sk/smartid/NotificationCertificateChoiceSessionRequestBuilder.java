@@ -38,9 +38,13 @@ import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 
+/**
+ * Builder for notification-based certificate choice session requests
+ */
 public class NotificationCertificateChoiceSessionRequestBuilder {
 
     private final SmartIdConnector connector;
+
     private String relyingPartyUUID;
     private String relyingPartyName;
     private CertificateLevel certificateLevel;
@@ -138,14 +142,12 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     }
 
     /**
-     * Sends the notification request and get the init session response
-     * <p>
-     * There are 2 supported ways to start authentication session:
-     * <ul>
-     *     <li>with semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
-     * </ul>
+     * Initializes a notification-based certificate choice session
      *
      * @return init session response
+     * @throws SmartIdRequestSetupException          whe the provided request parameters are invalid
+     * @throws UnprocessableSmartIdResponseException when the response is missing required parameters
+     * @throws SmartIdClientException                when the request could not be sent
      */
     public NotificationCertificateChoiceSessionResponse initCertificateChoice() {
         validateRequestParameters();
@@ -157,17 +159,17 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
 
     private NotificationCertificateChoiceSessionResponse initCertificateChoiceSession(NotificationCertificateChoiceSessionRequest request) {
         if (semanticsIdentifier == null) {
-            throw new SmartIdClientException("Value for 'semanticIdentifier' must be set");
+            throw new SmartIdRequestSetupException("Value for 'semanticIdentifier' must be set");
         }
         return connector.initNotificationCertificateChoice(request, semanticsIdentifier);
     }
 
     private void validateRequestParameters() {
         if (StringUtil.isEmpty(relyingPartyUUID)) {
-            throw new SmartIdClientException("Value for 'relyingPartyUUID' cannot be empty");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyName)) {
-            throw new SmartIdClientException("Value for 'relyingPartyUUID' cannot be empty");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
             throw new SmartIdRequestSetupException("Value for 'nonce' length must be between 1 and 30 characters");

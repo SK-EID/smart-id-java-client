@@ -53,7 +53,8 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
@@ -200,7 +201,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initCertificateChoiceSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new NotificationCertificateChoiceSessionRequestBuilder(connector)
                             .withRelyingPartyUUID(relyingPartyUUID)
                             .withRelyingPartyName("DEMO")
@@ -211,7 +212,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initCertificateChoiceSession_relyingPartyNameIsEmpty_throwException(String relyingPartyName) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new NotificationCertificateChoiceSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName(relyingPartyName)
@@ -222,7 +223,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @ArgumentsSource(InvalidNonceProvider.class)
         void initAuthenticationSession_nonceOutOfBounds_throwException(String invalidNonce, String expectedException) {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new NotificationCertificateChoiceSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -233,7 +234,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
 
         @Test
         void initCertificateChoiceSession_semanticsIdentifierOrDocumentNumberMissing_throwException() {
-            var exception = assertThrows(SmartIdClientException.class, () ->
+            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
                     new NotificationCertificateChoiceSessionRequestBuilder(connector)
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName("DEMO")
@@ -258,7 +259,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
                     .withRelyingPartyName("DEMO")
                     .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"));
 
-            var exception = assertThrows(SmartIdClientException.class, builder::initCertificateChoice);
+            var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateChoice);
             assertEquals("Notification-based certificate choice response field 'sessionID' is missing or empty", exception.getMessage());
         }
     }

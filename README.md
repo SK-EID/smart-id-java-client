@@ -1499,7 +1499,7 @@ ResteasyClient resteasyClient = new ResteasyClientBuilder()
         .build();
 
 SmartIdClient client = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+client.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
 client.setRelyingPartyName("DEMO");
 client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 client.setConfiguredClient(resteasyClient);
