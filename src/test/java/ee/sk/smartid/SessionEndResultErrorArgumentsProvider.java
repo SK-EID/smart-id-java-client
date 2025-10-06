@@ -38,6 +38,7 @@ import ee.sk.smartid.exception.permanent.SmartIdServerException;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraccount.UserAccountUnusableException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
 import ee.sk.smartid.exception.useraction.UserRefusedException;
@@ -57,7 +58,8 @@ public class SessionEndResultErrorArgumentsProvider implements ArgumentsProvider
                 Arguments.of("PROTOCOL_FAILURE", ProtocolFailureException.class),
                 Arguments.of("EXPECTED_LINKED_SESSION", ExpectedLinkedSessionException.class),
                 Arguments.of("SERVER_ERROR", SmartIdServerException.class),
-                Arguments.of("UNKNOWN_RESULT", UnprocessableSmartIdResponseException.class)
+                Arguments.of("UNKNOWN_RESULT", UnprocessableSmartIdResponseException.class),
+                Arguments.of("ACCOUNT_UNUSABLE", UserAccountUnusableException.class)
         );
     }
 }

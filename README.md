@@ -1430,6 +1430,7 @@ Exception Categories
   These exceptions handle issues related to the user's Smart-ID account or session requirements.
   * `CertificateLevelMismatchException` Thrown when the returned certificate level does not meet the requested level.
   * `DocumentUnusableException` Indicates that the requested document cannot be used for the operation.
+  * `UserAccountUnusableException` Thrown when the user's Smart-ID account is not currently usable for the requested operation.
 * Validation and Parsing Exceptions
   These exceptions arise during validation or parsing operations within the library.
   * `CertificateParsingException` Thrown when the X.509 certificate cannot be parsed.

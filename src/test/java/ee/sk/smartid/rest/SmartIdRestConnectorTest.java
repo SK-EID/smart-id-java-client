@@ -301,6 +301,13 @@ class SmartIdRestConnectorTest {
             assertEquals("SERVER_ERROR", sessionStatus.getResult().getEndResult());
         }
 
+        @Test
+        void getSessionStatus_accountUnusable() {
+            SessionStatus sessionStatus = getStubbedSessionStatusWithResponse("responses/session-status-account-unusable.json");
+            assertEquals("COMPLETE", sessionStatus.getState());
+            assertEquals("ACCOUNT_UNUSABLE", sessionStatus.getResult().getEndResult());
+        }
+
         private SessionStatus getStubbedSessionStatusWithResponse(String responseFile) {
             stubRequestWithResponse("/session/de305d54-75b4-431b-adb2-eb6b9e546016", responseFile);
             return connector.getSessionStatus("de305d54-75b4-431b-adb2-eb6b9e546016");
