@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -45,52 +46,60 @@ class CallbackUrlUtilTest {
 
     private static final String SESSION_SECRET_DIGEST = "nKMc7gT3mvWuJtfXVFjCY2ehuvTs26f1Sgjk6g9oOr8";
 
-    @Test
-    void createCallbackUrl_valueQueryParameterIsSameAsUrlToken() {
-        CallbackUrl callbackUrl = CallbackUrlUtil.createCallbackUrl("https://example.com/callback");
+    @Nested
+    class CreateCallbackUrl {
 
-        assertEquals("https://example.com/callback?value=" + callbackUrl.urlToken(),
-                callbackUrl.initialCallbackUri().toString());
+        @Test
+        void createCallbackUrl_valueQueryParameterIsSameAsUrlToken() {
+            CallbackUrl callbackUrl = CallbackUrlUtil.createCallbackUrl("https://example.com/callback");
+
+            assertEquals("https://example.com/callback?value=" + callbackUrl.urlToken(),
+                    callbackUrl.initialCallbackUri().toString());
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        void createCallbackUrl_inputBaseUrlIsEmpty_throwException(String baseUrl) {
+            var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.createCallbackUrl(baseUrl));
+            assertEquals("Parameter for 'baseUrl' cannot be empty", ex.getMessage());
+        }
     }
 
-    @Test
-    void validateSessionSecretDigest() {
-        String sessionSecret = "fBo1/L1vM9xcSmZF7hvvooEj";
-        assertDoesNotThrow(() -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, sessionSecret));
-    }
+    @Nested
+    class ValidateSessionSecretDigest {
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    void createCallbackUrl_inputParameterIsEmpty_throwException(String baseUrl) {
-        var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.createCallbackUrl(baseUrl));
-        assertEquals("Parameter for 'baseUrl' cannot be empty", ex.getMessage());
-    }
+        @Test
+        void validateSessionSecretDigest() {
+            String sessionSecret = "fBo1/L1vM9xcSmZF7hvvooEj";
+            assertDoesNotThrow(() -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, sessionSecret));
+        }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    void validateSessionSecretDigest_sessionSecretDigestIsEmpty_throwException(String sessionSecretDigest) {
-        var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(sessionSecretDigest, ""));
-        assertEquals("Parameter for 'sessionSecretDigest' cannot be empty", ex.getMessage());
-    }
+        @ParameterizedTest
+        @NullAndEmptySource
+        void validateSessionSecretDigest_sessionSecretDigestIsEmpty_throwException(String sessionSecretDigest) {
+            var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(sessionSecretDigest, ""));
+            assertEquals("Parameter for 'sessionSecretDigest' cannot be empty", ex.getMessage());
+        }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    void validateSessionSecretDigest_sessionSecretIsEmpty_throwException(String sessionSecret) {
-        var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, sessionSecret));
-        assertEquals("Parameter for 'sessionSecret' cannot be empty", ex.getMessage());
-    }
+        @ParameterizedTest
+        @NullAndEmptySource
+        void validateSessionSecretDigest_sessionSecretIsEmpty_throwException(String sessionSecret) {
+            var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, sessionSecret));
+            assertEquals("Parameter for 'sessionSecret' cannot be empty", ex.getMessage());
+        }
 
-    @Test
-    void validateSessionSecretDigest_sessionSecretValidationFails_throwException() {
-        String sessionSecret = Base64.getEncoder().encodeToString("sessionSecret".getBytes(StandardCharsets.UTF_8));
+        @Test
+        void validateSessionSecretDigest_sessionSecretValidationFails_throwException() {
+            String sessionSecret = Base64.getEncoder().encodeToString("sessionSecret".getBytes(StandardCharsets.UTF_8));
 
-        var ex = assertThrows(SessionSecretMismatchException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, sessionSecret));
-        assertEquals("Session secret digest from callback does not match calculated session secret digest", ex.getMessage());
-    }
+            var ex = assertThrows(SessionSecretMismatchException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, sessionSecret));
+            assertEquals("Session secret digest from callback does not match calculated session secret digest", ex.getMessage());
+        }
 
-    @Test
-    void validateSessionSecretDigest_sessionSecretIsNotBase64Encoded_throwException() {
-        var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, "sessionSecret"));
-        assertEquals("Parameter 'sessionSecret' is not Base64-encoded value", ex.getMessage());
+        @Test
+        void validateSessionSecretDigest_sessionSecretIsNotBase64Encoded_throwException() {
+            var ex = assertThrows(SmartIdClientException.class, () -> CallbackUrlUtil.validateSessionSecretDigest(SESSION_SECRET_DIGEST, "sessionSecret"));
+            assertEquals("Parameter 'sessionSecret' is not Base64-encoded value", ex.getMessage());
+        }
     }
 }
