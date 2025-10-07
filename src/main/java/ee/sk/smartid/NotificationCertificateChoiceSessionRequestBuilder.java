@@ -169,7 +169,7 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
             throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyName)) {
-            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
         }
         if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
             throw new SmartIdRequestSetupException("Value for 'nonce' length must be between 1 and 30 characters");

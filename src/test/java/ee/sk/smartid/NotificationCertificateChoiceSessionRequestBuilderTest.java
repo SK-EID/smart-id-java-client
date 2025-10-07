@@ -217,7 +217,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
                             .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
                             .withRelyingPartyName(relyingPartyName)
                             .initCertificateChoice());
-            assertEquals("Value for 'relyingPartyUUID' cannot be empty", exception.getMessage());
+            assertEquals("Value for 'relyingPartyName' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
