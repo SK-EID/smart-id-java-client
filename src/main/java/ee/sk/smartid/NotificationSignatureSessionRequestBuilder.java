@@ -38,12 +38,12 @@ import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.StringUtil;
@@ -161,8 +161,7 @@ public class NotificationSignatureSessionRequestBuilder {
      * @param allowedInteractionsOrder the allowed interactions order
      * @return this builder
      */
-    @Deprecated // TODO - 17.09.25: fix in SLIB-116
-    public NotificationSignatureSessionRequestBuilder withAllowedInteractionsOrder(List<NotificationInteraction> allowedInteractionsOrder) {
+    public NotificationSignatureSessionRequestBuilder withInteractions(List<NotificationInteraction> allowedInteractionsOrder) {
         this.interactions = allowedInteractionsOrder;
         return this;
     }
@@ -231,13 +230,13 @@ public class NotificationSignatureSessionRequestBuilder {
      */
     public NotificationSignatureSessionResponse initSignatureSession() {
         validateParameters();
-        SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
-        NotificationSignatureSessionResponse notificationSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
+        NotificationSignatureSessionRequest request = createSignatureSessionRequest();
+        NotificationSignatureSessionResponse notificationSignatureSessionResponse = initSignatureSession(request);
         validateResponseParameters(notificationSignatureSessionResponse);
         return notificationSignatureSessionResponse;
     }
 
-    private NotificationSignatureSessionResponse initSignatureSession(SignatureSessionRequest request) {
+    private NotificationSignatureSessionResponse initSignatureSession(NotificationSignatureSessionRequest request) {
         if (documentNumber != null) {
             return connector.initNotificationSignature(request, documentNumber);
         } else if (semanticsIdentifier != null) {
@@ -247,12 +246,12 @@ public class NotificationSignatureSessionRequestBuilder {
         }
     }
 
-    private SignatureSessionRequest createSignatureSessionRequest() {
+    private NotificationSignatureSessionRequest createSignatureSessionRequest() {
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
                 new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
 
-        return new SignatureSessionRequest(relyingPartyUUID,
+        return new NotificationSignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
@@ -260,8 +259,7 @@ public class NotificationSignatureSessionRequestBuilder {
                 nonce,
                 capabilities,
                 InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
-                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
-                null
+                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null
         );
     }
 

@@ -59,9 +59,9 @@ import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.rest.dao.VerificationCode;
 
 @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
@@ -77,7 +77,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         builder = new NotificationSignatureSessionRequestBuilder(connector)
                 .withRelyingPartyUUID("test-relying-party-uuid")
                 .withRelyingPartyName("DEMO")
-                .withAllowedInteractionsOrder(List.of(NotificationInteraction.displayTextAndPin("Sign?")))
+                .withInteractions(List.of(NotificationInteraction.displayTextAndPin("Sign?")))
                 .withSignableData(new SignableData("Test data".getBytes()));
     }
 
@@ -86,7 +86,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         var semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
         builder.withSemanticsIdentifier(semanticsIdentifier);
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), eq(semanticsIdentifier))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), eq(semanticsIdentifier))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
 
@@ -95,7 +95,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         assertEquals("alphaNumeric4", signature.getVc().getType());
         assertEquals("4927", signature.getVc().getValue());
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), eq(semanticsIdentifier));
 
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), requestCaptor.getValue().signatureProtocol());
@@ -106,7 +106,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         String documentNumber = "PNOEE-31111111111";
         builder.withDocumentNumber(documentNumber);
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
 
@@ -115,7 +115,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         assertEquals("alphaNumeric4", signature.getVc().getType());
         assertEquals("4927", signature.getVc().getValue());
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), eq(documentNumber));
 
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), requestCaptor.getValue().signatureProtocol());
@@ -126,15 +126,15 @@ class NotificationSignatureSessionRequestBuilderTest {
     void initSignatureSession_withCertificateLevel(CertificateLevel certificateLevel, String expectedValue) {
         builder.withCertificateLevel(certificateLevel).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest request = requestCaptor.getValue();
+        NotificationSignatureSessionRequest request = requestCaptor.getValue();
 
         assertEquals(expectedValue, request.certificateLevel());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), request.signatureProtocol());
@@ -145,15 +145,15 @@ class NotificationSignatureSessionRequestBuilderTest {
     void initSignatureSession_withNonce_ok(String nonce) {
         builder.withNonce(nonce).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest request = requestCaptor.getValue();
+        NotificationSignatureSessionRequest request = requestCaptor.getValue();
 
         assertEquals(nonce, request.nonce());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), request.signatureProtocol());
@@ -164,14 +164,14 @@ class NotificationSignatureSessionRequestBuilderTest {
         var signableData = new SignableData("Test data".getBytes());
         builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.signatureProtocolParameters().digest());
@@ -181,16 +181,16 @@ class NotificationSignatureSessionRequestBuilderTest {
     void initSignatureSession_withRequestProperties() {
         builder.withShareMdClientIpAddress(true).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
 
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertNotNull(capturedRequest.requestProperties());
         assertTrue(capturedRequest.requestProperties().shareMdClientIpAddress());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
@@ -203,14 +203,14 @@ class NotificationSignatureSessionRequestBuilderTest {
         var signableHash = new SignableHash("Test hash".getBytes(), hashAlgorithm);
         builder.withSignableData(null).withSignableHash(signableHash).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(hashAlgorithm.getAlgorithmName().toLowerCase() + "WithRSAEncryption", capturedRequest.signatureProtocolParameters().signatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString("Test hash".getBytes()), capturedRequest.signatureProtocolParameters().digest());
@@ -222,16 +222,16 @@ class NotificationSignatureSessionRequestBuilderTest {
     void initSignatureSession_withCapabilities(Set<String> capabilities, Set<String> expectedCapabilities) {
         builder.withCapabilities(capabilities).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
 
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
 
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertEquals(expectedCapabilities, capturedRequest.capabilities());
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
     }
@@ -242,14 +242,14 @@ class NotificationSignatureSessionRequestBuilderTest {
         var signableData = new SignableData("Test data".getBytes(), hashAlgorithm);
         builder.withSignableData(signableData).withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
         assertEquals(Base64.getEncoder().encodeToString(signableData.calculateHash()), capturedRequest.signatureProtocolParameters().digest());
@@ -261,14 +261,14 @@ class NotificationSignatureSessionRequestBuilderTest {
         var signableData = new SignableData("Test data".getBytes());
         builder.withSignableData(signableData).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
@@ -277,14 +277,14 @@ class NotificationSignatureSessionRequestBuilderTest {
     void getSignatureAlgorithm_withDefaultAlgorithmWhenNoSignableDataOrHash() {
         builder.withSignableData(null).withSignableHash(null).withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"));
 
-        when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
+        when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockNotificationSignatureSessionResponse());
 
         NotificationSignatureSessionResponse signature = builder.initSignatureSession();
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<NotificationSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationSignatureSessionRequest.class);
         verify(connector).initNotificationSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        NotificationSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
@@ -321,7 +321,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initSignatureSession_whenAllowedInteractionsOrderIsNullOrEmpty(List<NotificationInteraction> allowedInteractionsOrder) {
-            builder.withAllowedInteractionsOrder(allowedInteractionsOrder);
+            builder.withInteractions(allowedInteractionsOrder);
 
             var ex = assertThrows(SmartIdClientException.class, () -> builder.initSignatureSession());
             assertEquals("Allowed interactions order must be set and contain at least one interaction.", ex.getMessage());
@@ -372,7 +372,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             response.setSessionID(sessionID);
             response.setVc(new VerificationCode());
 
-            when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("Session ID is missing from the response", ex.getMessage());
@@ -390,7 +390,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             verificationCode.setType(vcType);
             response.setVc(verificationCode);
 
-            when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("VC type is missing from the response", ex.getMessage());
@@ -407,7 +407,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             vc.setType("unsupportedType");
             response.setVc(vc);
 
-            when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("Unsupported VC type: unsupportedType", ex.getMessage());
@@ -422,7 +422,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             response.setSessionID("test-session-id");
             response.setVc(vc);
 
-            when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("VC object is missing from the response", ex.getMessage());
@@ -438,7 +438,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             VerificationCode emptyVc = new VerificationCode();
             response.setVc(emptyVc);
 
-            when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("VC type is missing from the response", ex.getMessage());
@@ -457,7 +457,7 @@ class NotificationSignatureSessionRequestBuilderTest {
             vc.setValue(vcValue);
             response.setVc(vc);
 
-            when(connector.initNotificationSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, () -> builder.initSignatureSession());
             assertEquals("VC value is missing from the response", ex.getMessage());

@@ -53,17 +53,18 @@ import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.util.InteractionUtil;
 
 @SmartIdDemoIntegrationTest
@@ -179,7 +180,7 @@ class SmartIdRestIntegrationTest {
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashAlgorithm.SHA3_512)),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
-                var request = new SignatureSessionRequest(RELYING_PARTY_UUID,
+                var request = new DeviceLinkSignatureSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         null,
                         SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
@@ -205,7 +206,7 @@ class SmartIdRestIntegrationTest {
                         Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashAlgorithm.SHA_512)),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
-                var request = new SignatureSessionRequest(RELYING_PARTY_UUID,
+                var request = new DeviceLinkSignatureSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         null,
                         SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
@@ -309,12 +310,12 @@ class SmartIdRestIntegrationTest {
                 assertEquals("alphaNumeric4", sessionResponse.getVc().getType());
             }
 
-            private static SignatureSessionRequest toSignatureSessionRequest() {
+            private static NotificationSignatureSessionRequest toSignatureSessionRequest() {
                 var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(
                         Base64.toBase64String(DigestCalculator.calculateDigest("test".getBytes(), HashAlgorithm.SHA_512)),
                         SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(),
                         new SignatureAlgorithmParameters(HashAlgorithm.SHA3_512.getAlgorithmName()));
-                return new SignatureSessionRequest(RELYING_PARTY_UUID,
+                return new NotificationSignatureSessionRequest(RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         "QUALIFIED",
                         SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
@@ -322,7 +323,6 @@ class SmartIdRestIntegrationTest {
                         null,
                         null,
                         InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Sign it!", null))),
-                        null,
                         null
                 );
             }

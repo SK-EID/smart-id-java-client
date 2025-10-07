@@ -51,7 +51,6 @@ import java.util.regex.Pattern;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -76,6 +75,7 @@ import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
@@ -83,6 +83,7 @@ import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
@@ -92,7 +93,6 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.util.InteractionUtil;
 
 class SmartIdRestConnectorTest {
@@ -1355,7 +1355,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkSignature_withSemanticsIdentifier_successful() {
             stubPostRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "responses/sign/device-link/signature/device-link-signature-session-response.json");
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             DeviceLinkSessionResponse response = connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER);
 
@@ -1370,7 +1370,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkSignature_withDocumentNumber_successful() {
             stubPostRequestWithResponse("/signature/device-link/document/PNOEE-31111111111-MOCK-Q", "responses/sign/device-link/signature/device-link-signature-session-response.json");
 
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
             String documentNumber = "PNOEE-31111111111-MOCK-Q";
 
             DeviceLinkSessionResponse response = connector.initDeviceLinkSignature(request, documentNumber);
@@ -1385,7 +1385,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkSignature_userAccountNotFound() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 404);
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             assertThrows(UserAccountNotFoundException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
         }
@@ -1393,7 +1393,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkSignature_relyingPartyNoPermission() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 403);
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
         }
@@ -1401,7 +1401,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkSignature_invalidRequest() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 400);
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
         }
@@ -1409,7 +1409,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkSignature_throwsRelyingPartyAccountConfigurationException_whenUnauthorized() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 401);
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             Exception exception = assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
 
@@ -1420,7 +1420,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 471);
 
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
         }
@@ -1429,7 +1429,7 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkSignature_throwsPersonShouldViewSmartIdPortalException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 472);
 
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
         }
@@ -1437,7 +1437,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initDeviceLinkSignature_throwsSmartIdClientException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 480);
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             var exception = assertThrows(SmartIdClientException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
             assertEquals("Client-side API is too old and not supported anymore", exception.getMessage());
@@ -1447,18 +1447,18 @@ class SmartIdRestConnectorTest {
         void initDeviceLinkSignature_throwsServerMaintenanceException() {
             stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 580);
 
-            SignatureSessionRequest request = createSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = createSignatureSessionRequest();
 
             assertThrows(ServerMaintenanceException.class, () -> connector.initDeviceLinkSignature(request, SEMANTICS_IDENTIFIER));
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18084)
     class SemanticsIdentifierNotificationSignature {
 
         private static final String SIGNATURE_WITH_PERSON_CODE_PATH = "/signature/notification/etsi/PNOEE-48010010101";
+        private static final SemanticsIdentifier SEMANTICS_IDENTIFIER = new SemanticsIdentifier("PNOEE-48010010101");
 
         private SmartIdRestConnector connector;
 
@@ -1467,15 +1467,14 @@ class SmartIdRestConnectorTest {
             connector = new SmartIdRestConnector("http://localhost:18084");
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/notification-signature-session-request.json", "responses/notification-session-response.json");
+        void initNotificationSignature_onlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
-
-            var semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
-            NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, semanticsIdentifier);
+            NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
 
             assertNotNull(response);
             assertNotNull(response.getSessionID());
@@ -1485,83 +1484,89 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initNotificationSignature_userAccountNotFound_throwException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/notification-signature-session-request.json");
+        void initNotificationSignature_allFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse(SIGNATURE_WITH_PERSON_CODE_PATH,
+                    "requests/sign/notification/signature/notification-signature-session-request-all-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest("DEMO", CertificateLevel.QSCD, "d8XkbEnA0WsE0PvBZZoxGnPI4ml9qk", true);
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
 
-            assertThrows(UserAccountNotFoundException.class, () -> {
-                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
-                connector.initNotificationSignature(request, semanticsIdentifier);
-            });
+            assertNotNull(response);
+            assertNotNull(response.getSessionID());
+            assertNotNull(response.getVc());
+            assertNotNull(response.getVc().getType());
+            assertNotNull(response.getVc().getValue());
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationSignature_requestIsUnauthorized_throwException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/notification-signature-session-request.json");
+        void initNotificationSignature_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/signature/notification-signature-session-request-invalid.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            assertThrows(SmartIdClientException.class, () -> connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER));
+        }
 
-            assertThrows(RelyingPartyAccountConfigurationException.class, () -> {
-                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
-                connector.initNotificationSignature(request, semanticsIdentifier);
-            });
+        @Test
+        void initNotificationSignature_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/signature/notification-signature-session-request-invalid-credentials.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
+
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationSignature_relyingPartyDoesNotHavePermission_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER));
+        }
+
+        @Test
+        void initNotificationSignature_userAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_PERSON_CODE_PATH, "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
+
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER));
         }
 
         @Test
         void initNotificationSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 471);
-
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> {
-                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
-                connector.initNotificationSignature(request, semanticsIdentifier);
+                connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
             });
         }
 
         @Test
         void initNotificationSignature_throwsPersonShouldViewSmartIdPortalException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 472);
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
-
-            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> {
-                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
-                connector.initNotificationSignature(request, semanticsIdentifier);
-            });
+            assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER));
         }
 
         @Test
         void initNotificationSignature_throwsSmartIdClientException() {
-            SmartIdRestServiceStubs.stubPostErrorResponse(
-                    SIGNATURE_WITH_PERSON_CODE_PATH, 480);
+            SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 480);
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
-
-            var ex = assertThrows(SmartIdClientException.class, () -> {
-                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
-                connector.initNotificationSignature(request, semanticsIdentifier);
-            });
-
+            var ex = assertThrows(SmartIdClientException.class, () -> connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER));
             assertEquals("Client-side API is too old and not supported anymore", ex.getMessage());
         }
 
         @Test
         void initNotificationSignature_throwsServerMaintenanceException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_PERSON_CODE_PATH, 580);
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
-
-            assertThrows(ServerMaintenanceException.class, () -> {
-                SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-48010010101");
-                connector.initNotificationSignature(request, semanticsIdentifier);
-            });
+            assertThrows(ServerMaintenanceException.class, () -> connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER));
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18085)
     class DocumentNumberNotificationSignature {
@@ -1576,11 +1581,12 @@ class SmartIdRestConnectorTest {
             connector = new SmartIdRestConnector("http://localhost:18085");
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationSignature() {
-            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/sign/notification/notification-signature-session-request.json", "responses/notification-session-response.json");
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+        void initNotificationSignature_onlyRequiredFields() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH,
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
             NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, DOCUMENT_NUMBER);
 
@@ -1592,29 +1598,61 @@ class SmartIdRestConnectorTest {
         }
 
         @Test
-        void initNotificationSignature_userAccountNotFound_throwException() {
-            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/sign/notification/notification-signature-session-request.json");
+        void initNotificationSignature_allFields() {
+            SmartIdRestServiceStubs.stubRequestWithResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH,
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, DOCUMENT_NUMBER);
 
-            assertThrows(UserAccountNotFoundException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
+            assertNotNull(response);
+            assertNotNull(response.getSessionID());
+            assertNotNull(response.getVc());
+            assertNotNull(response.getVc().getType());
+            assertNotNull(response.getVc().getValue());
         }
 
-        @Disabled("Request body has changed")
         @Test
-        void initNotificationSignature_requestIsUnauthorized_throwException() {
-            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, "requests/sign/notification/notification-signature-session-request.json");
+        void initNotificationSignature_badRequest_throwException() {
+            SmartIdRestServiceStubs.stubBadRequestResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH,
+                    "requests/sign/notification/signature/notification-signature-session-request-invalid.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            assertThrows(SmartIdClientException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationSignature_unauthorized_throwException() {
+            SmartIdRestServiceStubs.stubUnauthorizedResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH,
+                    "requests/sign/notification/signature/notification-signature-session-request-invalid-credentials.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest("NOT DEMO", null, null, null);
 
             assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
         }
 
         @Test
+        void initNotificationSignature_relyingPartyDoesNotHavePermission_throwException() {
+            SmartIdRestServiceStubs.stubForbiddenResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH,
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-only-required-fields.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
+
+            assertThrows(RelyingPartyAccountConfigurationException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
+        }
+
+        @Test
+        void initNotificationSignature_userAccountNotFound_throwException() {
+            SmartIdRestServiceStubs.stubNotFoundResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH,
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-only-required-fields.json");
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
+
+            assertThrows(UserAccountNotFoundException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
+        }
+
+        @Test
         void initNotificationSignature_throwsNoSuitableAccountOfRequestedTypeFoundException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 471);
-
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
         }
@@ -1622,8 +1660,7 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationSignature_throwsPersonShouldViewSmartIdPortalException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 472);
-
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
             assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
         }
@@ -1631,19 +1668,16 @@ class SmartIdRestConnectorTest {
         @Test
         void initNotificationSignature_throwsSmartIdClientException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 480);
-
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
             var ex = assertThrows(SmartIdClientException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
-
             assertEquals("Client-side API is too old and not supported anymore", ex.getMessage());
         }
 
         @Test
         void initNotificationSignature_throwsServerMaintenanceException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(SIGNATURE_WITH_DOCUMENT_NUMBER_PATH, 580);
-
-            SignatureSessionRequest request = createNotificationSignatureSessionRequest();
+            NotificationSignatureSessionRequest request = toNotificationSignatureSessionRequest();
 
             assertThrows(ServerMaintenanceException.class, () -> connector.initNotificationSignature(request, DOCUMENT_NUMBER));
         }
@@ -1695,12 +1729,12 @@ class SmartIdRestConnectorTest {
         return new CertificateByDocumentNumberRequest("00000000-0000-4000-8000-000000000000", "DEMO", "ADVANCED");
     }
 
-    private static SignatureSessionRequest createSignatureSessionRequest() {
+    private static DeviceLinkSignatureSessionRequest createSignatureSessionRequest() {
         var protocolParameters = new RawDigestSignatureProtocolParameters("base64-encoded-digest",
                 "rsassa-pss",
                 new SignatureAlgorithmParameters("SHA3-512"));
 
-        return new SignatureSessionRequest("de305d54-75b4-431b-adb2-eb6b9e546014",
+        return new DeviceLinkSignatureSessionRequest("de305d54-75b4-431b-adb2-eb6b9e546014",
                 "BANK123",
                 null,
                 SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
@@ -1712,22 +1746,27 @@ class SmartIdRestConnectorTest {
                 null);
     }
 
-    private static SignatureSessionRequest createNotificationSignatureSessionRequest() {
+    private static NotificationSignatureSessionRequest toNotificationSignatureSessionRequest() {
+        return toNotificationSignatureSessionRequest("DEMO", null, null, null);
+    }
+
+    private static NotificationSignatureSessionRequest toNotificationSignatureSessionRequest(String relyingPartyName,
+                                                                                             CertificateLevel certificateLevel,
+                                                                                             String nonce,
+                                                                                             Boolean shareIpAddress) {
         var protocolParameters = new RawDigestSignatureProtocolParameters("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
                 "rsassa-pss",
                 new SignatureAlgorithmParameters("SHA-512"));
         var interaction = new Interaction(NotificationInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Verify the code", null);
-        return new SignatureSessionRequest("00000000-0000-0000-0000-000000000000",
-                "DEMO",
-                null,
+        return new NotificationSignatureSessionRequest("00000000-0000-4000-8000-000000000000",
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
                 protocolParameters,
-                null,
+                nonce,
                 null,
                 InteractionUtil.encodeToBase64(List.of(interaction)),
-                null,
-                null
-        );
+                shareIpAddress != null ? new RequestProperties(shareIpAddress) : null);
     }
 
     private static void assertResponseValues(DeviceLinkSessionResponse response,

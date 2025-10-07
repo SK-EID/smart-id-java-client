@@ -64,7 +64,7 @@ import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 
 class DeviceLinkSignatureSessionRequestBuilderTest {
 
@@ -79,7 +79,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
     @Test
     void initSignatureSession_withSemanticsIdentifier() {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), eq(SEMANTICS_IDENTIFIER))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), eq(SEMANTICS_IDENTIFIER))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSemanticsIdentifier(SEMANTICS_IDENTIFIER));
 
         DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
@@ -94,7 +94,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @Test
     void initSignatureSession_withDocumentNumber() {
         String documentNumber = "PNOEE-31111111111-MOCK-Q";
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withDocumentNumber(documentNumber));
 
         DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
@@ -109,16 +109,16 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @ArgumentsSource(CertificateLevelArgumentProvider.class)
     void initSignatureSession_withCertificateLevel(CertificateLevel certificateLevel, String expectedValue) {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withCertificateLevel(certificateLevel));
 
         DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest request = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest request = requestCaptor.getValue();
 
         assertEquals(expectedValue, request.certificateLevel());
     }
@@ -126,49 +126,49 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @ArgumentsSource(ValidNonceArgumentSourceProvider.class)
     void initSignatureSession_withNonce_ok(String nonce) {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withNonce(nonce));
 
         DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest request = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest request = requestCaptor.getValue();
 
         assertEquals(nonce, request.nonce());
     }
 
     @Test
     void initSignatureSession_withRequestProperties() {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withShareMdClientIpAddress(true));
 
         DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
 
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertNotNull(capturedRequest.requestProperties());
         assertTrue(capturedRequest.requestProperties().shareMdClientIpAddress());
     }
 
     @Test
     void initSignatureSession_withSignatureAlgorithm_setsCorrectAlgorithm() {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS));
 
         DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signatureSessionResponse);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
@@ -176,7 +176,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @EnumSource(HashAlgorithm.class)
     void initSignatureSession_withSignableHash(HashAlgorithm hashAlgorithm) {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var signableHash = new SignableHash("Test hash".getBytes(), hashAlgorithm);
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignableData(null).withSignableHash(signableHash));
 
@@ -184,9 +184,9 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
         assertNotNull(signatureSessionResponse);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(Base64.getEncoder().encodeToString("Test hash".getBytes()), capturedRequest.signatureProtocolParameters().digest());
     }
@@ -194,7 +194,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ParameterizedTest
     @EnumSource(HashAlgorithm.class)
     void initSignatureSession_withSignableData(HashAlgorithm hashAlgorithm) {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var signableData = new SignableData("Test hash".getBytes(), hashAlgorithm);
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withSignableData(signableData));
 
@@ -202,9 +202,9 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
 
         assertNotNull(signatureSessionResponse);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         String expectedDigest = Base64.getEncoder().encodeToString(DigestCalculator.calculateDigest("Test hash".getBytes(), hashAlgorithm));
         assertEquals(expectedDigest, capturedRequest.signatureProtocolParameters().digest());
@@ -215,69 +215,69 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     @ValueSource(strings = {"  "})
     void initSignatureSession_withCapabilitiesSetToEmpty_ok(String capabilities) {
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withCapabilities(capabilities));
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class)))
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class)))
                 .thenReturn(mockSignatureSessionResponse());
 
         DeviceLinkSessionResponse response = deviceLinkSessionRequestBuilder.initSignatureSession();
         assertEquals("test-session-id", response.sessionID());
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest request = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest request = requestCaptor.getValue();
         assertEquals(0, request.capabilities().size());
     }
 
     @ParameterizedTest
     @ArgumentsSource(CapabilitiesArgumentProvider.class)
     void initSignatureSession_withCapabilities(String[] capabilities, Set<String> expectedCapabilities) {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withCapabilities(capabilities));
 
         DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
 
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
 
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
         assertEquals(expectedCapabilities, capturedRequest.capabilities());
     }
 
     @Test
     void initSignatureSession_withDefaultAlgorithmWhenNoSignatureAlgorithmSet() {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
 
         DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
         assertNotNull(signature);
 
-        ArgumentCaptor<SignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(SignatureSessionRequest.class);
+        ArgumentCaptor<DeviceLinkSignatureSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkSignatureSessionRequest.class);
         verify(connector).initDeviceLinkSignature(requestCaptor.capture(), any(SemanticsIdentifier.class));
-        SignatureSessionRequest capturedRequest = requestCaptor.getValue();
+        DeviceLinkSignatureSessionRequest capturedRequest = requestCaptor.getValue();
 
         assertEquals(SignatureAlgorithm.RSASSA_PSS.getAlgorithmName(), capturedRequest.signatureProtocolParameters().signatureAlgorithm());
     }
 
     @Test
     void getSignatureSessionRequest_ok() {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
 
         DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
-        SignatureSessionRequest signatureSessionRequest = deviceLinkSessionRequestBuilder.getSignatureSessionRequest();
+        DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = deviceLinkSessionRequestBuilder.getSignatureSessionRequest();
         assertNotNull(signature);
 
-        assertEquals("test-relying-party-uuid", signatureSessionRequest.relyingPartyUUID());
-        assertEquals("DEMO", signatureSessionRequest.relyingPartyName());
-        assertEquals("RAW_DIGEST_SIGNATURE", signatureSessionRequest.signatureProtocol());
-        assertNotNull(signatureSessionRequest.signatureProtocolParameters());
-        assertNotNull(signatureSessionRequest.interactions());
+        assertEquals("test-relying-party-uuid", deviceLinkSignatureSessionRequest.relyingPartyUUID());
+        assertEquals("DEMO", deviceLinkSignatureSessionRequest.relyingPartyName());
+        assertEquals("RAW_DIGEST_SIGNATURE", deviceLinkSignatureSessionRequest.signatureProtocol());
+        assertNotNull(deviceLinkSignatureSessionRequest.signatureProtocolParameters());
+        assertNotNull(deviceLinkSignatureSessionRequest.interactions());
     }
 
     @Test
     void getSignatureSessionRequest_sessionNotStarted_throwException() {
-        when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
+        when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(mockSignatureSessionResponse());
         var deviceLinkSessionRequestBuilder = toBaseDeviceLinkSessionRequestBuilder();
 
         var ex = assertThrows(SmartIdClientException.class, deviceLinkSessionRequestBuilder::getSignatureSessionRequest);
@@ -419,7 +419,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     "test-session-secret",
                     URI.create("https://example.com/device-link"));
             var builder = toBaseDeviceLinkSessionRequestBuilder();
-            when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
             assertEquals("Device link signature session initialisation response field 'sessionID' is missing or empty", ex.getMessage());
@@ -433,7 +433,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     "test-session-secret",
                     URI.create("https://example.com/device-link"));
             var builder = toBaseDeviceLinkSessionRequestBuilder();
-            when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
             assertEquals("Device link signature session initialisation response field 'sessionToken' is missing or empty", ex.getMessage());
@@ -447,7 +447,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     sessionSecret,
                     URI.create("https://example.com/device-link"));
             var builder = toBaseDeviceLinkSessionRequestBuilder();
-            when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
             assertEquals("Device link signature session initialisation response field 'sessionSecret' is missing or empty", ex.getMessage());
@@ -461,7 +461,7 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
                     "test-session-secret",
                     deviceLinkBaseValue == null ? null : URI.create(deviceLinkBaseValue));
             var builder = toBaseDeviceLinkSessionRequestBuilder();
-            when(connector.initDeviceLinkSignature(any(SignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+            when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
             assertEquals("Device link signature session initialisation response field 'deviceLinkBase' is missing or empty", ex.getMessage());

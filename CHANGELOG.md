@@ -4,6 +4,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Changes mentioned under 3.1.x version have not been published yet. Will be released when v3.1 is stable.
 
+## [3.1.17] - 2025-10-07
+- Updated SmartIdRestConnector to use v3.1 notification-based signature endpoint
+
 ## [3.1.16] - 2025-10-04
 - Updated SmartIdRestConnector to use v3.1 notification-based certificate choice endpoint
 - Added AccountUnusableException to handle ACCOUNT_UNUSABLE endResult from session status response

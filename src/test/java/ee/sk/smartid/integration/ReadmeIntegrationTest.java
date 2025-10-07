@@ -93,7 +93,7 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.util.CallbackUrlUtil;
 
 @SmartIdDemoIntegrationTest
@@ -383,7 +383,7 @@ public class ReadmeIntegrationTest {
                         .withInteractions(signatureInteractions);
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
                 // Get SignatureSessionRequest after the request is made and store for validations
-                SignatureSessionRequest signatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
+                DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
 
                 // Process the signature response
                 String signatureSessionId = signatureSessionResponse.sessionID();
@@ -408,7 +408,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(signatureSessionRequest.interactions())
+                        .withInteractions(deviceLinkSignatureSessionRequest.interactions())
                         .buildDeviceLink(sessionSecret);
 
                 // Return URI to be used with QR-code generation library on the frontend side
@@ -491,7 +491,7 @@ public class ReadmeIntegrationTest {
                 // Init signature session
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
                 // Get SignatureSessionRequest after the request is made and store for validations
-                SignatureSessionRequest signatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
+                DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
 
                 // Process the signature response
                 String signatureSessionId = signatureSessionResponse.sessionID();
@@ -515,7 +515,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(signatureSessionRequest.interactions()) // interactions string must be the same as in the signature session request
+                        .withInteractions(deviceLinkSignatureSessionRequest.interactions()) // interactions string must be the same as in the signature session request
                         .buildDeviceLink(sessionSecret);
                 // Display QR-code to the user
 
@@ -737,7 +737,7 @@ public class ReadmeIntegrationTest {
                     .withCertificateLevel(CertificateLevel.QUALIFIED)
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
-                    .withAllowedInteractionsOrder(List.of(
+                    .withInteractions(List.of(
                             NotificationInteraction.confirmationMessage("Please sign the document"))
                     )
                     .withNonce("random")
