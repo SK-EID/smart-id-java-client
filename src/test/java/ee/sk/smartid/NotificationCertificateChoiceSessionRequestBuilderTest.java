@@ -37,9 +37,9 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
-import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
@@ -62,6 +62,10 @@ import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 
 class NotificationCertificateChoiceSessionRequestBuilderTest {
 
+    private static final String RELYING_PARTY_UUID = "00000000-0000-4000-8000-000000000000";
+    private static final String RELYING_PARTY_NAME = "DEMO";
+    private static final SemanticsIdentifier SEMANTICS_IDENTIFIER = new SemanticsIdentifier("PNOEE-48010010101");
+
     private SmartIdConnector connector;
 
     @BeforeEach
@@ -74,12 +78,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
         when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class)))
                 .thenReturn(createCertificateChoiceSessionResponse());
 
-        new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                .withRelyingPartyName("DEMO")
-                .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                .withCertificateLevel(CertificateLevel.QUALIFIED)
-                .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-48010010101"))
+        toBaseNotificationCertChoiceRequestBuilder()
                 .initCertificateChoice();
 
         ArgumentCaptor<SemanticsIdentifier> semanticsIdentifierCaptor = ArgumentCaptor.forClass(SemanticsIdentifier.class);
@@ -98,12 +97,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class)))
                     .thenReturn(createCertificateChoiceSessionResponse());
 
-            new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                    .withCertificateLevel(certificateLevel)
-                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+            toNotificationCertChoiceRequestBuilder(b -> b.withCertificateLevel(certificateLevel))
                     .initCertificateChoice();
 
             ArgumentCaptor<NotificationCertificateChoiceSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationCertificateChoiceSessionRequest.class);
@@ -119,12 +113,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class)))
                     .thenReturn(createCertificateChoiceSessionResponse());
 
-            new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withNonce(nonce)
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
+            toNotificationCertChoiceRequestBuilder(b -> b.withNonce(nonce))
                     .initCertificateChoice();
 
             ArgumentCaptor<NotificationCertificateChoiceSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationCertificateChoiceSessionRequest.class);
@@ -139,13 +128,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class)))
                     .thenReturn(createCertificateChoiceSessionResponse());
 
-            new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                    .initCertificateChoice();
+            toBaseNotificationCertChoiceRequestBuilder().initCertificateChoice();
 
             ArgumentCaptor<NotificationCertificateChoiceSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationCertificateChoiceSessionRequest.class);
             verify(connector).initNotificationCertificateChoice(requestCaptor.capture(), any(SemanticsIdentifier.class));
@@ -160,13 +143,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class)))
                     .thenReturn(createCertificateChoiceSessionResponse());
 
-            new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                    .withShareMdClientIpAddress(ipRequested)
+            toNotificationCertChoiceRequestBuilder(b -> b.withShareMdClientIpAddress(ipRequested))
                     .initCertificateChoice();
 
             ArgumentCaptor<NotificationCertificateChoiceSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationCertificateChoiceSessionRequest.class);
@@ -183,12 +160,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class)))
                     .thenReturn(createCertificateChoiceSessionResponse());
 
-            new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
-                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"))
-                    .withCapabilities(capabilities)
+            toNotificationCertChoiceRequestBuilder(b -> b.withCapabilities(capabilities))
                     .initCertificateChoice();
 
             ArgumentCaptor<NotificationCertificateChoiceSessionRequest> requestCaptor = ArgumentCaptor.forClass(NotificationCertificateChoiceSessionRequest.class);
@@ -201,46 +173,39 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initCertificateChoiceSession_relyingPartyUUIDIsEmpty_throwException(String relyingPartyUUID) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID(relyingPartyUUID)
-                            .withRelyingPartyName("DEMO")
-                            .initCertificateChoice());
+            NotificationCertificateChoiceSessionRequestBuilder builder =
+                    toNotificationCertChoiceRequestBuilder(b -> b.withRelyingPartyUUID(relyingPartyUUID));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initCertificateChoice);
             assertEquals("Value for 'relyingPartyUUID' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         void initCertificateChoiceSession_relyingPartyNameIsEmpty_throwException(String relyingPartyName) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName(relyingPartyName)
-                            .initCertificateChoice());
+            NotificationCertificateChoiceSessionRequestBuilder builder =
+                    toNotificationCertChoiceRequestBuilder(b -> b.withRelyingPartyName(relyingPartyName));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initCertificateChoice);
             assertEquals("Value for 'relyingPartyName' cannot be empty", exception.getMessage());
         }
 
         @ParameterizedTest
         @ArgumentsSource(InvalidNonceProvider.class)
         void initAuthenticationSession_nonceOutOfBounds_throwException(String invalidNonce, String expectedException) {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withNonce(invalidNonce)
-                            .initCertificateChoice());
+            NotificationCertificateChoiceSessionRequestBuilder builder =
+                    toNotificationCertChoiceRequestBuilder(b -> b.withNonce(invalidNonce));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initCertificateChoice);
             assertEquals(expectedException, exception.getMessage());
         }
 
         @Test
-        void initCertificateChoiceSession_semanticsIdentifierOrDocumentNumberMissing_throwException() {
-            var exception = assertThrows(SmartIdRequestSetupException.class, () ->
-                    new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                            .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                            .withRelyingPartyName("DEMO")
-                            .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                            .withCertificateLevel(CertificateLevel.QUALIFIED)
-                            .initCertificateChoice());
+        void initCertificateChoiceSession_semanticsIdentifierMissing_throwException() {
+            NotificationCertificateChoiceSessionRequestBuilder builder =
+                    toNotificationCertChoiceRequestBuilder(b -> b.withSemanticsIdentifier(null));
+
+            var exception = assertThrows(SmartIdRequestSetupException.class, builder::initCertificateChoice);
             assertEquals("Value for 'semanticIdentifier' must be set", exception.getMessage());
         }
     }
@@ -254,10 +219,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
             var notificationCertificateChoiceSessionResponse = new NotificationCertificateChoiceSessionResponse();
             notificationCertificateChoiceSessionResponse.setSessionID(sessionId);
             when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(notificationCertificateChoiceSessionResponse);
-            var builder = new NotificationCertificateChoiceSessionRequestBuilder(connector)
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
-                    .withSemanticsIdentifier(new SemanticsIdentifier("PNOEE-1234567890"));
+            NotificationCertificateChoiceSessionRequestBuilder builder = toBaseNotificationCertChoiceRequestBuilder();
 
             var exception = assertThrows(UnprocessableSmartIdResponseException.class, builder::initCertificateChoice);
             assertEquals("Notification-based certificate choice response field 'sessionID' is missing or empty", exception.getMessage());
@@ -266,8 +228,19 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
 
     private NotificationCertificateChoiceSessionResponse createCertificateChoiceSessionResponse() {
         var notificationCertificateChoiceSessionResponse = new NotificationCertificateChoiceSessionResponse();
-        notificationCertificateChoiceSessionResponse.setSessionID("00000000-0000-0000-0000-000000000000");
+        notificationCertificateChoiceSessionResponse.setSessionID(RELYING_PARTY_UUID);
         return notificationCertificateChoiceSessionResponse;
+    }
+
+    private NotificationCertificateChoiceSessionRequestBuilder toNotificationCertChoiceRequestBuilder(UnaryOperator<NotificationCertificateChoiceSessionRequestBuilder> modifier) {
+        return modifier.apply(toBaseNotificationCertChoiceRequestBuilder());
+    }
+
+    private NotificationCertificateChoiceSessionRequestBuilder toBaseNotificationCertChoiceRequestBuilder() {
+        return new NotificationCertificateChoiceSessionRequestBuilder(connector)
+                .withRelyingPartyUUID(RELYING_PARTY_UUID)
+                .withRelyingPartyName(RELYING_PARTY_NAME)
+                .withSemanticsIdentifier(SEMANTICS_IDENTIFIER);
     }
 
     private static class CertificateLevelArgumentProvider implements ArgumentsProvider {
