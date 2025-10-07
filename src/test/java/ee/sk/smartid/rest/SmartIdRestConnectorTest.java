@@ -1224,7 +1224,6 @@ class SmartIdRestConnectorTest {
             assertThrows(UserAccountNotFoundException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
         }
 
-        // TODO - 04.10.25: 471
         @Test
         void initCertificateChoice_suitableAccountNotFound_throwException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 471);
@@ -1239,7 +1238,6 @@ class SmartIdRestConnectorTest {
             assertThrows(NoSuitableAccountOfRequestedTypeFoundException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
         }
 
-        // TODO - 04.10.25: 472
         @Test
         void initCertificateChoice_userShouldCheckPortal_throwException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 472);
@@ -1254,7 +1252,6 @@ class SmartIdRestConnectorTest {
             assertThrows(PersonShouldViewSmartIdPortalException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
         }
 
-        // TODO - 04.10.25: 480
         @Test
         void initCertificateChoice_javaClientBeingUsedIsTooOld_throwException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 480);
@@ -1269,7 +1266,6 @@ class SmartIdRestConnectorTest {
             assertThrows(SmartIdClientException.class, () -> connector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER));
         }
 
-        // TODO - 04.10.25: 580
         @Test
         void initCertificateChoice_systemUnderMaintenance_throwException() {
             SmartIdRestServiceStubs.stubPostErrorResponse(CERTIFICATE_CHOICE_WITH_PERSON_CODE_PATH, 580);
