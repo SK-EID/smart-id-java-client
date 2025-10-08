@@ -28,8 +28,8 @@ package ee.sk.smartid.auth;
 
 import java.security.cert.X509Certificate;
 
-import ee.sk.smartid.common.certifiate.NonQualifiedSmartIdCertificateValidator;
-import ee.sk.smartid.common.certifiate.SmartIdAuthenticationCertificateValidator;
+import ee.sk.smartid.common.certificate.NonQualifiedSmartIdCertificateValidator;
+import ee.sk.smartid.common.certificate.SmartIdAuthenticationCertificateValidator;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 /**

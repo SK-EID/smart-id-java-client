@@ -1,4 +1,4 @@
-package ee.sk.smartid.common.certifiate;
+package ee.sk.smartid.common.certificate;
 
 /*-
  * #%L
