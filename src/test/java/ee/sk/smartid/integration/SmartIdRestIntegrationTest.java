@@ -70,14 +70,13 @@ import ee.sk.smartid.util.InteractionUtil;
 @SmartIdDemoIntegrationTest
 class SmartIdRestIntegrationTest {
 
-    // Replace these to test with V3
     private static final String RELYING_PARTY_UUID = "00000000-0000-4000-8000-000000000000";
     private static final String RELYING_PARTY_NAME = "DEMO";
 
-    private static final String UUID_PATTERN = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
-    private static final String VERIFICATION_CODE_PATTERN = "^[A-Za-z0-9]{4}$";
-    private static final String SESSION_TOKEN_PATTERN = "^[A-Za-z0-9]{24}$";
-    private static final String SESSION_SECRET_PATTERN = "^[A-Za-z0-9+/]{24}$";
+    private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+    private static final Pattern VERIFICATION_CODE_PATTERN = Pattern.compile("^[A-Za-z0-9]{4}$");
+    private static final Pattern SESSION_TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9]{24}$");
+    private static final Pattern SESSION_SECRET_PATTERN = Pattern.compile("^[A-Za-z0-9+/]{24}$");
 
     private SmartIdConnector smartIdConnector;
 
@@ -86,7 +85,7 @@ class SmartIdRestIntegrationTest {
         smartIdConnector = new SmartIdRestConnector("https://sid.demo.sk.ee/smart-id-rp/v3/");
     }
 
-    @Disabled("Demo accounts for device link requests not yet available")
+    @Disabled("Testing device-link flows with demo accounts is not yet possible")
     @Nested
     class DeviceLink {
 
@@ -97,24 +96,24 @@ class SmartIdRestIntegrationTest {
             void initAnonymousDeviceLinkAuthentication() {
                 DeviceLinkAuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initAnonymousDeviceLinkAuthentication(request);
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initAnonymousDeviceLinkAuthentication(request);
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.sessionID()));
-                assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.sessionToken()));
-                assertTrue(Pattern.matches(SESSION_SECRET_PATTERN, sessionsResponse.sessionSecret()));
-                assertNotNull(sessionsResponse.receivedAt());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
+                assertTrue(SESSION_SECRET_PATTERN.matcher(sessionResponse.sessionSecret()).matches());
+                assertNotNull(sessionResponse.receivedAt());
             }
 
             @Test
             void initDeviceLinkAuthentication_withDocumentNumber() {
                 DeviceLinkAuthenticationSessionRequest request = toDeviceLinkAuthenticationSessionRequest();
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkAuthentication(request, "PNOEE-40504040001-MOCK-Q");
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkAuthentication(request, "PNOEE-40504040001-MOCK-Q");
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.sessionID()));
-                assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.sessionToken()));
-                assertTrue(Pattern.matches(SESSION_SECRET_PATTERN, sessionsResponse.sessionSecret()));
-                assertNotNull(sessionsResponse.receivedAt());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
+                assertTrue(SESSION_SECRET_PATTERN.matcher(sessionResponse.sessionSecret()).matches());
+                assertNotNull(sessionResponse.receivedAt());
             }
 
             @Test
@@ -123,9 +122,9 @@ class SmartIdRestIntegrationTest {
 
                 DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkAuthentication(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.sessionID()));
-                assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionResponse.sessionToken()));
-                assertTrue(Pattern.matches(SESSION_SECRET_PATTERN, sessionResponse.sessionSecret()));
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
+                assertTrue(SESSION_SECRET_PATTERN.matcher(sessionResponse.sessionSecret()).matches());
                 assertNotNull(sessionResponse.receivedAt());
             }
 
@@ -162,13 +161,13 @@ class SmartIdRestIntegrationTest {
                         null
                 );
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkCertificateChoice(request);
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkCertificateChoice(request);
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.sessionID()));
-                assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.sessionToken()));
-                assertTrue(Pattern.matches(SESSION_SECRET_PATTERN, sessionsResponse.sessionSecret()));
-                assertNotNull(sessionsResponse.deviceLinkBase());
-                assertNotNull(sessionsResponse.receivedAt());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
+                assertTrue(SESSION_SECRET_PATTERN.matcher(sessionResponse.sessionSecret()).matches());
+                assertNotNull(sessionResponse.deviceLinkBase());
+                assertNotNull(sessionResponse.receivedAt());
             }
         }
 
@@ -192,12 +191,12 @@ class SmartIdRestIntegrationTest {
                         null
                 );
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.sessionID()));
-                assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.sessionToken()));
-                assertTrue(Pattern.matches(SESSION_SECRET_PATTERN, sessionsResponse.sessionSecret()));
-                assertNotNull(sessionsResponse.receivedAt());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
+                assertTrue(SESSION_SECRET_PATTERN.matcher(sessionResponse.sessionSecret()).matches());
+                assertNotNull(sessionResponse.receivedAt());
             }
 
             @Test
@@ -218,18 +217,21 @@ class SmartIdRestIntegrationTest {
                         null
                 );
 
-                DeviceLinkSessionResponse sessionsResponse = smartIdConnector.initDeviceLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
+                DeviceLinkSessionResponse sessionResponse = smartIdConnector.initDeviceLinkSignature(request, "PNOEE-40504040001-MOCK-Q");
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionsResponse.sessionID()));
-                assertTrue(Pattern.matches(SESSION_TOKEN_PATTERN, sessionsResponse.sessionToken()));
-                assertTrue(Pattern.matches(SESSION_SECRET_PATTERN, sessionsResponse.sessionSecret()));
-                assertNotNull(sessionsResponse.receivedAt());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(SESSION_TOKEN_PATTERN.matcher(sessionResponse.sessionToken()).matches());
+                assertTrue(SESSION_SECRET_PATTERN.matcher(sessionResponse.sessionSecret()).matches());
+                assertNotNull(sessionResponse.receivedAt());
             }
         }
     }
 
     @Nested
     class NotificationBasedRequests {
+
+        private static final SemanticsIdentifier SEMANTICS_IDENTIFIER = new SemanticsIdentifier("PNOEE-40504040001");
+        private static final String DOCUMENT_NUMBER = "PNOEE-40504040001-DEMO-Q";
 
         @Nested
         class Authentication {
@@ -238,18 +240,18 @@ class SmartIdRestIntegrationTest {
             void initNotificationAuthentication_withSemanticIdentifier() {
                 var request = toAuthenticationRequest();
 
-                NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, new SemanticsIdentifier("PNOEE-40504040001"));
+                NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, SEMANTICS_IDENTIFIER);
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.sessionID()));
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
             }
 
             @Test
             void initNotificationAuthentication_withDocumentNumber() {
                 var request = toAuthenticationRequest();
 
-                NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, "PNOEE-40504040001-DEMO-Q");
+                NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, DOCUMENT_NUMBER);
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.sessionID()));
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
             }
 
             private static NotificationAuthenticationSessionRequest toAuthenticationRequest() {
@@ -278,13 +280,12 @@ class SmartIdRestIntegrationTest {
             void initNotificationCertificateChoice_withSemanticIdentifier() {
                 var request = new NotificationCertificateChoiceSessionRequest(RELYING_PARTY_UUID, RELYING_PARTY_NAME, null, null, null, null);
 
-                NotificationCertificateChoiceSessionResponse sessionResponse = smartIdConnector.initNotificationCertificateChoice(request, new SemanticsIdentifier("PNOEE-40504040001"));
+                NotificationCertificateChoiceSessionResponse sessionResponse = smartIdConnector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER);
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.getSessionID()).matches());
             }
         }
 
-        @Disabled
         @Nested
         class Signature {
 
@@ -292,22 +293,22 @@ class SmartIdRestIntegrationTest {
             void initNotificationSignature_withSemanticIdentifier() {
                 var request = toSignatureSessionRequest();
 
-                NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, new SemanticsIdentifier("PNOEE-40504040001"));
+                NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
-                assertTrue(Pattern.matches(VERIFICATION_CODE_PATTERN, sessionResponse.getVc().getValue()));
-                assertEquals("alphaNumeric4", sessionResponse.getVc().getType());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.getSessionID()).matches());
+                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.getVc().getValue()).matches());
+                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.getVc().getType());
             }
 
             @Test
             void initNotificationCertificateChoice_withDocumentNumber() {
                 var request = toSignatureSessionRequest();
 
-                NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, "PNOEE-40504040001-MOCK-Q");
+                NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, DOCUMENT_NUMBER);
 
-                assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.getSessionID()));
-                assertTrue(Pattern.matches(VERIFICATION_CODE_PATTERN, sessionResponse.getVc().getValue()));
-                assertEquals("alphaNumeric4", sessionResponse.getVc().getType());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.getSessionID()).matches());
+                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.getVc().getValue()).matches());
+                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.getVc().getType());
             }
 
             private static NotificationSignatureSessionRequest toSignatureSessionRequest() {

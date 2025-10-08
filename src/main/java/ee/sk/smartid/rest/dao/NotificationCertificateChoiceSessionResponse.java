@@ -30,6 +30,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+// TODO - 08.10.25: convert to record
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NotificationCertificateChoiceSessionResponse implements Serializable {
 

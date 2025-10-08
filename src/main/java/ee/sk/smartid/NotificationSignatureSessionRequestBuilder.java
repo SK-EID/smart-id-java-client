@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.common.InteractionsMapper;
 import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
@@ -46,6 +45,7 @@ import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.VerificationCode;
 import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -66,7 +66,7 @@ public class NotificationSignatureSessionRequestBuilder {
     private Set<String> capabilities;
     private List<NotificationInteraction> interactions;
     private Boolean shareMdClientIpAddress;
-    private SignatureAlgorithm signatureAlgorithm;
+    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
     private DigestInput digestInput;
 
     /**
@@ -150,19 +150,19 @@ public class NotificationSignatureSessionRequestBuilder {
      * @param capabilities the capabilities
      * @return this builder
      */
-    public NotificationSignatureSessionRequestBuilder withCapabilities(Set<String> capabilities) {
-        this.capabilities = capabilities;
+    public NotificationSignatureSessionRequestBuilder withCapabilities(String... capabilities) {
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 
     /**
-     * Sets the allowed interactions order.
+     * Sets the interactions.
      *
-     * @param allowedInteractionsOrder the allowed interactions order
+     * @param interactions the allowed interactions order
      * @return this builder
      */
-    public NotificationSignatureSessionRequestBuilder withInteractions(List<NotificationInteraction> allowedInteractionsOrder) {
-        this.interactions = allowedInteractionsOrder;
+    public NotificationSignatureSessionRequestBuilder withInteractions(List<NotificationInteraction> interactions) {
+        this.interactions = interactions;
         return this;
     }
 
@@ -192,12 +192,17 @@ public class NotificationSignatureSessionRequestBuilder {
      * Sets the data to be signed.
      * <p>
      * This method allows setting a {@link SignableData} object, which contains the data to be hashed and signed in the signing request.
-     * If both {@link SignableData} and {@link SignableHash} are provided, {@link SignableData} will take precedence.
+     * <p>
+     * Only one of {@link #withSignableData(SignableData)} or {@link #withSignableHash(SignableHash)} may be used to set the digest input.
      *
      * @param signableData the data to be signed
      * @return this builder instance
+     * @throws SmartIdRequestSetupException if the digest input has already been set with {@link SignableHash}
      */
     public NotificationSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
+        if (this.digestInput != null && this.digestInput instanceof SignableHash) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' has already been set with SignableHash");
+        }
         this.digestInput = signableData;
         return this;
     }
@@ -207,11 +212,17 @@ public class NotificationSignatureSessionRequestBuilder {
      * <p>
      * The provided {@link SignableHash} must contain a valid hash value and hash type,
      * which will be used as the digest in the signing request.
+     * <p>
+     * Only one of {@link #withSignableData(SignableData)} or {@link #withSignableHash(SignableHash)} may be used to set the digest input.
      *
      * @param signableHash the hash data to be signed
      * @return this builder
+     * @throws SmartIdRequestSetupException if the digest input has already been set with {@link SignableData}
      */
     public NotificationSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
+        if (this.digestInput != null && this.digestInput instanceof SignableData) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' has already been set with SignableData");
+        }
         this.digestInput = signableHash;
         return this;
     }
@@ -225,11 +236,12 @@ public class NotificationSignatureSessionRequestBuilder {
      *     <li>with a semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
      * </ul>
      *
-     * @return a {@link NotificationSignatureSessionResponse} containing session details such as
-     * session ID, session token, and session secret.
+     * @return a {@link NotificationSignatureSessionResponse} containing session details such as session ID and verification code
+     * @throws SmartIdRequestSetupException          when the request parameters are not set correctly
+     * @throws UnprocessableSmartIdResponseException when the response from the Smart-ID service is invalid
      */
     public NotificationSignatureSessionResponse initSignatureSession() {
-        validateParameters();
+        validateRequestParameters();
         NotificationSignatureSessionRequest request = createSignatureSessionRequest();
         NotificationSignatureSessionResponse notificationSignatureSessionResponse = initSignatureSession(request);
         validateResponseParameters(notificationSignatureSessionResponse);
@@ -237,12 +249,15 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private NotificationSignatureSessionResponse initSignatureSession(NotificationSignatureSessionRequest request) {
+        if (semanticsIdentifier != null && documentNumber != null) {
+            throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
+        }
         if (documentNumber != null) {
             return connector.initNotificationSignature(request, documentNumber);
         } else if (semanticsIdentifier != null) {
             return connector.initNotificationSignature(request, semanticsIdentifier);
         } else {
-            throw new IllegalArgumentException("Either documentNumber or semanticsIdentifier must be set.");
+            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set");
         }
     }
 
@@ -263,23 +278,28 @@ public class NotificationSignatureSessionRequestBuilder {
         );
     }
 
-    private void validateParameters() {
-        if (relyingPartyUUID == null || relyingPartyUUID.isEmpty()) {
-            throw new SmartIdClientException("Relying Party UUID must be set.");
+    private void validateRequestParameters() {
+        if (StringUtil.isEmpty(relyingPartyUUID)) {
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
-        if (relyingPartyName == null || relyingPartyName.isEmpty()) {
-            throw new SmartIdClientException("Relying Party Name must be set.");
+        if (StringUtil.isEmpty(relyingPartyName)) {
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
         }
-        validateAllowedInteractions();
-
-        if (nonce != null && (nonce.length() < 1 || nonce.length() > 30)) {
-            throw new SmartIdClientException("Nonce length must be between 1 and 30 characters.");
+        if (signatureAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
+        }
+        if (digestInput == null) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' must be set with either SignableData or SignableHash");
+        }
+        validateInteractions();
+        if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
+            throw new SmartIdRequestSetupException("Value for 'nonce' length must be between 1 and 30 characters");
         }
     }
 
-    private void validateAllowedInteractions() {
+    private void validateInteractions() {
         if (InteractionUtil.isEmpty(interactions)) {
-            throw new SmartIdClientException("Allowed interactions order must be set and contain at least one interaction.");
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
         }
         if (interactions.stream().map(NotificationInteraction::type).distinct().count() != interactions.size()) {
             throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
@@ -288,30 +308,23 @@ public class NotificationSignatureSessionRequestBuilder {
 
     private void validateResponseParameters(NotificationSignatureSessionResponse response) {
         if (StringUtil.isEmpty(response.getSessionID())) {
-            logger.error("Session ID is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'sessionID' is missing or empty");
         }
 
         VerificationCode verificationCode = response.getVc();
         if (verificationCode == null) {
-            logger.error("VC object is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC object is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc' is missing");
         }
-
         String vcType = verificationCode.getType();
         if (StringUtil.isEmpty(vcType)) {
-            logger.error("VC type is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC type is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.type' is missing or empty");
         }
-
-        if (!VerificationCode.ALPHA_NUMERIC_4.equals(vcType)) {
-            logger.error("Unsupported VC type: {}", vcType);
-            throw new UnprocessableSmartIdResponseException("Unsupported VC type: " + vcType);
+        if (!VerificationCodeType.NUMERIC4.getValue().equals(vcType)) {
+            logger.error("Notification-based signature response field 'vc.type' contains unsupported value '{}'", vcType);
+            throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.type' contains unsupported value");
         }
-
         if (StringUtil.isEmpty(verificationCode.getValue())) {
-            logger.error("VC value is missing from the response");
-            throw new UnprocessableSmartIdResponseException("VC value is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.value' is missing or empty");
         }
     }
 }

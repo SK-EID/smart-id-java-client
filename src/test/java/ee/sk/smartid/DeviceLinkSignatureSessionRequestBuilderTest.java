@@ -95,7 +95,9 @@ class DeviceLinkSignatureSessionRequestBuilderTest {
     void initSignatureSession_withDocumentNumber() {
         String documentNumber = "PNOEE-31111111111-MOCK-Q";
         when(connector.initDeviceLinkSignature(any(DeviceLinkSignatureSessionRequest.class), eq(documentNumber))).thenReturn(mockSignatureSessionResponse());
-        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b.withDocumentNumber(documentNumber));
+        var deviceLinkSessionRequestBuilder = toDeviceLinkSignatureSessionRequestBuilder(b -> b
+                .withSemanticsIdentifier(null)
+                .withDocumentNumber(documentNumber));
 
         DeviceLinkSessionResponse signature = deviceLinkSessionRequestBuilder.initSignatureSession();
 

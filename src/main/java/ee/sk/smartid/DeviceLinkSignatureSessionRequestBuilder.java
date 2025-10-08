@@ -274,6 +274,9 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     }
 
     private DeviceLinkSessionResponse initSignatureSession(DeviceLinkSignatureSessionRequest request) {
+        if (semanticsIdentifier != null && documentNumber != null) {
+            throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
+        }
         if (!StringUtil.isEmpty(documentNumber)) {
             return connector.initDeviceLinkSignature(request, documentNumber);
         } else if (semanticsIdentifier != null) {
