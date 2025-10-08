@@ -301,13 +301,6 @@ class NotificationSignatureSessionRequestBuilderTest {
         }
 
         @Test
-        void initSignatureSession_whenSignableDataHashAlgorithmIsNull() { // TODO - 08.10.25: maybe class specific test is better for this case
-            var ex = assertThrows(SmartIdRequestSetupException.class, () -> new SignableData("Test data".getBytes(), null));
-
-            assertEquals("Parameter 'hashAlgorithm' must be set", ex.getMessage());
-        }
-
-        @Test
         void initSignatureSession_signableDataAndSignableHashAreNotSet_throwException() {
             NotificationSignatureSessionRequestBuilder builder =
                     toNotificationSignatureSessionRequestBuilder(b -> b.withSignableData(null).withSignableHash(null));

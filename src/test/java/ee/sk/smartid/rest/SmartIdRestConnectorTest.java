@@ -1742,7 +1742,7 @@ class SmartIdRestConnectorTest {
         var protocolParameters = new RawDigestSignatureProtocolParameters("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
                 "rsassa-pss",
                 new SignatureAlgorithmParameters("SHA-512"));
-        var interaction = new Interaction(NotificationInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Verify the code", null);
+        var interaction = new Interaction(NotificationInteractionType.CONFIRMATION_MESSAGE.getCode(), null, "Sign it!");
         return new NotificationSignatureSessionRequest("00000000-0000-4000-8000-000000000000",
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,

@@ -396,7 +396,6 @@ class SmartIdClientTest {
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18089)
     class NotificationBasedSignatureSession {
@@ -404,14 +403,13 @@ class SmartIdClientTest {
         @Test
         void createNotificationSignature_withDocumentNumber() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q",
-                    "requests/sign/notification/notification-signature-session-request.json",
-                    "responses/notification-session-response.json");
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
 
             var signableHash = new SignableHash("a".repeat(64).getBytes());
             NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Verify the code")))
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Sign it!")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
@@ -421,16 +419,13 @@ class SmartIdClientTest {
         @Test
         void createNotificationSignature_withSemanticsIdentifier() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890",
-                    "requests/sign/notification/notification-signature-session-request.json",
-                    "responses/notification-session-response.json");
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
 
             var signableHash = new SignableHash("a".repeat(64).getBytes());
             NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Verify the code")))
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Sign it!")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
