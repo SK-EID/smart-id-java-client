@@ -990,7 +990,7 @@ the Smart-ID API will stay waiting for the RP to start the [linked notification-
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
-* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
+* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotent behaviour. 
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
 * `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
 * `initialCallbackUrl` : Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be used for same-device flow.
@@ -1337,7 +1337,12 @@ try {
 
 #### Using nonce to override idempotent behaviour
 
-Authentication is used as an example, nonce can also be used with certificate choice and signature sessions requests by using method `withNonce("randomValue")`.
+Idempotent behaviour means that if the session request with same values is made multiple times within a 15-second window,
+the same response with identical values will be returned. If there is a need to override this behaviour, a nonce can be used.
+Nonce value must be a random string with a minimum length of 1 and a maximum length of 30 characters.
+
+Notification-based signature request is used as an example. Nonce can also be used with other signing session request
+(device-link signature and certificate choice; notification-based certificate choice) by using method `withNonce("randomValue")`.
 
 ```java
 NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
