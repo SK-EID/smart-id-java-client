@@ -495,6 +495,23 @@ class NotificationSignatureSessionRequestBuilderTest {
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
             assertEquals("Notification-based signature response field 'vc.value' is missing or empty", ex.getMessage());
         }
+
+        @Test
+        void validateResponse_verificationCodeDoesNotMatchPattern_throwException() {
+            NotificationSignatureSessionRequestBuilder builder = toBaseNotificationSignatureSessionRequestBuilder();
+
+            NotificationSignatureSessionResponse response = new NotificationSignatureSessionResponse();
+            response.setSessionID("test-session-id");
+
+            VerificationCode vc = new VerificationCode();
+            vc.setType("numeric4");
+            vc.setValue("aaaaaa");
+            response.setVc(vc);
+            when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
+            assertEquals("Notification-based signature response field 'vc.value' does not match the required pattern", ex.getMessage());
+        }
     }
 
     private NotificationSignatureSessionRequestBuilder toNotificationSignatureSessionRequestBuilder(UnaryOperator<NotificationSignatureSessionRequestBuilder> modifier) {

@@ -28,6 +28,7 @@ package ee.sk.smartid;
 
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,8 @@ import ee.sk.smartid.util.StringUtil;
 public class NotificationSignatureSessionRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationSignatureSessionRequestBuilder.class);
+
+    private static final Pattern VERIFICATION_CODE_PATTERN = Pattern.compile("^[0-9]{4}$");
 
     private final SmartIdConnector connector;
 
@@ -325,6 +328,11 @@ public class NotificationSignatureSessionRequestBuilder {
         }
         if (StringUtil.isEmpty(verificationCode.getValue())) {
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.value' is missing or empty");
+        }
+        if (!VERIFICATION_CODE_PATTERN.matcher(verificationCode.getValue()).matches()) {
+            logger.error("Notification-based signature response field 'vc.value' does not match the required pattern. Expected pattern: {}; actual value: {}",
+                    VERIFICATION_CODE_PATTERN.pattern(), verificationCode.getValue());
+            throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.value' does not match the required pattern");
         }
     }
 }
