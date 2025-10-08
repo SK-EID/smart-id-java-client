@@ -318,7 +318,7 @@ public class NotificationSignatureSessionRequestBuilder {
         if (verificationCode == null) {
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc' is missing");
         }
-        String vcType = verificationCode.getType();
+        String vcType = verificationCode.type();
         if (StringUtil.isEmpty(vcType)) {
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.type' is missing or empty");
         }
@@ -326,12 +326,12 @@ public class NotificationSignatureSessionRequestBuilder {
             logger.error("Notification-based signature response field 'vc.type' contains unsupported value '{}'", vcType);
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.type' contains unsupported value");
         }
-        if (StringUtil.isEmpty(verificationCode.getValue())) {
+        if (StringUtil.isEmpty(verificationCode.value())) {
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.value' is missing or empty");
         }
-        if (!VERIFICATION_CODE_PATTERN.matcher(verificationCode.getValue()).matches()) {
+        if (!VERIFICATION_CODE_PATTERN.matcher(verificationCode.value()).matches()) {
             logger.error("Notification-based signature response field 'vc.value' does not match the required pattern. Expected pattern: {}; actual value: {}",
-                    VERIFICATION_CODE_PATTERN.pattern(), verificationCode.getValue());
+                    VERIFICATION_CODE_PATTERN.pattern(), verificationCode.value());
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc.value' does not match the required pattern");
         }
     }

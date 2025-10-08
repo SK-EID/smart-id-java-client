@@ -389,7 +389,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         @NullAndEmptySource
         void validateResponse_missingSessionID_throwException(String sessionID) {
             NotificationSignatureSessionRequestBuilder builder = toBaseNotificationSignatureSessionRequestBuilder();
-            NotificationSignatureSessionResponse response = new NotificationSignatureSessionResponse(sessionID, new VerificationCode());
+            NotificationSignatureSessionResponse response = new NotificationSignatureSessionResponse(sessionID, new VerificationCode(null, null));
             when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
 
             var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::initSignatureSession);
@@ -410,8 +410,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponse_missingVerificationCodeType_throwException(String vcType) {
-            var verificationCode = new VerificationCode();
-            verificationCode.setType(vcType);
+            var verificationCode = new VerificationCode(vcType, null);
             NotificationSignatureSessionResponse response = toNotificationSignatureSessionResponse(verificationCode);
             when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
             NotificationSignatureSessionRequestBuilder builder = toBaseNotificationSignatureSessionRequestBuilder();
@@ -422,8 +421,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         @Test
         void validateResponse_unsupportedVerificationCodeType_throwException() {
-            var verificationCode = new VerificationCode();
-            verificationCode.setType("unsupportedType");
+            var verificationCode = new VerificationCode("unsupportedType", null);
             NotificationSignatureSessionResponse response = toNotificationSignatureSessionResponse(verificationCode);
             NotificationSignatureSessionRequestBuilder builder = toBaseNotificationSignatureSessionRequestBuilder();
             when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
@@ -435,9 +433,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void validateResponse_missingVerificationCodeValue_throwException(String vcValue) {
-            var verificationCode = new VerificationCode();
-            verificationCode.setType("numeric4");
-            verificationCode.setValue(vcValue);
+            var verificationCode = new VerificationCode("numeric4", vcValue);
             NotificationSignatureSessionResponse response = toNotificationSignatureSessionResponse(verificationCode);
             when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
             NotificationSignatureSessionRequestBuilder builder = toBaseNotificationSignatureSessionRequestBuilder();
@@ -448,9 +444,7 @@ class NotificationSignatureSessionRequestBuilderTest {
 
         @Test
         void validateResponse_verificationCodeDoesNotMatchPattern_throwException() {
-            var verificationCode = new VerificationCode();
-            verificationCode.setType("numeric4");
-            verificationCode.setValue("aaaaaa");
+            var verificationCode = new VerificationCode("numeric4", "aaaaaa");
             NotificationSignatureSessionResponse response = toNotificationSignatureSessionResponse(verificationCode);
             when(connector.initNotificationSignature(any(NotificationSignatureSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(response);
             NotificationSignatureSessionRequestBuilder builder = toBaseNotificationSignatureSessionRequestBuilder();
@@ -474,10 +468,7 @@ class NotificationSignatureSessionRequestBuilderTest {
     }
 
     private NotificationSignatureSessionResponse mockNotificationSignatureSessionResponse() {
-        var verificationCode = new VerificationCode();
-        verificationCode.setType("numeric4");
-        verificationCode.setValue("4927");
-
+        var verificationCode = new VerificationCode("numeric4","4927");
         return toNotificationSignatureSessionResponse(verificationCode);
     }
 
@@ -488,8 +479,8 @@ class NotificationSignatureSessionRequestBuilderTest {
     private static void assertSessionResponse(NotificationSignatureSessionResponse signature) {
         assertNotNull(signature);
         assertEquals("00000000-0000-0000-0000-000000000000", signature.sessionID());
-        assertEquals("numeric4", signature.vc().getType());
-        assertEquals("4927", signature.vc().getValue());
+        assertEquals("numeric4", signature.vc().type());
+        assertEquals("4927", signature.vc().value());
     }
 
     private static class CertificateLevelArgumentProvider implements ArgumentsProvider {

@@ -1773,7 +1773,7 @@ class SmartIdRestConnectorTest {
         assertNotNull(response.sessionID());
         VerificationCode verificationCode = response.vc();
         assertNotNull(verificationCode);
-        assertNotNull(verificationCode.getType());
-        assertNotNull(verificationCode.getValue());
+        assertNotNull(verificationCode.type());
+        assertNotNull(verificationCode.value());
     }
 }

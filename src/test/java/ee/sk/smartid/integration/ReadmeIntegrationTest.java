@@ -747,7 +747,7 @@ public class ReadmeIntegrationTest {
             String sessionID = signatureSessionResponse.sessionID();
 
             // Display verification code to the user
-            String verificationCode = signatureSessionResponse.vc().getValue();
+            String verificationCode = signatureSessionResponse.vc().value();
             assertTrue(Pattern.matches(ALPHA_NUMERIC_PATTERN, verificationCode));
 
             // Get sessionID from current session response and poll for session status

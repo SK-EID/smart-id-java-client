@@ -1243,8 +1243,8 @@ The request parameters for the notification-based signature session are as follo
 #### Response Parameters
 * `sessionID`: Required. String used to request the operation result.
 * `verificationCode`: Required. Object describing the Verification Code to be displayed.
-    * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
-    * `value`: Required. Value of the VC code.
+    * `type`: Required. Type of the verification code. Currently, the only allowed type is `numeric4`.
+    * `value`: Required. Value of the verification code.
 
 #### Examples of initiating a notification-based signature session
 
@@ -1276,7 +1276,7 @@ NotificationSignatureSessionResponse signatureSessionResponse = client.createNot
 String sessionID = signatureSessionResponse.sessionID();
 
 // Display verification code to the user
-String verificationCode = signatureSessionResponse.getVc().getValue();
+String verificationCode = signatureSessionResponse.vc().getValue();
 ```
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
@@ -1304,7 +1304,7 @@ NotificationSignatureSessionResponse signatureResponse = client.createNotificati
 String sessionID = signatureResponse.sessionID();
 
 // Display verification code to the user
-String verificationCode = signatureResponse.getVc().getValue();
+String verificationCode = signatureResponse.vc().getValue();
 ```
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
