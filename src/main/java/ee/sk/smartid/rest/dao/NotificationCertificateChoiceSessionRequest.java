@@ -4,7 +4,7 @@ package ee.sk.smartid.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@ package ee.sk.smartid.rest.dao;
  * THE SOFTWARE.
  * #L%
  */
+
 
 import java.io.Serializable;
 import java.util.Set;
@@ -48,5 +49,4 @@ public record NotificationCertificateChoiceSessionRequest(
         @JsonInclude(JsonInclude.Include.NON_EMPTY) String nonce,
         @JsonInclude(JsonInclude.Include.NON_NULL) Set<String> capabilities,
         @JsonInclude(JsonInclude.Include.NON_NULL) RequestProperties requestProperties) implements Serializable {
-
 }
