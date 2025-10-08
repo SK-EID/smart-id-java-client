@@ -45,7 +45,7 @@ import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFound
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
@@ -53,6 +53,7 @@ import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
@@ -85,7 +86,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private static final String DEVICE_LINK_CERTIFICATE_CHOICE_DEVICE_LINK_PATH = "signature/certificate-choice/device-link/anonymous";
     private static final String LINKED_NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH = "signature/notification/linked";
 
-    private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH = "/certificatechoice/notification/etsi";
+    private static final String NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH = "signature/certificate-choice/notification/etsi";
 
     private static final String CERTIFICATE_BY_DOCUMENT_NUMBER_PATH = "/signature/certificate/";
 
@@ -186,7 +187,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initDeviceLinkCertificateChoice(CertificateChoiceSessionRequest request) {
+    public DeviceLinkSessionResponse initDeviceLinkCertificateChoice(DeviceLinkCertificateChoiceSessionRequest request) {
         logger.debug("Initiating device link based certificate choice request");
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
@@ -207,7 +208,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(CertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
+    public NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(NotificationCertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(NOTIFICATION_CERTIFICATE_CHOICE_WITH_SEMANTIC_IDENTIFIER_PATH)

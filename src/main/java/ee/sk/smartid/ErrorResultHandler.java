@@ -35,6 +35,7 @@ import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.exception.permanent.SmartIdServerException;
 import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
 import ee.sk.smartid.exception.useraccount.RequiredInteractionNotSupportedByAppException;
+import ee.sk.smartid.exception.useraccount.UserAccountUnusableException;
 import ee.sk.smartid.exception.useraction.SessionTimeoutException;
 import ee.sk.smartid.exception.useraction.UserRefusedCertChoiceException;
 import ee.sk.smartid.exception.useraction.UserRefusedConfirmationMessageException;
@@ -77,6 +78,7 @@ public class ErrorResultHandler {
             case "PROTOCOL_FAILURE" -> throw new ProtocolFailureException();
             case "EXPECTED_LINKED_SESSION" -> throw new ExpectedLinkedSessionException();
             case "SERVER_ERROR" -> throw new SmartIdServerException();
+            case "ACCOUNT_UNUSABLE" -> throw new UserAccountUnusableException();
             default -> throw new UnprocessableSmartIdResponseException("Unexpected session result: " + sessionResult.getEndResult());
         }
     }

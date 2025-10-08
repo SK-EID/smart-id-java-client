@@ -1178,9 +1178,6 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 
 ### Notification-based certificate choice session
 
-> [!CAUTION]
-> The notification-based certificate choice has not yet been updated to be used with Smart-ID API v3.1
-
 #### Request parameters
 
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
@@ -1206,10 +1203,12 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
         SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
         "40504040001"); // identifier (according to country and identity type reference)
 
+// Use requested certificate level to validate certificate choice session status OK response. 
+CertificateLevel requestedCertificateLevel = CertificateLevel.QSCD; // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
 NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = client
         .createNotificationCertificateChoice()
         .withSemanticsIdentifier(semanticsIdentifier)
-        .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+        .withCertificateLevel(requestedCertificateLevel) 
         .initCertificateChoice();
 
 String sessionId = certificateChoiceSessionResponse.sessionID();
@@ -1431,6 +1430,7 @@ Exception Categories
   These exceptions handle issues related to the user's Smart-ID account or session requirements.
   * `CertificateLevelMismatchException` Thrown when the returned certificate level does not meet the requested level.
   * `DocumentUnusableException` Indicates that the requested document cannot be used for the operation.
+  * `UserAccountUnusableException` Thrown when the user's Smart-ID account is not currently usable for the requested operation.
 * Validation and Parsing Exceptions
   These exceptions arise during validation or parsing operations within the library.
   * `CertificateParsingException` Thrown when the X.509 certificate cannot be parsed.
@@ -1499,7 +1499,7 @@ ResteasyClient resteasyClient = new ResteasyClientBuilder()
         .build();
 
 SmartIdClient client = new SmartIdClient();
-client.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+client.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
 client.setRelyingPartyName("DEMO");
 client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
 client.setConfiguredClient(resteasyClient);

@@ -31,7 +31,18 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-public record CertificateChoiceSessionRequest(
+/**
+ * Request to create a Device Link session for choosing a certificate.
+ *
+ * @param relyingPartyUUID   Required. Relying party UUID
+ * @param relyingPartyName   Required. Relying party name
+ * @param certificateLevel   Requested certificate level. If not specified, will default to QUALIFIED.
+ * @param nonce              Random value that can be used to override idempotent behaviour
+ * @param capabilities       Capabilities that should be used only when agreed with the Smart-ID provider.
+ * @param requestProperties  Additional request properties
+ * @param initialCallbackUrl Initial callback URL to be used instead of the default one configured for the RP.
+ */
+public record DeviceLinkCertificateChoiceSessionRequest(
         String relyingPartyUUID,
         String relyingPartyName,
         @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel,

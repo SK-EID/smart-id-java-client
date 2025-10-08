@@ -33,7 +33,7 @@ import java.util.Set;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.util.StringUtil;
@@ -150,8 +150,8 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
      */
     public DeviceLinkSessionResponse initCertificateChoice() {
         validateRequestParameters();
-        CertificateChoiceSessionRequest certificateChoiceSessionRequest = createCertificateRequest();
-        DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse = connector.initDeviceLinkCertificateChoice(certificateChoiceSessionRequest);
+        DeviceLinkCertificateChoiceSessionRequest deviceLinkCertificateChoiceSessionRequest = createCertificateRequest();
+        DeviceLinkSessionResponse deviceLinkCertificateChoiceSessionResponse = connector.initDeviceLinkCertificateChoice(deviceLinkCertificateChoiceSessionRequest);
         validateResponseParameters(deviceLinkCertificateChoiceSessionResponse);
         return deviceLinkCertificateChoiceSessionResponse;
     }
@@ -169,8 +169,8 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
         validateInitialCallbackUrl();
     }
 
-    private CertificateChoiceSessionRequest createCertificateRequest() {
-        return new CertificateChoiceSessionRequest(
+    private DeviceLinkCertificateChoiceSessionRequest createCertificateRequest() {
+        return new DeviceLinkCertificateChoiceSessionRequest(
                 relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,

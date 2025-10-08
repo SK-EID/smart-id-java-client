@@ -28,23 +28,23 @@ package ee.sk.smartid;
 
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.util.StringUtil;
 
+/**
+ * Builder for notification-based certificate choice session requests
+ */
 public class NotificationCertificateChoiceSessionRequestBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(NotificationCertificateChoiceSessionRequestBuilder.class);
-
     private final SmartIdConnector connector;
+
     private String relyingPartyUUID;
     private String relyingPartyName;
     private CertificateLevel certificateLevel;
@@ -142,72 +142,53 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     }
 
     /**
-     * Sends the notification request and get the init session response
-     * <p>
-     * There are 2 supported ways to start authentication session:
-     * <ul>
-     *     <li>with semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
-     * </ul>
+     * Initializes a notification-based certificate choice session
      *
      * @return init session response
+     * @throws SmartIdRequestSetupException          whe the provided request parameters are invalid
+     * @throws UnprocessableSmartIdResponseException when the response is missing required parameters
+     * @throws SmartIdClientException                when the request could not be sent
      */
     public NotificationCertificateChoiceSessionResponse initCertificateChoice() {
         validateRequestParameters();
-        CertificateChoiceSessionRequest request = createCertificateChoiceRequest();
+        NotificationCertificateChoiceSessionRequest request = createCertificateChoiceRequest();
         NotificationCertificateChoiceSessionResponse notificationCertificateChoiceSessionResponse = initCertificateChoiceSession(request);
         validateResponseParameters(notificationCertificateChoiceSessionResponse);
         return notificationCertificateChoiceSessionResponse;
     }
 
-    private NotificationCertificateChoiceSessionResponse initCertificateChoiceSession(CertificateChoiceSessionRequest request) {
+    private NotificationCertificateChoiceSessionResponse initCertificateChoiceSession(NotificationCertificateChoiceSessionRequest request) {
         if (semanticsIdentifier == null) {
-            throw new SmartIdClientException("SemanticsIdentifier must be set.");
+            throw new SmartIdRequestSetupException("Value for 'semanticIdentifier' must be set");
         }
         return connector.initNotificationCertificateChoice(request, semanticsIdentifier);
     }
 
     private void validateRequestParameters() {
         if (StringUtil.isEmpty(relyingPartyUUID)) {
-            logger.error("Parameter relyingPartyUUID must be set");
-            throw new SmartIdClientException("Parameter relyingPartyUUID must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
         }
         if (StringUtil.isEmpty(relyingPartyName)) {
-            logger.error("Parameter relyingPartyName must be set");
-            throw new SmartIdClientException("Parameter relyingPartyName must be set");
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
         }
-        validateNonce();
+        if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
+            throw new SmartIdRequestSetupException("Value for 'nonce' length must be between 1 and 30 characters");
+        }
     }
 
-    private CertificateChoiceSessionRequest createCertificateChoiceRequest() {
-        return new CertificateChoiceSessionRequest(
+    private NotificationCertificateChoiceSessionRequest createCertificateChoiceRequest() {
+        return new NotificationCertificateChoiceSessionRequest(
                 relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
                 nonce,
                 capabilities,
-                shareMdClientIpAddress != null ? new RequestProperties(shareMdClientIpAddress) : null,
-                null
-        );
-    }
-
-    private void validateNonce() {
-        if (nonce == null) {
-            return;
-        }
-        if (nonce.isEmpty()) {
-            logger.error("Parameter nonce value has to be at least 1 character long");
-            throw new SmartIdClientException("Parameter nonce value has to be at least 1 character long");
-        }
-        if (nonce.length() > 30) {
-            logger.error("Nonce cannot be longer that 30 chars");
-            throw new SmartIdClientException("Nonce cannot be longer that 30 chars");
-        }
+                shareMdClientIpAddress != null ? new RequestProperties(shareMdClientIpAddress) : null);
     }
 
     private void validateResponseParameters(NotificationCertificateChoiceSessionResponse notificationCertificateChoiceSessionResponse) {
         if (StringUtil.isEmpty(notificationCertificateChoiceSessionResponse.getSessionID())) {
-            logger.error("Session ID is missing from the response");
-            throw new UnprocessableSmartIdResponseException("Session ID is missing from the response");
+            throw new UnprocessableSmartIdResponseException("Notification-based certificate choice response field 'sessionID' is missing or empty");
         }
     }
 }

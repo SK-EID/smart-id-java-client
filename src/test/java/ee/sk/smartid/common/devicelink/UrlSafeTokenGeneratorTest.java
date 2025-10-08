@@ -1,4 +1,4 @@
-package ee.sk.smartid.util;
+package ee.sk.smartid.common.devicelink;
 
 /*-
  * #%L
@@ -36,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import ee.sk.smartid.common.devicelink.UrlSafeTokenGenerator;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 class UrlSafeTokenGeneratorTest {

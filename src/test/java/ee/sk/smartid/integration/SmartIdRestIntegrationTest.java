@@ -45,16 +45,18 @@ import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SignatureAlgorithm;
 import ee.sk.smartid.SignatureProtocol;
 import ee.sk.smartid.SmartIdDemoIntegrationTest;
+import ee.sk.smartid.VerificationCodeType;
 import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteractionType;
 import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.SmartIdRestConnector;
 import ee.sk.smartid.rest.dao.AcspV2SignatureProtocolParameters;
-import ee.sk.smartid.rest.dao.CertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.Interaction;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
@@ -64,12 +66,11 @@ import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.util.InteractionUtil;
 
-@Disabled("Relying party demo account not yet available for v3")
 @SmartIdDemoIntegrationTest
 class SmartIdRestIntegrationTest {
 
     // Replace these to test with V3
-    private static final String RELYING_PARTY_UUID = "00000000-0000-0000-0000-000000000000";
+    private static final String RELYING_PARTY_UUID = "00000000-0000-4000-8000-000000000000";
     private static final String RELYING_PARTY_NAME = "DEMO";
 
     private static final String UUID_PATTERN = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
@@ -150,7 +151,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initDeviceLinkCertificateChoice() {
-                var request = new CertificateChoiceSessionRequest(
+                var request = new DeviceLinkCertificateChoiceSessionRequest(
                         RELYING_PARTY_UUID,
                         RELYING_PARTY_NAME,
                         null,
@@ -245,7 +246,7 @@ class SmartIdRestIntegrationTest {
             void initNotificationAuthentication_withDocumentNumber() {
                 var request = toAuthenticationRequest();
 
-                NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, "PNOEE-40504040001-MOCK-Q");
+                NotificationAuthenticationSessionResponse sessionResponse = smartIdConnector.initNotificationAuthentication(request, "PNOEE-40504040001-DEMO-Q");
 
                 assertTrue(Pattern.matches(UUID_PATTERN, sessionResponse.sessionID()));
             }
@@ -264,7 +265,7 @@ class SmartIdRestIntegrationTest {
                         InteractionUtil.encodeToBase64(List.of(new Interaction(DeviceLinkInteractionType.DISPLAY_TEXT_AND_PIN.getCode(), "Log in?", null))),
                         new RequestProperties(true),
                         null,
-                        "numeric4"
+                        VerificationCodeType.NUMERIC4.getValue()
                 );
             }
         }
@@ -274,7 +275,7 @@ class SmartIdRestIntegrationTest {
 
             @Test
             void initNotificationCertificateChoice_withSemanticIdentifier() {
-                var request = new CertificateChoiceSessionRequest(RELYING_PARTY_NAME, RELYING_PARTY_UUID, null, null, null, null, null);
+                var request = new NotificationCertificateChoiceSessionRequest(RELYING_PARTY_UUID, RELYING_PARTY_NAME, null, null, null, null);
 
                 NotificationCertificateChoiceSessionResponse sessionResponse = smartIdConnector.initNotificationCertificateChoice(request, new SemanticsIdentifier("PNOEE-40504040001"));
 
@@ -282,6 +283,7 @@ class SmartIdRestIntegrationTest {
             }
         }
 
+        @Disabled
         @Nested
         class Signature {
 

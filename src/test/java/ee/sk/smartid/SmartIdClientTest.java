@@ -71,7 +71,7 @@ class SmartIdClientTest {
     @BeforeEach
     void setUp() {
         smartIdClient = new SmartIdClient();
-        smartIdClient.setRelyingPartyUUID("00000000-0000-0000-0000-000000000000");
+        smartIdClient.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
         smartIdClient.setRelyingPartyName("DEMO");
         smartIdClient.setHostUrl("http://localhost:18089");
         smartIdClient.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
@@ -142,15 +142,29 @@ class SmartIdClientTest {
     class NotificationCertificateChoiceSession {
 
         @Test
-        void createNotificationCertificateChoice_withSemanticsIdentifier() {
-            SmartIdRestServiceStubs.stubRequestWithResponse("/certificatechoice/notification/etsi/PNOEE-1234567890",
-                    "requests/sign/notification/certificate-choice-session-request.json",
-                    "responses/notification-certificate-choice-session-response.json");
+        void createNotificationCertificateChoice_withSemanticsIdentifierAndOnlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/notification/etsi/PNOEE-1234567890",
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-only-required-fields.json",
+                    "responses/sign/notification/cert-choice/notification-certificate-choice-session-response.json");
+
+            NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .initCertificateChoice();
+
+            assertNotNull(response.getSessionID());
+        }
+
+        @Test
+        void createNotificationCertificateChoice_withSemanticsIdentifierAndAllFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/notification/etsi/PNOEE-1234567890",
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-all-fields.json",
+                    "responses/sign/notification/cert-choice/notification-certificate-choice-session-response.json");
 
             NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
                     .withNonce(Base64.toBase64String("randomNonce".getBytes()))
-                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .withShareMdClientIpAddress(true)
                     .initCertificateChoice();
 
             assertNotNull(response.getSessionID());
