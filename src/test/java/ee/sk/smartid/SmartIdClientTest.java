@@ -151,7 +151,7 @@ class SmartIdClientTest {
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
                     .initCertificateChoice();
 
-            assertNotNull(response.getSessionID());
+            assertNotNull(response.sessionID());
         }
 
         @Test
@@ -167,7 +167,7 @@ class SmartIdClientTest {
                     .withShareMdClientIpAddress(true)
                     .initCertificateChoice();
 
-            assertNotNull(response.getSessionID());
+            assertNotNull(response.sessionID());
         }
     }
 

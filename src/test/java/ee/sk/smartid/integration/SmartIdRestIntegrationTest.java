@@ -282,7 +282,7 @@ class SmartIdRestIntegrationTest {
 
                 NotificationCertificateChoiceSessionResponse sessionResponse = smartIdConnector.initNotificationCertificateChoice(request, SEMANTICS_IDENTIFIER);
 
-                assertTrue(UUID_PATTERN.matcher(sessionResponse.getSessionID()).matches());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
             }
         }
 

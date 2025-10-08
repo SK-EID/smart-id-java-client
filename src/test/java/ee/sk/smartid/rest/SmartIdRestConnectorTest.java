@@ -1142,7 +1142,7 @@ class SmartIdRestConnectorTest {
             NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, semanticsIdentifier);
 
             assertNotNull(response);
-            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
+            assertEquals("00000000-0000-0000-0000-000000000000", response.sessionID());
         }
 
         @Test
@@ -1162,7 +1162,7 @@ class SmartIdRestConnectorTest {
             NotificationCertificateChoiceSessionResponse response = connector.initNotificationCertificateChoice(request, semanticsIdentifier);
 
             assertNotNull(response);
-            assertEquals("00000000-0000-0000-0000-000000000000", response.getSessionID());
+            assertEquals("00000000-0000-0000-0000-000000000000", response.sessionID());
         }
 
         @Test

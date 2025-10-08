@@ -454,7 +454,7 @@ public class ReadmeIntegrationTest {
                         .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
                         .initCertificateChoice();
 
-                String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
+                String certificateChoiceSessionId = certificateChoiceSessionResponse.sessionID();
                 // SessionID is used to query sessions status later
 
                 // Get the session status poller
@@ -670,7 +670,7 @@ public class ReadmeIntegrationTest {
                     .withCertificateLevel(requestedCertificateLevel)
                     .initCertificateChoice();
 
-            String sessionId = certificateChoiceSessionResponse.getSessionID();
+            String sessionId = certificateChoiceSessionResponse.sessionID();
             // SessionID is used to query sessions status later
 
             // Get the session status poller
@@ -706,7 +706,7 @@ public class ReadmeIntegrationTest {
                     .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
                     .initCertificateChoice();
 
-            String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
+            String certificateChoiceSessionId = certificateChoiceSessionResponse.sessionID();
             // SessionID is used to query sessions status later
 
             // Get the session status poller

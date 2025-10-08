@@ -187,7 +187,7 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
     }
 
     private void validateResponseParameters(NotificationCertificateChoiceSessionResponse notificationCertificateChoiceSessionResponse) {
-        if (StringUtil.isEmpty(notificationCertificateChoiceSessionResponse.getSessionID())) {
+        if (StringUtil.isEmpty(notificationCertificateChoiceSessionResponse.sessionID())) {
             throw new UnprocessableSmartIdResponseException("Notification-based certificate choice response field 'sessionID' is missing or empty");
         }
     }
