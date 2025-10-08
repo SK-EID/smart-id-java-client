@@ -310,11 +310,11 @@ public class NotificationSignatureSessionRequestBuilder {
     }
 
     private void validateResponseParameters(NotificationSignatureSessionResponse response) {
-        if (StringUtil.isEmpty(response.getSessionID())) {
+        if (StringUtil.isEmpty(response.sessionID())) {
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'sessionID' is missing or empty");
         }
 
-        VerificationCode verificationCode = response.getVc();
+        VerificationCode verificationCode = response.vc();
         if (verificationCode == null) {
             throw new UnprocessableSmartIdResponseException("Notification-based signature response field 'vc' is missing");
         }

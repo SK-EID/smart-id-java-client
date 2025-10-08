@@ -58,6 +58,7 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
+import ee.sk.smartid.rest.dao.VerificationCode;
 
 class SmartIdClientTest {
 
@@ -414,10 +415,7 @@ class SmartIdClientTest {
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
         }
 
         @Test
@@ -436,10 +434,15 @@ class SmartIdClientTest {
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
+        }
+
+        private static void assertSessionResponse(NotificationSignatureSessionResponse response) {
+            assertNotNull(response.sessionID());
+            VerificationCode verificationCode = response.vc();
+            assertNotNull(verificationCode);
+            assertNotNull(verificationCode.getType());
+            assertNotNull(verificationCode.getValue());
         }
     }
 

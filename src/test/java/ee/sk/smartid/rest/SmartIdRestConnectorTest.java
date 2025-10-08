@@ -93,6 +93,7 @@ import ee.sk.smartid.rest.dao.SessionSignature;
 import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.rest.dao.VerificationCode;
 import ee.sk.smartid.util.InteractionUtil;
 
 class SmartIdRestConnectorTest {
@@ -1476,11 +1477,7 @@ class SmartIdRestConnectorTest {
 
             NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
 
-            assertNotNull(response);
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
         }
 
         @Test
@@ -1492,11 +1489,7 @@ class SmartIdRestConnectorTest {
 
             NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
 
-            assertNotNull(response);
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
         }
 
         @Test
@@ -1590,11 +1583,7 @@ class SmartIdRestConnectorTest {
 
             NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, DOCUMENT_NUMBER);
 
-            assertNotNull(response);
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
         }
 
         @Test
@@ -1606,11 +1595,7 @@ class SmartIdRestConnectorTest {
 
             NotificationSignatureSessionResponse response = connector.initNotificationSignature(request, DOCUMENT_NUMBER);
 
-            assertNotNull(response);
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
         }
 
         @Test
@@ -1781,5 +1766,14 @@ class SmartIdRestConnectorTest {
         assertNotNull(response.receivedAt());
         assertFalse(response.receivedAt().isBefore(start.minusSeconds(1)));
         assertFalse(response.receivedAt().isAfter(end.plusSeconds(1)));
+    }
+
+    private static void assertSessionResponse(NotificationSignatureSessionResponse response) {
+        assertNotNull(response);
+        assertNotNull(response.sessionID());
+        VerificationCode verificationCode = response.vc();
+        assertNotNull(verificationCode);
+        assertNotNull(verificationCode.getType());
+        assertNotNull(verificationCode.getValue());
     }
 }

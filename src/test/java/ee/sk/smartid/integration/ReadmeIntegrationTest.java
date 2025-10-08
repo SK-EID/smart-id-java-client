@@ -744,10 +744,10 @@ public class ReadmeIntegrationTest {
                     .initSignatureSession();
 
             // Process the querying sessions status response
-            String sessionID = signatureSessionResponse.getSessionID();
+            String sessionID = signatureSessionResponse.sessionID();
 
             // Display verification code to the user
-            String verificationCode = signatureSessionResponse.getVc().getValue();
+            String verificationCode = signatureSessionResponse.vc().getValue();
             assertTrue(Pattern.matches(ALPHA_NUMERIC_PATTERN, verificationCode));
 
             // Get sessionID from current session response and poll for session status

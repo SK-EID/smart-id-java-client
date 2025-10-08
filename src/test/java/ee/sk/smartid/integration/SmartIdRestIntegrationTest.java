@@ -295,9 +295,9 @@ class SmartIdRestIntegrationTest {
 
                 NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, SEMANTICS_IDENTIFIER);
 
-                assertTrue(UUID_PATTERN.matcher(sessionResponse.getSessionID()).matches());
-                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.getVc().getValue()).matches());
-                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.getVc().getType());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.vc().getValue()).matches());
+                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.vc().getType());
             }
 
             @Test
@@ -306,9 +306,9 @@ class SmartIdRestIntegrationTest {
 
                 NotificationSignatureSessionResponse sessionResponse = smartIdConnector.initNotificationSignature(request, DOCUMENT_NUMBER);
 
-                assertTrue(UUID_PATTERN.matcher(sessionResponse.getSessionID()).matches());
-                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.getVc().getValue()).matches());
-                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.getVc().getType());
+                assertTrue(UUID_PATTERN.matcher(sessionResponse.sessionID()).matches());
+                assertTrue(VERIFICATION_CODE_PATTERN.matcher(sessionResponse.vc().getValue()).matches());
+                assertEquals(VerificationCodeType.NUMERIC4.getValue(), sessionResponse.vc().getType());
             }
 
             private static NotificationSignatureSessionRequest toSignatureSessionRequest() {
