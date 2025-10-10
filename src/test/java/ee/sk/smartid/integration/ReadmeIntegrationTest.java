@@ -72,6 +72,9 @@ import ee.sk.smartid.RpChallenge;
 import ee.sk.smartid.RpChallengeGenerator;
 import ee.sk.smartid.SessionType;
 import ee.sk.smartid.SignableData;
+import ee.sk.smartid.SignatureCertificatePurposeValidator;
+import ee.sk.smartid.SignatureCertificatePurposeValidatorFactory;
+import ee.sk.smartid.SignatureCertificatePurposeValidatorFactoryImpl;
 import ee.sk.smartid.SignatureResponse;
 import ee.sk.smartid.SignatureResponseValidator;
 import ee.sk.smartid.SignatureValueValidator;
@@ -86,6 +89,7 @@ import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.rest.SessionStatusPoller;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
@@ -93,13 +97,12 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
 import ee.sk.smartid.util.CallbackUrlUtil;
 
 @SmartIdDemoIntegrationTest
 public class ReadmeIntegrationTest {
 
-    private static final String ALPHA_NUMERIC_PATTERN = "^[A-z0-9]{4}$";
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[0-9]{4}$");
 
     private SmartIdClient smartIdClient;
 
@@ -383,7 +386,7 @@ public class ReadmeIntegrationTest {
                         .withInteractions(signatureInteractions);
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
                 // Get SignatureSessionRequest after the request is made and store for validations
-                SignatureSessionRequest signatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
+                DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
 
                 // Process the signature response
                 String signatureSessionId = signatureSessionResponse.sessionID();
@@ -408,7 +411,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(signatureSessionRequest.interactions())
+                        .withInteractions(deviceLinkSignatureSessionRequest.interactions())
                         .buildDeviceLink(sessionSecret);
 
                 // Return URI to be used with QR-code generation library on the frontend side
@@ -454,7 +457,7 @@ public class ReadmeIntegrationTest {
                         .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
                         .initCertificateChoice();
 
-                String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
+                String certificateChoiceSessionId = certificateChoiceSessionResponse.sessionID();
                 // SessionID is used to query sessions status later
 
                 // Get the session status poller
@@ -491,7 +494,7 @@ public class ReadmeIntegrationTest {
                 // Init signature session
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
                 // Get SignatureSessionRequest after the request is made and store for validations
-                SignatureSessionRequest signatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
+                DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
 
                 // Process the signature response
                 String signatureSessionId = signatureSessionResponse.sessionID();
@@ -515,7 +518,7 @@ public class ReadmeIntegrationTest {
                         .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
-                        .withInteractions(signatureSessionRequest.interactions()) // interactions string must be the same as in the signature session request
+                        .withInteractions(deviceLinkSignatureSessionRequest.interactions()) // interactions string must be the same as in the signature session request
                         .buildDeviceLink(sessionSecret);
                 // Display QR-code to the user
 
@@ -670,7 +673,7 @@ public class ReadmeIntegrationTest {
                     .withCertificateLevel(requestedCertificateLevel)
                     .initCertificateChoice();
 
-            String sessionId = certificateChoiceSessionResponse.getSessionID();
+            String sessionId = certificateChoiceSessionResponse.sessionID();
             // SessionID is used to query sessions status later
 
             // Get the session status poller
@@ -690,7 +693,6 @@ public class ReadmeIntegrationTest {
             assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
         }
 
-        @Disabled("Not yet updated to work with v3.1")
         @Test
         void signature_withSemanticsIdentifier() {
             var semanticIdentifier = new SemanticsIdentifier(
@@ -700,14 +702,15 @@ public class ReadmeIntegrationTest {
                     SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
                     "40504040001"); // identifier (according to country and identity type reference)
 
+            CertificateLevel certificateLevel = CertificateLevel.QSCD;
             NotificationCertificateChoiceSessionResponse certificateChoiceSessionResponse = smartIdClient
                     .createNotificationCertificateChoice()
                     .withSemanticsIdentifier(semanticIdentifier)
-                    .withCertificateLevel(CertificateLevel.QSCD) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
+                    .withCertificateLevel(certificateLevel) // Certificate level can either be "QUALIFIED", "ADVANCED" or "QSCD"
                     .initCertificateChoice();
 
-            String certificateChoiceSessionId = certificateChoiceSessionResponse.getSessionID();
             // SessionID is used to query sessions status later
+            String certificateChoiceSessionId = certificateChoiceSessionResponse.sessionID();
 
             // Get the session status poller
             SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -718,7 +721,7 @@ public class ReadmeIntegrationTest {
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
             CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
             CertificateChoiceResponseValidator certificateChoiceResponseValidator = new CertificateChoiceResponseValidator(certificateValidator);
-            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(certificateSessionStatus);
+            CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(certificateSessionStatus, certificateLevel);
             // For example use digidoc4j use SignatureBuilder to create DataToSign using certificateChoiceResponse.getCertificate();
 
             // Create the signable data
@@ -732,23 +735,20 @@ public class ReadmeIntegrationTest {
             );
 
             NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
-                    .withRelyingPartyUUID(smartIdClient.getRelyingPartyUUID())
-                    .withRelyingPartyName(smartIdClient.getRelyingPartyName())
-                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withCertificateLevel(certificateLevel)
                     .withSignableData(signableData)
                     .withSemanticsIdentifier(semanticsIdentifier)
-                    .withAllowedInteractionsOrder(List.of(
+                    .withInteractions(List.of(
                             NotificationInteraction.confirmationMessage("Please sign the document"))
                     )
-                    .withNonce("random")
                     .initSignatureSession();
 
-            // Process the querying sessions status response
-            String sessionID = signatureSessionResponse.getSessionID();
+            // Get the session ID and continue to querying session status
+            String sessionID = signatureSessionResponse.sessionID();
 
             // Display verification code to the user
-            String verificationCode = signatureSessionResponse.getVc().getValue();
-            assertTrue(Pattern.matches(ALPHA_NUMERIC_PATTERN, verificationCode));
+            String verificationCode = signatureSessionResponse.vc().value();
+            assertTrue(NUMERIC_PATTERN.matcher(verificationCode).matches());
 
             // Get sessionID from current session response and poll for session status
             SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(sessionID);
@@ -756,13 +756,76 @@ public class ReadmeIntegrationTest {
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
-            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
 
             assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOEE-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
+            assertEquals("PNOEE-40504040001-DEMO-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
-            assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
-            assertEquals("verificationCodeChoice", signatureResponse.getInteractionFlowUsed());
+            assertEquals(CertificateLevel.QSCD, signatureResponse.getRequestedCertificateLevel());
+            assertEquals("confirmationMessage", signatureResponse.getInteractionFlowUsed());
+            assertNotNull(signatureResponse.getCertificate());
+        }
+
+        @Test
+        void signature_withDocumentNumber() {
+            String documentNumber = "PNOEE-40504040001-DEMO-Q";
+
+            CertificateLevel certificateLevel = CertificateLevel.QSCD;
+            // Query the certificate by document number to be used for creating the DataToSign
+            CertificateByDocumentNumberResult certificateByDocumentNumber = smartIdClient
+                    .createCertificateByDocumentNumber()
+                    .withDocumentNumber(documentNumber)
+                    .withCertificateLevel(certificateLevel)
+                    .getCertificateByDocumentNumber();
+
+            // Set up the certificate validator
+            TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
+            CertificateValidator certificateValidator = new CertificateValidatorImpl(trustedCACertStore);
+            // Validate the certificate is trusted and active
+            certificateValidator.validate(certificateByDocumentNumber.certificate());
+
+            // Validate the certificate is suitable for signing
+            SignatureCertificatePurposeValidatorFactory signatureCertificatePurposeValidatorFactory = new SignatureCertificatePurposeValidatorFactoryImpl();
+            SignatureCertificatePurposeValidator certificatePurposeValidator = signatureCertificatePurposeValidatorFactory.create(certificateByDocumentNumber.certificateLevel());
+            certificatePurposeValidator.validate(certificateByDocumentNumber.certificate());
+
+            // For example use digidoc4j with SignatureBuilder to create DataToSign using `certificateByDocumentNumber.certificate()`
+
+            // Create the signable data
+            var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+
+            NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
+                    .withCertificateLevel(certificateLevel)
+                    .withSignableData(signableData)
+                    .withDocumentNumber(documentNumber)
+                    .withInteractions(List.of(
+                            NotificationInteraction.confirmationMessage("Please sign the document"))
+                    )
+                    .initSignatureSession();
+
+            // Get the session ID and continue to querying session status
+            String signatureSessionId = signatureSessionResponse.sessionID();
+
+            // Display verification code to the user
+            String verificationCode = signatureSessionResponse.vc().value();
+            assertTrue(NUMERIC_PATTERN.matcher(verificationCode).matches());
+
+            // Get the session status poller
+            SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
+
+            // Get sessionID from current session response and poll for session status
+            SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
+            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+            assertEquals("COMPLETE", signatureSessionStatus.getState());
+
+            SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
+            SignatureResponse signatureResponse = validator.validate(signatureSessionStatus, certificateLevel);
+
+            assertEquals("OK", signatureResponse.getEndResult());
+            assertEquals(documentNumber, signatureResponse.getDocumentNumber());
+            assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
+            assertEquals(CertificateLevel.QSCD, signatureResponse.getRequestedCertificateLevel());
+            assertEquals("confirmationMessage", signatureResponse.getInteractionFlowUsed());
             assertNotNull(signatureResponse.getCertificate());
         }
     }
@@ -786,6 +849,11 @@ public class ReadmeIntegrationTest {
 
             // Validate the certificate
             certificateValidator.validate(certResponse.certificate());
+
+            // Validate the certificate is suitable for signing
+            SignatureCertificatePurposeValidatorFactory signatureCertificatePurposeValidatorFactory = new SignatureCertificatePurposeValidatorFactoryImpl();
+            SignatureCertificatePurposeValidator certificatePurposeValidator = signatureCertificatePurposeValidatorFactory.create(certResponse.certificateLevel());
+            certificatePurposeValidator.validate(certResponse.certificate());
         }
     }
 

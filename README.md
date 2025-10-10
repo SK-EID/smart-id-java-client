@@ -990,7 +990,7 @@ the Smart-ID API will stay waiting for the RP to start the [linked notification-
 * `relyingPartyUUID`: Required. UUID of the Relying Party.
 * `relyingPartyName`: Required. Friendly name of the Relying Party, limited to 32 bytes in UTF-8 encoding.
 * `certificateLevel`: Level of certificate requested. ADVANCED/QUALIFIED/QSCD, defaults to QUALIFIED.
-* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotency.
+* `nonce`: Random string, up to 30 characters. If present, must have at least 1 character. Used for overriding idempotent behaviour. 
 * `capabilities`: Used only when agreed with Smart-ID provider. When omitted, request capabilities are derived from certificateLevel.
 * `requestProperties`: A request properties object as a set of name/value pairs. For example, requesting the IP address of the user's device.
 * `initialCallbackUrl` : Optional. Must match regex `^https:\/\/([^\\|]+)$`. If it contains the vertical bar `|`, it must be percent-encoded. Should be used for same-device flow.
@@ -1218,9 +1218,6 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 
 ### Notification-based signature session
 
-> [!CAUTION]
-> The notification-based signature has not yet been updated to be used with Smart-ID API v3.1
-
 #### Request Parameters
 The request parameters for the notification-based signature session are as follows:
 
@@ -1230,21 +1227,23 @@ The request parameters for the notification-based signature session are as follo
 * `signatureProtocol`: Required. Signature protocol to use. Currently, the only allowed value is RAW_DIGEST_SIGNATURE.
 * `signatureProtocolParameters`: Required. Parameters for the RAW_DIGEST_SIGNATURE signature protocol.
     * `digest`: Required. Base64 encoded digest to be signed.
-    * `signatureAlgorithm`: Required. Signature algorithm name. Supported values are `sha256WithRSAEncryption`, `sha384WithRSAEncryption`, `sha512WithRSAEncryption`.
-* `allowedInteractionsOrder`: Required. An array of interaction objects defining the allowed interactions in order of preference.
+    * `signatureAlgorithm`: Required. Signature algorithm name. Only `rsassa-pss` is currently supported.
+    * `signatureAlgorithmParameters`: Required. Parameters for the signature algorithm.
+        * `hashAlgorithm`: Required. Hash algorithm used for digest. Supported values are `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`.
+* `interactions`: Required. Base64-encoded string of interactions to be used for a session. The interactions are defined in order of preference.
     * Each interaction object includes:
-        * `type`: Required. Type of interaction. Allowed types are `verificationCodeChoice`, `confirmationMessageAndVerificationCodeChoice`.
+        * `type`: Required. Type of interaction. Allowed types are `displayTextAndPIN`, `confirmationMessage`, `confirmationMessageAndVerificationCodeChoice`.
         * `displayText60` or `displayText200`: Required based on type. Text to display to the user. `displayText60` is limited to 60 characters, and `displayText200` is limited to 200 characters.
-* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character.
+* `nonce`: Optional. Random string, up to 30 characters. If present, must have at least 1 character. To be used for overriding idempotency.
 * `requestProperties`: requestProperties:
     * `shareMdClientIpAddress`: Optional. Boolean indicating whether to request the IP address of the user's device.
 * `capabilities`: Optional. Array of strings specifying capabilities. Used only when agreed with the Smart-ID provider.
 
 #### Response Parameters
 * `sessionID`: Required. String used to request the operation result.
-* `verificationCode`: Required. Object describing the Verification Code to be displayed.
-    * `type`: Required. Type of the VC code. Currently, the only allowed type is `alphaNumeric4`.
-    * `value`: Required. Value of the VC code.
+* `vc`: Required. Object describing the verification code details.
+    * `type`: Required. Type of the verification code. Currently, the only allowed type is `numeric4`.
+    * `value`: Required. Value of the verification code to be displayed to the user.
 
 #### Examples of initiating a notification-based signature session
 
@@ -1262,21 +1261,20 @@ SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(
 );
 
 // Build the notification signature request
-NotificationSignatureSessionResponse signatureSessionResponse = client.createNotificationSignature()
-    .withRelyingPartyUUID(client.getRelyingPartyUUID())
-    .withRelyingPartyName(client.getRelyingPartyName())
-    .withCertificateLevel(CertificateLevel.QUALIFIED)
-    .withSignableData(signableData)
-    .withSemanticsIdentifier(semanticsIdentifier)
-    .withAllowedInteractionsOrder(List.of(
-        NotificationInteraction.confirmationMessage("Please sign the <document-name>"))) // Display text should be concise and specific.
-    .initSignatureSession();
+NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()
+        .withCertificateLevel(CertificateLevel.QSCD)
+        .withSignableData(signableData)
+        .withSemanticsIdentifier(semanticsIdentifier)
+        .withInteractions(List.of(
+                NotificationInteraction.confirmationMessage("Please sign the <document-name>")) // Display text should be concise and specific.
+        ) 
+        .initSignatureSession();
 
-// Process the querying sessions status response
+// Get the session ID and continue to querying session status
 String sessionID = signatureSessionResponse.sessionID();
 
 // Display verification code to the user
-String verificationCode = signatureSessionResponse.getVc().getValue();
+String verificationCode = signatureSessionResponse.vc().getValue();
 ```
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
@@ -1300,11 +1298,11 @@ NotificationSignatureSessionResponse signatureResponse = client.createNotificati
             NotificationInteraction.confirmationMessage("Please sign the <document-name>"))) // Display text should be concise and specific.
     .initSignatureSession();
 
-// Process the signature response
+// Get the session ID and continue to querying session status
 String sessionID = signatureResponse.sessionID();
 
 // Display verification code to the user
-String verificationCode = signatureResponse.getVc().getValue();
+String verificationCode = signatureResponse.vc().getValue();
 ```
 Jump to [Query session status](#example-of-using-session-status-poller-to-query-final-sessions-status) for an example of session querying.
 
@@ -1339,7 +1337,12 @@ try {
 
 #### Using nonce to override idempotent behaviour
 
-Authentication is used as an example, nonce can also be used with certificate choice and signature sessions requests by using method `withNonce("randomValue")`.
+Idempotent behaviour means that if the session request with same values is made multiple times within a 15-second window,
+the same response with identical values will be returned. If there is a need to override this behaviour, a nonce can be used.
+Nonce value must be a random string with a minimum length of 1 and a maximum length of 30 characters.
+
+Notification-based signature request is used as an example. Nonce can also be used with other signing session request
+(device-link signature and certificate choice; notification-based certificate choice) by using method `withNonce("randomValue")`.
 
 ```java
 NotificationSignatureSessionResponse signatureSessionResponse = smartIdClient.createNotificationSignature()

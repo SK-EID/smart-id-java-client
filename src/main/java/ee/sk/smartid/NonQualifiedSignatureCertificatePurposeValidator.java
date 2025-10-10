@@ -28,7 +28,7 @@ package ee.sk.smartid;
 
 import java.security.cert.X509Certificate;
 
-import ee.sk.smartid.common.certifiate.NonQualifiedSmartIdCertificateValidator;
+import ee.sk.smartid.common.certificate.NonQualifiedSmartIdCertificateValidator;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.util.CertificateAttributeUtil;
 

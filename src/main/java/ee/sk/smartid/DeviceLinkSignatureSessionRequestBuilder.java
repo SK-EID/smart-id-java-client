@@ -40,7 +40,7 @@ import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.util.InteractionUtil;
 import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
@@ -67,7 +67,7 @@ public class DeviceLinkSignatureSessionRequestBuilder {
     private String initialCallbackUrl;
     private DigestInput digestInput;
 
-    private SignatureSessionRequest signatureSessionRequest;
+    private DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest;
 
     /**
      * Constructs a new Smart-ID signature request builder with the given connector.
@@ -251,29 +251,32 @@ public class DeviceLinkSignatureSessionRequestBuilder {
      */
     public DeviceLinkSessionResponse initSignatureSession() {
         validateRequestParameters();
-        SignatureSessionRequest signatureSessionRequest = createSignatureSessionRequest();
-        DeviceLinkSessionResponse deviceLinkSignatureSessionResponse = initSignatureSession(signatureSessionRequest);
+        DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = createSignatureSessionRequest();
+        DeviceLinkSessionResponse deviceLinkSignatureSessionResponse = initSignatureSession(deviceLinkSignatureSessionRequest);
         validateResponseParameters(deviceLinkSignatureSessionResponse);
-        this.signatureSessionRequest = signatureSessionRequest;
+        this.deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequest;
         return deviceLinkSignatureSessionResponse;
     }
 
     /**
-     * Gets the SignatureSessionRequest that was used to initiate the signature session.
+     * Gets the DeviceLinkSignatureSessionRequest that was used to initiate the signature session.
      * <p>
      * This method can only be called after {@link #initSignatureSession()} has been invoked.
      *
      * @return the signature request that was used to initiate the session
      * @throws SmartIdClientException if called before initSignatureSession()
      */
-    public SignatureSessionRequest getSignatureSessionRequest() {
-        if (signatureSessionRequest == null) {
+    public DeviceLinkSignatureSessionRequest getSignatureSessionRequest() {
+        if (deviceLinkSignatureSessionRequest == null) {
             throw new SmartIdClientException("Signature session has not been initiated yet");
         }
-        return signatureSessionRequest;
+        return deviceLinkSignatureSessionRequest;
     }
 
-    private DeviceLinkSessionResponse initSignatureSession(SignatureSessionRequest request) {
+    private DeviceLinkSessionResponse initSignatureSession(DeviceLinkSignatureSessionRequest request) {
+        if (semanticsIdentifier != null && documentNumber != null) {
+            throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
+        }
         if (!StringUtil.isEmpty(documentNumber)) {
             return connector.initDeviceLinkSignature(request, documentNumber);
         } else if (semanticsIdentifier != null) {
@@ -283,11 +286,11 @@ public class DeviceLinkSignatureSessionRequestBuilder {
         }
     }
 
-    private SignatureSessionRequest createSignatureSessionRequest() {
+    private DeviceLinkSignatureSessionRequest createSignatureSessionRequest() {
         var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
                 signatureAlgorithm.getAlgorithmName(),
                 new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
-        return new SignatureSessionRequest(relyingPartyUUID,
+        return new DeviceLinkSignatureSessionRequest(relyingPartyUUID,
                 relyingPartyName,
                 certificateLevel != null ? certificateLevel.name() : null,
                 SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),

@@ -55,11 +55,12 @@ import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.ForbiddenException;
@@ -227,7 +228,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
+    public DeviceLinkSessionResponse initDeviceLinkSignature(DeviceLinkSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(DEVICE_LINK_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
@@ -237,7 +238,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, String documentNumber) {
+    public DeviceLinkSessionResponse initDeviceLinkSignature(DeviceLinkSignatureSessionRequest request, String documentNumber) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(DEVICE_LINK_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)
@@ -247,7 +248,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
+    public NotificationSignatureSessionResponse initNotificationSignature(NotificationSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(NOTIFICATION_SIGNATURE_WITH_SEMANTIC_IDENTIFIER_PATH)
@@ -257,7 +258,7 @@ public class SmartIdRestConnector implements SmartIdConnector {
     }
 
     @Override
-    public NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, String documentNumber) {
+    public NotificationSignatureSessionResponse initNotificationSignature(NotificationSignatureSessionRequest request, String documentNumber) {
         URI uri = UriBuilder
                 .fromUri(endpointUrl)
                 .path(NOTIFICATION_SIGNATURE_WITH_DOCUMENT_NUMBER_PATH)

@@ -32,7 +32,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.sk.smartid.common.certifiate.SmartIdAuthenticationCertificateValidator;
+import ee.sk.smartid.common.certificate.SmartIdAuthenticationCertificateValidator;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 import ee.sk.smartid.util.CertificateAttributeUtil;

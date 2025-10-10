@@ -43,10 +43,11 @@ import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 
 public interface SmartIdConnector extends Serializable {
 
@@ -108,7 +109,7 @@ public interface SmartIdConnector extends Serializable {
      * @param semanticsIdentifier The semantics identifier
      * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
      */
-    DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+    DeviceLinkSessionResponse initDeviceLinkSignature(DeviceLinkSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Initiates a device link based signature sessions.
@@ -117,7 +118,7 @@ public interface SmartIdConnector extends Serializable {
      * @param documentNumber The document number
      * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
      */
-    DeviceLinkSessionResponse initDeviceLinkSignature(SignatureSessionRequest request, String documentNumber);
+    DeviceLinkSessionResponse initDeviceLinkSignature(DeviceLinkSignatureSessionRequest request, String documentNumber);
 
     /**
      * Initiates a notification-based signature session using a semantics identifier.
@@ -126,7 +127,7 @@ public interface SmartIdConnector extends Serializable {
      * @param semanticsIdentifier The semantics identifier for the user initiating the session.
      * @return NotificationSignatureSessionResponse containing the session ID and verification code (VC) information.
      */
-    NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+    NotificationSignatureSessionResponse initNotificationSignature(NotificationSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
 
     /**
      * Initiates a notification-based signature session using a document number.
@@ -135,7 +136,7 @@ public interface SmartIdConnector extends Serializable {
      * @param documentNumber The document number for the user initiating the session.
      * @return NotificationSignatureSessionResponse containing the session ID and verification code (VC) information.
      */
-    NotificationSignatureSessionResponse initNotificationSignature(SignatureSessionRequest request, String documentNumber);
+    NotificationSignatureSessionResponse initNotificationSignature(NotificationSignatureSessionRequest request, String documentNumber);
 
     /**
      * Set the SSL context to use for secure communication

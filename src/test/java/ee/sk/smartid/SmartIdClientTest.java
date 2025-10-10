@@ -39,7 +39,6 @@ import java.util.List;
 
 import org.bouncycastle.util.encoders.Base64;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -51,13 +50,14 @@ import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.SignatureSessionRequest;
+import ee.sk.smartid.rest.dao.VerificationCode;
 
 class SmartIdClientTest {
 
@@ -151,7 +151,7 @@ class SmartIdClientTest {
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
                     .initCertificateChoice();
 
-            assertNotNull(response.getSessionID());
+            assertNotNull(response.sessionID());
         }
 
         @Test
@@ -167,7 +167,7 @@ class SmartIdClientTest {
                     .withShareMdClientIpAddress(true)
                     .initCertificateChoice();
 
-            assertNotNull(response.getSessionID());
+            assertNotNull(response.sessionID());
         }
     }
 
@@ -395,7 +395,6 @@ class SmartIdClientTest {
         }
     }
 
-    @Disabled("will be fixed in https://jira.sk.ee/browse/SLIB-116")
     @Nested
     @WireMockTest(httpPort = 18089)
     class NotificationBasedSignatureSession {
@@ -403,43 +402,41 @@ class SmartIdClientTest {
         @Test
         void createNotificationSignature_withDocumentNumber() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q",
-                    "requests/sign/notification/notification-signature-session-request.json",
-                    "responses/notification-session-response.json");
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
 
             var signableHash = new SignableHash("a".repeat(64).getBytes());
             NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
                     .withDocumentNumber(DOCUMENT_NUMBER)
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.confirmationMessage("Verify the code")))
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Sign it!")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
         }
 
         @Test
         void createNotificationSignature_withSemanticsIdentifier() {
             SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890",
-                    "requests/sign/notification/notification-signature-session-request.json",
-                    "responses/notification-session-response.json");
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
 
             var signableHash = new SignableHash("a".repeat(64).getBytes());
             NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
-                    .withRelyingPartyUUID("00000000-0000-0000-0000-000000000000")
-                    .withRelyingPartyName("DEMO")
                     .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
-                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
-                    .withAllowedInteractionsOrder(List.of(NotificationInteraction.confirmationMessage("Verify the code")))
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Sign it!")))
                     .withSignableHash(signableHash)
                     .initSignatureSession();
 
-            assertNotNull(response.getSessionID());
-            assertNotNull(response.getVc());
-            assertNotNull(response.getVc().getType());
-            assertNotNull(response.getVc().getValue());
+            assertSessionResponse(response);
+        }
+
+        private static void assertSessionResponse(NotificationSignatureSessionResponse response) {
+            assertNotNull(response.sessionID());
+            VerificationCode verificationCode = response.vc();
+            assertNotNull(verificationCode);
+            assertNotNull(verificationCode.type());
+            assertNotNull(verificationCode.value());
         }
     }
 
@@ -632,7 +629,7 @@ class SmartIdClientTest {
                     .withSignableHash(signableHash)
                     .withInitialCallbackUrl(INITIAL_CALLBACK_URL);
             DeviceLinkSessionResponse response = builder.initSignatureSession();
-            SignatureSessionRequest request = builder.getSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = builder.getSignatureSessionRequest();
 
             URI deviceLink = smartIdClient.createDynamicContent()
                     .withSchemeName("smart-id-demo")
@@ -662,7 +659,7 @@ class SmartIdClientTest {
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash);
             DeviceLinkSessionResponse response = builder.initSignatureSession();
-            SignatureSessionRequest request = builder.getSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = builder.getSignatureSessionRequest();
 
             Duration elapsed = Duration.between(response.receivedAt(), Instant.now());
 
@@ -694,7 +691,7 @@ class SmartIdClientTest {
                     .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
                     .withSignableHash(signableHash);
             DeviceLinkSessionResponse response = builder.initSignatureSession();
-            SignatureSessionRequest request = builder.getSignatureSessionRequest();
+            DeviceLinkSignatureSessionRequest request = builder.getSignatureSessionRequest();
 
             Duration elapsed = Duration.between(response.receivedAt(), Instant.now());
             URI qrCodeUri = smartIdClient.createDynamicContent()

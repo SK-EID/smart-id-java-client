@@ -216,8 +216,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
         @ParameterizedTest
         @NullAndEmptySource
         void initAuthenticationSession_sessionIdIsNotPresentInTheResponse_throwException(String sessionId) {
-            var notificationCertificateChoiceSessionResponse = new NotificationCertificateChoiceSessionResponse();
-            notificationCertificateChoiceSessionResponse.setSessionID(sessionId);
+            var notificationCertificateChoiceSessionResponse = new NotificationCertificateChoiceSessionResponse(sessionId);
             when(connector.initNotificationCertificateChoice(any(NotificationCertificateChoiceSessionRequest.class), any(SemanticsIdentifier.class))).thenReturn(notificationCertificateChoiceSessionResponse);
             NotificationCertificateChoiceSessionRequestBuilder builder = toBaseNotificationCertChoiceRequestBuilder();
 
@@ -227,9 +226,7 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
     }
 
     private NotificationCertificateChoiceSessionResponse createCertificateChoiceSessionResponse() {
-        var notificationCertificateChoiceSessionResponse = new NotificationCertificateChoiceSessionResponse();
-        notificationCertificateChoiceSessionResponse.setSessionID(RELYING_PARTY_UUID);
-        return notificationCertificateChoiceSessionResponse;
+        return new NotificationCertificateChoiceSessionResponse("00000000-0000-0000-0000-000000000000");
     }
 
     private NotificationCertificateChoiceSessionRequestBuilder toNotificationCertChoiceRequestBuilder(UnaryOperator<NotificationCertificateChoiceSessionRequestBuilder> modifier) {
