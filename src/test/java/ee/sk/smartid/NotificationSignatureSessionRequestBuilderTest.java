@@ -249,7 +249,6 @@ class NotificationSignatureSessionRequestBuilderTest {
         assertEquals(SignatureProtocol.RAW_DIGEST_SIGNATURE.name(), capturedRequest.signatureProtocol());
     }
 
-
     @Nested
     class ErrorCases {
 
@@ -312,7 +311,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         @Test
         void initSignatureSession_signableDataAlreadySetAndSignableHashIsAlsoAdded_throwException() {
             var ex = assertThrows(SmartIdRequestSetupException.class,
-                    () ->  new NotificationSignatureSessionRequestBuilder(connector)
+                    () -> new NotificationSignatureSessionRequestBuilder(connector)
                             .withRelyingPartyUUID(RELYING_PARTY_UUID)
                             .withRelyingPartyName(RELYING_PARTY_NAME)
                             .withInteractions(List.of(NotificationInteraction.displayTextAndPin("Sign?")))
@@ -325,7 +324,7 @@ class NotificationSignatureSessionRequestBuilderTest {
         @Test
         void initSignatureSession_signableHashAlreadySetAndSignableHashIsAlsoAdded_throwException() {
             var ex = assertThrows(SmartIdRequestSetupException.class,
-                    () ->  new NotificationSignatureSessionRequestBuilder(connector)
+                    () -> new NotificationSignatureSessionRequestBuilder(connector)
                             .withRelyingPartyUUID(RELYING_PARTY_UUID)
                             .withRelyingPartyName(RELYING_PARTY_NAME)
                             .withInteractions(List.of(NotificationInteraction.displayTextAndPin("Sign?")))
@@ -461,7 +460,7 @@ class NotificationSignatureSessionRequestBuilderTest {
     }
 
     private NotificationSignatureSessionResponse mockNotificationSignatureSessionResponse() {
-        var verificationCode = new VerificationCode("numeric4","4927");
+        var verificationCode = new VerificationCode("numeric4", "4927");
         return toNotificationSignatureSessionResponse(verificationCode);
     }
 

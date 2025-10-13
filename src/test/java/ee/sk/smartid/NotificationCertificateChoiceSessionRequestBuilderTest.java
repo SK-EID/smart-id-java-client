@@ -35,7 +35,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
@@ -256,17 +255,6 @@ class NotificationCertificateChoiceSessionRequestBuilderTest {
         @Override
         public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
             return Stream.of(null, "a", "a".repeat(30)).map(Arguments::of);
-        }
-    }
-
-    private static class CapabilitiesArgumentProvider implements ArgumentsProvider {
-        @Override
-        public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-            return Stream.of(
-                    Arguments.of(new String[0], Collections.emptySet()),
-                    Arguments.of(new String[]{"capability1"}, Set.of("capability1")),
-                    Arguments.of(new String[]{"capability1", "capability2"}, Set.of("capability1", "capability2"))
-            );
         }
     }
 

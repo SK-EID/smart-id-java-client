@@ -36,6 +36,7 @@ import ee.sk.smartid.rest.SmartIdConnector;
 import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 public class DeviceLinkCertificateChoiceSessionRequestBuilder {
@@ -112,7 +113,7 @@ public class DeviceLinkCertificateChoiceSessionRequestBuilder {
      * @return this builder
      */
     public DeviceLinkCertificateChoiceSessionRequestBuilder withCapabilities(String... capabilities) {
-        this.capabilities = Set.of(capabilities);
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 
