@@ -36,6 +36,7 @@ import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.util.SetUtil;
 import ee.sk.smartid.util.StringUtil;
 
 /**
@@ -113,7 +114,7 @@ public class NotificationCertificateChoiceSessionRequestBuilder {
      * @return this builder
      */
     public NotificationCertificateChoiceSessionRequestBuilder withCapabilities(String... capabilities) {
-        this.capabilities = Set.of(capabilities);
+        this.capabilities = SetUtil.toSet(capabilities);
         return this;
     }
 

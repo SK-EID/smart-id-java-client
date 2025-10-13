@@ -42,7 +42,9 @@ public class CapabilitiesArgumentProvider implements ArgumentsProvider {
                 Arguments.of(new String[]{"capability1"}, Set.of("capability1")),
                 Arguments.of(new String[]{"capability1", "capability1"}, Set.of("capability1")),
                 Arguments.of(new String[]{"capability1", null}, Set.of("capability1")),
-                Arguments.of(new String[]{null, "capability1"}, Set.of("capability1"))
+                Arguments.of(new String[]{null, "capability1"}, Set.of("capability1")),
+                Arguments.of(new String[]{"", "capability1"}, Set.of("capability1")),
+                Arguments.of(new String[]{" ", "capability1"}, Set.of("capability1"))
         );
     }
 }
