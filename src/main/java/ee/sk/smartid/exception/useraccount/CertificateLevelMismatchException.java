@@ -4,7 +4,7 @@ package ee.sk.smartid.exception.useraccount;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2022 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,25 @@ package ee.sk.smartid.exception.useraccount;
  * #L%
  */
 
-
 import ee.sk.smartid.exception.UserAccountException;
 
+/**
+ * Thrown when returned certificate level is lower than the requested certificate level.
+ */
 public class CertificateLevelMismatchException extends UserAccountException {
 
+    /**
+     * Constructs the exception with the default message.
+     */
     public CertificateLevelMismatchException() {
         super("Signer's certificate is below requested certificate level");
     }
 
+    /**
+     * Constructs the exception with the specified exception message.
+     *
+     * @param message the exception message
+     */
     public CertificateLevelMismatchException(String message) {
         super(message);
     }

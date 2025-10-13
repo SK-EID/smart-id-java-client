@@ -4,7 +4,7 @@ package ee.sk.smartid.exception.useraccount;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,14 @@ package ee.sk.smartid.exception.useraccount;
 
 import ee.sk.smartid.exception.UserAccountException;
 
+/**
+ * Thrown when the user's app version does not support any of the provided interactions.
+ */
 public class RequiredInteractionNotSupportedByAppException extends UserAccountException {
 
+    /**
+     * Constructs the exception with the default message.
+     */
     public RequiredInteractionNotSupportedByAppException() {
         super("User app version does not support any of the provided interactions.");
     }
