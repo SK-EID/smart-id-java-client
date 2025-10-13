@@ -35,6 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +48,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
@@ -114,36 +116,18 @@ class DeviceLinkCertificateChoiceSessionRequestBuilderTest {
         verify(connector).initDeviceLinkCertificateChoice(any(DeviceLinkCertificateChoiceSessionRequest.class));
     }
 
-    @Test
-    void initiateCertificateChoice_withValidCapabilities() {
-        builderService.withCapabilities("ADVANCED", "QUALIFIED");
+    @ParameterizedTest
+    @ArgumentsSource(CapabilitiesArgumentProvider.class)
+    void initiateCertificateChoice_withValidCapabilities(String[] capabilities, Set<String> expectedCapabilities) {
         when(connector.initDeviceLinkCertificateChoice(any(DeviceLinkCertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
 
-        DeviceLinkSessionResponse result = builderService.initCertificateChoice();
+        builderService.withCapabilities(capabilities).initCertificateChoice();
 
-        assertNotNull(result);
-        assertEquals("test-session-id", result.sessionID());
-        assertEquals("test-session-token", result.sessionToken());
-        assertEquals("test-session-secret", result.sessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), result.deviceLinkBase());
+        ArgumentCaptor<DeviceLinkCertificateChoiceSessionRequest> requestCaptor = ArgumentCaptor.forClass(DeviceLinkCertificateChoiceSessionRequest.class);
+        verify(connector).initDeviceLinkCertificateChoice(requestCaptor.capture());
+        DeviceLinkCertificateChoiceSessionRequest request = requestCaptor.getValue();
 
-        verify(connector).initDeviceLinkCertificateChoice(any(DeviceLinkCertificateChoiceSessionRequest.class));
-    }
-
-    @Test
-    void initiateCertificateChoice_nullCapabilities() {
-        builderService.withCapabilities();
-        when(connector.initDeviceLinkCertificateChoice(any(DeviceLinkCertificateChoiceSessionRequest.class))).thenReturn(mockCertificateChoiceResponse());
-
-        DeviceLinkSessionResponse result = builderService.initCertificateChoice();
-
-        assertNotNull(result);
-        assertEquals("test-session-id", result.sessionID());
-        assertEquals("test-session-token", result.sessionToken());
-        assertEquals("test-session-secret", result.sessionSecret());
-        assertEquals(URI.create("https://example.com/device-link"), result.deviceLinkBase());
-
-        verify(connector).initDeviceLinkCertificateChoice(any(DeviceLinkCertificateChoiceSessionRequest.class));
+        assertEquals(expectedCapabilities, request.capabilities());
     }
 
     @Nested
