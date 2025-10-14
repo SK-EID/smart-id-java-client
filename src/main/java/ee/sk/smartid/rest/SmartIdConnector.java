@@ -33,10 +33,11 @@ import javax.net.ssl.SSLContext;
 
 import ee.sk.smartid.exception.SessionNotFoundException;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
@@ -47,8 +48,12 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 
+/**
+ * SmartIdConnector is the main interface for interacting with the Smart-ID service.
+ * It provides methods to initiate various types of sessions (authentication, signature, certificate choice)
+ * and to query session status and certificates.
+ */
 public interface SmartIdConnector extends Serializable {
 
     /**
@@ -79,7 +84,8 @@ public interface SmartIdConnector extends Serializable {
     /**
      * Initiates a linked notification based signature session.
      *
-     * @param request LinkedSignatureSessionRequest containing necessary parameters
+     * @param request        LinkedSignatureSessionRequest containing necessary parameters
+     * @param documentNumber The document number to be used for the session
      * @return LinkedSignatureSessionResponse containing sessionID
      */
     LinkedSignatureSessionResponse initLinkedNotificationSignature(LinkedSignatureSessionRequest request, String documentNumber);

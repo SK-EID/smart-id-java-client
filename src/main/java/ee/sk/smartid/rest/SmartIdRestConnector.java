@@ -4,7 +4,7 @@ package ee.sk.smartid.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -45,10 +45,11 @@ import ee.sk.smartid.exception.useraccount.NoSuitableAccountOfRequestedTypeFound
 import ee.sk.smartid.exception.useraccount.PersonShouldViewSmartIdPortalException;
 import ee.sk.smartid.exception.useraccount.UserAccountNotFoundException;
 import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
 import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
 import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
@@ -60,7 +61,6 @@ import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.rest.dao.SessionStatusRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.ForbiddenException;
@@ -75,6 +75,9 @@ import jakarta.ws.rs.core.Configuration;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.UriBuilder;
 
+/**
+ * Smart-ID REST connector implementation.
+ */
 public class SmartIdRestConnector implements SmartIdConnector {
 
     @Serial
@@ -111,12 +114,23 @@ public class SmartIdRestConnector implements SmartIdConnector {
     private long sessionStatusResponseSocketOpenTimeValue;
     private TimeUnit sessionStatusResponseSocketOpenTimeUnit;
 
-    public SmartIdRestConnector(String endpointUrl) {
-        this.endpointUrl = endpointUrl;
+    /**
+     * Creates a new instance of SmartIdRestConnector.
+     *
+     * @param baseUrl The base URL of the Smart-ID API (e.g. https://sid.demo.sk.ee/smart-id-rp/v3/)
+     */
+    public SmartIdRestConnector(String baseUrl) {
+        this.endpointUrl = baseUrl;
     }
 
-    public SmartIdRestConnector(String endpointUrl, Client configuredClient) {
-        this(endpointUrl);
+    /**
+     * Creates a new instance of SmartIdRestConnector with a pre-configured client.
+     *
+     * @param baseUrl          The base URL of the Smart-ID API (e.g. https://sid.demo.sk.ee/smart-id-rp/v3/)
+     * @param configuredClient a pre-configured client instace
+     */
+    public SmartIdRestConnector(String baseUrl, Client configuredClient) {
+        this(baseUrl);
         this.configuredClient = configuredClient;
     }
 
@@ -278,6 +292,12 @@ public class SmartIdRestConnector implements SmartIdConnector {
         this.sslContext = sslContext;
     }
 
+    /**
+     * Prepare client for the request.
+     *
+     * @param uri the target URI
+     * @return prepared invocation builder
+     */
     protected Invocation.Builder prepareClient(URI uri) {
         Client client;
         if (this.configuredClient == null) {
@@ -301,15 +321,30 @@ public class SmartIdRestConnector implements SmartIdConnector {
                 .header("User-Agent", buildUserAgentString());
     }
 
+    /**
+     * Build user-agent string.
+     *
+     * @return user-agent string in the format: smart-id-java-client/[client-version] (Java/[java-version])
+     */
     protected String buildUserAgentString() {
         return "smart-id-java-client/" + getClientVersion() + " (Java/" + getJdkMajorVersion() + ")";
     }
 
+    /**
+     * Get client version from package implementation version.
+     *
+     * @return client version or "-"
+     */
     protected String getClientVersion() {
         String clientVersion = getClass().getPackage().getImplementationVersion();
         return clientVersion == null ? "-" : clientVersion;
     }
 
+    /**
+     * Get JDK major version.
+     *
+     * @return JDK major version or "-"
+     */
     protected String getJdkMajorVersion() {
         try {
             return System.getProperty("java.version").split("_")[0];
