@@ -33,6 +33,9 @@ import java.util.Arrays;
  */
 public enum MaskGenAlgorithm {
 
+    /**
+     * id-mgf1 is used in the Smart-ID API and MGF1 is the name used in the Java Cryptography API.
+     */
     ID_MGF1("id-mgf1", "MGF1");
 
     private final String algorithmName;
@@ -43,14 +46,31 @@ public enum MaskGenAlgorithm {
         this.mgfName = mgfName;
     }
 
+    /**
+     * Gets the algorithm name used by the Smart-ID API.
+     *
+     * @return the algorithm name
+     */
     public String getAlgorithmName() {
         return algorithmName;
     }
 
+    /**
+     * Gets the MGF name used in the Java Cryptography API.
+     *
+     * @return the MGF name
+     */
     public String getMgfName() {
         return mgfName;
     }
 
+    /**
+     * Converts a string to the corresponding MaskGenAlgorithm enum value.
+     *
+     * @param maskGenAlgorithm the string representation of the mask generation algorithm
+     * @return the corresponding MaskGenAlgorithm enum value
+     * @throws IllegalArgumentException if the provided string does not match any enum value
+     */
     public static MaskGenAlgorithm fromString(String maskGenAlgorithm) {
         return Arrays.stream(MaskGenAlgorithm.values())
                 .filter(m -> m.getAlgorithmName().equals(maskGenAlgorithm))

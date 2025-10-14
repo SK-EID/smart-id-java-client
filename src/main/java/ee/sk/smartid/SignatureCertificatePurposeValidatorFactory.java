@@ -26,6 +26,9 @@ package ee.sk.smartid;
  * #L%
  */
 
+/**
+ * Factory interface to create instances of SignatureCertificatePurposeValidator based on the certificate level.
+ */
 public interface SignatureCertificatePurposeValidatorFactory {
 
     /**

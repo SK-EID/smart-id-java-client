@@ -28,9 +28,24 @@ package ee.sk.smartid;
 
 import java.util.Arrays;
 
+/**
+ * Representation of different signing certificate levels.
+ */
 public enum CertificateLevel {
+
+    /**
+     * Smart-ID basic certificate level. Use if you want to allow signing with non-qualified and qualified accounts.
+     */
     ADVANCED(1),
+
+    /**
+     * The highest Smart-ID certificate level that is also QSCD-capable. Use only to allow signing with qualified accounts.
+     */
     QUALIFIED(2),
+
+    /**
+     * Shortened alias for QUALIFIED level.
+     */
     QSCD(2);
 
     private final int level;
@@ -55,7 +70,7 @@ public enum CertificateLevel {
      * @param certificateLevel the certificate level string to check
      * @return true if the certificate level is supported, false otherwise
      */
-    public static boolean isSupported(String certificateLevel){
+    public static boolean isSupported(String certificateLevel) {
         return Arrays.stream(CertificateLevel.values())
                 .anyMatch(level -> level.name().equals(certificateLevel));
     }

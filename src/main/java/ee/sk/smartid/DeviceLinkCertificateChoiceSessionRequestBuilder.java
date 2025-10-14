@@ -38,6 +38,9 @@ import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
 import ee.sk.smartid.rest.dao.RequestProperties;
 import ee.sk.smartid.util.StringUtil;
 
+/**
+ * Builder class for creating and initializing a device link-based certificate choice session.
+ */
 public class DeviceLinkCertificateChoiceSessionRequestBuilder {
 
     private static final String INITIAL_CALLBACK_URL_PATTERN = "^https://[^|]+$";

@@ -34,6 +34,9 @@ import java.security.cert.X509Certificate;
 
 public final class CertificateUtil {
 
+    private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
+    private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
+
     private CertificateUtil() {
     }
 
@@ -57,14 +60,13 @@ public final class CertificateUtil {
     }
 
     public static String getEncodedCertificateData(String certificate) {
-        return certificate.replace("-----BEGIN CERTIFICATE-----", "")
-                .replace("-----END CERTIFICATE-----", "")
+        return certificate.replace(BEGIN_CERTIFICATE, "")
+                .replace(END_CERTIFICATE, "")
                 .replace("\n", "");
     }
 
     private static byte[] getX509CertificateBytes(String encodedData) {
-        String certificate = CertificateParser.BEGIN_CERT + "\n" + encodedData + "\n" + CertificateParser.END_CERT;
+        String certificate = BEGIN_CERTIFICATE + "\n" + encodedData + "\n" + END_CERTIFICATE;
         return certificate.getBytes(StandardCharsets.UTF_8);
     }
-
 }

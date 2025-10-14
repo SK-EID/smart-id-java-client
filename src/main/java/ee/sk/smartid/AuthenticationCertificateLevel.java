@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,18 @@ package ee.sk.smartid;
 
 import java.util.Arrays;
 
+/**
+ * Represents of authentication certificate levels.
+ */
 public enum AuthenticationCertificateLevel {
+
+    /**
+     * Smart-ID basic certificate level. Use if you want to allow non-qualified and qualified accounts.
+     */
     ADVANCED(1),
+    /**
+     * Smart-ID highest certificate level. Use if you want to only allow qualified accounts.
+     */
     QUALIFIED(2);
 
     private final int level;

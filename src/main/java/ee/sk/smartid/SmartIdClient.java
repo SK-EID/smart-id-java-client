@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -51,6 +51,9 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.Configuration;
 
+/**
+ * Main entry point for using Smart-ID services.
+ */
 public class SmartIdClient {
 
     private String relyingPartyUUID;
@@ -246,6 +249,11 @@ public class SmartIdClient {
         this.networkConnectionConfig = networkConnectionConfig;
     }
 
+    /**
+     * // TODO - 13.10.25:
+     *
+     * @param configuredClient
+     */
     public void setConfiguredClient(Client configuredClient) {
         this.configuredClient = configuredClient;
     }
@@ -322,6 +330,7 @@ public class SmartIdClient {
     }
 
     /**
+     * // TODO - 13.10.25: add info about HTTPS pinning
      * Sets the trust store for the client
      * <p>
      * Useful for configuring custom trust store
@@ -341,6 +350,11 @@ public class SmartIdClient {
         }
     }
 
+    /**
+     *
+     *
+     * @param sslCertificates
+     */
     public void setTrustedCertificates(String... sslCertificates) {
         try {
             this.trustSslContext = createSslContext(Arrays.asList(sslCertificates));
@@ -349,6 +363,14 @@ public class SmartIdClient {
         }
     }
 
+    /**
+     * Sets the smart-id connector
+     * <p>
+     * Useful for providing custom implementation
+     * of the connector.
+     *
+     * @param smartIdConnector smart-id connector
+     */
     public void setSmartIdConnector(SmartIdConnector smartIdConnector) {
         this.connector = smartIdConnector;
     }
@@ -369,11 +391,11 @@ public class SmartIdClient {
      *
      * @param sslCertificates list of certificates in PEM format
      * @return SSL context
-     * @throws NoSuchAlgorithmException
-     * @throws KeyStoreException
-     * @throws IOException
-     * @throws CertificateException
-     * @throws KeyManagementException
+     * @throws NoSuchAlgorithmException if SSL context with provided protocol is not found
+     * @throws KeyStoreException        if key store cannot be created for a type
+     * @throws IOException              if loading key store fails
+     * @throws CertificateException     if certificate for the given data cannot be generated
+     * @throws KeyManagementException   if SSL context cannot be initialized
      */
     public static SSLContext createSslContext(List<String> sslCertificates)
             throws NoSuchAlgorithmException, KeyStoreException, IOException, CertificateException, KeyManagementException {

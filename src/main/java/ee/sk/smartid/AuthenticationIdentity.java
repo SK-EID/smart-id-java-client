@@ -31,7 +31,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 /**
- * Interpretation of users identity in the validate authentication certificate
+ * Represents users identity in the validated authentication certificate
  */
 public class AuthenticationIdentity {
 
@@ -42,60 +42,130 @@ public class AuthenticationIdentity {
     private X509Certificate authCertificate;
     private LocalDate dateOfBirth;
 
+    /**
+     * Initializes a new instance of the authentication identity.
+     */
     public AuthenticationIdentity() {
     }
 
+    /**
+     * Initializes a new instance of authentication identity with the authentication certificate.
+     *
+     * @param authCertificate the authentication certificate where the identity information is extracted from
+     */
     public AuthenticationIdentity(X509Certificate authCertificate) {
         this.authCertificate = authCertificate;
     }
 
+    /**
+     * Gets the given name of the user.
+     *
+     * @return the given name of the user
+     */
     public String getGivenName() {
         return givenName;
     }
 
+    /**
+     * Sets the given name of the user.
+     *
+     * @param givenName the given name of the user
+     */
     public void setGivenName(String givenName) {
         this.givenName = givenName;
     }
 
+    /**
+     * Gets the surname of the user.
+     *
+     * @return the surname of the user
+     */
     public String getSurname() {
         return surname;
     }
 
+    /**
+     * Sets the surname of the user.
+     *
+     * @param surname the surname of the user
+     */
     public void setSurname(String surname) {
         this.surname = surname;
     }
 
+    /**
+     * Gets the identity number of the user.
+     *
+     * @return the identity number of the user
+     */
     public String getIdentityNumber() {
         return identityNumber;
     }
 
+    /**
+     * Sets the identity number of the user.
+     * <p>
+     * The identity number is also known as national identification number, personal code, social security number etc.
+     * <p>
+     * Should be used if the value are only the numbers. F.e. 12345678901
+     *
+     * @param identityNumber the identity number of the user
+     */
     public void setIdentityNumber(String identityNumber) {
         this.identityNumber = identityNumber;
     }
 
+    /**
+     * Gets the identity number of the user.
+     *
+     * @return the identity code of the user
+     */
     public String getIdentityCode() {
         return identityNumber;
     }
 
+    /**
+     * Sets the identity number of the user.
+     * <p>
+     * The identity number is also known as national identification number, personal code, social security number etc.
+     * <p>
+     * Should be used if the value contains alphanumeric characters. F.e. EE12345678901, 1234567-8901
+     *
+     * @param identityCode the identity code of the user
+     */
     public void setIdentityCode(String identityCode) {
         this.identityNumber = identityCode;
     }
 
+    /**
+     * Gets the country code of the user.
+     *
+     * @return the country code of the user
+     */
     public String getCountry() {
         return country;
     }
 
+    /**
+     * Sets the country code of the user.
+     *
+     * @param country the country code of the user
+     */
     public void setCountry(String country) {
         this.country = country;
     }
 
+    /**
+     * Gets the authentication certificate of the user.
+     *
+     * @return the authentication certificate of the user
+     */
     public X509Certificate getAuthCertificate() {
         return authCertificate;
     }
 
     /**
      * Person's date of birth.
-     * NB! This information is not available for some Latvian certificates.
      *
      * @return Date of birth if this information is available in authentication response or empty optional.
      */
@@ -103,6 +173,11 @@ public class AuthenticationIdentity {
         return Optional.ofNullable(dateOfBirth);
     }
 
+    /**
+     * Sets person's date of birth.
+     *
+     * @param dateOfBirth Date of birth
+     */
     public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }

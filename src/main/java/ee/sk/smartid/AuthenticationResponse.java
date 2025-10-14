@@ -33,16 +33,16 @@ import java.util.Base64;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 /**
- * Represents the authentication response after a successful authentication sessions status response was received.
+ * The authentication response after a successful authentication sessions status response was received.
  * <p>
- * Use with {@link DeviceLinkAuthenticationResponseValidator} to validate the auth certificate and signature.
+ * Used with {@link DeviceLinkAuthenticationResponseValidator} to validate the certificate used for authentication
+ * and the signature in the authentication response.
  */
 public class AuthenticationResponse {
 
     private String endResult;
     private String serverRandom;
     private String userChallenge;
-    private String relyingPartyName;
     private String signatureValueInBase64;
     private X509Certificate certificate;
     private AuthenticationCertificateLevel certificateLevel;
@@ -52,18 +52,38 @@ public class AuthenticationResponse {
     private String deviceIpAddress;
     private RsaSsaPssParameters rsaSsaPssSignatureParameters;
 
+    /**
+     * Gets the end result of the authentication session.
+     *
+     * @return the end result of the authentication session
+     */
     public String getEndResult() {
         return endResult;
     }
 
+    /**
+     * Sets the end result of the authentication session.
+     *
+     * @param endResult the end result of the authentication session
+     */
     public void setEndResult(String endResult) {
         this.endResult = endResult;
     }
 
+    /**
+     * Gets the signature value in Base64 encoding.
+     *
+     * @return signature value in Base64 encoding
+     */
     public String getSignatureValueInBase64() {
         return signatureValueInBase64;
     }
 
+    /**
+     * Sets the signature value in Base64 encoding.
+     *
+     * @param signatureValueInBase64 signature value in Base64 encoding
+     */
     public void setSignatureValueInBase64(String signatureValueInBase64) {
         this.signatureValueInBase64 = signatureValueInBase64;
     }
@@ -82,82 +102,165 @@ public class AuthenticationResponse {
         }
     }
 
+    /**
+     * Get the certificate used in authentication.
+     *
+     * @return the X509Certificate used in authentication
+     */
     public X509Certificate getCertificate() {
         return certificate;
     }
 
+    /**
+     * Sets the certificate used in authentication.
+     *
+     * @param certificate the X509Certificate used in authentication
+     */
     public void setCertificate(X509Certificate certificate) {
         this.certificate = certificate;
     }
 
+    /**
+     * Gets the level of the authentication certificate.
+     *
+     * @return the level of the authentication certificate
+     */
     public AuthenticationCertificateLevel getCertificateLevel() {
         return certificateLevel;
     }
 
+    /**
+     * Sets the level of the authentication certificate.
+     *
+     * @param certificateLevel the authentication certificate level in the session status response
+     */
     public void setCertificateLevel(AuthenticationCertificateLevel certificateLevel) {
         this.certificateLevel = certificateLevel;
     }
 
+    /**
+     * Gets the document number used for authentication
+     *
+     * @return the document number
+     */
     public String getDocumentNumber() {
         return documentNumber;
     }
 
+    /**
+     * Sets the document number used for authentication
+     *
+     * @param documentNumber the document number from the session status response
+     */
     public void setDocumentNumber(String documentNumber) {
         this.documentNumber = documentNumber;
     }
 
+    /**
+     * Gets the interaction type used in authentication
+     *
+     * @return the interaction type used in authentication
+     */
     public String getInteractionTypeUsed() {
         return interactionTypeUsed;
     }
 
+    /**
+     * Sets the interaction type used in authentication
+     *
+     * @param interactionTypeUsed the interaction type used in authentication
+     */
     public void setInteractionTypeUsed(String interactionTypeUsed) {
         this.interactionTypeUsed = interactionTypeUsed;
     }
 
+    /**
+     * Gets the IP address of the device used in authentication
+     *
+     * @return the IP address of the device
+     */
     public String getDeviceIpAddress() {
         return deviceIpAddress;
     }
 
+    /**
+     * Sets the IP address of the device used in authentication
+     *
+     * @param deviceIpAddress the IP address of the device
+     */
     public void setDeviceIpAddress(String deviceIpAddress) {
         this.deviceIpAddress = deviceIpAddress;
     }
 
+    /**
+     * Gets the server random in Base64 encoding
+     *
+     * @return server random
+     */
     public String getServerRandom() {
         return serverRandom;
     }
 
+    /**
+     * Sets the server random in Base64 encoding
+     *
+     * @param serverRandom the server random from the session status response
+     */
     public void setServerRandom(String serverRandom) {
         this.serverRandom = serverRandom;
     }
 
+    /**
+     * Gets the user challenge
+     *
+     * @return user challenge
+     */
     public String getUserChallenge() {
         return userChallenge;
     }
 
+    /**
+     * Sets the user challenge
+     *
+     * @param userChallenge the user challenge from the session status response
+     */
     public void setUserChallenge(String userChallenge) {
         this.userChallenge = userChallenge;
     }
 
-    public String getRelyingPartyName() {
-        return relyingPartyName;
-    }
-
-    public void setRelyingPartyName(String relyingPartyName) {
-        this.relyingPartyName = relyingPartyName;
-    }
-
+    /**
+     * Gets the flow type user used to complete the authentication
+     * <p>
+     *
+     * @return flow type
+     */
     public FlowType getFlowType() {
         return flowType;
     }
 
+    /**
+     * Sets the flow type used in authentication
+     *
+     * @param flowType the flow type used in authentication
+     */
     public void setFlowType(FlowType flowType) {
         this.flowType = flowType;
     }
 
+    /**
+     * Gets the RSASSA-PSS parameters
+     *
+     * @return return RSASSA-PSS parameters
+     */
     public RsaSsaPssParameters getRsaSsaPssSignatureParameters() {
         return rsaSsaPssSignatureParameters;
     }
 
+    /**
+     * Sets the RSASSA-PSS parameters
+     *
+     * @param rsaSsaPssSignatureParameters the RSASSA-PSS parameters from the session status response
+     */
     public void setRsaSsaPssSignatureParameters(RsaSsaPssParameters rsaSsaPssSignatureParameters) {
         this.rsaSsaPssSignatureParameters = rsaSsaPssSignatureParameters;
     }

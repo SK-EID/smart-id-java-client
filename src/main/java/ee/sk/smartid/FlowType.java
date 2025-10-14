@@ -28,11 +28,31 @@ package ee.sk.smartid;
 
 import java.util.Arrays;
 
+/**
+ * Represents the flow types that user used to complete the authentication or signing.
+ */
 public enum FlowType {
 
+    /**
+     * QR-code (cross-device) flow. User scanned a QR-code with the Smart-ID app.
+     */
     QR("QR"),
+
+    /**
+     * Web2App (same-device) flow. User clicked on a link in the browser on a mobile device
+     * and confirmed with the Smart-ID app.
+     */
     WEB2APP("Web2App"),
+
+    /**
+     * App2App (same-device) flow. User clicked on a link in the app on a mobile device
+     * and confirmed with the Smart-ID app.
+     */
     APP2APP("App2App"),
+
+    /**
+     * Notification flow. User received a push-notification and confirmed with the Smart-ID app.
+     */
     NOTIFICATION("Notification");
 
     private final String description;
@@ -41,15 +61,33 @@ public enum FlowType {
         this.description = description;
     }
 
+    /***
+     * Gets the value used in the Smart ID API to represent the flow type.
+     *
+     * @return the flow type description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Checks if the provided flow type is supported.
+     *
+     * @param flowType the flow type to check
+     * @return true if the flow type is supported, false otherwise
+     */
     public static boolean isSupported(String flowType) {
         return Arrays.stream(FlowType.values())
                 .anyMatch(f -> f.getDescription().equals(flowType));
     }
 
+    /**
+     * Converts a string representation of a flow type to the corresponding FlowType enum value.
+     *
+     * @param flowType the string representation of the flow type
+     * @return the corresponding FlowType enum value
+     * @throws IllegalArgumentException if the provided flow type is not valid
+     */
     public static FlowType fromString(String flowType) {
         return Arrays.stream(FlowType.values())
                 .filter(f -> f.getDescription().equals(flowType))

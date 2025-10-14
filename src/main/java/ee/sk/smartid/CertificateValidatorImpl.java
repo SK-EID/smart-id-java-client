@@ -46,12 +46,20 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.util.CertificateAttributeUtil;
 
+/**
+ * Validates the certificate's validity period and its trust chain.
+ */
 public class CertificateValidatorImpl implements CertificateValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(CertificateValidatorImpl.class);
 
     private final TrustedCACertStore trustedCaCertStore;
 
+    /**
+     * Constructs a certificate validator with the specified trusted certificate store.
+     *
+     * @param trustedCaCertStore the store containing trusted certificates.
+     */
     public CertificateValidatorImpl(TrustedCACertStore trustedCaCertStore) {
         this.trustedCaCertStore = trustedCaCertStore;
     }

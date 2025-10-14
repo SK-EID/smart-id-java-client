@@ -53,9 +53,10 @@ public class NotificationAuthenticationResponseValidator {
      * Creates an instance of {@link NotificationAuthenticationResponseValidator}
      * using {@link CertificateValidator}, {@link AuthenticationResponseMapper} and {@link SignatureValueValidator}
      *
-     * @param certificateValidator         validator used to verify the authentication certificate is valid and trusted
-     * @param authenticationResponseMapper the mapper to convert session status to authentication response
-     * @param signatureValueValidator      validator used to verify the correctness of the authentication signature value
+     * @param certificateValidator                             validator used to verify the authentication certificate is valid and trusted
+     * @param authenticationResponseMapper                     the mapper to convert session status to authentication response
+     * @param signatureValueValidator                          validator used to verify the correctness of the authentication signature value
+     * @param authenticationCertificatePurposeValidatorFactory factory to create purpose validators based on certificate level
      */
     public NotificationAuthenticationResponseValidator(CertificateValidator certificateValidator,
                                                        AuthenticationResponseMapper authenticationResponseMapper,
