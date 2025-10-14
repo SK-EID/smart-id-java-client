@@ -54,9 +54,10 @@ public class DeviceLinkAuthenticationResponseValidator {
      * Creates an instance of {@link DeviceLinkAuthenticationResponseValidator}
      * using {@link CertificateValidator}, {@link AuthenticationResponseMapper} and {@link SignatureValueValidator}
      *
-     * @param certificateValidator         validator used to verify the authentication certificate is valid and trusted
-     * @param authenticationResponseMapper the mapper to convert session status to authentication response
-     * @param signatureValueValidator      validator used to verify the correctness of the authentication signature value
+     * @param certificateValidator                             validator used to verify the authentication certificate is valid and trusted
+     * @param authenticationResponseMapper                     the mapper to convert session status to authentication response
+     * @param signatureValueValidator                          validator used to verify the correctness of the authentication signature value
+     * @param authenticationCertificatePurposeValidatorFactory factory to create purpose validator based on certificate level
      */
     public DeviceLinkAuthenticationResponseValidator(CertificateValidator certificateValidator,
                                                      AuthenticationResponseMapper authenticationResponseMapper,

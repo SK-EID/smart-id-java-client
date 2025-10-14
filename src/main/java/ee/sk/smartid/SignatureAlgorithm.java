@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2024 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,15 @@ package ee.sk.smartid;
 
 import java.util.Arrays;
 
+/**
+ * Signature algorithms supported by Smart-ID API.
+ */
 public enum SignatureAlgorithm {
 
+    /**
+     * RSASSA-PSS (RSA Probabilistic Signature Scheme) as defined in PKCS #1 v2.1.
+     * This algorithm provides probabilistic signature generation for enhanced security.
+     */
     RSASSA_PSS("rsassa-pss");
 
     private final String algorithmName;
@@ -38,15 +45,33 @@ public enum SignatureAlgorithm {
         this.algorithmName = algorithmName;
     }
 
+    /**
+     * Provides the signature algorithm name as used in the Smart-ID API.
+     *
+     * @return the signature algorithm name
+     */
     public String getAlgorithmName() {
         return algorithmName;
     }
 
+    /**
+     * Checks if the provided signature algorithm is supported.
+     *
+     * @param signatureAlgorithm the signature algorithm name to check
+     * @return true if the signature algorithm is supported, false otherwise
+     */
     public static boolean isSupported(String signatureAlgorithm) {
         return Arrays.stream(SignatureAlgorithm.values())
                 .anyMatch(s -> s.getAlgorithmName().equals(signatureAlgorithm));
     }
 
+    /**
+     * Converts a string representation of a signature algorithm to its corresponding enum value.
+     *
+     * @param signatureAlgorithm the signature algorithm name
+     * @return the corresponding SignatureAlgorithm enum value
+     * @throws IllegalArgumentException if the provided signature algorithm is not supported
+     */
     public static SignatureAlgorithm fromString(String signatureAlgorithm) {
         return Arrays
                 .stream(SignatureAlgorithm.values())

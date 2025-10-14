@@ -4,7 +4,7 @@ package ee.sk.smartid.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,27 +26,54 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+/**
+ * Certificate data in session status response.
+ * <p>
+ * value - the certificate data in Base64-encoded format
+ * certificateLevel - the certificate level. Possible values: QUALIFIED or ADVANCED
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionCertificate implements Serializable {
+
     private String value;
     private String certificateLevel;
 
+    /**
+     * Get the certificate value.
+     *
+     * @return the certificate data in Base64-encoded format
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Set the certificate value.
+     *
+     * @param value the certificate data in Base64-encoded format
+     */
     public void setValue(String value) {
         this.value = value;
     }
 
+    /**
+     * Gets the certificate level.
+     *
+     * @return the certificate level
+     */
     public String getCertificateLevel() {
         return certificateLevel;
     }
 
+    /**
+     * Sets the certificate level.
+     *
+     * @param certificateLevel the certificate level
+     */
     public void setCertificateLevel(String certificateLevel) {
         this.certificateLevel = certificateLevel;
     }

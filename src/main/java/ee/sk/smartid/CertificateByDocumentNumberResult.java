@@ -28,5 +28,11 @@ package ee.sk.smartid;
 
 import java.security.cert.X509Certificate;
 
+/**
+ * Result of querying certificate by document number.
+ *
+ * @param certificateLevel the level of the certificate
+ * @param certificate      the X.509 certificate
+ */
 public record CertificateByDocumentNumberResult(CertificateLevel certificateLevel, X509Certificate certificate) {
 }

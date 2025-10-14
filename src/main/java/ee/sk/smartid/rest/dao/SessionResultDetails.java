@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,15 +30,32 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Represents additional info when end result if user refused interactions.
+ * <p>
+ * Required when end result is USER_REFUSED_INTERACTION.
+ * <p>
+ * interaction - Type of the interaction that was cancelled by the user, e.g. "displayTextAndPIN"
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionResultDetails implements Serializable {
 
     private String interaction;
 
+    /**
+     * Gets type of the interaction that was cancelled by the user.
+     *
+     * @return type of the interaction that was cancelled by the user.
+     */
     public String getInteraction() {
         return interaction;
     }
 
+    /**
+     * Sets type of the interaction type
+     *
+     * @param interaction type of the interaction
+     */
     public void setInteraction(String interaction) {
         this.interaction = interaction;
     }

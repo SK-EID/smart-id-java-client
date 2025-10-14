@@ -28,8 +28,19 @@ package ee.sk.smartid;
 
 import java.util.Arrays;
 
+/**
+ * Representation state of the queried certificate from the Smart-ID API.
+ */
 public enum CertificateState {
+
+    /**
+     * Certificate is valid and can be used for signing.
+     */
     OK,
+
+    /**
+     * There is an issue with the document.
+     */
     DOCUMENT_UNUSABLE;
 
     /**

@@ -28,6 +28,13 @@ package ee.sk.smartid;
 
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
+/**
+ * Factory to create Qualified or Non-Qualified SignatureCertificatePurposeValidator based on the certificate level.
+ * Will be used to validate the certificate purpose of the signature certificate.
+ * <p>
+ * Only QUALIFIED and ADVANCED certificate levels are supported,
+ * because QUALIFIED level certificate will also be returned for QSCD.
+ */
 public class SignatureCertificatePurposeValidatorFactoryImpl implements SignatureCertificatePurposeValidatorFactory {
 
     @Override

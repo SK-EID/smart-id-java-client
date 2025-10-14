@@ -28,6 +28,11 @@ package ee.sk.smartid;
 
 import java.security.cert.X509Certificate;
 
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+
+/**
+ * Interface for signature value validator.
+ */
 public interface SignatureValueValidator {
 
     /**
@@ -37,7 +42,7 @@ public interface SignatureValueValidator {
      * @param payload             the original data that was signed
      * @param certificate         X509 certificate used for signature validation
      * @param rsaSsaPssParameters signature parameters used for creating signature value
-     * @throws UnsupportedOperationException when there are any issue with validating the signature value
+     * @throws UnprocessableSmartIdResponseException when there are any issue with validating the signature value
      */
     void validate(byte[] signatureValue,
                   byte[] payload,

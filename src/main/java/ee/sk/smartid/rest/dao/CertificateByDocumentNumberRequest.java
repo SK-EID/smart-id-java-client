@@ -30,6 +30,13 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+/**
+ * Request for querying certificate by document number.
+ *
+ * @param relyingPartyUUID Required. The relying party UUID
+ * @param relyingPartyName Required. The relying party name
+ * @param certificateLevel The certificate level. Possible values are "QSCD", "QUALIFIED" and "ADVANCED". If not specified, defaults to "QUALIFIED"
+ */
 public record CertificateByDocumentNumberRequest(String relyingPartyUUID,
                                                  String relyingPartyName,
                                                  @JsonInclude(JsonInclude.Include.NON_EMPTY) String certificateLevel) implements Serializable {

@@ -40,10 +40,16 @@ import ee.sk.smartid.rest.dao.SessionStatus;
 public class SessionStatusPoller {
 
     private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
+
     private final SmartIdConnector connector;
     private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
     private long pollingSleepTimeout = 1L;
 
+    /**
+     * Constructs a new SessionStatusPoller with the specified SmartIdConnector.
+     *
+     * @param connector the SmartIdConnector to use for querying session status.
+     */
     public SessionStatusPoller(SmartIdConnector connector) {
         this.connector = connector;
     }

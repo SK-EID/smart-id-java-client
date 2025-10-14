@@ -12,10 +12,10 @@ package ee.sk.smartid.util;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,11 +26,6 @@ package ee.sk.smartid.util;
  * #L%
  */
 
-import ee.sk.smartid.AuthenticationIdentity;
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -38,7 +33,17 @@ import java.time.format.ResolverStyle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import ee.sk.smartid.AuthenticationIdentity;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+
+/**
+ * Utility class for handling national identity numbers (personal codes).
+ */
 public class NationalIdentityNumberUtil {
+
     private static final Logger logger = LoggerFactory.getLogger(NationalIdentityNumberUtil.class);
 
     private static final DateTimeFormatter DATE_FORMATTER_YYYY_MM_DD = DateTimeFormatter.ofPattern("uuuuMMdd")
@@ -48,19 +53,19 @@ public class NationalIdentityNumberUtil {
      * Detect date-of-birth from a Baltic national identification number if possible or return null.
      * <p>
      * This method always returns the value for all Estonian and Lithuanian national identification numbers.
-     *
+     * <p>
      * It also works for older Latvian personal codes but Latvian personal codes issued after July 1st 2017
      * (starting with "32") do not carry date-of-birth.
-     *
+     * <p>
      * For non-Baltic countries (countries other than Estonia, Latvia or Lithuania) it always returns null
      * (even if it would be possible to deduce date of birth from national identity number).
-     *
+     * <p>
      * Newer (but not all) Smart-ID certificates have date-of-birth on a separate attribute.
      * It is recommended to use that value if present.
-     * @see CertificateAttributeUtil#getDateOfBirth(java.security.cert.X509Certificate)
      *
      * @param authenticationIdentity Authentication identity
      * @return DateOfBirth or null if it cannot be detected from personal code
+     * @see CertificateAttributeUtil#getDateOfBirth(java.security.cert.X509Certificate)
      */
     public static LocalDate getDateOfBirth(AuthenticationIdentity authenticationIdentity) {
         String identityNumber = authenticationIdentity.getIdentityNumber();
@@ -72,6 +77,13 @@ public class NationalIdentityNumberUtil {
         };
     }
 
+    /**
+     * Parses date of birth from Estonian or Lithuanian national identity number.
+     *
+     * @param eeOrLtNationalIdentityNumber Estonian or Lithuanian national identity number
+     * @return Date of birth
+     * @throws UnprocessableSmartIdResponseException if the national identity number is invalid or date cannot be parsed
+     */
     public static LocalDate parseEeLtDateOfBirth(String eeOrLtNationalIdentityNumber) {
         String birthDate = eeOrLtNationalIdentityNumber.substring(1, 7);
 
@@ -89,6 +101,15 @@ public class NationalIdentityNumberUtil {
         }
     }
 
+    /**
+     * Parses date of birth from Latvian national identity number if possible.
+     * <p>
+     * Latvian personal codes issued after July 1st 2017 (starting with "32") do not carry date-of-birth and null is returned.
+     *
+     * @param lvNationalIdentityNumber Latvian national identity number
+     * @return Date of birth or null if the personal code does not carry birthdate info
+     * @throws UnprocessableSmartIdResponseException if the national identity number is invalid or date cannot be parsed
+     */
     public static LocalDate parseLvDateOfBirth(String lvNationalIdentityNumber) {
         String birthDay = lvNationalIdentityNumber.substring(0, 2);
         if (isNonParsableLVPersonCodePrefix(birthDay)) {

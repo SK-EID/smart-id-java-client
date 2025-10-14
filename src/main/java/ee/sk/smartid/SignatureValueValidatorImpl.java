@@ -40,6 +40,10 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
+/**
+ * Implementation of {@link SignatureValueValidator} that uses RSASSA-PSS signature algorithm
+ * to validate the signature value in the authentication and signature session status response.
+ */
 public final class SignatureValueValidatorImpl implements SignatureValueValidator {
 
     private final Logger logger = LoggerFactory.getLogger(SignatureValueValidatorImpl.class);

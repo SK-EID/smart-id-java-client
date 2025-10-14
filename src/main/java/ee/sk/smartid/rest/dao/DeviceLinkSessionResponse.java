@@ -39,9 +39,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @param sessionID      Required. The unique identifier of the session.
  * @param sessionToken   Required. The token of the session.
- * @param sessionSecret  Required.
- * @param deviceLinkBase Required. Base URI for generating device link
- * @param receivedAt     Timestamp when the response was received
+ * @param sessionSecret  Required. The secret for the session.
+ * @param deviceLinkBase Required. Base URI for generating device link.
+ * @param receivedAt     Timestamp when the response was received.
  */
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -51,6 +51,16 @@ public record DeviceLinkSessionResponse(String sessionID,
                                         URI deviceLinkBase,
                                         Instant receivedAt) implements Serializable {
 
+    /**
+     * Initializes a new instance of the {@link DeviceLinkSessionResponse} class.
+     * <p>
+     * The receivedAt value is set to the current time.
+     *
+     * @param sessionID      Required. The unique identifier of the session.
+     * @param sessionToken   Required. The token of the session.
+     * @param sessionSecret  Required. The secret for the session.
+     * @param deviceLinkBase Required. Base URI for generating device link
+     */
     @JsonCreator
     public DeviceLinkSessionResponse(@JsonProperty("sessionID") String sessionID,
                                      @JsonProperty("sessionToken") String sessionToken,

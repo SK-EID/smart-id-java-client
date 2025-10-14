@@ -60,6 +60,9 @@ import org.slf4j.LoggerFactory;
 import ee.sk.smartid.AuthenticationIdentity;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
+/**
+ * Utility class for extracting attributes from X.509 certificates.
+ */
 public final class CertificateAttributeUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(CertificateAttributeUtil.class);

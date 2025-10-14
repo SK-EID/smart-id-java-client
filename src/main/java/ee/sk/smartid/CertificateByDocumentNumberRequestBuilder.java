@@ -39,6 +39,9 @@ import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
 import ee.sk.smartid.rest.dao.CertificateResponse;
 import ee.sk.smartid.util.StringUtil;
 
+/**
+ * Builder for constructing request to query certificate from Smart-ID API
+ */
 public class CertificateByDocumentNumberRequestBuilder {
 
     private static final Logger logger = LoggerFactory.getLogger(CertificateByDocumentNumberRequestBuilder.class);

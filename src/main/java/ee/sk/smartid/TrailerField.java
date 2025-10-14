@@ -29,11 +29,14 @@ package ee.sk.smartid;
 import java.util.Arrays;
 
 /**
- * TrailerField represents the value used in the trailer field of the Smart-ID authentication and signature response.
- * The pssSpecValue necessary for generating the signature.
+ * TrailerField represents the value used in the trailer field of the Smart-ID authentication and signature response
+ * and related value for PSSParameterSpec.
  */
 public enum TrailerField {
 
+    /**
+     * Trailer field hexadecimal value "0xbc" with PSSParameterSpec value 1.
+     */
     BC("0xbc", 1);
 
     private final String value;
@@ -44,14 +47,31 @@ public enum TrailerField {
         this.pssSpecValue = pssSpecValue;
     }
 
+    /**
+     * Gets the hexadecimal value of the trailer field.
+     *
+     * @return the hexadecimal value of the trailer field.
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Gets the PSSParameterSpec value associated with the trailer field.
+     *
+     * @return the PSS specification value.
+     */
     public int getPssSpecValue() {
         return pssSpecValue;
     }
 
+    /**
+     * Converts a string representation of a trailer field to its corresponding TrailerField enum value.
+     *
+     * @param trailerField the string representation of the trailer field.
+     * @return the corresponding TrailerField enum value.
+     * @throws IllegalArgumentException if the provided string does not match any TrailerField value.
+     */
     public static TrailerField fromString(String trailerField) {
         return Arrays.stream(TrailerField.values())
                 .filter(field -> field.getValue().equals(trailerField))

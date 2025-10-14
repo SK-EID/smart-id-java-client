@@ -28,9 +28,14 @@ package ee.sk.smartid.exception.useraccount;
 
 import ee.sk.smartid.exception.UserAccountException;
 
-
+/**
+ * Thrown when session status end result is ACCOUNT_UNUSABLE.
+ */
 public class UserAccountUnusableException extends UserAccountException {
 
+    /**
+     * Constructs the exception with the default exception message.
+     */
     public UserAccountUnusableException() {
         super("The account is currently unusable");
     }

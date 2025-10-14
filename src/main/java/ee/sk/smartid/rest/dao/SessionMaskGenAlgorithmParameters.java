@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,20 +26,34 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Mask generation algorithm parameters.
+ * <p>
+ * hashAlgorithm - Required. The hash algorithm, e.g. "SHA-256"
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionMaskGenAlgorithmParameters implements Serializable {
 
     private String hashAlgorithm;
 
+    /**
+     * Gets hash algorithm.
+     *
+     * @return hash algorithm
+     */
     public String getHashAlgorithm() {
         return hashAlgorithm;
     }
 
+    /**
+     * Sets hash algorithm.
+     *
+     * @param hashAlgorithm hash algorithm
+     */
     public void setHashAlgorithm(String hashAlgorithm) {
         this.hashAlgorithm = hashAlgorithm;
     }

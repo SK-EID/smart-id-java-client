@@ -51,6 +51,9 @@ import ee.sk.smartid.rest.dao.SessionSignatureAlgorithmParameters;
 import ee.sk.smartid.rest.dao.SessionStatus;
 import ee.sk.smartid.util.StringUtil;
 
+/**
+ * Validator for signature session status.
+ */
 public class SignatureResponseValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(SignatureResponseValidator.class);
@@ -82,7 +85,7 @@ public class SignatureResponseValidator {
     }
 
     /**
-     * Create {@link SignatureResponse} from {@link SessionStatus}
+     * Validates {@link SessionStatus} and produces {@link SignatureResponse}.
      *
      * @param sessionStatus             session status response
      * @param requestedCertificateLevel certificate level used to start the signature session

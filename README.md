@@ -148,16 +148,44 @@ logging.level.ee.sk.smartid.rest.LoggingFilter: trace
 [Configure to use with Smart-ID Demo environment](https://sk-eid.github.io/smart-id-documentation/environments.html#_demo)
 NB! Smart-ID Basic level accounts (certificate level ADVANCED) are not supported for DEMO
 
+### Setting up SSL connection to Smart-ID API
+
+Live SSL certificates of Smart-ID service provider (SK) can be found here: https://sk-eid.github.io/smart-id-documentation/https_pinning.html#_rp_api_smart_id_com_certificates
+Demo SSL certificates can be found here: https://sk-eid.github.io/smart-id-documentation/https_pinning.html#_sid_demo_sk_ee_certificates
+
+Recommended way is to use truststore and provide it to the client.
+
 ```java 
+// Read truststore containing Smart-ID service provider (SK) SSL certificates
 InputStream is = SmartIdClient.class.getResourceAsStream("demo_server_trusted_ssl_certs.jks");
 KeyStore trustStore = KeyStore.getInstance("JKS");
 trustStore.load(is, "changeit".toCharArray());
 
+// Initialize SmartIdClient and set connection parameters.
 var smartIdClient = new SmartIdClient();
+// set relying party details
 client.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
 client.setRelyingPartyName("DEMO");
+// set Smart-ID API host URL
 client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+// set the trust store containing SK SSL certificates
 client.setTrustStore(trustStore);
+```
+
+### Provide SSL certificates to the client
+
+Also it is possible to add trusted certificates one by one. 
+
+```java
+// Initialize SmartIdClient and set connection parameters.
+var smartIdClient = new SmartIdClient();
+// set relying party details
+client.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
+client.setRelyingPartyName("DEMO");
+// set Smart-ID API host URL
+client.setHostUrl("https://sid.demo.sk.ee/smart-id-rp/v3/");
+// add trusted SSL certificates
+client.setTrustedCertificates("-----BEGIN CERTIFICATE-----\nMIIFIjCCBAqgAwIBAgIQBH3ZvDVJl5qtCPwQJSruuj...");
 ```
 
 ## Device-link flows

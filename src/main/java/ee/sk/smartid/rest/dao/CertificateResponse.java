@@ -30,6 +30,12 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+/**
+ * Response of certificate queried by document number
+ *
+ * @param state Required. State of the certificate
+ * @param cert  Required if state is OK. Certificate information {@link CertificateInfo}
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CertificateResponse(String state, CertificateInfo cert) implements Serializable {
 }
