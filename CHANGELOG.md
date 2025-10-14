@@ -1,128 +1,17 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-Changes mentioned under 3.1.x version have not been published yet. Will be released when v3.1 is stable.
+## [3.1-?] - TBD
 
-## [3.1.17] - 2025-10-07
-- Updated SmartIdRestConnector to use v3.1 notification-based signature endpoint
+### Structural changes
 
-## [3.1.16] - 2025-10-04
-- Updated SmartIdRestConnector to use v3.1 notification-based certificate choice endpoint
-- Added AccountUnusableException to handle ACCOUNT_UNUSABLE endResult from session status response
+- Moved Smart-ID v3 related classes from ee.sk.smartid.v3 package to root ee.sk.smartid package.
+- Removed all Smart-ID v2 related classes, tests, and documentation.
+- Updated README to reflect removal of v2-related information.
 
-## [3.1.15] - 2025-09-17 
-- Added CallbackUrlUtil to generate callback URL with token and provides method to validate sessionSecretDigest
-- Updated DeviceLinkAuthenticationResponseValidator to also validate userChallenge and userChallengeVerifier same device flows.
-
-## [3.1.14] - 2025-09-17
-- Updated notification-based authentication session request creation to be usable with Smart-ID API v3.1
-- Removed verificationCodeChoice interactions and related handling
-- Removed AuthenticationHash.
-
-## [3.1.13] - 2025-09-08
-- Added endpoint for creating linked signature session `POST /v3/signature/notification/linked/{document-number}`.
-- Added builder to create linked signature session request `LinkedSignatureSessionRequestBuilder`.
-
-## [3.1.12] - 2025-09-08
-- Removed HashType and update SignableHash and SignableData to use HashAlgorithm
-
-## [3.1.11] - 2025-08-25
-- Updated CertificateChoiceResponseMapper
-    - Renamed to CertificateChoiceResponseValidator
-    - Added CertificateValidator as dependency
-
-## [3.1.10] - 2025-08-28
-- Updated exception message of `DocumentUnusableException`
-
-## [3.1.9] - 2025-07-20
-- Extracted common certificate validation logic into `CertificateValidator` and will be used by `AuthenticationResponseValidator` and `SignatureResponseValidator`.
-
-## [3.1.8] - 2025-07-15
-- Added new exception `SmartIdRequestSetupException` to handle cases when invalid values are provided for building session request objects.
-
-## [3.1.7] - 2025-07-10
-
-- Renamed dynamic-link certificate choice to device-link certificate choice.
-- Updated certificate choice endpoint to use /device-link/ paths.
-- Added `initialCallbackUrl` field with regex validation.
-- Added `deviceLinkBase` to session response.
-
-## [3.1.6] - 2025-07-08
-
-### Added
-- Session-status (signature)
-  - `signature.value` must match `^[A-Za-z0-9+/]+={0,2}$`.
-  - Allowed `flowType`: QR · App2App · Web2App · Notification.
-  - Fixed `signatureAlgorithm` to `rsassa-pss`.
-  - `signatureAlgorithmParameters`
-    - `hashAlgorithm`: `SHA-256/384/512, SHA3-256/384/512`.
-    - `maskGenAlgorithm.algorithm`: `id-mgf1` & its `hashAlgorithm` must equal the main hash.
-    - `saltLength`: 32 / 48 / 64 bytes to match chosen hash.
-    - `trailerField`: `0xbc`.
-
-- Certificate
-  - Must be a Smart-ID *signature* certificate:
-    - `CertificatePolicies (2.5.29.32)` contain either `qualified``1.3.6.1.4.1.10015.17.2`, `0.4.0.194112.1.2`or `non-qualified``1.3.6.1.4.1.10015.17.1`, `0.4.0.2042.1.1`.
-    - `KeyUsage (2.5.29.15)` – NonRepudiation bit set.
-    - `QC-Statement (1.3.6.1.5.5.7.1.3)` contains `0.4.0.1862.1.6.1`.
-
-## [3.1.5] - 2025-06-30
-
-- Renamed dynamic-link signature to device-link signature.
-- Updated signature endpoints to use /device-link/ paths.
-- Replaced signature algorithm list with fixed `rsassa-pss`.
-- Added required `signatureAlgorithmParameters.hashAlgorithm` field with validation.
-- Converted interaction list to Base64 string and ensured no duplicates.
-- Added `initialCallbackUrl` field with regex validation.
-- Added `deviceLinkBase` to session response.
-
-## [3.1.4] - 2025-07-05
-
-### Changed
-- Updates to session status response
-  - Updated USER_REFUSED_INTERACTION responses and updated error handling for these cases.
-  - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
-  - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
-  - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
-- Updated AuthenticationSessionRequest and related classes to records.
-- Refactored loading of trusted CA certificates from AuthenticationResponseValidator to their own class `DefaultTrustedCACertStore`.
-  - Created to builder-classes for loading trusted CA certificates
-    - `FileTrustedCACertStoreBuilder` for loading trust anchors and intermediate CA certificates from truststore
-    - `DefaultTrustedCACertStoreBuilder` for creating DefaultTrustedCACertStore with preloaded certificates, also validates provided certificates
-- Refactored AuthenticationResponseMapper to be used as singleton instead of static class and added it as dependency for AuthenticationResponseValidator
-- Update AuthenticationResponseValidator
-  - update signature value validation
-  - added additional certificate validations (validate certificate chain and certificate purpose)
-
-## [3.1.3] - 2025-06-13
-
-### Added
-
-- Added new endpoint: `POST /v3/signature/certificate/{document-number}`.
-
-### Removed
-
-- Removed notification-based certificate choice request with document number.
-
-## [3.1.2] - 2025-06-05
-
-### Changed
-
-- Replaced old dynamic content and authCode generation logic to match Smart-ID v3.1 authCode specification.
-- Introduced a `DeviceLinkBuilder` to generate device-links.
-  - Validates required parameters such as `deviceLinkBase`, `version`, `deviceLinkType`, `sessionType`, `lang`, `elapsedSeconds` and `sessionToken`.
-  - Ensures `elapsedSeconds` is only used for QR_CODE flows.
-  - Moved `deviceLinkBase` to required input (no more default).
-  - Handles both unprotected device-link generation and HMAC-SHA256 based authCode calculation as per specification.
-  - New payload structure includes required and optional fields as per documentation.
-  - `schemeName` is now configurable (default is `"smart-id"`).
-  - Does not store `sessionSecret`, ensures it must be passed to the build method.
-- Removed deprecated dynamic link and QR code generation logic from old builders and helpers.
-
-## [3.1.1] - 2025-06-02
-
-### Changed
+### Dynamic-link auth to device-link auth changes
 
 - Renamed dynamic-link authentication to device-link authentication.
 - Updated authentication endpoints to use /device-link/ paths.
@@ -132,13 +21,109 @@ Changes mentioned under 3.1.x version have not been published yet. Will be relea
 - Converted interaction list to Base64 string and ensured no duplicates.
 - Added `initialCallbackUrl` field with regex validation.
 - Added `deviceLinkBase` to session response.
+- Added new exception `SmartIdRequestSetupException` to handle cases when invalid values are provided for building session request objects.
+- Replaced old dynamic content and authCode generation logic to match Smart-ID v3.1 authCode specification.
+- Introduced a `DeviceLinkBuilder` to generate device links.
+    - Validates required parameters such as `deviceLinkBase`, `version`, `deviceLinkType`, `sessionType`, `lang`, `elapsedSeconds` and `sessionToken`.
+    - Ensures `elapsedSeconds` is only used for QR_CODE flows.
+    - Moved `deviceLinkBase` to required input (no more default).
+    - Handles both unprotected device-link generation and HMAC-SHA256 based authCode calculation as per specification.
+    - New payload structure includes required and optional fields as per documentation.
+    - `schemeName` is now configurable (default is `"smart-id"`).
+    - Does not store `sessionSecret`, ensures it must be passed to the build method.
+- Removed deprecated dynamic link and QR code generation logic from old builders and helpers.
 
-## [3.1] - 2025-05-20
+- Updates to session status response
+    - Updated USER_REFUSED_INTERACTION responses and updated error handling for these cases.
+    - Added new `endResult` error responses (`PROTOCOL_FAILURE`, `EXPECTED_LINKED_SESSION`, `SERVER_ERROR`) with handling
+    - Added new fields: `userChallenge`, `flowType`, `signatureAlgorithmParameters`
+    - Renamed `interactionFlowUsed` to `interactionTypeUsed`.
+- Updated exception message of `DocumentUnusableException`
+- Added AccountUnusableException to handle ACCOUNT_UNUSABLE endResult from session status response
+- Updated AuthenticationSessionRequest and related classes to records.
+- Refactored loading of trusted CA certificates from AuthenticationResponseValidator to their own class `DefaultTrustedCACertStore`.
+    - Created to builder-classes for loading trusted CA certificates
+        - `FileTrustedCACertStoreBuilder` for loading trust anchors and intermediate CA certificates from truststore
+        - `DefaultTrustedCACertStoreBuilder` for creating DefaultTrustedCACertStore with preloaded certificates, also validates provided certificates
+- Update AuthenticationResponseValidator to DeviceLinkAuthenticationResponseValidator
+    - update signature value validation
+    - added additional certificate validations (validate certificate chain and certificate purpose)
+    - added validation for userChallenge and userChallengeVerifier in case of same device flows
+    - added validators QualifiedAuthenticationCertificatePurposeValidator and NonQualifiedAuthenticationCertificatePurposeValidator to validate
+      certificate purpose based on requested certificate level.
 
-### Changed
-- Moved Smart-ID v3 related classes from ee.sk.smartid.v3 package to root ee.sk.smartid package.
-- Removed all Smart-ID v2 related classes, tests, and documentation.
-- Updated README to reflect removal of v2-related information.
+- Added CallbackUrlUtil to generate callback URL with token and provides method to validate sessionSecretDigest
+
+### Added handling for querying certificate by document number
+
+- Added new endpoint: `POST /v3/signature/certificate/{document-number}`.
+- Added new builder CertificateByDocumentNumberRequestBuilder to create the request
+- Add new request objects CertificateByDocumentNumberRequest and response CertificateResponse
+- Removed notification-based certificate choice request with document number.
+
+### Updated dynamic-link signature to device-link signature
+
+- Renamed dynamic-link signature to device-link signature.
+- Updated signature endpoints to use /device-link/ paths.
+- Replaced signature algorithm list with fixed `rsassa-pss`.
+- Added required `signatureAlgorithmParameters.hashAlgorithm` field with validation.
+- Converted interaction list to Base64 string and ensured no duplicates.
+- Added `initialCallbackUrl` field with regex validation.
+- Added `deviceLinkBase` to session response.
+- Removed HashType and update SignableHash and SignableData to use HashAlgorithm
+- Update signature session-status validations
+    - Signature
+        - `signature.value` must match `^[A-Za-z0-9+/]+={0,2}$`.
+        - Allowed `flowType`: QR · App2App · Web2App · Notification.
+        - Fixed `signatureAlgorithm` to `rsassa-pss`.
+        - `signatureAlgorithmParameters`
+            - `hashAlgorithm`: `SHA-256/384/512, SHA3-256/384/512`.
+            - `maskGenAlgorithm.algorithm`: `id-mgf1` & its `hashAlgorithm` must equal the main hash.
+            - `saltLength`: 32 / 48 / 64 bytes to match chosen hash algorithm octet length.
+            - `trailerField`: `0xbc`.
+
+    - Certificate
+        - Must be a Smart-ID *signature* certificate:
+            - `CertificatePolicies (2.5.29.32)` contain either `qualified``1.3.6.1.4.1.10015.17.2`, `0.4.0.194112.1.2`or
+              `non-qualified``1.3.6.1.4.1.10015.17.1`, `0.4.0.2042.1.1`.
+            - `KeyUsage (2.5.29.15)` – NonRepudiation bit set.
+            - `QC-Statement (1.3.6.1.5.5.7.1.3)` contains `0.4.0.1862.1.6.1`.
+
+- Extracted common certificate validation logic into `CertificateValidator` and will be used by `AuthenticationResponseValidator` and
+  `SignatureResponseValidator`.
+
+## Update dynamic-link certificate choice to device-link certificate choice
+
+- Renamed dynamic-link certificate choice to device-link certificate choice.
+- Updated certificate choice endpoint to use /device-link/ paths.
+- Added `initialCallbackUrl` field with regex validation.
+- Added `deviceLinkBase` to session response.
+- Updated CertificateChoiceResponseMapper
+    - Renamed to CertificateChoiceResponseValidator
+    - Added CertificateValidator as dependency
+
+## Added linked signature session support
+
+- Added endpoint for creating linked signature session `POST /v3/signature/notification/linked/{document-number}`.
+- Added builder to create linked signature session request `LinkedSignatureSessionRequestBuilder`.
+- Added request LinkedSignatureSessionRequest and LinkedSignatureSessionResponse.
+
+### Updated notification-based authentication to work with Smart-ID API v3.1
+
+- Updated notification-based authentication session request creation to be usable with Smart-ID API v3.1
+- Removed verificationCodeChoice interactions and related handling
+- Removed AuthenticationHash.
+- Added NotificationAuthenticationResponseValidator
+
+### Updated notification-based certificate choice to work with Smart-ID API v3.1
+
+- Updated SmartIdRestConnector to use v3.1 notification-based certificate choice endpoint
+- Added NotificationCertificateChoiceSessionRequest
+
+### Updated notification-based signature to work with Smart-ID API v3.1
+
+- Updated SmartIdRestConnector to use v3.1 notification-based signature endpoint
+- Added NotificationSignatureSessionRequest
 
 ## [3.0] - 2023-10-14
 
