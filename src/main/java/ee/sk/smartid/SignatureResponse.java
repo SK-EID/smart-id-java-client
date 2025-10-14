@@ -46,7 +46,7 @@ public class SignatureResponse implements Serializable {
     private CertificateLevel requestedCertificateLevel;
     private CertificateLevel certificateLevel;
     private String documentNumber;
-    private String interactionFlowUsed; // TODO - 10.10.25: should be renamed to match new field name 'interactionTypeUsed'
+    private String interactionFlowUsed; // TODO - 10.10.25: should be renamed to match new field name 'interactionTypeUsed'; Fix in SLIB-138
     private String deviceIpAddress;
     private RsaSsaPssParameters rsaSsaPssParameters;
 
@@ -227,7 +227,6 @@ public class SignatureResponse implements Serializable {
         this.documentNumber = documentNumber;
     }
 
-    // TODO - 13.10.25: should be renamed to interactionTypeUsed
     public String getInteractionFlowUsed() {
         return interactionFlowUsed;
     }

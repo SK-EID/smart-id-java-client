@@ -37,7 +37,7 @@ public class CertificateChoiceResponse {
     private X509Certificate certificate;
     private CertificateLevel certificateLevel;
     private String documentNumber;
-    private String interactionFlowUsed; // TODO - 10.10.25: should be renamed to match new field name
+    private String interactionFlowUsed; // TODO - 10.10.25: should be renamed to match new field name; Fix in SLIB-138
     private String deviceIpAddress;
 
     /**
@@ -112,7 +112,6 @@ public class CertificateChoiceResponse {
         this.documentNumber = documentNumber;
     }
 
-    // TODO - 10.10.25: rename
     public String getInteractionFlowUsed() {
         return interactionFlowUsed;
     }
