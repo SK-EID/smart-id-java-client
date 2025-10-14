@@ -12,10 +12,10 @@ package ee.sk.smartid.common.notification.interactions;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@ import ee.sk.smartid.common.SmartIdInteraction;
 import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 
 /**
- * Notification interaction to be used in notification based authentication and signing requests
+ * Interaction to be used in notification-based authentication and signing requests
  *
  * @param type           the interactions type that can be used for notification based flows (see {@link NotificationInteractionType} for possible values)
  * @param displayText60  the text to be displayed on the device screen (maximum length 60 characters).
@@ -43,6 +43,16 @@ public record NotificationInteraction(NotificationInteractionType type,
                                       String displayText60,
                                       String displayText200) implements Serializable, SmartIdInteraction {
 
+    /**
+     * Constructs a new NotificationInteraction instance.
+     * <p>
+     * Display text fields will be validated based on interaction type.
+     *
+     * @param type           the interactions type that can be used for notification based flows (see {@link NotificationInteractionType} for possible values)
+     * @param displayText60  the text to be displayed on the device screen (maximum length 60 characters).
+     * @param displayText200 the text to be displayed on the device screen (maximum length 200 characters).
+     * @throws SmartIdRequestSetupException if display text fields have incorrect value based on the type
+     */
     public NotificationInteraction {
         if (type == null) {
             throw new SmartIdRequestSetupException("Value for 'type' must be set");

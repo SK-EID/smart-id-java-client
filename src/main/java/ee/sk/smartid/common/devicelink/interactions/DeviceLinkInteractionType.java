@@ -29,11 +29,17 @@ package ee.sk.smartid.common.devicelink.interactions;
 import ee.sk.smartid.common.InteractionType;
 
 /**
- * Device link interaction types that can be used in device link based authentication and signing requests
+ * Interaction types that can be used in device link-based authentication and signing requests
  */
 public enum DeviceLinkInteractionType implements InteractionType {
 
+    /**
+     * Provided text with max length of 60 chars will be displayed on the device with option to enter the PIN.
+     */
     DISPLAY_TEXT_AND_PIN("displayTextAndPIN", 60),
+    /**
+     * Provided text with max length of 200 chars will be shown on the device with confirmation dialog before entering the PIN.
+     */
     CONFIRMATION_MESSAGE("confirmationMessage", 200);
 
     private final String code;

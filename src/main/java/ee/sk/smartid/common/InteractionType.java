@@ -12,10 +12,10 @@ package ee.sk.smartid.common;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,19 +27,19 @@ package ee.sk.smartid.common;
  */
 
 /**
- * Representations of interaction types that can be used in authentication and signing requests
+ * Interface for interaction types that can be used in authentication and signing requests.
  */
 public interface InteractionType {
 
     /**
-     * Provides the interaction type as value that can be used in the Smart ID API
+     * Get the interaction type as value that can be used in the Smart ID API.
      *
      * @return code representing the interaction type
      */
     String getCode();
 
     /**
-        * Provides the maximum length of the display text for this interaction type
+     * Get the maximum length of the display text for this interaction type.
      *
      * @return maximum length of the display text
      */

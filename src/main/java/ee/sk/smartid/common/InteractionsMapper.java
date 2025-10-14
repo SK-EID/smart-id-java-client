@@ -42,6 +42,7 @@ public final class InteractionsMapper {
     /**
      * Converts from any SmartIdInteraction to Interaction
      *
+     * @param <T>         type of SmartIdInteraction
      * @param interaction the interaction to be converted
      * @return interaction to be used in REST request
      */
