@@ -29,7 +29,7 @@ package ee.sk.smartid.exception.useraccount;
 import ee.sk.smartid.exception.UserAccountException;
 
 /**
- * Thrown when sessions status end result is ACCOUNT_UNUSABLE.
+ * Thrown when session status end result is ACCOUNT_UNUSABLE.
  */
 public class UserAccountUnusableException extends UserAccountException {
 

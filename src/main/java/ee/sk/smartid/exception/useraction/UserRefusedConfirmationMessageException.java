@@ -27,7 +27,7 @@ package ee.sk.smartid.exception.useraction;
  */
 
 /**
- * Thrown when sessions status end result is USER_REFUSED_INTERACTION.
+ * Thrown when session status end result is USER_REFUSED_INTERACTION.
  * This happens when user presses Cancel on confirmation message screen.
  */
 public class UserRefusedConfirmationMessageException extends UserRefusedException {

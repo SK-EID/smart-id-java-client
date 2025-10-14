@@ -33,7 +33,7 @@ import java.util.Base64;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 /**
- * The authentication response after a successful authentication sessions status response was received.
+ * The authentication response after a successful authentication session status response was received.
  * <p>
  * Used with {@link DeviceLinkAuthenticationResponseValidator} to validate the certificate used for authentication
  * and the signature in the authentication response.

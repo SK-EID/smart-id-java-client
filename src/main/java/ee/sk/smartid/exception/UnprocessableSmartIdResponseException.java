@@ -29,7 +29,8 @@ package ee.sk.smartid.exception;
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 /**
- * Thrown when validation of any Smart-ID AP responses fail. This includes response for session initialization requests and session status response.
+ * Thrown when validation of any Smart-ID API responses fail.
+ * This includes responses for session initialization requests and session status responses.
  */
 public class UnprocessableSmartIdResponseException extends SmartIdClientException {
 

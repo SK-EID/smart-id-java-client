@@ -29,7 +29,7 @@ package ee.sk.smartid;
 import java.util.Arrays;
 
 /**
- * Signature algorithms supported by Smart ID API.
+ * Signature algorithms supported by Smart-ID API.
  */
 public enum SignatureAlgorithm {
 

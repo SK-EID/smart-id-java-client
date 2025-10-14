@@ -29,7 +29,7 @@ package ee.sk.smartid.exception.permanent;
 import ee.sk.smartid.exception.EnduringSmartIdException;
 
 /**
- * Exception thrown when the session end results is PROTOCOL_FAILURE, indicating logical error in the signing protocol.
+ * Exception thrown when the session status end result is PROTOCOL_FAILURE, indicating logical error in the signing protocol.
  * <p>
  * F.e. Constructed device link that user can interact with contains invalid schema.
  */

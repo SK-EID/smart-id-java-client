@@ -27,7 +27,7 @@ package ee.sk.smartid.exception.useraccount;
  */
 
 /**
- * Thrown when sessions status response ends result with DOCUMENT_UNUSABLE status.
+ * Thrown when session status end result is DOCUMENT_UNUSABLE.
  */
 public class DocumentUnusableException extends PersonShouldViewSmartIdPortalException {
 

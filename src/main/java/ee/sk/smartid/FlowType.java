@@ -62,7 +62,7 @@ public enum FlowType {
     }
 
     /***
-     * Gets the value used in the Smart ID API to represent the flow type.
+     * Gets the value used in the Smart-ID API to represent the flow type.
      *
      * @return the flow type description
      */

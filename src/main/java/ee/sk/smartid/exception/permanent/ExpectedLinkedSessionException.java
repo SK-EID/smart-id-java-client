@@ -29,8 +29,9 @@ package ee.sk.smartid.exception.permanent;
 import ee.sk.smartid.exception.EnduringSmartIdException;
 
 /**
- * Exception will be thrown when in linked signature flow the session that follows
- * the device link-based cert-choice session is not the expected linked signature session.
+ * Linked signature flow consists of two sessions - device link-based certificate choice session followed by the linked signature session.
+ * Exception will be thrown when linked signature session is not received after the device link-based certificate choice session,
+ * but some other session with the same document number is received instead.
  */
 public class ExpectedLinkedSessionException extends EnduringSmartIdException {
 

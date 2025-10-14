@@ -29,10 +29,10 @@ package ee.sk.smartid.exception.useraccount;
 import ee.sk.smartid.exception.UserAccountException;
 
 /**
- * Thrown when user does not have account suitable for the requested operation.
+ * Thrown when user does not have a suitable account for the requested operation.
  * <p>
  * F.e. user has non-qualified account with ADVANCED certificate level,
- * but operation requires QUALIFIED certificate level for the operation.
+ * but QUALIFIED certificate level is required for the operation.
  */
 public class NoSuitableAccountOfRequestedTypeFoundException extends UserAccountException {
 

@@ -54,7 +54,7 @@ public record DeviceLinkSessionResponse(String sessionID,
     /**
      * Initializes a new instance of the {@link DeviceLinkSessionResponse} class.
      * <p>
-     * The receivedAt is set to the current time.
+     * The receivedAt value is set to the current time.
      *
      * @param sessionID      Required. The unique identifier of the session.
      * @param sessionToken   Required. The token of the session.

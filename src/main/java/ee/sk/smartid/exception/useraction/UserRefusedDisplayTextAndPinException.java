@@ -27,7 +27,7 @@ package ee.sk.smartid.exception.useraction;
  */
 
 /**
- * Thrown when sessions result is USER_REFUSED_INTERACTION.
+ * Thrown when session status end result is USER_REFUSED_INTERACTION.
  * This happens when user presses Cancel on display text and PIN screen.
  */
 public class UserRefusedDisplayTextAndPinException extends UserRefusedException {

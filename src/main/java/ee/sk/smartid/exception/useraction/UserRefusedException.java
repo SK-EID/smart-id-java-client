@@ -29,7 +29,7 @@ package ee.sk.smartid.exception.useraction;
 import ee.sk.smartid.exception.UserActionException;
 
 /**
- * Thrown when session status result is USER_REFUSED.
+ * Thrown when session status end result is USER_REFUSED.
  */
 public class UserRefusedException extends UserActionException {
 

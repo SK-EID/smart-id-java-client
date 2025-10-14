@@ -31,7 +31,7 @@ import java.security.cert.X509Certificate;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
 
 /**
- * Interface for validating X509 certificates used in Smart ID authentication and signing.
+ * Interface for validating X509 certificates used in Smart-ID authentication and signing.
  * <p>
  * Implementations of this interface should provide the logic to validate the certificate,
  * ensuring it meets the necessary security and trust requirements.

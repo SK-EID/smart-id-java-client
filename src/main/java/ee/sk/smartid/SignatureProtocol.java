@@ -27,7 +27,7 @@ package ee.sk.smartid;
  */
 
 /**
- * Signature protocols supported by Smart ID API.
+ * Signature protocols supported by Smart-ID API.
  */
 public enum SignatureProtocol {
 

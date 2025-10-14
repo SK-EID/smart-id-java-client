@@ -30,7 +30,7 @@ import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Represents request to query sessions status.
+ * Represents request to query session status.
  * <p>
  * sessionId - the session ID to query status for.
  * responseSocketOpenTimeUnit - time unit of how much time a network request socket should be kept open.

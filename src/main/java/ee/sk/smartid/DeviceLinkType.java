@@ -53,7 +53,7 @@ public enum DeviceLinkType {
     }
 
     /**
-     * Provides the device link type as value that can be used in the Smart ID API
+     * Provides the device link type as value that can be used in the Smart-ID API
      *
      * @return code representing the device link type
      */

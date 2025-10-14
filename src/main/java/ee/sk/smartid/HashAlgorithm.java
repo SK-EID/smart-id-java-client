@@ -32,7 +32,7 @@ import java.util.Optional;
 /**
  * Represents hash algorithms used for hashing the data to be signed.
  * <p>
- * * The algorithm name is the name used in the Smart ID API.
+ * * The algorithm name is the name used in the Smart-ID API.
  * * The octet length represents salt length in bytes (octets) produced by the hash algorithm.
  */
 public enum HashAlgorithm {
@@ -71,7 +71,7 @@ public enum HashAlgorithm {
     }
 
     /**
-     * Gets the name of the algorithm as used in the Smart ID API.
+     * Gets the name of the algorithm as used in the Smart-ID API.
      *
      * @return the algorithm name
      */
