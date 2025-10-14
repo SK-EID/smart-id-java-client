@@ -250,9 +250,9 @@ public class SmartIdClient {
     }
 
     /**
-     * // TODO - 13.10.25:
+     * Set the configured client.
      *
-     * @param configuredClient
+     * @param configuredClient jakarta.ws.rs.client.Client implementations
      */
     public void setConfiguredClient(Client configuredClient) {
         this.configuredClient = configuredClient;
@@ -330,11 +330,7 @@ public class SmartIdClient {
     }
 
     /**
-     * // TODO - 13.10.25: add info about HTTPS pinning
-     * Sets the trust store for the client
-     * <p>
-     * Useful for configuring custom trust store
-     * for the client.
+     * Set trust store containing SSL certificates
      *
      * @param trustStore trust store for the client
      */
@@ -351,9 +347,9 @@ public class SmartIdClient {
     }
 
     /**
+     * Can be used instead of {@link #setTrustStore} to add SSL certificates.
      *
-     *
-     * @param sslCertificates
+     * @param sslCertificates certificates in PEM format
      */
     public void setTrustedCertificates(String... sslCertificates) {
         try {
