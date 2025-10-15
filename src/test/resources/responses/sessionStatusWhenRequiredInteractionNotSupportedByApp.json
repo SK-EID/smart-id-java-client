@@ -1,0 +1,7 @@
+{
+  "state": "COMPLETE",
+  "result": {
+    "endResult": "REQUIRED_INTERACTION_NOT_SUPPORTED_BY_APP"
+  },
+  "unknownField7899852":  "this field is added to verify that client doesn't fail when new fields are added in future"
+}

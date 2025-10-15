@@ -1,0 +1,12 @@
+{
+  "relyingPartyUUID": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "relyingPartyName": "BANK123",
+  "certificateLevel": "ADVANCED",
+  "hash": "0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=",
+  "hashType": "SHA256",
+  "nonce": "zstOt2umlc",
+  "allowedInteractionsOrder": [
+    {"type": "confirmationMessage", "displayText200":"Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"},
+    {"type": "displayTextAndPIN","displayText60": "Transfer 1 unit to account 7677323232?"}
+  ]
+}

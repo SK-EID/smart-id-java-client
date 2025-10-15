@@ -1,0 +1,13 @@
+{
+  "state": "COMPLETE",
+  "result": {
+    "endResult": "OK",
+    "documentNumber": "PNOEE-31111111111"
+  },
+  "signature": {
+    "value": "luvjsi1+1iLN9yfDFEh/BE8hXtAKhAIxilv0SEk8Qk0yoM9ms/Qsq6OtFoTFZfmpZNQtmEDg6ADeVNUfZrAoozSbqGggNP9pZLv0pQ6fvkoUjV0XI3FP5PuICuRp0vfC2w024cG/Rw2XGfZTcDWZ3IWVaS/C9tqbvA7l0Ssa8W9wUit2H5msNMyyviHJFW7m9yfjdMZe9ebPw9HGSHjnRGbzl7myUIZyWtlD5mqnk/tcU13+lD6DBYkGSW5eu125W1BMojH3sIRrKhEdZxkgwtg6KEuWQ85OQBMF3X5zFB62caKqKo42HfV74EcbaBChhJ32226VZju+JKN9D+WUeQ==",
+    "algorithm": "sha256WithRSAEncryption"
+  },
+  "interactionFlowUsed":"displayTextAndPIN",
+  "unknownField880624":  "this field is added to verify that client doesn't fail when new fields are added in future"
+}

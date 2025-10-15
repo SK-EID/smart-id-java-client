@@ -28,111 +28,43 @@ package ee.sk.smartid.rest.dao;
 
 import java.io.Serializable;
 
-/**
- * Representation of Semantic Identifier.
- */
 public class SemanticsIdentifier implements Serializable {
 
-    private final String identifier;
+  protected String identifier;
 
-    /**
-     * Constructs a new SemanticsIdentifier with the specified identity type, country code and identity number.
-     *
-     * @param identityType   the identity type (e.g., PAS, IDC, PNO). See {@link IdentityType}
-     * @param countryCode    the country code (e.g., EE, LT, LV). See {@link CountryCode}
-     * @param identityNumber the identity number
-     */
-    public SemanticsIdentifier(IdentityType identityType, CountryCode countryCode, String identityNumber) {
-        this.identifier = "" + identityType + countryCode + "-" + identityNumber;
-    }
+  public SemanticsIdentifier(IdentityType identityType, CountryCode countryCode, String identityNumber) {
+    this.identifier = "" + identityType + countryCode + "-" + identityNumber;
+  }
 
-    /**
-     * Constructs a new SemanticsIdentifier with the specified identity type, country code string and identity number.
-     *
-     * @param identityType      the identity type (e.g., PAS, IDC, PNO). See {@link IdentityType}
-     * @param countryCodeString country code as string (e.g., EE, LT, LV)
-     * @param identityNumber    the identity number
-     */
-    public SemanticsIdentifier(IdentityType identityType, String countryCodeString, String identityNumber) {
-        this.identifier = "" + identityType + countryCodeString + "-" + identityNumber;
-    }
+  public SemanticsIdentifier(IdentityType identityType, String countryCodeString, String identityNumber) {
+    this.identifier = "" + identityType + countryCodeString + "-" + identityNumber;
+  }
 
-    /**
-     * Constructs a new SemanticsIdentifier with the specified identity type string, country code string and identity number.
-     *
-     * @param identityTypeString the identity type as string (e.g., PAS, IDC, PNO)
-     * @param countryCodeString  country code as string (e.g., EE, LT, LV)
-     * @param identityNumber     the identity number
-     */
-    public SemanticsIdentifier(String identityTypeString, String countryCodeString, String identityNumber) {
-        this.identifier = "" + identityTypeString + countryCodeString + "-" + identityNumber;
-    }
+  public SemanticsIdentifier(String identityTypeString, String countryCodeString, String identityNumber) {
+    this.identifier = "" + identityTypeString + countryCodeString + "-" + identityNumber;
+  }
 
-    /**
-     * Constructs a new SemanticsIdentifier with the specified identifier string.
-     *
-     * @param identifier the full semantics identifier string (e.g., "PAS EE-1234567890")
-     */
-    public SemanticsIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
+  public SemanticsIdentifier(String identifier) {
+    this.identifier = identifier;
+  }
 
-    /**
-     * Gets the full semantics identifier string.
-     *
-     * @return the full semantics identifier string
-     */
-    public String getIdentifier() {
-        return identifier;
-    }
+  public String getIdentifier() {
+    return identifier;
+  }
 
-    /**
-     * 3-character identity type codes for SemanticsIdentifier
-     */
-    public enum IdentityType {
+  public enum IdentityType {
+    PAS, IDC, PNO
+  }
 
-        /**
-         * PAS - Passport
-         */
-        PAS,
+  public enum CountryCode {
+    EE, LT, LV
+  }
 
-        /**
-         * IDC - Identity Card
-         */
-        IDC,
-
-        /**
-         * PNO - Personal Number
-         */
-        PNO
-    }
-
-    /**
-     * 2-character country codes for SemanticsIdentifier
-     */
-    public enum CountryCode {
-
-        /**
-         * Estonia
-         */
-        EE,
-
-        /**
-         * Lithuania
-         */
-        LT,
-
-        /**
-         * Latvia
-         */
-        LV
-    }
-
-    @Override
-    public String toString() {
-        return "SemanticsIdentifier{" +
-                "identifier='" + identifier + '\'' +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "SemanticsIdentifier{" +
+        "identifier='" + identifier + '\'' +
+        '}';
+  }
 
 }

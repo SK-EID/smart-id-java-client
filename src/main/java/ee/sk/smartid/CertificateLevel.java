@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,52 +26,35 @@ package ee.sk.smartid;
  * #L%
  */
 
-import java.util.Arrays;
 
-/**
- * Representation of different signing certificate levels.
- */
-public enum CertificateLevel {
+import java.util.HashMap;
+import java.util.Map;
 
-    /**
-     * Smart-ID basic certificate level. Use if you want to allow signing with non-qualified and qualified accounts.
-     */
-    ADVANCED(1),
+public class CertificateLevel {
 
-    /**
-     * The highest Smart-ID certificate level that is also QSCD-capable. Use only to allow signing with qualified accounts.
-     */
-    QUALIFIED(2),
+  private String certificateLevel;
 
-    /**
-     * Shortened alias for QUALIFIED level.
-     */
-    QSCD(2);
+  private static final Map<String, Integer> certificateLevels = new HashMap<>();
 
-    private final int level;
+  static {
+    certificateLevels.put("ADVANCED", 1);
+    certificateLevels.put("QUALIFIED", 2);
+  }
 
-    CertificateLevel(int level) {
-        this.level = level;
+  public CertificateLevel(String certificateLevel) {
+    if (certificateLevel == null) {
+      throw new IllegalArgumentException("certificateLevel cannot be null");
     }
+    this.certificateLevel = certificateLevel;
+  }
 
-    /**
-     * Check if current certificate level is same or higher than the given certificate level
-     *
-     * @param certificateLevel the level of the certificate
-     * @return true if the current level is same or higher than the given level, false otherwise
-     */
-    public boolean isSameLevelOrHigher(CertificateLevel certificateLevel) {
-        return this == certificateLevel || this.level >= certificateLevel.level;
+  public boolean isEqualOrAbove(String certificateLevel) {
+    if (this.certificateLevel.equalsIgnoreCase(certificateLevel)) {
+      return true;
     }
-
-    /**
-     * Checks if the given certificate level value is supported
-     *
-     * @param certificateLevel the certificate level string to check
-     * @return true if the certificate level is supported, false otherwise
-     */
-    public static boolean isSupported(String certificateLevel) {
-        return Arrays.stream(CertificateLevel.values())
-                .anyMatch(level -> level.name().equals(certificateLevel));
+    else if (certificateLevels.get(certificateLevel) != null && certificateLevels.get(this.certificateLevel) != null) {
+      return certificateLevels.get(certificateLevel) <= certificateLevels.get(this.certificateLevel);
     }
+    return false;
+  }
 }

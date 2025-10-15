@@ -1,0 +1,6 @@
+{
+  "state": "RUNNING",
+  "result": {},
+  "ignoredProperties":["testingIgnored","testingIgnoredTwo"],
+  "unknownField444211":  "this field is added to verify that client doesn't fail when new fields are added in future"
+}

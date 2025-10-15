@@ -4,7 +4,7 @@ package ee.sk.smartid.rest.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.rest.dao;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,55 +26,29 @@ package ee.sk.smartid.rest.dao;
  * #L%
  */
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-/**
- * Certificate data in session status response.
- * <p>
- * value - the certificate data in Base64-encoded format
- * certificateLevel - the certificate level. Possible values: QUALIFIED or ADVANCED
- */
+import java.io.Serializable;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SessionCertificate implements Serializable {
 
-    private String value;
-    private String certificateLevel;
+  private String value;
+  private String certificateLevel;
 
-    /**
-     * Get the certificate value.
-     *
-     * @return the certificate data in Base64-encoded format
-     */
-    public String getValue() {
-        return value;
-    }
+  public String getValue() {
+    return value;
+  }
 
-    /**
-     * Set the certificate value.
-     *
-     * @param value the certificate data in Base64-encoded format
-     */
-    public void setValue(String value) {
-        this.value = value;
-    }
+  public void setValue(String value) {
+    this.value = value;
+  }
 
-    /**
-     * Gets the certificate level.
-     *
-     * @return the certificate level
-     */
-    public String getCertificateLevel() {
-        return certificateLevel;
-    }
+  public String getCertificateLevel() {
+    return certificateLevel;
+  }
 
-    /**
-     * Sets the certificate level.
-     *
-     * @param certificateLevel the certificate level
-     */
-    public void setCertificateLevel(String certificateLevel) {
-        this.certificateLevel = certificateLevel;
-    }
+  public void setCertificateLevel(String certificateLevel) {
+    this.certificateLevel = certificateLevel;
+  }
 }

@@ -4,7 +4,7 @@ package ee.sk.smartid.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,172 +26,31 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
+import ee.sk.smartid.exception.SessionNotFoundException;
+import ee.sk.smartid.rest.dao.*;
+
+import javax.net.ssl.SSLContext;
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLContext;
-
-import ee.sk.smartid.exception.SessionNotFoundException;
-import ee.sk.smartid.rest.dao.CertificateByDocumentNumberRequest;
-import ee.sk.smartid.rest.dao.CertificateResponse;
-import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkCertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
-import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
-import ee.sk.smartid.rest.dao.LinkedSignatureSessionRequest;
-import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionRequest;
-import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionRequest;
-import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
-import ee.sk.smartid.rest.dao.NotificationSignatureSessionRequest;
-import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SessionStatus;
-
-/**
- * SmartIdConnector is the main interface for interacting with the Smart-ID service.
- * It provides methods to initiate various types of sessions (authentication, signature, certificate choice)
- * and to query session status and certificates.
- */
 public interface SmartIdConnector extends Serializable {
 
-    /**
-     * Get session status for the given session ID.
-     *
-     * @param sessionId The session ID
-     * @return The session status
-     * @throws SessionNotFoundException If the session is not found
-     */
-    SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException;
+  SessionStatus getSessionStatus(String sessionId) throws SessionNotFoundException;
 
-    /**
-     * Set the session status response socket open time
-     *
-     * @param sessionStatusResponseSocketOpenTimeUnit  The time unit of the open time
-     * @param sessionStatusResponseSocketOpenTimeValue The value of the open time
-     */
-    void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
+  CertificateChoiceResponse getCertificate(String documentNumber, CertificateRequest request);
 
-    /**
-     * Initiates a device link based certificate choice request.
-     *
-     * @param request CertificateChoiceSessionRequest containing necessary parameters
-     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
-     */
-    DeviceLinkSessionResponse initDeviceLinkCertificateChoice(DeviceLinkCertificateChoiceSessionRequest request);
+  CertificateChoiceResponse getCertificate(SemanticsIdentifier identifier, CertificateRequest request);
 
-    /**
-     * Initiates a linked notification based signature session.
-     *
-     * @param request        LinkedSignatureSessionRequest containing necessary parameters
-     * @param documentNumber The document number to be used for the session
-     * @return LinkedSignatureSessionResponse containing sessionID
-     */
-    LinkedSignatureSessionResponse initLinkedNotificationSignature(LinkedSignatureSessionRequest request, String documentNumber);
+  SignatureSessionResponse sign(String documentNumber, SignatureSessionRequest request);
 
-    /**
-     * Initiates a notification based certificate choice request.
-     *
-     * @param request             CertificateChoiceSessionRequest containing necessary parameters
-     * @param semanticsIdentifier The semantics identifier to be used for the session
-     * @return NotificationCertificateChoiceSessionResponse containing sessionID
-     */
-    NotificationCertificateChoiceSessionResponse initNotificationCertificateChoice(NotificationCertificateChoiceSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+  SignatureSessionResponse sign(SemanticsIdentifier identifier, SignatureSessionRequest request);
 
-    /**
-     * Queries signing certificate by document number.
-     *
-     * @param request        CertificateByDocumentNumberRequest containing necessary parameters
-     * @param documentNumber The document number
-     * @return CertificateResponse containing response state and certificate information.
-     */
-    CertificateResponse getCertificateByDocumentNumber(String documentNumber, CertificateByDocumentNumberRequest request);
+  AuthenticationSessionResponse authenticate(String documentNumber, AuthenticationSessionRequest request);
 
-    /**
-     * Initiates a device link based signature sessions.
-     *
-     * @param request             SignatureSessionRequest containing necessary parameters for the signature session
-     * @param semanticsIdentifier The semantics identifier
-     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
-     */
-    DeviceLinkSessionResponse initDeviceLinkSignature(DeviceLinkSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+  AuthenticationSessionResponse authenticate(SemanticsIdentifier identity, AuthenticationSessionRequest request);
 
-    /**
-     * Initiates a device link based signature sessions.
-     *
-     * @param request        SignatureSessionRequest containing necessary parameters for the signature session
-     * @param documentNumber The document number
-     * @return DeviceLinkSessionResponse containing sessionID, sessionToken, sessionSecret and deviceLinkBase URL.
-     */
-    DeviceLinkSessionResponse initDeviceLinkSignature(DeviceLinkSignatureSessionRequest request, String documentNumber);
+  void setSessionStatusResponseSocketOpenTime(TimeUnit sessionStatusResponseSocketOpenTimeUnit, long sessionStatusResponseSocketOpenTimeValue);
 
-    /**
-     * Initiates a notification-based signature session using a semantics identifier.
-     *
-     * @param request             The notification signature session request containing the required parameters.
-     * @param semanticsIdentifier The semantics identifier for the user initiating the session.
-     * @return NotificationSignatureSessionResponse containing the session ID and verification code (VC) information.
-     */
-    NotificationSignatureSessionResponse initNotificationSignature(NotificationSignatureSessionRequest request, SemanticsIdentifier semanticsIdentifier);
+  void setSslContext(SSLContext sslContext);
 
-    /**
-     * Initiates a notification-based signature session using a document number.
-     *
-     * @param request        The notification signature session request containing the required parameters.
-     * @param documentNumber The document number for the user initiating the session.
-     * @return NotificationSignatureSessionResponse containing the session ID and verification code (VC) information.
-     */
-    NotificationSignatureSessionResponse initNotificationSignature(NotificationSignatureSessionRequest request, String documentNumber);
-
-    /**
-     * Set the SSL context to use for secure communication
-     *
-     * @param sslContext The SSL context
-     */
-    void setSslContext(SSLContext sslContext);
-
-    /**
-     * Create anonymous authentication session with device link
-     *
-     * @param authenticationRequest The device link authentication session request
-     * @return The device link authentication session response
-     */
-    DeviceLinkSessionResponse initAnonymousDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest);
-
-    /**
-     * Create authentication session with device link using semantics identifier
-     *
-     * @param authenticationRequest The device link authentication session request
-     * @param semanticsIdentifier   The semantics identifier
-     * @return The device link authentication session response
-     */
-    DeviceLinkSessionResponse initDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
-
-    /**
-     * Create authentication session with device link using document number
-     *
-     * @param authenticationRequest The device link authentication session request
-     * @param documentNumber        The document number
-     * @return The device link authentication session response
-     */
-    DeviceLinkSessionResponse initDeviceLinkAuthentication(DeviceLinkAuthenticationSessionRequest authenticationRequest, String documentNumber);
-
-    /**
-     * Create authentication session with notification using semantics identifier
-     *
-     * @param authenticationRequest The notification authentication session request
-     * @param semanticsIdentifier   The semantics identifier
-     * @return The notification authentication session response
-     */
-    NotificationAuthenticationSessionResponse initNotificationAuthentication(NotificationAuthenticationSessionRequest authenticationRequest, SemanticsIdentifier semanticsIdentifier);
-
-    /**
-     * Create authentication session with notification using document number
-     *
-     * @param authenticationRequest The notification authentication session request
-     * @param documentNumber        The document number
-     * @return The notification authentication session response
-     */
-    NotificationAuthenticationSessionResponse initNotificationAuthentication(NotificationAuthenticationSessionRequest authenticationRequest, String documentNumber);
 }

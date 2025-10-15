@@ -1,0 +1,7 @@
+{
+  "state": "COMPLETE",
+  "result": {
+    "endResult": "WRONG_VC"
+  },
+  "unknownField45622474":  "this field is added to verify that client doesn't fail when new fields are added in future"
+}

@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,16 +26,14 @@ package ee.sk.smartid;
  * #L%
  */
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.Test;
-
 import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import org.junit.Test;
 
 public class CertificateParserTest {
 
-    @Test
+    @Test(expected = SmartIdClientException.class)
     public void testBothCertificateLevelsQualified() {
-        assertThrows(SmartIdClientException.class, () -> CertificateParser.parseX509Certificate("invalid"));
+        CertificateParser.parseX509Certificate("invalid");
     }
+
 }

@@ -4,7 +4,7 @@ package ee.sk.smartid.exception.useraccount;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.exception.useraccount;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,15 +26,8 @@ package ee.sk.smartid.exception.useraccount;
  * #L%
  */
 
-/**
- * Thrown when session status end result is DOCUMENT_UNUSABLE.
- */
 public class DocumentUnusableException extends PersonShouldViewSmartIdPortalException {
-
-    /**
-     * Constructs the exception with default message.
-     */
     public DocumentUnusableException() {
-        super("Document is unusable. User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.");
+        super("DOCUMENT_UNUSABLE. User must either check his/her Smart-ID mobile application or turn to customer support for getting the exact reason.");
     }
 }

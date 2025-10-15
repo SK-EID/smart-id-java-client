@@ -1,0 +1,7 @@
+{
+  "state": "COMPLETE",
+  "result": {
+    "endResult": "USER_REFUSED_CONFIRMATIONMESSAGE"
+  },
+  "unknownField45332721":  "this field is added to verify that client doesn't fail when new fields are added in future"
+}

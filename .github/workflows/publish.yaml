@@ -15,10 +15,10 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-    - name: Setup java SDK 17
+    - name: Setup java SDK 8
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '8'
         distribution: 'temurin'
         cache: maven
     -
@@ -37,28 +37,17 @@ jobs:
         echo "[INFO] Artifact name: $artifact"
         ./mvnw versions:set -DnewVersion="$version"
         ./mvnw package -DskipTests
+        gpg -ab pom.xml
         cd target
-        rm -rf ee/sk/smartid/smart-id-java-client/$version
-        mkdir -p ee/sk/smartid/smart-id-java-client/$version
-        cp $artifact.jar  ee/sk/smartid/smart-id-java-client/$version/ 
-        cp $artifact-sources.jar  ee/sk/smartid/smart-id-java-client/$version/                                        
-        cp $artifact-javadoc.jar  ee/sk/smartid/smart-id-java-client/$version/
-        cp ../pom.xml  ee/sk/smartid/smart-id-java-client/$version/$artifact.pom
-        cd ee/sk/smartid/smart-id-java-client/$version
-        gpg -ab $artifact.pom
         gpg -ab $artifact.jar
         gpg -ab $artifact-sources.jar
         gpg -ab $artifact-javadoc.jar
-        find . -type f \( -name '*.jar' -o -name '*.pom' \) -exec sh -c 'for file; do sha256sum "$file" | cut -d " " -f 1 > "$file.sha256"; done' _ {} +
-        find . -type f \( -name '*.jar' -o -name '*.pom' \) -exec sh -c 'for file; do sha1sum "$file" | cut -d " " -f 1 > "$file.sha1"; done' _ {} +
-        find . -type f \( -name '*.jar' -o -name '*.pom' \) -exec sh -c 'for file; do md5sum "$file" | cut -d " " -f 1 > "$file.md5"; done' _ {} +
-        cd ../../../../../
-        zip bundle.zip ee/sk/smartid/smart-id-java-client/$version/*
-        CODE=$(curl -w "%{http_code}" -o curl_response.txt -s --request POST --verbose --header 'Authorization: Bearer ${{ secrets.SONATYPETOKEN }}' --form bundle=@bundle.zip https://central.sonatype.com/api/v1/publisher/upload) 
+        jar -cvf bundle.jar ../pom.xml ../pom.xml.asc $artifact.jar $artifact.jar.asc $artifact-javadoc.jar $artifact-javadoc.jar.asc $artifact-sources.jar $artifact-sources.jar.asc
+        CODE=$(curl -w "%{http_code}" -o curl_response.txt -s -ujorlina2 -u ${{ secrets.SONATYPEUN }}:${{ secrets.SONATYPEPW }} --request POST -F "file=@bundle.jar" "https://oss.sonatype.org/service/local/staging/bundle_upload")
         echo "[INFO] ------------------------------------------------------------------------"
-        echo "[INFO] Upload to central.sonatype.com ResponseCode: $CODE"
+        echo "[INFO] Upload to oss.sonatype.org ResponseCode: $CODE"
         cat curl_response.txt
-        echo -e "\n[INFO] Login to central.sonatype.com for releasing $artifact"
+        echo -e "\n[INFO] Login to oss.sonatype.org for releasing $artifact"
         echo "[INFO] ------------------------------------------------------------------------"
         [[ $CODE == 201 ]] && exit 0 || exit 1 
         

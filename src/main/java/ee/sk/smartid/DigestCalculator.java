@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,36 +26,20 @@ package ee.sk.smartid;
  * #L%
  */
 
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
+public class DigestCalculator {
 
-/**
- * Utility class for calculating digests using specified hash algorithms.
- */
-public final class DigestCalculator {
-
-    private DigestCalculator() {
+  public static byte[] calculateDigest(byte[] dataToDigest, HashType hashType) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance(hashType.getAlgorithmName());
+      return digest.digest(dataToDigest);
     }
-
-    /**
-     * Calculates the digest of the provided data using the specified hash algorithm.
-     *
-     * @param dataToDigest  The data to be hashed.
-     * @param hashAlgorithm The hash algorithm to use.
-     * @return The calculated digest as a byte array.
-     * @throws SmartIdClientException If there is an issue with the digest calculation.
-     */
-    public static byte[] calculateDigest(byte[] dataToDigest, HashAlgorithm hashAlgorithm) {
-        if (hashAlgorithm == null) {
-            throw new SmartIdClientException("Parameter 'hashAlgorithm' must be set");
-        }
-        try {
-            MessageDigest digest = MessageDigest.getInstance(hashAlgorithm.getAlgorithmName());
-            return digest.digest(dataToDigest);
-        } catch (NoSuchAlgorithmException ex) {
-            throw new SmartIdClientException("Problem with digest calculation.", ex);
-        }
+    catch (Exception e) {
+      throw new UnprocessableSmartIdResponseException("Problem with digest calculation. " + e);
     }
+  }
+
 }

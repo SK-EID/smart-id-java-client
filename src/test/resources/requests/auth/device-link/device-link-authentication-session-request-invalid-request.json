@@ -1,7 +1,0 @@
-{
-  "relyingPartyUUID": "00000000-0000-4000-8000-000000000000",
-  "relyingPartyName": "DEMO",
-  "signatureProtocol": "ACSP_V2",
-  "certificateLevel": "QUALIFIED",
-  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbj8ifV0="
-}

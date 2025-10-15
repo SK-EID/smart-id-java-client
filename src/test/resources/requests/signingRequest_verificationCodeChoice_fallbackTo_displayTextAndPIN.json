@@ -1,0 +1,17 @@
+{
+  "relyingPartyUUID": "de305d54-75b4-431b-adb2-eb6b9e546014",
+  "relyingPartyName": "BANK123",
+  "certificateLevel": "ADVANCED",
+  "hash": "0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=",
+  "hashType": "SHA256",
+  "allowedInteractionsOrder": [
+    {
+      "type": "verificationCodeChoice",
+      "displayText60": "Transfer 444 BSD to Oceanic Airlines?"
+    },
+    {
+      "type": "displayTextAndPIN",
+      "displayText60": "Transfer 444 BSD to Oceanic Airlines?"
+    }
+  ]
+}

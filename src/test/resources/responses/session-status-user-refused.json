@@ -1,8 +1,0 @@
-{
-  "state": "COMPLETE",
-  "result": {
-    "endResult": "USER_REFUSED",
-    "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
-  },
-  "unknownField9433454":  "this field is added to verify that client doesn't fail when new fields are added in future"
-}
