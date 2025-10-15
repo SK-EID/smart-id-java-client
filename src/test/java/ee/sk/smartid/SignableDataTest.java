@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,45 +26,43 @@ package ee.sk.smartid;
  * #L%
  */
 
-import org.apache.commons.codec.binary.Base64;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import java.util.Base64;
 
-public class SignableDataTest {
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
-  public static final byte[] DATA_TO_SIGN = "Hello World!".getBytes();
-  public static final String SHA512_HASH_IN_BASE64 = "hhhE1nBOhXP+w02WfiC8/vPUJM9IvgTm3AjyvVjHKXQzcQFerYkcw88cnTS0kmS1EHUbH/nlN5N7xGtdb/TsyA==";
-  public static final String SHA384_HASH_IN_BASE64 = "v9dsDrvQBv7lg0EFR8GIewKSvnbVgtlsJC0qeScj4/1v0GH51c/RO4+WE1jmrbpK";
-  public static final String SHA256_HASH_IN_BASE64 = "f4OxZX/x/FO5LcGBSKHWXfwtSx+j1ncoSt3SABJtkGk=";
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
 
-  @Test
-  public void signableData_withDefaultHashType_sha512() {
-    SignableData signableData = new SignableData(DATA_TO_SIGN);
-    assertEquals("SHA512", signableData.getHashType().getHashTypeName());
-    assertEquals(SHA512_HASH_IN_BASE64, signableData.calculateHashInBase64());
-    assertArrayEquals(Base64.decodeBase64(SHA512_HASH_IN_BASE64), signableData.calculateHash());
-    assertEquals("4664", signableData.calculateVerificationCode());
-  }
+class SignableDataTest {
 
-  @Test
-  public void signableData_with_sha256() {
-    SignableData signableData = new SignableData(DATA_TO_SIGN);
-    signableData.setHashType(HashType.SHA256);
-    assertEquals("SHA256", signableData.getHashType().getHashTypeName());
-    assertEquals(SHA256_HASH_IN_BASE64, signableData.calculateHashInBase64());
-    assertArrayEquals(Base64.decodeBase64(SHA256_HASH_IN_BASE64), signableData.calculateHash());
-    assertEquals("7712", signableData.calculateVerificationCode());
-  }
+    private static final byte[] TEST_DATA = "Test data".getBytes();
 
-  @Test
-  public void signableData_with_sha384() {
-    SignableData signableData = new SignableData(DATA_TO_SIGN);
-    signableData.setHashType(HashType.SHA384);
-    assertEquals("SHA384", signableData.getHashType().getHashTypeName());
-    assertEquals(SHA384_HASH_IN_BASE64, signableData.calculateHashInBase64());
-    assertArrayEquals(Base64.decodeBase64(SHA384_HASH_IN_BASE64), signableData.calculateHash());
-    assertEquals("3486", signableData.calculateVerificationCode());
-  }
+    @Test
+    void getDigestInBase64() {
+        SignableData signableData = new SignableData(TEST_DATA, HashAlgorithm.SHA_512);
+        assertEquals(Base64.getEncoder().encodeToString(DigestCalculator.calculateDigest(TEST_DATA, HashAlgorithm.SHA_512)), signableData.getDigestInBase64());
+        assertEquals(HashAlgorithm.SHA_512, signableData.hashAlgorithm());
+    }
+
+    @Test
+    void calculateHash() {
+        SignableData signableData = new SignableData(TEST_DATA, HashAlgorithm.SHA_512);
+        assertArrayEquals(DigestCalculator.calculateDigest(TEST_DATA, HashAlgorithm.SHA_512), signableData.calculateHash());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void emptyHashProvided_throwException(byte[] dataToSign) {
+        var ex = assertThrows(SmartIdRequestSetupException.class, () -> new SignableData(dataToSign));
+        assertEquals("Parameter 'dataToSign' cannot be empty", ex.getMessage());
+    }
+
+    @Test
+    void defaultHashAlgorithmSetToNull_throwException() {
+        var ex = assertThrows(SmartIdRequestSetupException.class, () -> new SignableData(TEST_DATA, null));
+        assertEquals("Parameter 'hashAlgorithm' must be set", ex.getMessage());
+    }
 }

@@ -1,0 +1,14 @@
+{
+  "relyingPartyUUID": "00000000-0000-4000-8000-000000000000",
+  "relyingPartyName": "DEMO",
+  "signatureProtocol": "ACSP_V2",
+  "certificateLevel": "QUALIFIED",
+  "signatureProtocolParameters": {
+    "rpChallenge": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=",
+    "signatureAlgorithm": "rsassa-pss",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA3-512"
+    }
+  },
+  "interactions": "W3sidHlwZSI6ImRpc3BsYXlUZXh0QW5kUElOIiwiZGlzcGxheVRleHQ2MCI6IkxvZyBpbj8ifV0="
+}

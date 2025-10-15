@@ -1,0 +1,18 @@
+{
+  "relyingPartyUUID": "00000000-0000-4000-8000-000000000000",
+  "relyingPartyName": "DEMO",
+  "certificateLevel": "QSCD",
+  "signatureProtocol": "RAW_DIGEST_SIGNATURE",
+  "signatureProtocolParameters": {
+    "digest": "YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==",
+    "signatureAlgorithm": "rsassa-pss",
+    "signatureAlgorithmParameters": {
+      "hashAlgorithm": "SHA-512"
+    }
+  },
+  "nonce": "d8XkbEnA0WsE0PvBZZoxGnPI4ml9qk",
+  "interactions": "W3sidHlwZSI6ImNvbmZpcm1hdGlvbk1lc3NhZ2UiLCJkaXNwbGF5VGV4dDIwMCI6IlNpZ24gaXQhIn1d",
+  "requestProperties": {
+    "shareMdClientIpAddress": true
+  }
+}

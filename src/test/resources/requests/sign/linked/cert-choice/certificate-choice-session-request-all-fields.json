@@ -1,0 +1,10 @@
+{
+  "relyingPartyUUID": "00000000-0000-4000-8000-000000000000",
+  "relyingPartyName": "DEMO",
+  "certificateLevel": "QUALIFIED",
+  "initialCallbackUrl": "https://example.com/callback",
+  "nonce": "d8XkbEnA0WsE0PvBZZoxGnPI4ml9qk",
+  "requestProperties": {
+    "shareMdClientIpAddress": true
+  }
+}

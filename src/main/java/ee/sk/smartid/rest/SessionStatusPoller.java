@@ -4,7 +4,7 @@ package ee.sk.smartid.rest;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid.rest;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,60 +26,84 @@ package ee.sk.smartid.rest;
  * #L%
  */
 
-import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.useraccount.DocumentUnusableException;
-import ee.sk.smartid.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.exception.useraction.UserRefusedException;
-import ee.sk.smartid.exception.useraction.UserSelectedWrongVerificationCodeException;
-import ee.sk.smartid.rest.dao.SessionStatus;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.rest.dao.SessionStatus;
 
+/**
+ * Provides methods for querying sessions status and polling session status
+ */
 public class SessionStatusPoller {
 
-  private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
-  private SmartIdConnector connector;
-  private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
-  private long pollingSleepTimeout = 1L;
+    private static final Logger logger = LoggerFactory.getLogger(SessionStatusPoller.class);
 
-  public SessionStatusPoller(SmartIdConnector connector) {
-    this.connector = connector;
-  }
+    private final SmartIdConnector connector;
+    private TimeUnit pollingSleepTimeUnit = TimeUnit.SECONDS;
+    private long pollingSleepTimeout = 1L;
 
-  public SessionStatus fetchFinalSessionStatus(String sessionId) throws UserRefusedException, UserSelectedWrongVerificationCodeException, SessionTimeoutException, DocumentUnusableException {
-    logger.debug("Starting to poll session status for session " + sessionId);
-    try {
-      return pollForFinalSessionStatus(sessionId);
-    } catch (InterruptedException e) {
-      logger.error("Failed to poll session status: " + e.getMessage());
-      throw new UnprocessableSmartIdResponseException("Failed to poll session status: " + e.getMessage(), e);
+    /**
+     * Constructs a new SessionStatusPoller with the specified SmartIdConnector.
+     *
+     * @param connector the SmartIdConnector to use for querying session status.
+     */
+    public SessionStatusPoller(SmartIdConnector connector) {
+        this.connector = connector;
     }
-  }
 
-  private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
-    SessionStatus sessionStatus = null;
-    while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState()) ) {
-      sessionStatus = pollSessionStatus(sessionId);
-      if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState()) ) {
-        break;
-      }
-      logger.debug("Sleeping for " + pollingSleepTimeout + " " + pollingSleepTimeUnit);
-      pollingSleepTimeUnit.sleep(pollingSleepTimeout);
+    /**
+     * Loops session status query until state is COMPLETE
+     *
+     * @param sessionId session id from init session response
+     * @return Sessions status
+     */
+    public SessionStatus fetchFinalSessionStatus(String sessionId) {
+        logger.debug("Starting to poll session status for session {}", sessionId);
+        try {
+            return pollForFinalSessionStatus(sessionId);
+        } catch (InterruptedException ex) {
+            logger.error("Failed to poll session status", ex);
+            throw new SmartIdClientException("Failed to poll session status", ex);
+        }
     }
-    logger.debug("Got session final session status response");
-    return sessionStatus;
-  }
 
-  private SessionStatus pollSessionStatus(String sessionId) {
-    logger.debug("Polling session status");
-    return connector.getSessionStatus(sessionId);
-  }
+    private SessionStatus pollForFinalSessionStatus(String sessionId) throws InterruptedException {
+        SessionStatus sessionStatus = null;
+        while (sessionStatus == null || "RUNNING".equalsIgnoreCase(sessionStatus.getState())) {
+            sessionStatus = getSessionStatus(sessionId);
+            if (sessionStatus != null && "COMPLETE".equalsIgnoreCase(sessionStatus.getState())) {
+                break;
+            }
+            logger.debug("Sleeping for {} {}", pollingSleepTimeout, pollingSleepTimeUnit);
+            pollingSleepTimeUnit.sleep(pollingSleepTimeout);
+        }
+        logger.debug("Got final session status response");
+        return sessionStatus;
+    }
 
-  public void setPollingSleepTime(TimeUnit unit, long timeout) {
-    logger.debug("Polling sleep time is " + timeout + " " + unit.toString());
-    pollingSleepTimeUnit = unit;
-    pollingSleepTimeout = timeout;
-  }
+    /**
+     * Query session status
+     *
+     * @param sessionId session id from init session response
+     * @return Sessions status
+     */
+    public SessionStatus getSessionStatus(String sessionId) {
+        logger.debug("Querying session status");
+        return connector.getSessionStatus(sessionId);
+    }
+
+    /**
+     * Set polling sleep time
+     *
+     * @param unit    time unit {@link TimeUnit}
+     * @param timeout time
+     */
+    public void setPollingSleepTime(TimeUnit unit, long timeout) {
+        logger.debug("Setting polling sleep time to {} {}", timeout, unit);
+        this.pollingSleepTimeUnit = unit;
+        this.pollingSleepTimeout = timeout;
+    }
 }

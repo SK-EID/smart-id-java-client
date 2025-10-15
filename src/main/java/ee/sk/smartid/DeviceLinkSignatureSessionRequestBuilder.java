@@ -1,0 +1,356 @@
+package ee.sk.smartid;
+
+/*-
+ * #%L
+ * Smart ID sample Java client
+ * %%
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * %%
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * #L%
+ */
+
+import java.util.List;
+import java.util.Set;
+
+import ee.sk.smartid.common.InteractionsMapper;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
+import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
+import ee.sk.smartid.exception.permanent.SmartIdRequestSetupException;
+import ee.sk.smartid.rest.SmartIdConnector;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.RawDigestSignatureProtocolParameters;
+import ee.sk.smartid.rest.dao.RequestProperties;
+import ee.sk.smartid.rest.dao.SemanticsIdentifier;
+import ee.sk.smartid.rest.dao.SignatureAlgorithmParameters;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
+import ee.sk.smartid.util.InteractionUtil;
+import ee.sk.smartid.util.SetUtil;
+import ee.sk.smartid.util.StringUtil;
+
+/**
+ * Builder for creating a device-link signature session
+ */
+public class DeviceLinkSignatureSessionRequestBuilder {
+
+    private static final String INITIAL_CALLBACK_URL_PATTERN = "^https://[^|]+$";
+
+    private final SmartIdConnector connector;
+
+    private String relyingPartyUUID;
+    private String relyingPartyName;
+    private String documentNumber;
+    private SemanticsIdentifier semanticsIdentifier;
+    private CertificateLevel certificateLevel;
+    private String nonce;
+    private Set<String> capabilities;
+    private List<DeviceLinkInteraction> interactions;
+    private Boolean shareMdClientIpAddress;
+    private SignatureAlgorithm signatureAlgorithm = SignatureAlgorithm.RSASSA_PSS;
+    private String initialCallbackUrl;
+    private DigestInput digestInput;
+
+    private DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest;
+
+    /**
+     * Constructs a new Smart-ID signature request builder with the given connector.
+     *
+     * @param connector the connector
+     */
+    public DeviceLinkSignatureSessionRequestBuilder(SmartIdConnector connector) {
+        this.connector = connector;
+    }
+
+    /**
+     * Sets the relying party UUID.
+     *
+     * @param relyingPartyUUID the relying party UUID
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withRelyingPartyUUID(String relyingPartyUUID) {
+        this.relyingPartyUUID = relyingPartyUUID;
+        return this;
+    }
+
+    /**
+     * Sets the relying party name.
+     *
+     * @param relyingPartyName the relying party name
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withRelyingPartyName(String relyingPartyName) {
+        this.relyingPartyName = relyingPartyName;
+        return this;
+    }
+
+    /**
+     * Sets the document number.
+     *
+     * @param documentNumber the document number
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withDocumentNumber(String documentNumber) {
+        this.documentNumber = documentNumber;
+        return this;
+    }
+
+    /**
+     * Sets the semantics identifier.
+     *
+     * @param semanticsIdentifier the semantics identifier
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withSemanticsIdentifier(SemanticsIdentifier semanticsIdentifier) {
+        this.semanticsIdentifier = semanticsIdentifier;
+        return this;
+    }
+
+    /**
+     * Sets the certificate level.
+     *
+     * @param certificateLevel the certificate level
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withCertificateLevel(CertificateLevel certificateLevel) {
+        this.certificateLevel = certificateLevel;
+        return this;
+    }
+
+    /**
+     * Sets the nonce.
+     *
+     * @param nonce the nonce
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withNonce(String nonce) {
+        this.nonce = nonce;
+        return this;
+    }
+
+    /**
+     * Sets the capabilities.
+     *
+     * @param capabilities the capabilities
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withCapabilities(String... capabilities) {
+        this.capabilities = SetUtil.toSet(capabilities);
+        return this;
+    }
+
+    /**
+     * Sets the interactions for device-link signature.
+     *
+     * @param interactions the interactions
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withInteractions(List<DeviceLinkInteraction> interactions) {
+        this.interactions = interactions;
+        return this;
+    }
+
+    /**
+     * Sets whether to share the Mobile device IP address
+     *
+     * @param shareMdClientIpAddress whether to share the Mobile device IP address
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withShareMdClientIpAddress(boolean shareMdClientIpAddress) {
+        this.shareMdClientIpAddress = shareMdClientIpAddress;
+        return this;
+    }
+
+    /**
+     * Sets the signature algorithm.
+     *
+     * @param signatureAlgorithm the signature algorithm
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withSignatureAlgorithm(SignatureAlgorithm signatureAlgorithm) {
+        this.signatureAlgorithm = signatureAlgorithm;
+        return this;
+    }
+
+    /**
+     * Sets the data to be signed.
+     * <p>
+     * This method allows setting a {@link SignableData} object, which contains the data to be hashed and signed in the signing request.
+     *
+     * @param signableData the data to be signed
+     * @return this builder instance
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withSignableData(SignableData signableData) {
+        if (this.digestInput != null && this.digestInput instanceof SignableHash) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' has already been set with SignableHash.");
+        }
+        this.digestInput = signableData;
+        return this;
+    }
+
+    /**
+     * Sets the hash to be signed in the signature protocol.
+     * <p>
+     * The provided {@link SignableHash} must contain a valid hash value and hash type,
+     * which will be used as the digest in the signing request.
+     *
+     * @param signableHash the hash data to be signed
+     * @return this builder
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withSignableHash(SignableHash signableHash) {
+        if (this.digestInput != null && this.digestInput instanceof SignableData) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' has already been set with SignableData.");
+        }
+        this.digestInput = signableHash;
+        return this;
+    }
+
+    /**
+     * Sets the initial callback URL.
+     * <p>
+     * This URL is used to redirect the user after the signature session is completed.
+     *
+     * @param initialCallbackUrl the initial callback URL
+     * @return this builder instance
+     */
+    public DeviceLinkSignatureSessionRequestBuilder withInitialCallbackUrl(String initialCallbackUrl) {
+        this.initialCallbackUrl = initialCallbackUrl;
+        return this;
+    }
+
+    /**
+     * Sends the signature request and initiates a device link based signature session.
+     * <p>
+     * There are two supported ways to start the signature session:
+     * <ul>
+     *     <li>with a document number by using {@link #withDocumentNumber(String)}</li>
+     *     <li>with a semantics identifier by using {@link #withSemanticsIdentifier(SemanticsIdentifier)}</li>
+     * </ul>
+     *
+     * @return a {@link DeviceLinkSessionResponse} containing session details such as
+     * session ID, session token, session secret and device link base URL.
+     * @throws SmartIdRequestSetupException          if request parameters are invalid
+     * @throws SmartIdClientException                if digest calculation fails or if both signableData and signableHash are missing
+     * @throws UnprocessableSmartIdResponseException if the response is missing required fields
+     */
+    public DeviceLinkSessionResponse initSignatureSession() {
+        validateRequestParameters();
+        DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = createSignatureSessionRequest();
+        DeviceLinkSessionResponse deviceLinkSignatureSessionResponse = initSignatureSession(deviceLinkSignatureSessionRequest);
+        validateResponseParameters(deviceLinkSignatureSessionResponse);
+        this.deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequest;
+        return deviceLinkSignatureSessionResponse;
+    }
+
+    /**
+     * Gets the DeviceLinkSignatureSessionRequest that was used to initiate the signature session.
+     * <p>
+     * This method can only be called after {@link #initSignatureSession()} has been invoked.
+     *
+     * @return the signature request that was used to initiate the session
+     * @throws SmartIdClientException if called before initSignatureSession()
+     */
+    public DeviceLinkSignatureSessionRequest getSignatureSessionRequest() {
+        if (deviceLinkSignatureSessionRequest == null) {
+            throw new SmartIdClientException("Signature session has not been initiated yet");
+        }
+        return deviceLinkSignatureSessionRequest;
+    }
+
+    private DeviceLinkSessionResponse initSignatureSession(DeviceLinkSignatureSessionRequest request) {
+        if (semanticsIdentifier != null && documentNumber != null) {
+            throw new SmartIdRequestSetupException("Only one of 'semanticsIdentifier' or 'documentNumber' may be set");
+        }
+        if (!StringUtil.isEmpty(documentNumber)) {
+            return connector.initDeviceLinkSignature(request, documentNumber);
+        } else if (semanticsIdentifier != null) {
+            return connector.initDeviceLinkSignature(request, semanticsIdentifier);
+        } else {
+            throw new SmartIdRequestSetupException("Either 'documentNumber' or 'semanticsIdentifier' must be set. Anonymous signing is not allowed");
+        }
+    }
+
+    private DeviceLinkSignatureSessionRequest createSignatureSessionRequest() {
+        var signatureProtocolParameters = new RawDigestSignatureProtocolParameters(digestInput.getDigestInBase64(),
+                signatureAlgorithm.getAlgorithmName(),
+                new SignatureAlgorithmParameters(digestInput.hashAlgorithm().getAlgorithmName()));
+        return new DeviceLinkSignatureSessionRequest(relyingPartyUUID,
+                relyingPartyName,
+                certificateLevel != null ? certificateLevel.name() : null,
+                SignatureProtocol.RAW_DIGEST_SIGNATURE.name(),
+                signatureProtocolParameters,
+                nonce != null ? nonce : null,
+                capabilities,
+                InteractionUtil.encodeToBase64(InteractionsMapper.from(interactions)),
+                this.shareMdClientIpAddress != null ? new RequestProperties(this.shareMdClientIpAddress) : null,
+                initialCallbackUrl);
+    }
+
+    private void validateRequestParameters() {
+        if (StringUtil.isEmpty(relyingPartyUUID)) {
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyUUID' cannot be empty");
+        }
+        if (StringUtil.isEmpty(relyingPartyName)) {
+            throw new SmartIdRequestSetupException("Value for 'relyingPartyName' cannot be empty");
+        }
+        if (signatureAlgorithm == null) {
+            throw new SmartIdRequestSetupException("Value for 'signatureAlgorithm' must be set");
+        }
+        if (digestInput == null) {
+            throw new SmartIdRequestSetupException("Value for 'digestInput' must be set with either SignableData or SignableHash");
+        }
+        validateInteractions();
+        validateInitialCallbackUrl();
+
+        if (nonce != null && (nonce.isEmpty() || nonce.length() > 30)) {
+            throw new SmartIdRequestSetupException("Value for 'nonce' length must be between 1 and 30 characters.");
+        }
+    }
+
+    private void validateInteractions() {
+        if (InteractionUtil.isEmpty(interactions)) {
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot be empty");
+        }
+        if (interactions.stream().map(DeviceLinkInteraction::type).distinct().count() != interactions.size()) {
+            throw new SmartIdRequestSetupException("Value for 'interactions' cannot contain duplicate types");
+        }
+    }
+
+    private void validateInitialCallbackUrl() {
+        if (!StringUtil.isEmpty(initialCallbackUrl) && !initialCallbackUrl.matches(INITIAL_CALLBACK_URL_PATTERN)) {
+            throw new SmartIdRequestSetupException("Value for 'initialCallbackUrl' must match pattern " + INITIAL_CALLBACK_URL_PATTERN + " and must not contain unencoded vertical bars");
+        }
+    }
+
+    private void validateResponseParameters(DeviceLinkSessionResponse deviceLinkSignatureSessionResponse) {
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.sessionID())) {
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionID' is missing or empty");
+        }
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.sessionToken())) {
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionToken' is missing or empty");
+        }
+        if (StringUtil.isEmpty(deviceLinkSignatureSessionResponse.sessionSecret())) {
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'sessionSecret' is missing or empty");
+        }
+        if (deviceLinkSignatureSessionResponse.deviceLinkBase() == null || deviceLinkSignatureSessionResponse.deviceLinkBase().toString().isBlank()) {
+            throw new UnprocessableSmartIdResponseException("Device link signature session initialisation response field 'deviceLinkBase' is missing or empty");
+        }
+    }
+
+}

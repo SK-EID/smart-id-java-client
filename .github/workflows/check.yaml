@@ -21,13 +21,13 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v4
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: 'temurin'
           cache: maven
 
       - name: Run dependency check
         run: |
-          ./mvnw org.owasp:dependency-check-maven:check
+          ./mvnw -DossIndexUsername=${{ secrets.ossIndexUsername }} -DossIndexPassword=${{ secrets.ossIndexPassword }} -DnvdApiKey=${{ secrets.nvdApiKey }} org.owasp:dependency-check-maven:check
 
       - name: Archive dependency report
         uses: actions/upload-artifact@v4

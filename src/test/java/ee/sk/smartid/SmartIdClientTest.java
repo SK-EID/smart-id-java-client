@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 SK ID Solutions AS
+ * Copyright (C) 2018 - 2025 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package ee.sk.smartid;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,1101 +26,786 @@ package ee.sk.smartid;
  * #L%
  */
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.net.URI;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+
+import org.bouncycastle.util.encoders.Base64;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import ee.sk.smartid.common.devicelink.interactions.DeviceLinkInteraction;
+import ee.sk.smartid.common.notification.interactions.NotificationInteraction;
 import ee.sk.smartid.exception.UnprocessableSmartIdResponseException;
-import ee.sk.smartid.exception.permanent.RelyingPartyAccountConfigurationException;
-import ee.sk.smartid.exception.permanent.ServerMaintenanceException;
-import ee.sk.smartid.exception.permanent.SmartIdClientException;
-import ee.sk.smartid.exception.useraccount.*;
-import ee.sk.smartid.exception.useraction.SessionTimeoutException;
-import ee.sk.smartid.exception.useraction.UserRefusedException;
-import ee.sk.smartid.rest.SmartIdConnector;
-import ee.sk.smartid.rest.SmartIdRestConnector;
-import ee.sk.smartid.rest.dao.Interaction;
+import ee.sk.smartid.rest.dao.DeviceLinkAuthenticationSessionRequest;
+import ee.sk.smartid.rest.dao.DeviceLinkSessionResponse;
+import ee.sk.smartid.rest.dao.DeviceLinkSignatureSessionRequest;
+import ee.sk.smartid.rest.dao.LinkedSignatureSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationAuthenticationSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationCertificateChoiceSessionResponse;
+import ee.sk.smartid.rest.dao.NotificationSignatureSessionResponse;
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier.CountryCode;
-import ee.sk.smartid.rest.dao.SemanticsIdentifier.IdentityType;
 import ee.sk.smartid.rest.dao.SessionStatus;
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static ee.sk.smartid.SmartIdRestServiceStubs.*;
-import static java.util.Arrays.asList;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-public class SmartIdClientTest {
-
-  @Rule
-  public WireMockRule wireMockRule = new WireMockRule(18089);
-
-  private SmartIdClient client;
-
-  @Before
-  public void setUp() {
-    client = new SmartIdClient();
-    client.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
-    client.setRelyingPartyName("BANK123");
-    client.setHostUrl("http://localhost:18089");
-    client.setTrustedCertificates("-----BEGIN CERTIFICATE-----\nMIIGjjCCBXagAwIBAgIQA6feGFsbcuz3yYop3036xzANBgkqhkiG9w0BAQsFADBN\nMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMScwJQYDVQQDEx5E\naWdpQ2VydCBTSEEyIFNlY3VyZSBTZXJ2ZXIgQ0EwHhcNMTkxMTAxMDAwMDAwWhcN\nMjExMTA1MTIwMDAwWjBaMQswCQYDVQQGEwJFRTEQMA4GA1UEBxMHVGFsbGlubjEb\nMBkGA1UEChMSU0sgSUQgU29sdXRpb25zIEFTMRwwGgYDVQQDExNycC1hcGkuc21h\ncnQtaWQuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuycMJZaS\nlaHLAYvqSFLoTZUF61EPrU4SiYmNqpvoAR7A/ywfjsZUyil1xBYwKI9+wZ4fW1Lj\njgzAY5p26ueGQSx/qHSU5D4ISL6dYvV1zvg5KRYtf1PxPFCOIhwzvoj8XnuiJoBt\n/wZmekB90giFRaeUmM2hCU9j78AM6hVJxMsvjP9Kpua4Hc4RJJSZwpnjO8nLO1BO\ndRf1M6TFqkYqUYtSJ8Y2NTalgo2gcPw+peN74MomRRB7oIRK6jUsUzwMDaJ0GTan\ngnLY1VIgdJhN9EIrIkisJMQJYcabh6KV/s1JG+wTpoC8usqFE/r4ILmTU+BeXL38\nyJXHoGhmkyvCBQIDAQABo4IDWzCCA1cwHwYDVR0jBBgwFoAUD4BhHIIxYdUvKOeN\nRji0LOHG2eIwHQYDVR0OBBYEFDfsZsmLfC1FetD3tQu+TR6qdAlgMB4GA1UdEQQX\nMBWCE3JwLWFwaS5zbWFydC1pZC5jb20wDgYDVR0PAQH/BAQDAgWgMB0GA1UdJQQW\nMBQGCCsGAQUFBwMBBggrBgEFBQcDAjBrBgNVHR8EZDBiMC+gLaArhilodHRwOi8v\nY3JsMy5kaWdpY2VydC5jb20vc3NjYS1zaGEyLWc2LmNybDAvoC2gK4YpaHR0cDov\nL2NybDQuZGlnaWNlcnQuY29tL3NzY2Etc2hhMi1nNi5jcmwwTAYDVR0gBEUwQzA3\nBglghkgBhv1sAQEwKjAoBggrBgEFBQcCARYcaHR0cHM6Ly93d3cuZGlnaWNlcnQu\nY29tL0NQUzAIBgZngQwBAgIwfAYIKwYBBQUHAQEEcDBuMCQGCCsGAQUFBzABhhho\ndHRwOi8vb2NzcC5kaWdpY2VydC5jb20wRgYIKwYBBQUHMAKGOmh0dHA6Ly9jYWNl\ncnRzLmRpZ2ljZXJ0LmNvbS9EaWdpQ2VydFNIQTJTZWN1cmVTZXJ2ZXJDQS5jcnQw\nDAYDVR0TAQH/BAIwADCCAX0GCisGAQQB1nkCBAIEggFtBIIBaQFnAHYAu9nfvB+K\ncbWTlCOXqpJ7RzhXlQqrUugakJZkNo4e0YUAAAFuJnDpmQAABAMARzBFAiBOZX5E\noZTVzSXTZFgxNf16qm8UJz2h3ipNicc3Jk7T5gIhALLh+P1hMSmN+GZ6j2Q0Ithd\n0XCzzLyepocD9MoS5lGgAHYAh3W/51l8+IxDmV+9827/Vo1HVjb/SrVgwbTq/16g\ngw8AAAFuJnDp9wAABAMARzBFAiARiorj+Iahj3ht/QurQ8jhKY3G2gSTpLifh6YW\nw+I+egIhAIQCtaaIjKXP5a8jJbKSphUVmj0f78wX0F3flqSOqbyBAHUARJRlLrDu\nzq/EQAfYqP4owNrmgr7YyzG1P9MzlrW2gagAAAFuJnDpAAAABAMARjBEAiBnqbvU\n9b50/orscwLl8Ynyggfym7rsnfX4zkbq/Iun0gIgG1ar0X2/vLa7PKlgCWmnzNM1\nfM2ex6zBYjjBHNjN5GAwDQYJKoZIhvcNAQELBQADggEBACko+lWd1cqdlSv2GDU2\nFJC6f3rMLOcUr/H6A6taaThUQ9gJ1W/xtlSAldHkwC/X2J9Zuw3MbKn+jV17SFEg\nlWu4iMlOSd5RPM51Dc7DyALAceau/I5rchKrYH3hhspJydZhz1ghgyZ3mdwkQE6t\nYv5v+G4jeHwUXxJ5dFFnRLNCHeTDqpa2zOglA/ORRM83NDt4cKTl3CqXWeeteFyu\nulnrt7w+IuCVhV6zywolQsqI5T77nQ4GfB6Cco3s01JWTaOg+DcPnobjwqk0o0mi\n/rBcmf49zy9T5O8CW6sABOqRV7RKIRSPEiv3M9IKJd621F/OfgGYwWDepBIk4ex3\ndgE=\n-----END CERTIFICATE-----\n");
-
-    stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-    stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-    stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithSha512.json", "responses/signatureSessionResponse.json");
-    stubRequestWithResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequestWithNonce.json", "responses/signatureSessionResponse.json");
-
-    stubRequestWithResponse("/signature/etsi/PNOEE-31111111111", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-    stubRequestWithResponse("/signature/etsi/PASEE-987654321012", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-    stubRequestWithResponse("/signature/etsi/IDCEE-AA3456789", "requests/signatureSessionRequest.json", "responses/signatureSessionResponse.json");
-    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json");
-    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json");
-
-    stubRequestWithResponse("/authentication/document/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    stubRequestWithResponse("/authentication/etsi/PNOEE-31111111111", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    stubRequestWithResponse("/authentication/etsi/PASEE-987654321012", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    stubRequestWithResponse("/authentication/etsi/IDCEE-AA3456789", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-
-    stubRequestWithResponse("/certificatechoice/etsi/PASEE-987654321012", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-    stubRequestWithResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-    stubRequestWithResponse("/certificatechoice/etsi/IDCEE-AA3456789", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json");
-  }
-
-  @Test
-  public void testSetup() {
-    assertThat(client.getRelyingPartyUUID(), is("de305d54-75b4-431b-adb2-eb6b9e546014"));
-    assertThat(client.getRelyingPartyName(), is("BANK123"));
-  }
-
-  @Test
-  public void getCertificateAndSign_fullExample() {
-    // Provide data bytes to be signed (Default hash type is SHA-512)
-    SignableData dataToSign = new SignableData("Hello World!".getBytes());
-
-    // Calculate verification code
-    assertEquals("4664", dataToSign.calculateVerificationCode());
-
-    // Get certificate and document number
-    SmartIdCertificate certificateResponse = client
-        .getCertificate()
-        .withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"))
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-
-    X509Certificate x509Certificate = certificateResponse.getCertificate();
-    String documentNumber = certificateResponse.getDocumentNumber();
-
-    // Sign the data using the document number
-    SmartIdSignature signature = client
-        .createSignature()
-        .withDocumentNumber(documentNumber)
-        .withSignableData(dataToSign)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?")))
-        .sign();
-
-    byte[] signatureValue = signature.getValue();
-    String algorithmName = signature.getAlgorithmName(); // Returns "sha512WithRSAEncryption"
-
-    String interactionFlowUsed = signature.getInteractionFlowUsed();
-
-    assertThat(interactionFlowUsed, isOneOf("displayTextAndPIN", "confirmationMessage"));
-    assertValidSignatureCreated(signature);
-  }
-
-  @Test
-  public void getCertificateAndSign_withExistingHash() {
-    SmartIdCertificate certificateResponse = client
-        .getCertificate()
-        .withSemanticsIdentifier(new SemanticsIdentifier("PNO", "EE", "31111111111"))
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-
-    String documentNumber = certificateResponse.getDocumentNumber();
-
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    SmartIdSignature signature = client
-        .createSignature()
-        .withDocumentNumber(documentNumber)
-        .withSignableHash(hashToSign)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signature);
-  }
-
-  @Test
-  public void getCertificateUsingSemanticsIdentifier() {
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", "31111111111");
-
-    SmartIdCertificate certificate = client
-        .getCertificate()
-        .withSemanticsIdentifier(semanticsIdentifier)
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-
-    assertCertificateResponseValid(certificate);
-  }
-
-  @Test
-  public void getCertificateUsingDocumentNumber() {
-    stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-
-    SmartIdCertificate certificate = client
-        .getCertificate()
-        .withDocumentNumber("PNOEE-31111111111-ADVANCED-LEVEL")
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-
-    assertCertificateResponseValid(certificate);
-  }
-
-  @Test
-  public void getCertificateWithNonce() {
-    stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-NONCE", "requests/certificateChoiceRequestWithNonce.json", "responses/certificateChoiceResponse.json");
-
-    SmartIdCertificate certificate = client
-        .getCertificate()
-        .withDocumentNumber("PNOEE-31111111111-NONCE")
-        .withCertificateLevel("ADVANCED")
-        .withNonce("zstOt2umlc")
-        .fetch();
-
-    assertCertificateResponseValid(certificate);
-  }
-
-  @Test
-  public void getCertificateWithManualSessionStatusRequesting() {
-    stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-
-    CertificateRequestBuilder builder = client.getCertificate();
-    String sessionId = builder
-            .withDocumentNumber("PNOEE-31111111111-ADVANCED-LEVEL")
-            .withCertificateLevel("ADVANCED")
-            .initiateCertificateChoice();
-
-    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
-    SmartIdCertificate certificate = builder.createSmartIdCertificate(sessionStatus);
-
-    assertCertificateResponseValid(certificate);
-    verify(getRequestedFor(urlEqualTo("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86")));
-  }
-
-  @Test(expected = SmartIdClientException.class)
-  public void noTrustStoreOrTrustedCertificates_shouldThrowException() {
-
-    SmartIdClient client = new SmartIdClient();
-    client.setRelyingPartyUUID("de305d54-75b4-431b-adb2-eb6b9e546014");
-    client.setRelyingPartyName("BANK123");
-    client.setHostUrl("http://localhost:18089");
-
-    CertificateRequestBuilder builder = client.getCertificate();
-    builder
-            .withDocumentNumber("PNOEE-31111111111-ADVANCED-LEVEL")
-            .withCertificateLevel("ADVANCED")
-            .initiateCertificateChoice();
-
-    client.getSmartIdConnector();
-  }
-
-  @Test
-  public void getCertificateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
-    stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111-ADVANCED-LEVEL", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-
-    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
-    CertificateRequestBuilder builder = client.getCertificate();
-    String sessionId = builder
-            .withDocumentNumber("PNOEE-31111111111-ADVANCED-LEVEL")
-            .withCertificateLevel("ADVANCED")
-            .initiateCertificateChoice();
-
-    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
-    SmartIdCertificate certificate = builder.createSmartIdCertificate(sessionStatus);
-
-    assertCertificateResponseValid(certificate);
-    verify(getRequestedFor(urlEqualTo("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86?timeoutMs=5000")));
-  }
-
-  @Test
-  public void sign_withDocumentNumber() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    assertEquals("1796", hashToSign.calculateVerificationCode());
-
-    SmartIdSignature signature = client
-        .createSignature()
-        .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signature);
-  }
-
-  @Test
-  public void sign_withSemanticsIdentifier() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    assertEquals("1796", hashToSign.calculateVerificationCode());
-
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789");
-
-    SmartIdSignature signature = client
-        .createSignature()
-        .withSemanticsIdentifier(semanticsIdentifier)
-        .withSignableHash(hashToSign)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signature);
-  }
-
-  @Test
-  public void signWithNonce() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    assertEquals("1796", hashToSign.calculateVerificationCode());
-
-    SmartIdSignature signature = client
-        .createSignature()
-        .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
-        .withCertificateLevel("ADVANCED")
-        .withNonce("zstOt2umlc")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signature);
-  }
-
-  @Test
-  public void signWithManualSessionStatusRequesting() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    assertEquals("1796", hashToSign.calculateVerificationCode());
-
-    SignatureRequestBuilder builder = client.createSignature();
-    String sessionId = builder
-            .withDocumentNumber("PNOEE-31111111111")
-            .withSignableHash(hashToSign)
-            .withCertificateLevel("ADVANCED")
-            .withAllowedInteractionsOrder(asList(
-                    Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                    Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-            )
-            .initiateSigning();
-
-    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
-    SmartIdSignature signature = builder.createSmartIdSignature(sessionStatus);
-
-    assertValidSignatureCreated(signature);
-    verify(getRequestedFor(urlEqualTo("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00")));
-  }
-
-  @Test
-  public void signWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    assertEquals("1796", hashToSign.calculateVerificationCode());
-
-    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
-    SignatureRequestBuilder builder = client.createSignature();
-    String sessionId = builder
-            .withDocumentNumber("PNOEE-31111111111")
-            .withSignableHash(hashToSign)
-            .withCertificateLevel("ADVANCED")
-            .withAllowedInteractionsOrder(asList(
-                    Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                    Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-            )
-            .initiateSigning();
-
-    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
-    SmartIdSignature signature = builder.createSmartIdSignature(sessionStatus);
-
-    assertValidSignatureCreated(signature);
-    verify(getRequestedFor(urlEqualTo("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00?timeoutMs=5000")));
-
-  }
-
-  @Test(expected = UserAccountNotFoundException.class)
-  public void getCertificate_whenUserAccountNotFound_shouldThrowException() {
-    stubNotFoundResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json");
-    makeGetCertificateRequest();
-  }
-
-  @Test(expected = UserAccountNotFoundException.class)
-  public void sign_whenUserAccountNotFound_shouldThrowException() {
-    stubNotFoundResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json");
-    makeCreateSignatureRequest();
-  }
-
-  @Test(expected = UserRefusedException.class)
-  public void getCertificate_whenUserCancels_shouldThrowException() {
-    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenUserRefusedGeneral.json");
-    makeGetCertificateRequest();
-  }
-
-  @Test(expected = UserRefusedException.class)
-  public void sign_whenUserCancels_shouldThrowException() {
-    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenUserRefusedGeneral.json");
-    makeCreateSignatureRequest();
-  }
-
-  @Test(expected = SessionTimeoutException.class)
-  public void sign_whenTimeout_shouldThrowException() {
-    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenTimeout.json");
-    makeCreateSignatureRequest();
-  }
-
-  @Test(expected = RequiredInteractionNotSupportedByAppException.class)
-  public void authenticate_whenRequiredInteractionNotSupportedByApp_shouldThrowException() {
-    stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/signatureSessionResponse.json");
-    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenRequiredInteractionNotSupportedByApp.json");
-    makeAuthenticationRequest();
-  }
-
-  @Test(expected = RequiredInteractionNotSupportedByAppException.class)
-  public void sign_whenRequiredInteractionNotSupportedByApp_shouldThrowException() {
-    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenRequiredInteractionNotSupportedByApp.json");
-    makeCreateSignatureRequest();
-  }
-
-  @Test(expected = DocumentUnusableException.class)
-  public void getCertificate_whenDocumentUnusable_shouldThrowException() {
-    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenDocumentUnusable.json");
-    makeGetCertificateRequest();
-  }
-
-  @Test(expected = UnprocessableSmartIdResponseException.class)
-  public void getCertificate_whenUnknownErrorCode_shouldThrowException() {
-    stubRequestWithResponse("/session/97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusWhenUnknownErrorCode.json");
-    makeGetCertificateRequest();
-  }
-
-  @Test(expected = DocumentUnusableException.class)
-  public void sign_whenDocumentUnusable_shouldThrowException() {
-    stubRequestWithResponse("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusWhenDocumentUnusable.json");
-    makeCreateSignatureRequest();
-  }
-
-  @Test(expected = RelyingPartyAccountConfigurationException.class)
-  public void getCertificate_whenRequestForbidden_shouldThrowException() {
-    stubForbiddenResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json");
-    makeGetCertificateRequest();
-  }
-
-  @Test(expected = RelyingPartyAccountConfigurationException.class)
-  public void sign_whenRequestForbidden_shouldThrowException() {
-    stubForbiddenResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json");
-    makeCreateSignatureRequest();
-  }
-
-  @Test(expected = NoSuitableAccountOfRequestedTypeFoundException.class)
-  public void getCertificate_whenApiReturnsErrorStatusCode471_shouldThrowNoSuitableAccountOfRequestedTypeFoundException() {
-    stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", 471);
-    makeGetCertificateRequest();
-  }
-
-  @Test(expected = PersonShouldViewSmartIdPortalException.class)
-  public void getCertificate_whenApiReturnsErrorStatusCode472_shouldThrowPersonShouldViewSmartIdPortalExceptionn() {
-    stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", 472);
-    makeGetCertificateRequest();
-  }
-
-
-
-  @Test(expected = SmartIdClientException.class)
-  public void sign_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
-    stubErrorResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", 480);
-    makeCreateSignatureRequest();
-  }
-
-  @Test(expected = ServerMaintenanceException.class)
-  public void getCertificate_whenSystemUnderMaintenance_shouldThrowException() {
-    stubErrorResponse("/certificatechoice/etsi/PNOEE-31111111111", "requests/certificateChoiceRequest.json", 580);
-    makeGetCertificateRequest();
-  }
-
-  @Test(expected = ServerMaintenanceException.class)
-  public void sign_whenSystemUnderMaintenance_shouldThrowException() {
-    stubErrorResponse("/signature/document/PNOEE-31111111111", "requests/signatureSessionRequest.json", 580);
-    makeCreateSignatureRequest();
-  }
-
-  @Test
-  public void setPollingSleepTimeoutForSignatureCreation() {
-    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
-    client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
-    long duration = measureSigningDuration();
-    assertTrue("Duration is " + duration, duration > 2000L);
-    assertTrue("Duration is " + duration, duration < 3000L);
-  }
-
-  @Test
-  public void createSignatureAndGetDeviceIpAddress_noIpAddressReturned() {
-    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequest.json", "COMPLETE", STARTED);
-    SmartIdSignature signature = createSignature();
-
-    assertThat(signature.getDeviceIpAddress(), is(nullValue()));
-  }
-
-  @Test
-  public void createSignatureAndGetDeviceIpAddress() {
-    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-    stubSessionStatusWithState("2c52caf4-13b0-41c4-bdc6-aa268403cc00", "responses/sessionStatusForSuccessfulSigningRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
-    SmartIdSignature signature = createSignature();
-
-    assertThat(signature.getInteractionFlowUsed(), is("displayTextAndPIN"));
-    assertThat(signature.getDeviceIpAddress(), is("62.65.42.46"));
-  }
-
-  @Test
-  public void setPollingSleepTimeoutForCertificateChoice() {
-    stubRequestWithResponse("/certificatechoice/document/PNOEE-31111111111", "requests/certificateChoiceRequest.json", "responses/certificateChoiceResponse.json");
-
-    stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-    stubSessionStatusWithState("97f5058e-e308-4c83-ac14-7712b0eb9d86", "responses/sessionStatusForSuccessfulCertificateRequest.json", "COMPLETE", STARTED);
-    client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
-    long duration = measureCertificateChoiceDuration();
-    assertTrue("Duration is " + duration, duration > 2000L);
-    assertTrue("Duration is " + duration, duration < 3000L);
-  }
-
-  @Test
-  public void setSessionStatusResponseSocketTimeout() {
-    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 10L);
-    SmartIdSignature signature = createSignature();
-    assertNotNull(signature);
-    verify(getRequestedFor(urlEqualTo("/session/2c52caf4-13b0-41c4-bdc6-aa268403cc00?timeoutMs=10000")));
-  }
-
-  @Test
-  public void authenticateUsingDocumentNumber() {
-    stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    assertEquals("4430", authenticationHash.calculateVerificationCode());
-
-    SmartIdAuthenticationResponse authenticationResponse = client
-        .createAuthentication()
-        .withDocumentNumber("PNOEE-32222222222-Z1B2-Q")
-        .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                Interaction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-
-    assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
-    assertAuthenticationResponseValid(authenticationResponse);
-  }
-
-  @Test
-  public void authenticate_usingSemanticsIdentifier() {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    assertEquals("4430", authenticationHash.calculateVerificationCode());
-
-    SmartIdAuthenticationResponse authenticationResponse = client
-            .createAuthentication()
-            .withSemanticsIdentifierAsString("PNOEE-31111111111")
-            .withAuthenticationHash(authenticationHash)
-            .withCertificateLevel("ADVANCED")
-            .withAllowedInteractionsOrder(asList(
-                    Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                    Interaction.displayTextAndPIN("Log in?"))
-            )
-            .authenticate();
-
-    assertAuthenticationResponseValid(authenticationResponse);
-  }
-
-  @Test
-  public void authenticateWithNonce() {
-    stubRequestWithResponse("/authentication/document/PNOEE-31111111111-WITH-NONCE", "requests/authenticationSessionRequestWithNonce.json", "responses/authenticationSessionResponse.json");
-
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    assertEquals("4430", authenticationHash.calculateVerificationCode());
-
-    SmartIdAuthenticationResponse authenticationResponse = client
-        .createAuthentication()
-        .withDocumentNumber("PNOEE-31111111111-WITH-NONCE")
-        .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
-        .withNonce("g9rp4kjca3")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                Interaction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-
-    assertAuthenticationResponseValid(authenticationResponse);
-  }
-
-  @Test
-  public void authenticateWithManualSessionStatusRequesting() {
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111");
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    assertEquals("4430", authenticationHash.calculateVerificationCode());
-
-    AuthenticationRequestBuilder builder = client.createAuthentication();
-    String sessionId = builder
-            .withSemanticsIdentifier(semanticsIdentifier)
-            .withAuthenticationHash(authenticationHash)
-            .withCertificateLevel("ADVANCED")
-            .withAllowedInteractionsOrder(asList(
-                    Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                    Interaction.displayTextAndPIN("Log in?"))
-            )
-            .initiateAuthentication();
-
-    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
-    SmartIdAuthenticationResponse authenticationResponse = builder.createSmartIdAuthenticationResponse(sessionStatus);
-
-    assertAuthenticationResponseValid(authenticationResponse);
-    verify(getRequestedFor(urlEqualTo("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb")));
-  }
-
-  @Test
-  public void authenticateWithManualSessionStatusRequesting_andCustomResponseSocketTimeout() {
-    SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111");
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    assertEquals("4430", authenticationHash.calculateVerificationCode());
-
-    client.setSessionStatusResponseSocketOpenTime(TimeUnit.SECONDS, 5);
-    AuthenticationRequestBuilder builder = client.createAuthentication();
-    String sessionId = builder
-            .withSemanticsIdentifier(semanticsIdentifier)
-            .withAuthenticationHash(authenticationHash)
-            .withCertificateLevel("ADVANCED")
-            .withAllowedInteractionsOrder(asList(
-                    Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                    Interaction.displayTextAndPIN("Log in?"))
-            )
-            .initiateAuthentication();
-
-    SessionStatus sessionStatus = client.getSmartIdConnector().getSessionStatus(sessionId);
-    SmartIdAuthenticationResponse authenticationResponse = builder.createSmartIdAuthenticationResponse(sessionStatus);
-
-    assertAuthenticationResponseValid(authenticationResponse);
-    verify(getRequestedFor(urlEqualTo("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb?timeoutMs=5000")));
-  }
-
-  @Test(expected = UserAccountNotFoundException.class)
-  public void authenticate_whenUserAccountNotFound_shouldThrowException() {
-    stubNotFoundResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json");
-    makeAuthenticationRequest();
-  }
-
-  @Test(expected = UserRefusedException.class)
-  public void authenticate_whenUserCancels_shouldThrowException() {
-    stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenUserRefusedGeneral.json");
-    makeAuthenticationRequest();
-  }
-
-  @Test(expected = SessionTimeoutException.class)
-  public void authenticate_whenTimeout_shouldThrowException() {
-    stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenTimeout.json");
-    makeAuthenticationRequest();
-  }
-
-  @Test(expected = DocumentUnusableException.class)
-  public void authenticate_whenDocumentUnusable_shouldThrowException() {
-    stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-    stubRequestWithResponse("/session/1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusWhenDocumentUnusable.json");
-    makeAuthenticationRequest();
-  }
-
-  @Test(expected = RelyingPartyAccountConfigurationException.class)
-  public void authenticate_whenRequestForbidden_shouldThrowException() {
-    stubForbiddenResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json");
-    makeAuthenticationRequest();
-  }
-
-  @Test(expected = SmartIdClientException.class)
-  public void authenticate_whenClientSideAPIIsNotSupportedAnymore_shouldThrowException() {
-    stubErrorResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", 480);
-    makeAuthenticationRequest();
-  }
-
-  @Test(expected = ServerMaintenanceException.class)
-  public void authenticate_whenSystemUnderMaintenance_shouldThrowException() {
-    stubErrorResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", 580);
-    makeAuthenticationRequest();
-  }
-
-  @Test
-  public void setPollingSleepTimeoutForAuthentication() {
-    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
-    client.setPollingSleepTimeout(TimeUnit.SECONDS, 2L);
-    long duration = measureAuthenticationDuration();
-    assertTrue("Duration is " + duration, duration > 2000L);
-    assertTrue("Duration is " + duration, duration < 3000L);
-  }
-
-
-  @Test
-  public void getDeviceIpAddress_ipAddressNotPresent() {
-    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequest.json", "COMPLETE", STARTED);
-
-    SmartIdAuthenticationResponse authentication = createAuthentication();
-    assertThat(authentication.getDeviceIpAddress(), is(nullValue()));
-  }
-
-  @Test
-  public void getDeviceIpAddress_ipAddressReturned() {
-    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusRunning.json", STARTED, "COMPLETE");
-    stubSessionStatusWithState("1dcc1600-29a6-4e95-a95c-d69b31febcfb", "responses/sessionStatusForSuccessfulAuthenticationRequestWithDeviceIpAddress.json", "COMPLETE", STARTED);
-
-    SmartIdAuthenticationResponse authentication = createAuthentication();
-    assertThat(authentication.getDeviceIpAddress(), is("62.65.42.45"));
-  }
-
-  @Test
-  public void verifyAuthentication_withNetworkConnectionConfigurationHavingCustomHeader() {
-    stubRequestWithResponse("/authentication/document/PNOEE-32222222222-Z1B2-Q", "requests/authenticationSessionRequest.json", "responses/authenticationSessionResponse.json");
-
-    String headerName = "custom-header";
-    String headerValue = "Hi!";
-
-    Map<String, String> headersToAdd = new HashMap<>();
-    headersToAdd.put(headerName, headerValue);
-    ClientConfig clientConfig = getClientConfigWithCustomRequestHeaders(headersToAdd);
-    client.setNetworkConnectionConfig(clientConfig);
-    makeAuthenticationRequest();
-
-    verify(postRequestedFor(urlEqualTo("/authentication/document/PNOEE-32222222222-Z1B2-Q"))
-            .withHeader(headerName, equalTo(headerValue)));
-  }
-
-  @Test
-  public void verifySigning_withNetworkConnectionConfigurationHavingCustomHeader() {
-    String headerName = "custom-header";
-    String headerValue = "Hello?!";
-
-    Map<String, String> headers = new HashMap<>();
-    headers.put(headerName, headerValue);
-    ClientConfig clientConfig = getClientConfigWithCustomRequestHeaders(headers);
-    client.setNetworkConnectionConfig(clientConfig);
-    makeCreateSignatureRequest();
-
-    verify(postRequestedFor(urlEqualTo("/signature/document/PNOEE-31111111111"))
-        .withHeader(headerName, equalTo(headerValue)));
-  }
-
-  @Test
-  public void verifyCertificateChoice_withNetworkConnectionConfigurationHavingCustomHeader() {
-    String headerName = "custom-header";
-    String headerValue = "Man, come on..";
-
-    Map<String, String> headers = new HashMap<>();
-    headers.put(headerName, headerValue);
-    ClientConfig clientConfig = getClientConfigWithCustomRequestHeaders(headers);
-    client.setNetworkConnectionConfig(clientConfig);
-    makeGetCertificateRequest();
-
-    verify(postRequestedFor(urlEqualTo("/certificatechoice/etsi/PNOEE-31111111111"))
-        .withHeader(headerName, equalTo(headerValue)));
-  }
-
-  @Test
-  public void verifySmartIdConnector_whenConnectorIsNotProvided() {
-    SmartIdConnector smartIdConnector = client.getSmartIdConnector();
-    assertTrue(smartIdConnector instanceof SmartIdRestConnector);
-  }
-
-  @Test
-  public void verifySmartIdConnector_whenConnectorIsProvided() {
-    final String mock = "MOCK";
-    SessionStatus status = mock(SessionStatus.class);
-    when(status.getState()).thenReturn(mock);
-    SmartIdConnector connector = mock(SmartIdConnector.class);
-    when(connector.getSessionStatus(null)).thenReturn(status);
-    client.setSmartIdConnector(connector);
-    assertEquals(mock, client.getSmartIdConnector().getSessionStatus(null).getState());
-  }
-
-  @Test(expected = SmartIdClientException.class)
-  public void getCertificate_noIdentifierGiven() {
-
-    client
-         .getCertificate()
-         .withCertificateLevel("ADVANCED")
-         .fetch();
-
-  }
-
-  @Test
-  public void getCertificateByETSIPNO_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
-    SmartIdCertificate cer = client
-        .getCertificate()
-        .withSemanticsIdentifier(new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-
-    assertCertificateResponseValid(cer);
-  }
-
-  @Test
-  public void getCertificateByETSIPAS_ValidSemanticsIdentifierAsString_ShouldReturnValidCertificate() {
-    SmartIdCertificate cer = client
-        .getCertificate()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-
-    assertCertificateResponseValid(cer);
-  }
-
-  @Test
-  public void getCertificateByETSIIDC_ValidSemanticsIdentifier_ShouldReturnValidCertificate() {
-    SmartIdCertificate cer = client
-        .getCertificate()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-
-    assertCertificateResponseValid(cer);
-  }
-
-  @Test
-  public void getAuthenticationByETSIPNO_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    SmartIdAuthenticationResponse authResponse = client
-        .createAuthentication()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
-        .withCertificateLevel("ADVANCED")
-        .withAuthenticationHash(authenticationHash)
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                Interaction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-
-    assertAuthenticationResponseValid(authResponse);
-  }
-
-  @Test
-  public void getAuthenticationByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    SmartIdAuthenticationResponse authResponse = client
-        .createAuthentication()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
-        .withCertificateLevel("ADVANCED")
-        .withAuthenticationHash(authenticationHash)
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                Interaction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-
-    assertAuthenticationResponseValid(authResponse);
-  }
-
-  @Test
-  public void getAuthenticationByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulAuthentication() {
-
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    SmartIdAuthenticationResponse authResponse = client
-        .createAuthentication()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
-        .withCertificateLevel("ADVANCED")
-        .withAuthenticationHash(authenticationHash)
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                Interaction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-
-    assertAuthenticationResponseValid(authResponse);
-  }
-
-  @Test
-  public void getSignatureByETSIPNO_ValidSemanticsIdentifier_ShouldReturnSuccessfulSignature() {
-
-    SignableHash signableHash = new SignableHash();
-    signableHash.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    signableHash.setHashType(HashType.SHA256);
-
-    SmartIdSignature signResponse = client
-        .createSignature()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
-        .withCertificateLevel("ADVANCED")
-        .withSignableHash(signableHash)
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signResponse);
-  }
-
-  @Test
-  public void getSignatureByETSIPAS_ValidSemanticsIdentifier_ShouldReturnSuccessfulSignature() {
-
-    SignableHash signableHash = new SignableHash();
-    signableHash.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    signableHash.setHashType(HashType.SHA256);
-
-    SmartIdSignature signResponse = client
-        .createSignature()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.PAS, CountryCode.EE, "987654321012"))
-        .withCertificateLevel("ADVANCED")
-        .withSignableHash(signableHash)
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signResponse);
-  }
-
-  @Test
-  public void getSignatureByETSIIDC_ValidSemanticsIdentifier_ShouldReturnSuccessfulSignature() {
-
-    SignableHash signableHash = new SignableHash();
-    signableHash.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    signableHash.setHashType(HashType.SHA256);
-
-    SmartIdSignature signResponse = client
-        .createSignature()
-        .withSemanticsIdentifier(
-            new SemanticsIdentifier(IdentityType.IDC, CountryCode.EE, "AA3456789"))
-        .withCertificateLevel("ADVANCED")
-        .withSignableHash(signableHash)
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-
-    assertValidSignatureCreated(signResponse);
-  }
-
-  private long measureSigningDuration() {
-    long startTime = System.currentTimeMillis();
-    SmartIdSignature signature = createSignature();
-    long endTime = System.currentTimeMillis();
-    assertNotNull(signature);
-    return endTime - startTime;
-  }
-
-  private SmartIdSignature createSignature() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-    return client
-        .createSignature()
-        .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-  }
-
-  private long measureAuthenticationDuration() {
-    long startTime = System.currentTimeMillis();
-    SmartIdAuthenticationResponse AuthenticationResponse = createAuthentication();
-    long endTime = System.currentTimeMillis();
-    assertNotNull(AuthenticationResponse);
-    return endTime - startTime;
-  }
-
-  private SmartIdAuthenticationResponse createAuthentication() {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    return client
-        .createAuthentication()
-        .withDocumentNumber("PNOEE-31111111111")
-        .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                Interaction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-  }
-
-  private long measureCertificateChoiceDuration() {
-    long startTime = System.currentTimeMillis();
-    SmartIdCertificate certificate = client
-        .getCertificate()
-        .withDocumentNumber("PNOEE-31111111111")
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-    long endTime = System.currentTimeMillis();
-    assertNotNull(certificate);
-    return endTime - startTime;
-  }
-
-  private void makeGetCertificateRequest() {
-    client
-        .getCertificate()
-        .withSemanticsIdentifier(new SemanticsIdentifier(IdentityType.PNO, CountryCode.EE, "31111111111"))
-        .withCertificateLevel("ADVANCED")
-        .fetch();
-  }
-
-  private void makeCreateSignatureRequest() {
-    SignableHash hashToSign = new SignableHash();
-    hashToSign.setHashType(HashType.SHA256);
-    hashToSign.setHashInBase64("0nbgC2fVdLVQFZJdBbmG7oPoElpCYsQMtrY0c0wKYRg=");
-
-    client
-        .createSignature()
-        .withDocumentNumber("PNOEE-31111111111")
-        .withSignableHash(hashToSign)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessage("Authorize transfer of 1 unit from account 113245344343 to account 7677323232?"),
-                Interaction.displayTextAndPIN("Transfer 1 unit to account 7677323232?"))
-        )
-        .sign();
-  }
-
-  private void makeAuthenticationRequest() {
-    AuthenticationHash authenticationHash = new AuthenticationHash();
-    authenticationHash.setHashInBase64("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==");
-    authenticationHash.setHashType(HashType.SHA512);
-
-    client
-        .createAuthentication()
-        .withDocumentNumber("PNOEE-32222222222-Z1B2-Q")
-        .withAuthenticationHash(authenticationHash)
-        .withCertificateLevel("ADVANCED")
-        .withAllowedInteractionsOrder(asList(
-                Interaction.confirmationMessageAndVerificationCodeChoice("Log in to self-service?"),
-                Interaction.displayTextAndPIN("Log in?"))
-        )
-        .authenticate();
-  }
-
-  private ClientConfig getClientConfigWithCustomRequestHeaders(Map<String, String> headers) {
-    ClientConfig clientConfig = new ClientConfig().connectorProvider(new ApacheConnectorProvider());
-    clientConfig.register(new ClientRequestHeaderFilter(headers));
-    return clientConfig;
-  }
-
-  private void assertCertificateResponseValid(SmartIdCertificate certificate) {
-    assertNotNull(certificate);
-    assertNotNull(certificate.getCertificate());
-    X509Certificate cert = certificate.getCertificate();
-    assertThat(cert.getSubjectDN().getName(), containsString("SERIALNUMBER=PNOEE-31111111111"));
-    assertEquals("PNOEE-31111111111", certificate.getDocumentNumber());
-    assertEquals("QUALIFIED", certificate.getCertificateLevel());
-  }
-
-  private void assertValidSignatureCreated(SmartIdSignature signature) {
-    assertNotNull(signature);
-    assertThat(signature.getValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
-    assertEquals("sha256WithRSAEncryption", signature.getAlgorithmName());
-    assertThat(signature.getInteractionFlowUsed(), is("displayTextAndPIN"));
-  }
-
-  private void assertAuthenticationResponseValid(SmartIdAuthenticationResponse authenticationResponse) {
-    assertNotNull(authenticationResponse);
-    assertEquals("K74MSLkafRuKZ1Ooucvh2xa4Q3nz+R/hFWIShN96SPHNcem+uQ6mFMe9kkJQqp5EaoZnJeaFpl310TmlzRgNyQ==", authenticationResponse.getSignedHashInBase64());
-    assertEquals("OK", authenticationResponse.getEndResult());
-    assertNotNull(authenticationResponse.getCertificate());
-    assertThat(authenticationResponse.getSignatureValueInBase64(), startsWith("luvjsi1+1iLN9yfDFEh/BE8h"));
-    assertEquals("sha256WithRSAEncryption", authenticationResponse.getAlgorithmName());
-    assertEquals("PNOEE-31111111111", authenticationResponse.getDocumentNumber());
-  }
-
+import ee.sk.smartid.rest.dao.VerificationCode;
+
+class SmartIdClientTest {
+
+    private static final String DEMO_HOST_SSL_CERTIFICATE = FileUtil.readFileToString("sid_demo_sk_ee.pem");
+    private static final String DOCUMENT_NUMBER = "PNOEE-1234567890-MOCK-Q";
+    private static final String PERSON_CODE = "PNOEE-1234567890";
+    private static final String INITIAL_CALLBACK_URL = "https://example.com/callback";
+
+    private SmartIdClient smartIdClient;
+
+    @BeforeEach
+    void setUp() {
+        smartIdClient = new SmartIdClient();
+        smartIdClient.setRelyingPartyUUID("00000000-0000-4000-8000-000000000000");
+        smartIdClient.setRelyingPartyName("DEMO");
+        smartIdClient.setHostUrl("http://localhost:18089");
+        smartIdClient.setTrustedCertificates(DEMO_HOST_SSL_CERTIFICATE);
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class DeviceLinkCertificateChoiceSession {
+
+        @Test
+        void createSameDeviceCertificateChoiceSession() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-device-link.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
+                    .initCertificateChoice();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+
+        @Test
+        void createSameDeviceCertificateChoiceSessionWithAllFields() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-all-fields.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
+                    .withNonce("d8XkbEnA0WsE0PvBZZoxGnPI4ml9qk")
+                    .withShareMdClientIpAddress(true)
+                    .initCertificateChoice();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+
+        @Test
+        void createQrCodeCertificateChoiceSession() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-for-qr-code.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .initCertificateChoice();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class NotificationCertificateChoiceSession {
+
+        @Test
+        void createNotificationCertificateChoice_withSemanticsIdentifierAndOnlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/notification/etsi/PNOEE-1234567890",
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-only-required-fields.json",
+                    "responses/sign/notification/cert-choice/notification-certificate-choice-session-response.json");
+
+            NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .initCertificateChoice();
+
+            assertNotNull(response.sessionID());
+        }
+
+        @Test
+        void createNotificationCertificateChoice_withSemanticsIdentifierAndAllFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate-choice/notification/etsi/PNOEE-1234567890",
+                    "requests/sign/notification/cert-choice/certificate-choice-session-request-all-fields.json",
+                    "responses/sign/notification/cert-choice/notification-certificate-choice-session-response.json");
+
+            NotificationCertificateChoiceSessionResponse response = smartIdClient.createNotificationCertificateChoice()
+                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .withShareMdClientIpAddress(true)
+                    .initCertificateChoice();
+
+            assertNotNull(response.sessionID());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class DeviceLinkAuthenticationSession {
+
+        @Test
+        void createDeviceLinkAuthentication_anonymous() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/authentication/device-link/anonymous",
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
+                    .initAuthenticationSession();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+
+        @Test
+        void createDeviceLinkAuthentication_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/authentication/device-link/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
+                    .initAuthenticationSession();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+
+        @Test
+        void createDeviceLinkAuthentication_withSemanticsIdentifier() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/authentication/device-link/etsi/PNOEE-1234567890",
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkAuthentication()
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
+                    .initAuthenticationSession();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class DeviceLinkSignatureSession {
+
+        @Test
+        void createDeviceLinkSignature_withDocumentNumberSameDevice() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/device-link/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/device-link/signature/device-link-signature-request-same-device.json",
+                    "responses/sign/device-link/signature/device-link-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(32).getBytes(), HashAlgorithm.SHA_512);
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
+                    .initSignatureSession();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+
+        @Test
+        void createDeviceLinkSignature_withDocumentNumberQrCode() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/device-link/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/device-link/signature/device-link-signature-request-qr-code.json",
+                    "responses/sign/device-link/signature/device-link-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(32).getBytes(), HashAlgorithm.SHA_512);
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .initSignatureSession();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+
+        @Test
+        void createDeviceLinkSignature_withSemanticsIdentifierSameDevice() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/device-link/etsi/PNOEE-1234567890",
+                    "requests/sign/device-link/signature/device-link-signature-request-same-device.json",
+                    "responses/sign/device-link/signature/device-link-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(32).getBytes());
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
+                    .initSignatureSession();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+
+        @Test
+        void createDeviceLinkSignature_withSemanticsIdentifierQrCode() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/device-link/etsi/PNOEE-1234567890",
+                    "requests/sign/device-link/signature/device-link-signature-request-qr-code.json",
+                    "responses/sign/device-link/signature/device-link-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(32).getBytes());
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkSignature()
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .initSignatureSession();
+
+            assertNotNull(response.sessionID());
+            assertNotNull(response.sessionToken());
+            assertNotNull(response.sessionSecret());
+            assertNotNull(response.deviceLinkBase());
+            assertNotNull(response.receivedAt());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class CertificateByDocumentNumberRequest {
+
+        @Test
+        void createCertificateRequest_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/certificate-by-document-number-request-all-fields.json",
+                    "responses/certificate-by-document-number-response.json");
+
+            CertificateByDocumentNumberResult response = smartIdClient.createCertificateByDocumentNumber()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .getCertificateByDocumentNumber();
+
+            assertNotNull(response);
+            assertEquals(CertificateLevel.QUALIFIED, response.certificateLevel());
+            assertNotNull(response.certificate());
+        }
+
+        @Test
+        void getCertificateByDocumentNumber_withUnknownState_throwsException() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/certificate-by-document-number-request-all-fields.json",
+                    "responses/certificate-by-document-number-response-unknown-state.json");
+
+            CertificateByDocumentNumberRequestBuilder builder = smartIdClient.createCertificateByDocumentNumber()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withCertificateLevel(CertificateLevel.ADVANCED);
+
+            var ex = assertThrows(UnprocessableSmartIdResponseException.class, builder::getCertificateByDocumentNumber);
+            assertEquals("Queried certificate response field 'state' has unsupported value", ex.getMessage());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class NotificationAuthenticationSession {
+
+        @Test
+        void createNotificationAuthentication_withSemanticsIdentifier() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/etsi/PNOEE-1234567890",
+                    "requests/auth/notification/notification-authentication-session-request-only-required-fields.json",
+                    "responses/auth/notification/notification-session-response.json");
+
+            NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Login?")))
+                    .initAuthenticationSession();
+
+            assertNotNull(response.sessionID());
+        }
+
+        @Test
+        void createNotificationAuthentication_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/notification/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/auth/notification/notification-authentication-session-request-only-required-fields.json",
+                    "responses/auth/notification/notification-session-response.json");
+
+            NotificationAuthenticationSessionResponse response = smartIdClient.createNotificationAuthentication()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Login?")))
+                    .initAuthenticationSession();
+
+            assertNotNull(response.sessionID());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class NotificationBasedSignatureSession {
+
+        @Test
+        void createNotificationSignature_withDocumentNumber() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(64).getBytes());
+            NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Sign it!")))
+                    .withSignableHash(signableHash)
+                    .initSignatureSession();
+
+            assertSessionResponse(response);
+        }
+
+        @Test
+        void createNotificationSignature_withSemanticsIdentifier() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/notification/etsi/PNOEE-1234567890",
+                    "requests/sign/notification/signature/notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/notification/signature/notification-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(64).getBytes());
+            NotificationSignatureSessionResponse response = smartIdClient.createNotificationSignature()
+                    .withSemanticsIdentifier(new SemanticsIdentifier(PERSON_CODE))
+                    .withInteractions(List.of(NotificationInteraction.confirmationMessage("Sign it!")))
+                    .withSignableHash(signableHash)
+                    .initSignatureSession();
+
+            assertSessionResponse(response);
+        }
+
+        private static void assertSessionResponse(NotificationSignatureSessionResponse response) {
+            assertNotNull(response.sessionID());
+            VerificationCode verificationCode = response.vc();
+            assertNotNull(verificationCode);
+            assertNotNull(verificationCode.type());
+            assertNotNull(verificationCode.value());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class LinkedNotificationBasedSignatureSession {
+
+        private static final String DOCUMENT_NUMBER = "PNOEE-1234567890-MOCK-Q";
+
+        @Test
+        void createLinkedNotificationSignature_onlyRequiredFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/notification/linked/" + DOCUMENT_NUMBER,
+                    "requests/sign/linked/signature/linked-notification-signature-session-request-only-required-fields.json",
+                    "responses/sign/linked/signature/linked-notification-signature-session-response.json");
+
+            LinkedSignatureSessionResponse response = smartIdClient.createLinkedNotificationSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withSignableData(new SignableData("Test data".getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withLinkedSessionID("10000000-0000-000-000-000000000000")
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign?")))
+                    .initSignatureSession();
+
+            assertNotNull(response);
+        }
+
+        @Test
+        void createLinkedNotificationSignature_allFields_ok() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/notification/linked/" + DOCUMENT_NUMBER,
+                    "requests/sign/linked/signature/linked-notification-signature-session-request-all-fields.json",
+                    "responses/sign/linked/signature/linked-notification-signature-session-response.json");
+
+            LinkedSignatureSessionResponse response = smartIdClient.createLinkedNotificationSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withSignableData(new SignableData("Test data".getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withLinkedSessionID("10000000-0000-000-000-000000000000")
+                    .withNonce("cmFuZG9tTm9uY2U=")
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign?")))
+                    .withShareMdClientIpAddress(true)
+                    .initSignatureSession();
+
+            assertNotNull(response);
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class SessionsStatus {
+
+        @Test
+        void fetchFinalSessionStatus() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "responses/session-status-successful-authentication.json");
+
+            SessionStatus status = smartIdClient.getSessionStatusPoller().fetchFinalSessionStatus("abcdef1234567890");
+
+            assertEquals("COMPLETE", status.getState());
+            assertEquals("OK", status.getResult().getEndResult());
+        }
+
+        @Test
+        void getSessionStatus() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/session/abcdef1234567890", "responses/session-status-running.json");
+
+            SessionStatus status = smartIdClient.getSessionStatusPoller().getSessionStatus("abcdef1234567890");
+
+            assertEquals("RUNNING", status.getState());
+            assertNull(status.getResult());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class DynamicContentForAuth {
+
+        @ParameterizedTest
+        @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
+        void createDynamicContent_authenticationForSameDeviceFlows(DeviceLinkType deviceLinkType) {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous",
+                    "requests/auth/device-link/device-link-authentication-session-request-same-device-only-required-fields.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient.createDeviceLinkAuthentication()
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512)
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL);
+            DeviceLinkSessionResponse response = builder.initAuthenticationSession();
+            DeviceLinkAuthenticationSessionRequest request = builder.getAuthenticationSessionRequest();
+
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(deviceLinkType)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(response.sessionToken())
+                    .withLang("eng")
+                    .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+                    .withInitialCallbackUrl(request.initialCallbackUrl())
+                    .withInteractions(request.interactions())
+                    .buildDeviceLink(response.sessionSecret());
+
+            assertUri(deviceLink, SessionType.AUTHENTICATION, deviceLinkType, response.sessionToken());
+        }
+
+        @Test
+        void createDynamicContent_authenticationWithQRCode() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous",
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient.createDeviceLinkAuthentication()
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512);
+            DeviceLinkSessionResponse response = builder.initAuthenticationSession();
+            DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+            long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
+
+            URI qrCodeUri = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(response.sessionToken())
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withLang("eng")
+                    .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+                    .withInteractions(authenticationSessionRequest.interactions())
+                    .buildDeviceLink(response.sessionSecret());
+
+            assertUri(qrCodeUri, SessionType.AUTHENTICATION, DeviceLinkType.QR_CODE, response.sessionToken());
+        }
+
+        @Test
+        void createDynamicContent_authenticationWithQRCodeImage() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/authentication/device-link/anonymous",
+                    "requests/auth/device-link/device-link-authentication-session-request-qr-code.json",
+                    "responses/auth/device-link/device-link-authentication-session-response.json");
+
+            DeviceLinkAuthenticationSessionRequestBuilder builder = smartIdClient.createDeviceLinkAuthentication()
+                    .withRpChallenge(Base64.toBase64String("a".repeat(32).getBytes()))
+                    .withSignatureAlgorithm(SignatureAlgorithm.RSASSA_PSS)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Log in?")))
+                    .withHashAlgorithm(HashAlgorithm.SHA3_512);
+            DeviceLinkSessionResponse response = builder.initAuthenticationSession();
+            DeviceLinkAuthenticationSessionRequest authenticationSessionRequest = builder.getAuthenticationSessionRequest();
+
+            long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
+            URI qrCodeUri = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withSessionType(SessionType.AUTHENTICATION)
+                    .withSessionToken(response.sessionToken())
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withLang("eng")
+                    .withDigest("YWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWE=")
+                    .withInteractions(authenticationSessionRequest.interactions())
+                    .buildDeviceLink(response.sessionSecret());
+
+            String qrCodeDataUri = QrCodeGenerator.generateDataUri(qrCodeUri.toString());
+            String[] qrCodeDataUriParts = qrCodeDataUri.split(",");
+            URI uri = URI.create(QrCodeUtil.extractQrContent(qrCodeDataUriParts[1]).getText());
+
+            assertUri(uri, SessionType.AUTHENTICATION, DeviceLinkType.QR_CODE, response.sessionToken());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class DynamicContentForSignature {
+
+        @ParameterizedTest
+        @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
+        void createDynamicContent_sameDevice(DeviceLinkType deviceLinkType) {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/device-link/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/device-link/signature/device-link-signature-request-same-device.json",
+                    "responses/sign/device-link/signature/device-link-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(32).getBytes());
+
+            DeviceLinkSignatureSessionRequestBuilder builder = smartIdClient.createDeviceLinkSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
+                    .withSignableHash(signableHash)
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL);
+            DeviceLinkSessionResponse response = builder.initSignatureSession();
+            DeviceLinkSignatureSessionRequest request = builder.getSignatureSessionRequest();
+
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(deviceLinkType)
+                    .withSessionType(SessionType.SIGNATURE)
+                    .withSessionToken(response.sessionToken())
+                    .withLang("eng")
+                    .withDigest(signableHash.getDigestInBase64())
+                    .withInteractions(request.interactions())
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
+                    .buildDeviceLink(response.sessionSecret());
+
+            assertUri(deviceLink, SessionType.SIGNATURE, deviceLinkType, response.sessionToken());
+        }
+
+        @Test
+        void createDynamicContent_withQrCode() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/device-link/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/device-link/signature/device-link-signature-request-qr-code.json",
+                    "responses/sign/device-link/signature/device-link-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(32).getBytes());
+
+            DeviceLinkSignatureSessionRequestBuilder builder = smartIdClient.createDeviceLinkSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
+                    .withSignableHash(signableHash);
+            DeviceLinkSessionResponse response = builder.initSignatureSession();
+            DeviceLinkSignatureSessionRequest request = builder.getSignatureSessionRequest();
+
+            Duration elapsed = Duration.between(response.receivedAt(), Instant.now());
+
+            URI qrCodeUri = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withElapsedSeconds(elapsed.getSeconds())
+                    .withSessionType(SessionType.SIGNATURE)
+                    .withSessionToken(response.sessionToken())
+                    .withLang("eng")
+                    .withDigest(signableHash.getDigestInBase64())
+                    .withInteractions(request.interactions())
+                    .buildDeviceLink(response.sessionSecret());
+
+            assertUri(qrCodeUri, SessionType.SIGNATURE, DeviceLinkType.QR_CODE, response.sessionToken());
+        }
+
+        @Test
+        void createDynamicContent_withQrCodeImage() {
+            SmartIdRestServiceStubs.stubStrictRequestWithResponse("/signature/device-link/document/PNOEE-1234567890-MOCK-Q",
+                    "requests/sign/device-link/signature/device-link-signature-request-qr-code.json",
+                    "responses/sign/device-link/signature/device-link-signature-session-response.json");
+
+            var signableHash = new SignableHash("a".repeat(32).getBytes());
+
+            DeviceLinkSignatureSessionRequestBuilder builder = smartIdClient.createDeviceLinkSignature()
+                    .withDocumentNumber(DOCUMENT_NUMBER)
+                    .withInteractions(List.of(DeviceLinkInteraction.displayTextAndPin("Sign document?")))
+                    .withSignableHash(signableHash);
+            DeviceLinkSessionResponse response = builder.initSignatureSession();
+            DeviceLinkSignatureSessionRequest request = builder.getSignatureSessionRequest();
+
+            Duration elapsed = Duration.between(response.receivedAt(), Instant.now());
+            URI qrCodeUri = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withElapsedSeconds(elapsed.getSeconds())
+                    .withSessionType(SessionType.SIGNATURE)
+                    .withSessionToken(response.sessionToken())
+                    .withLang("eng")
+                    .withDigest(signableHash.getDigestInBase64())
+                    .withInteractions(request.interactions())
+                    .buildDeviceLink(response.sessionSecret());
+
+            String qrCodeDataUri = QrCodeGenerator.generateDataUri(qrCodeUri.toString());
+            String[] qrCodeDataUriParts = qrCodeDataUri.split(",");
+            URI uri = URI.create(QrCodeUtil.extractQrContent(qrCodeDataUriParts[1]).getText());
+
+            assertUri(uri, SessionType.SIGNATURE, DeviceLinkType.QR_CODE, response.sessionToken());
+        }
+    }
+
+    @Nested
+    @WireMockTest(httpPort = 18089)
+    class DynamicContentForCertificateChoice {
+
+        @Test
+        void createDynamicContent_certificateChoiceWithDeviceLinkGeneratedForQrCode() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-for-qr-code.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .initCertificateChoice();
+
+            long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
+            URI deviceLink = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                    .withSessionToken(response.sessionToken())
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withLang("eng")
+                    .buildDeviceLink(response.sessionSecret());
+
+            assertUri(deviceLink, SessionType.CERTIFICATE_CHOICE, DeviceLinkType.QR_CODE, response.sessionToken());
+        }
+
+        @Test
+        void createDynamicContent_createQrCodeImage() {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-for-qr-code.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withNonce(Base64.toBase64String("randomNonce".getBytes()))
+                    .withCertificateLevel(CertificateLevel.ADVANCED)
+                    .initCertificateChoice();
+
+            long elapsedSeconds = Duration.between(response.receivedAt(), Instant.now()).getSeconds();
+
+            URI qrCodeUri = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(DeviceLinkType.QR_CODE)
+                    .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                    .withSessionToken(response.sessionToken())
+                    .withElapsedSeconds(elapsedSeconds)
+                    .withLang("eng")
+                    .buildDeviceLink(response.sessionSecret());
+
+            String qrCodeDataUri = QrCodeGenerator.generateDataUri(qrCodeUri.toString());
+            String[] qrCodeDataUriParts = qrCodeDataUri.split(",");
+            URI uri = URI.create(QrCodeUtil.extractQrContent(qrCodeDataUriParts[1]).getText());
+
+            assertUri(uri, SessionType.CERTIFICATE_CHOICE, DeviceLinkType.QR_CODE, response.sessionToken());
+        }
+
+        @ParameterizedTest
+        @EnumSource(value = DeviceLinkType.class, names = {"WEB_2_APP", "APP_2_APP"})
+        void createDynamicContent_certificateChoiceForSameDeviceFlows(DeviceLinkType deviceLinkType) {
+            SmartIdRestServiceStubs.stubRequestWithResponse("/signature/certificate-choice/device-link/anonymous",
+                    "requests/sign/linked/cert-choice/certificate-choice-session-request-device-link.json",
+                    "responses/sign/linked/certificate-choice/device-link-certificate-choice-session-response.json");
+
+            DeviceLinkSessionResponse response = smartIdClient.createDeviceLinkCertificateRequest()
+                    .withCertificateLevel(CertificateLevel.QUALIFIED)
+                    .withInitialCallbackUrl(INITIAL_CALLBACK_URL)
+                    .initCertificateChoice();
+
+            URI deviceLinkUri = smartIdClient.createDynamicContent()
+                    .withDeviceLinkBase(response.deviceLinkBase().toString())
+                    .withDeviceLinkType(deviceLinkType)
+                    .withSessionType(SessionType.CERTIFICATE_CHOICE)
+                    .withSessionToken(response.sessionToken())
+                    .withLang("eng")
+                    .withInitialCallbackUrl("https://smart-id.com/callback")
+                    .buildDeviceLink(response.sessionSecret());
+
+            assertUri(deviceLinkUri, SessionType.CERTIFICATE_CHOICE, deviceLinkType, response.sessionToken());
+        }
+    }
+
+    private static void assertUri(URI qrCodeUri, SessionType sessionType, DeviceLinkType deviceLinkType, String sessionToken) {
+        assertEquals("https", qrCodeUri.getScheme());
+        assertEquals("smart-id.com", qrCodeUri.getHost());
+        assertEquals("/device-link/", qrCodeUri.getPath());
+
+        assertTrue(qrCodeUri.getQuery().contains("version=1.0"));
+        assertTrue(qrCodeUri.getQuery().contains("sessionType=" + sessionType.getValue()));
+        assertTrue(qrCodeUri.getQuery().contains("deviceLinkType=" + deviceLinkType.getValue()));
+        assertTrue(qrCodeUri.getQuery().contains("sessionToken=" + sessionToken));
+        assertTrue(qrCodeUri.getQuery().contains("lang=eng"));
+        assertTrue(qrCodeUri.getQuery().contains("authCode="));
+    }
 }
