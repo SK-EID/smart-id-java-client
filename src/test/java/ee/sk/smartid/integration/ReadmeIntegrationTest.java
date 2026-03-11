@@ -381,12 +381,11 @@ public class ReadmeIntegrationTest {
         }
 
         @Nested
-        @Disabled("Testing with device-link signature is not possible at the moment")
         class Signature {
 
             @Test
-            void signature_withDocumentNumberAndQRCode() {
-                String documentNumber = "PNOLT-40504040001-MOCK-Q";
+            void signature_withDocumentNumberAndQRCode() throws IOException, InterruptedException {
+                String documentNumber = "PNOEE-40404040009-MOCK-Q";
 
                 CertificateByDocumentNumberResult certResponse = smartIdClient
                         .createCertificateByDocumentNumber()
@@ -418,9 +417,6 @@ public class ReadmeIntegrationTest {
                 Instant receivedAt = signatureSessionResponse.receivedAt();
                 URI deviceLinkBase = signatureSessionResponse.deviceLinkBase();
 
-                // Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
-                // Start querying sessions status
-
                 // Calculate elapsed seconds from response received time
                 long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
                 // Generate auth code
@@ -430,21 +426,25 @@ public class ReadmeIntegrationTest {
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.SIGNATURE)
                         .withSessionToken(sessionToken)
-                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withLang("est")
                         .withInteractions(deviceLinkSignatureSessionRequest.interactions())
+                        .withDigest(deviceLinkSignatureSessionRequest.signatureProtocolParameters().digest())
                         .buildDeviceLink(sessionSecret);
 
-                // Return URI to be used with QR-code generation library on the frontend side
-                // or create QR-code data-URI from device link and return that to the client side
-                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+                // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                submitDeviceLinkToMockService(new DeviceLinkMockRequest(
+                        documentNumber,
+                        deviceLink.toString(),
+                        DeviceLinkType.QR_CODE.getValue(),
+                        "",
+                        ""));
 
                 // Get the session status poller
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
                 // Get signatureSessionId from current session response and poll for session status
                 SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-                // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+                // Session can have two states RUNNING or COMPLETE, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
                 assertEquals("COMPLETE", signatureSessionStatus.getState());
 
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
@@ -464,13 +464,14 @@ public class ReadmeIntegrationTest {
                         signatureFactory);
 
                 assertEquals("OK", signatureResponse.getEndResult());
-                assertEquals("PNOLT-40504040001-MOCK-Q", signatureResponse.getDocumentNumber());
+                assertEquals(documentNumber, signatureResponse.getDocumentNumber());
                 assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
                 assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getRequestedCertificateLevel());
                 assertEquals("displayTextAndPIN", signatureResponse.getInteractionFlowUsed());
                 assertNotNull(signatureResponse.getCertificate());
             }
 
+            @Disabled("Testing with device-link signature is not possible at the moment")
             @Test
             void signature_withSemanticIdentifier() {
                 var semanticIdentifier = new SemanticsIdentifier(
