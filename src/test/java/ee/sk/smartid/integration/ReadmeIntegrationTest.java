@@ -789,7 +789,7 @@ public class ReadmeIntegrationTest {
 
             // Get sessionID from current session response and poll for session status
             SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(sessionID);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+            // Session can have two states RUNNING or COMPLETE, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
@@ -865,7 +865,7 @@ public class ReadmeIntegrationTest {
 
             // Get sessionID from current session response and poll for session status
             SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionId);
-            // Session can have two states RUNNING or COMPLETED, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
+            // Session can have two states RUNNING or COMPLETE, check sessionStatus.getResult().getEndResult() for OK or error responses (f.e USER_REFUSED, TIMEOUT)
             assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             SignatureResponseValidator validator = new SignatureResponseValidator(certificateValidator);
