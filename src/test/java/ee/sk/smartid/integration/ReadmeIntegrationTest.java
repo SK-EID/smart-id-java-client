@@ -33,6 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -46,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
@@ -104,9 +108,13 @@ import ee.sk.smartid.signature.SigningSignatureAlgorithm;
 import ee.sk.smartid.signature.SignatureValueValidator;
 import ee.sk.smartid.signature.SignatureValueValidatorImpl;
 import ee.sk.smartid.util.CallbackUrlUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SmartIdDemoIntegrationTest
 public class ReadmeIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReadmeIntegrationTest.class);
 
     private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[0-9]{4}$");
 
@@ -123,7 +131,6 @@ public class ReadmeIntegrationTest {
         smartIdClient.setTrustStore(keyStore);
     }
 
-    @Disabled("Testing with device-link demo accounts is not possible at the moment")
     @Nested
     class DeviceLinkBasedExamples {
 
@@ -131,6 +138,7 @@ public class ReadmeIntegrationTest {
         class Authentication {
 
             @Test
+            @Disabled("Testing with App2App is not possible at the moment")
             void anonymousAuthentication_withApp2App() {
                 // For security reasons a new hash value must be created for each new authentication request
                 String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
@@ -219,13 +227,13 @@ public class ReadmeIntegrationTest {
             }
 
             @Test
-            void authentication_withSemanticIdentifierAndQrCode() {
+            void authentication_withSemanticIdentifierAndQrCode() throws IOException, InterruptedException {
                 var semanticsIdentifier = new SemanticsIdentifier(
                         // 3 character identity type
                         // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
                         SemanticsIdentifier.IdentityType.PNO,
                         SemanticsIdentifier.CountryCode.EE, // 2 character ISO 3166-1 alpha-2 country code
-                        "40504040001"); // identifier (according to country and identity type reference)
+                        "40404040009"); // identifier (according to country and identity type reference)
 
                 // For security reasons a new rpChallenge must be created for each new authentication request
                 String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
@@ -256,15 +264,12 @@ public class ReadmeIntegrationTest {
                 // Will be used to calculate elapsed time being used in device link
                 Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
-                // Next steps:
-                // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
-                // - Start querying sessions status
-
                 // Calculate elapsed seconds from response received time
                 long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
                 // Build the  device link URI (without the authCode parameter)
                 // This base URI will be used for QR code or App2App flows
                 URI deviceLink = smartIdClient.createDynamicContent()
+                        .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.AUTHENTICATION)
@@ -278,12 +283,20 @@ public class ReadmeIntegrationTest {
                 // or create QR-code data-URI from device link and return that to the client side
                 String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
 
+                // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                submitDeviceLinkToMockService(new DeviceLinkMockRequest(
+                        "PNOEE-40404040009-MOCK-Q",
+                        deviceLink.toString(),
+                        "QR",
+                        "",
+                        ""));
+
                 // Use sessionId to poll for session status updates
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
                 SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
 
                 // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
-                assertEquals("COMPLETED", sessionStatus.getState());
+                assertEquals("COMPLETE", sessionStatus.getState());
 
                 // Validate the response and return user's identity
                 TrustedCACertStore trustedCaCertStore = new FileTrustedCAStoreBuilder().build();
@@ -291,13 +304,14 @@ public class ReadmeIntegrationTest {
                 AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                         .validate(sessionStatus, authenticationSessionRequest, null, "smart-id-demo");
 
-                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("40404040009", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
-                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+                assertEquals("TEST", authenticationIdentity.getSurname());
                 assertEquals("EE", authenticationIdentity.getCountry());
             }
 
             @Test
+            @Disabled("Testing with document number and QR code is not possible at the moment")
             void authentication_withDocumentNumberAndQrCode() {
                 String documentNumber = "PNOLT-40504040001-MOCK-Q";
 
@@ -366,6 +380,7 @@ public class ReadmeIntegrationTest {
         }
 
         @Nested
+        @Disabled("Testing with device-link signature is not possible at the moment")
         class Signature {
 
             @Test
@@ -977,6 +992,40 @@ public class ReadmeIntegrationTest {
             SignatureResponse signatureResponse = signatureResponseValidator.validate(signatureSessionStatus, CertificateLevel.QUALIFIED);
 
             assertNotNull(signatureResponse.getSignatureValue());
+        }
+    }
+
+    private static void submitDeviceLinkToMockService(DeviceLinkMockRequest deviceLinkMockRequest) throws IOException, InterruptedException {
+        var mapper = new ObjectMapper();
+        String body = mapper.writeValueAsString(deviceLinkMockRequest);
+
+        String url = "https://sid.demo.sk.ee/mock/device-link";
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("POST {}", url);
+        }
+        if (logger.isTraceEnabled()) {
+            logger.trace("Request headers: {}", Collections.singletonMap("Content-Type", "application/json"));
+            logger.trace("Message body: {}", body);
+        }
+
+        HttpClient client = HttpClient.newBuilder().build();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Response status: {}", response.statusCode());
+        }
+        if (logger.isTraceEnabled()) {
+            logger.trace("Response body: {}", response.body());
+        }
+
+        if (response.statusCode() != 200) {
+            throw new RuntimeException("Mock device-link submission failed: " + response.statusCode() + " " + response.body());
         }
     }
 

@@ -8,6 +8,7 @@
 
     <logger name="ee.sk.smartid" level="INFO"/>
     <logger name="ee.sk.smartid.rest.LoggingFilter" level="TRACE"/>
+    <logger name="ee.sk.smartid.integration.ReadmeIntegrationTest" level="TRACE"/>
 
     <root level="info">
         <appender-ref ref="STDOUT"/>
