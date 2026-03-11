@@ -279,15 +279,12 @@ public class ReadmeIntegrationTest {
                         .withInteractions(authenticationSessionRequest.interactions())
                         .withLang("est")
                         .buildDeviceLink(sessionSecret);
-                // Return URI to be used with QR-code generation library on the frontend side
-                // or create QR-code data-URI from device link and return that to the client side
-                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
 
                 // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
                 submitDeviceLinkToMockService(new DeviceLinkMockRequest(
                         "PNOEE-40404040009-MOCK-Q",
                         deviceLink.toString(),
-                        "QR",
+                        DeviceLinkType.QR_CODE.getValue(),
                         "",
                         ""));
 
@@ -311,9 +308,8 @@ public class ReadmeIntegrationTest {
             }
 
             @Test
-            @Disabled("Testing with document number and QR code is not possible at the moment")
-            void authentication_withDocumentNumberAndQrCode() {
-                String documentNumber = "PNOLT-40504040001-MOCK-Q";
+            void authentication_withDocumentNumberAndQrCode() throws IOException, InterruptedException {
+                String documentNumber = "PNOEE-40404040009-MOCK-Q";
 
                 // For security reasons a new rpChallenge must be created for each new authentication request
                 String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
@@ -345,19 +341,24 @@ public class ReadmeIntegrationTest {
                 // Generate the base (unprotected) device link URI, which does not yet include the authCode
                 long elapsedSeconds = Duration.between(responseReceivedAt, Instant.now()).getSeconds();
                 URI deviceLink = smartIdClient.createDynamicContent()
+                        .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
                         .withDeviceLinkType(DeviceLinkType.QR_CODE)
                         .withSessionType(SessionType.AUTHENTICATION)
                         .withSessionToken(sessionToken)
                         .withDigest(rpChallenge)
-                        .withRelyingPartyName(Base64.getEncoder().encodeToString(smartIdClient.getRelyingPartyName().getBytes(StandardCharsets.UTF_8)))
                         .withElapsedSeconds(elapsedSeconds)
                         .withInteractions(authenticationSessionRequest.interactions())
                         .withLang("est")
                         .buildDeviceLink(sessionSecret);
-                // Return URI to be used with QR-code generation library on the frontend side
-                // or create QR-code data-URI from device link and return that to the client side
-                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                submitDeviceLinkToMockService(new DeviceLinkMockRequest(
+                        documentNumber,
+                        deviceLink.toString(),
+                        DeviceLinkType.QR_CODE.getValue(),
+                        "",
+                        ""));
 
                 // Use sessionId to poll for session status updates
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -372,9 +373,9 @@ public class ReadmeIntegrationTest {
                 AuthenticationIdentity authenticationIdentity = DeviceLinkAuthenticationResponseValidator.defaultSetupWithCertificateValidator(certificateValidator)
                         .validate(sessionStatus, authenticationSessionRequest, null, "smart-id-demo");
 
-                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("40404040009", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
-                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+                assertEquals("TEST", authenticationIdentity.getSurname());
                 assertEquals("EE", authenticationIdentity.getCountry());
             }
         }
