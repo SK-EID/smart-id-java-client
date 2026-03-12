@@ -474,8 +474,9 @@ public class ReadmeIntegrationTest {
                 assertNotNull(signatureResponse.getCertificate());
             }
 
-            @Test
-            void signature_withSemanticIdentifier() throws IOException, InterruptedException {
+            @ParameterizedTest
+            @EnumSource(SigningSignatureAlgorithm.class)
+            void signature_withSemanticIdentifier(SigningSignatureAlgorithm signatureAlgorithm) throws IOException, InterruptedException {
                 var semanticIdentifier = new SemanticsIdentifier(
                         // 3 character identity type
                         // (PAS-passport, IDC-national identity card or PNO - (national) personal number)
@@ -506,7 +507,8 @@ public class ReadmeIntegrationTest {
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
                 // Create the signable data
-                var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_512);
+                HashAlgorithm hashAlgorithm = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA3_512;
+                var signableData = new SignableData("dataToSign".getBytes(), hashAlgorithm);
 
                 // Build the device link signature request
                 List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document"));
@@ -514,7 +516,8 @@ public class ReadmeIntegrationTest {
                         .withCertificateLevel(CertificateLevel.QUALIFIED)
                         .withSignableData(signableData)
                         .withSemanticsIdentifier(semanticIdentifier)
-                        .withInteractions(signatureInteractions);
+                        .withInteractions(signatureInteractions)
+                        .withSignatureAlgorithm(signatureAlgorithm);
 
                 // Init signature session
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
