@@ -281,7 +281,11 @@ public class ReadmeIntegrationTest {
                         .withLang("est")
                         .buildDeviceLink(sessionSecret);
 
-                // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                // In real application return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
                 submitDeviceLinkToMockService(new DeviceLinkMockRequest(
                         "PNOEE-40404040009-MOCK-Q",
                         deviceLink.toString(),
@@ -353,7 +357,11 @@ public class ReadmeIntegrationTest {
                         .withLang("est")
                         .buildDeviceLink(sessionSecret);
 
-                // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                // In real application return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
                 submitDeviceLinkToMockService(new DeviceLinkMockRequest(
                         documentNumber,
                         deviceLink.toString(),
@@ -436,7 +444,11 @@ public class ReadmeIntegrationTest {
                         .withDigest(deviceLinkSignatureSessionRequest.signatureProtocolParameters().digest())
                         .buildDeviceLink(sessionSecret);
 
-                // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                // In real application return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
                 submitDeviceLinkToMockService(new DeviceLinkMockRequest(
                         documentNumber,
                         deviceLink.toString(),
@@ -533,9 +545,6 @@ public class ReadmeIntegrationTest {
                 String sessionSecret = signatureSessionResponse.sessionSecret();
                 Instant receivedAt = signatureSessionResponse.receivedAt();
 
-                // Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the signatureSessionResponse
-                // Start querying sessions status
-
                 // Calculate elapsed seconds from response received time
                 long elapsedSeconds = Duration.between(receivedAt, Instant.now()).getSeconds();
                 // Generate auth code
@@ -551,7 +560,11 @@ public class ReadmeIntegrationTest {
                         .withDigest(deviceLinkSignatureSessionRequest.signatureProtocolParameters().digest())
                         .buildDeviceLink(sessionSecret);
 
-                // Submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
+                // In real application return URI to be used with QR-code generation library on the frontend side
+                // or create QR-code data-URI from device link and return that to the client side
+                String dataUri = QrCodeGenerator.generateDataUri(deviceLink.toString());
+
+                // In this test submit device link to the Mock Service so it simulates the user scanning the QR and completing the flow
                 submitDeviceLinkToMockService(new DeviceLinkMockRequest(
                         certificateChoiceResponse.getDocumentNumber(),
                         deviceLink.toString(),
