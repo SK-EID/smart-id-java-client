@@ -182,6 +182,7 @@ public class ReadmeIntegrationTest {
                 // Build the  device link URI (without the authCode parameter)
                 // This base URI will be used for QR code or App2App flows
                 URI deviceLink = smartIdClient.createDynamicContent()
+                        .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
                         .withDeviceLinkType(DeviceLinkType.APP_2_APP)
                         .withSessionType(SessionType.AUTHENTICATION)
