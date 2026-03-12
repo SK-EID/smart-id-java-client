@@ -383,8 +383,9 @@ public class ReadmeIntegrationTest {
         @Nested
         class Signature {
 
-            @Test
-            void signature_withDocumentNumberAndQRCode() throws IOException, InterruptedException {
+            @ParameterizedTest
+            @EnumSource(SigningSignatureAlgorithm.class)
+            void signature_withDocumentNumberAndQRCode(SigningSignatureAlgorithm signatureAlgorithm) throws IOException, InterruptedException {
                 String documentNumber = "PNOEE-40404040009-MOCK-Q";
 
                 CertificateByDocumentNumberResult certResponse = smartIdClient
@@ -396,7 +397,8 @@ public class ReadmeIntegrationTest {
                 // DataToSign dataToSign = toDataToSign(container,certResponse.certificate());
 
                 // Create the signable data from DataToSign
-                var signableData = new SignableData("dataToSign".getBytes(), HashAlgorithm.SHA_256);
+                HashAlgorithm hashAlgorithm = signatureAlgorithm.isLegacyRsa() ? signatureAlgorithm.getHashAlgorithmForLegacy() : HashAlgorithm.SHA_512;
+                var signableData = new SignableData("dataToSign".getBytes(), hashAlgorithm);
 
                 // Build the device link signature request
                 List<DeviceLinkInteraction> signatureInteractions = List.of(DeviceLinkInteraction.displayTextAndPin("Please sign the document"));
@@ -404,7 +406,8 @@ public class ReadmeIntegrationTest {
                         .withCertificateLevel(CertificateLevel.QSCD)
                         .withSignableData(signableData)
                         .withDocumentNumber(documentNumber)
-                        .withInteractions(signatureInteractions);
+                        .withInteractions(signatureInteractions)
+                        .withSignatureAlgorithm(signatureAlgorithm);
                 DeviceLinkSessionResponse signatureSessionResponse = deviceLinkSignatureSessionRequestBuilder.initSignatureSession();
                 // Get SignatureSessionRequest after the request is made and store for validations
                 DeviceLinkSignatureSessionRequest deviceLinkSignatureSessionRequest = deviceLinkSignatureSessionRequestBuilder.getSignatureSessionRequest();
