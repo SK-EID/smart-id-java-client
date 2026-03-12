@@ -43,7 +43,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -137,9 +136,10 @@ public class ReadmeIntegrationTest {
         @Nested
         class Authentication {
 
-            @Test
-            @Disabled("Testing with App2App is not possible at the moment")
-            void anonymousAuthentication_withApp2App() {
+            @Disabled("Testing with App2App and Web2App is not possible at the moment")
+            @ParameterizedTest
+            @EnumSource(value = DeviceLinkType.class, names = {"APP_2_APP", "WEB_2_APP"})
+            void anonymousAuthentication_with_App2App_or_Web2App(DeviceLinkType deviceLinkType) throws IOException, InterruptedException {
                 // For security reasons a new hash value must be created for each new authentication request
                 String rpChallenge = RpChallengeGenerator.generate().toBase64EncodedValue();
                 // Store generated rpChallenge only on backend side. Do not expose it to the client side.
@@ -175,16 +175,12 @@ public class ReadmeIntegrationTest {
                 // Will be used to calculate elapsed time being used in device link and in authCode
                 Instant responseReceivedAt = authenticationSessionResponse.receivedAt();
 
-                // Next steps:
-                // - Generate QR-code or device link to be displayed to the user using sessionToken, sessionSecret and receivedAt provided in the authenticationResponse
-                // - Start querying sessions status
-
                 // Build the  device link URI (without the authCode parameter)
-                // This base URI will be used for QR code or App2App flows
+                // This base URI will be used for App2App or Web2App flows
                 URI deviceLink = smartIdClient.createDynamicContent()
                         .withSchemeName("smart-id-demo")
                         .withDeviceLinkBase(deviceLinkBase.toString())
-                        .withDeviceLinkType(DeviceLinkType.APP_2_APP)
+                        .withDeviceLinkType(deviceLinkType)
                         .withSessionType(SessionType.AUTHENTICATION)
                         .withSessionToken(sessionToken)
                         .withDigest(rpChallenge)
@@ -192,6 +188,18 @@ public class ReadmeIntegrationTest {
                         .withInitialCallbackUrl(callbackUrl.initialCallbackUri().toString())
                         .withInteractions(authenticationSessionRequest.interactions())
                         .buildDeviceLink(sessionSecret);
+
+                // In real application user is routed to Smart-ID app and enters PIN 1 there
+                // In this test submit device link to the Mock Service so it simulates the user completing the flow (see device_link_test_endpoint in Smart-ID documentation)
+                submitDeviceLinkToMockService(
+                        new DeviceLinkMockRequest(
+                            "PNOEE-40404040009-MOCK-Q",
+                            deviceLink.toString(),
+                            deviceLinkType.getValue(),
+                            "a=b;c=d",
+                            callbackUrl.initialCallbackUri().toString()
+                        )
+                );
 
                 // Use the sessionId from the authentication session response to poll for session status updates
                 SessionStatusPoller poller = smartIdClient.getSessionStatusPoller();
@@ -221,10 +229,10 @@ public class ReadmeIntegrationTest {
                         queryParameters.get("userChallengeVerifier"),
                         "smart-id-demo");
 
-                assertEquals("40504040001", authenticationIdentity.getIdentityCode());
+                assertEquals("40404040009", authenticationIdentity.getIdentityCode());
                 assertEquals("OK", authenticationIdentity.getGivenName());
-                assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
-                assertEquals("LT", authenticationIdentity.getCountry());
+                assertEquals("TEST", authenticationIdentity.getSurname());
+                assertEquals("EE", authenticationIdentity.getCountry());
             }
 
             @Test
