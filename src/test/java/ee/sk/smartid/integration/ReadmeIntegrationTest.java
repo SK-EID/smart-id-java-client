@@ -947,6 +947,7 @@ public class ReadmeIntegrationTest {
             // Build the  device link URI
             // This base URI will be used for QR code or App2App flows
             URI deviceLink = smartIdClient.createDynamicContent()
+                    .withSchemeName("smart-id-demo")
                     .withDeviceLinkBase(deviceLinkBase.toString())
                     .withDeviceLinkType(DeviceLinkType.QR_CODE)
                     .withSessionType(SessionType.CERTIFICATE_CHOICE)
@@ -964,7 +965,7 @@ public class ReadmeIntegrationTest {
             SessionStatus certificateSessionStatus = poller.fetchFinalSessionStatus(certificateChoiceSessionId);
 
             // The session can have states such as RUNNING or COMPLETE. Check that the session has completed successfully.
-            assertEquals("COMPLETED", certificateSessionStatus.getState());
+            assertEquals("COMPLETE", certificateSessionStatus.getState());
 
             // Validate the certificate choice response
             CertificateValidatorImpl certificateValidator = new CertificateValidatorImpl(new FileTrustedCAStoreBuilder().build());
@@ -987,7 +988,7 @@ public class ReadmeIntegrationTest {
 
             // Use sessionId to poll for signature session status updates
             SessionStatus signatureSessionStatus = poller.fetchFinalSessionStatus(signatureSessionResponse.sessionID());
-            assertEquals("COMPLETED", signatureSessionStatus.getState());
+            assertEquals("COMPLETE", signatureSessionStatus.getState());
 
             // Validate signature response
             SignatureResponseValidator signatureResponseValidator = new SignatureResponseValidator(certificateValidator);
