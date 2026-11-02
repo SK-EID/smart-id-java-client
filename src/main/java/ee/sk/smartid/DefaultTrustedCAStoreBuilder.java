@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -152,7 +152,6 @@ public class DefaultTrustedCAStoreBuilder implements DefaultTrustedCACertStore.B
     }
 
     private String getCNValue(X509Certificate certificate) {
-        String subjectDN = certificate.getSubjectX500Principal().getName();
-        return CertificateAttributeUtil.getAttributeValue(subjectDN, BCStyle.CN).orElse(null);
+        return CertificateAttributeUtil.getAttributeValue(certificate.getSubjectX500Principal(), BCStyle.CN).orElse(null);
     }
 }

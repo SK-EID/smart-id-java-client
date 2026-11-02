@@ -3,7 +3,15 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [3.2] - TBD
+## [3.3] - TBD
+
+- Updated bouncy-castle artifact `bcprov-jdk18on` to version 1.86
+- Fixed reading certificate subject attributes failing with Bouncy Castle 1.85 or newer when an attribute value exceeds its RFC 5280 upper bound
+  (e.g. `commonName length 80 exceeds RFC 5280 ub-common-name (64)`).
+  - Added `CertificateAttributeUtil.getAttributeValue(X500Principal, ASN1ObjectIdentifier)` that reads the distinguished name from its DER encoding.
+  - Deprecated `CertificateAttributeUtil.getAttributeValue(String, ASN1ObjectIdentifier)`.
+
+## [3.2] - 2026-03-18
 
 ### Changes
 

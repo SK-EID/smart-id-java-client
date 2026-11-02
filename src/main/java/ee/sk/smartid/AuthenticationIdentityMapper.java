@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +30,8 @@ import java.security.cert.X509Certificate;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import javax.security.auth.x500.X500Principal;
+
 import org.bouncycastle.asn1.x500.style.BCStyle;
 
 import ee.sk.smartid.util.CertificateAttributeUtil;
@@ -51,12 +53,12 @@ public final class AuthenticationIdentityMapper {
      */
     public static AuthenticationIdentity from(X509Certificate certificate) {
         var identity = new AuthenticationIdentity(certificate);
-        String distinguishedName = certificate.getSubjectX500Principal().getName();
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.GIVENNAME).ifPresent(identity::setGivenName);
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SURNAME).ifPresent(identity::setSurname);
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.SERIALNUMBER)
+        X500Principal subject = certificate.getSubjectX500Principal();
+        CertificateAttributeUtil.getAttributeValue(subject, BCStyle.GIVENNAME).ifPresent(identity::setGivenName);
+        CertificateAttributeUtil.getAttributeValue(subject, BCStyle.SURNAME).ifPresent(identity::setSurname);
+        CertificateAttributeUtil.getAttributeValue(subject, BCStyle.SERIALNUMBER)
                 .ifPresent(serialNumber -> identity.setIdentityNumber(serialNumber.split("-", 2)[1]));
-        CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.C).ifPresent(identity::setCountry);
+        CertificateAttributeUtil.getAttributeValue(subject, BCStyle.C).ifPresent(identity::setCountry);
         identity.setDateOfBirth(getDateOfBirth(identity));
         return identity;
     }

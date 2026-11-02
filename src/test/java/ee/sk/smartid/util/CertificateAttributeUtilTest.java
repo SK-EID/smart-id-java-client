@@ -4,7 +4,7 @@ package ee.sk.smartid.util;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.cert.CertificateException;
@@ -41,7 +42,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.security.auth.x500.X500Principal;
+
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DERUTF8String;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
@@ -53,6 +59,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import ee.sk.smartid.CertificateUtil;
 import ee.sk.smartid.InvalidCertificateGenerator;
+import ee.sk.smartid.exception.permanent.SmartIdClientException;
 
 public class CertificateAttributeUtilTest {
 
@@ -80,7 +87,19 @@ public class CertificateAttributeUtilTest {
 
     @ParameterizedTest
     @ArgumentsSource(AttributeArgumentProvider.class)
-    void getAttributeValue(ASN1ObjectIdentifier attribute, String expectedValue) throws CertificateException {
+    void getAttributeValue_principal(ASN1ObjectIdentifier attribute, String expectedValue) throws CertificateException {
+        X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV_WITH_DOB);
+
+        Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(certificate.getSubjectX500Principal(), attribute);
+
+        assertTrue(attributeValue.isPresent());
+        assertThat(attributeValue.get(), is(expectedValue));
+    }
+
+    @SuppressWarnings("deprecation")
+    @ParameterizedTest
+    @ArgumentsSource(AttributeArgumentProvider.class)
+    void getAttributeValue_distinguishedNameString(ASN1ObjectIdentifier attribute, String expectedValue) throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV_WITH_DOB);
         String distinguishedName = certificate.getSubjectX500Principal().getName();
 
@@ -93,11 +112,33 @@ public class CertificateAttributeUtilTest {
     @Test
     void getAttributeValue_valueDoesNotExist_returnEmptyOptional() throws CertificateException {
         X509Certificate certificate = CertificateUtil.toX509CertificateFromEncodedString(AUTH_CERTIFICATE_LV_WITH_DOB);
-        String distinguishedName = certificate.getSubjectX500Principal().getName();
 
-        Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(distinguishedName, BCStyle.GENDER);
+        Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(certificate.getSubjectX500Principal(), BCStyle.GENDER);
 
         assertTrue(attributeValue.isEmpty());
+    }
+
+    @Test
+    void getAttributeValue_commonNameLongerThanRfc5280UpperBound() {
+        // ASN.1 value is used directly, the string variant of addRDN would reject a value over the RFC 5280 upper bound
+        X500Name subject = new X500NameBuilder(BCStyle.INSTANCE)
+                .addRDN(BCStyle.CN, new DERUTF8String("VERYLONGSURNAME-WITH-SEVERAL-PARTS,VERYLONGGIVENNAME-ALSO-LONG,PNOEE-40504040001"))
+                .build();
+        X509Certificate certificate = InvalidCertificateGenerator.builder()
+                .withSubject(subject)
+                .createCertificate();
+
+        Optional<String> attributeValue = CertificateAttributeUtil.getAttributeValue(certificate.getSubjectX500Principal(), BCStyle.CN);
+
+        // getAttributeValue returns the value escaped as defined in RFC 4514
+        assertThat(attributeValue, is(Optional.of("VERYLONGSURNAME-WITH-SEVERAL-PARTS\\,VERYLONGGIVENNAME-ALSO-LONG\\,PNOEE-40504040001")));
+    }
+
+    @Test
+    void getAttributeValue_principalIsNull_throwException() {
+        var exception = assertThrows(SmartIdClientException.class, () -> CertificateAttributeUtil.getAttributeValue((X500Principal) null, BCStyle.CN));
+
+        assertThat(exception.getMessage(), is("Parameter 'principal' must be provided"));
     }
 
     @Test

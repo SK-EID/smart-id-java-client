@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -95,9 +95,9 @@ public class CertificateValidatorImpl implements CertificateValidator {
                 X509Certificate intermediate = (X509Certificate) result.getCertPath().getCertificates().get(1);
                 X509Certificate trustedCert = result.getTrustAnchor().getTrustedCert();
                 logger.debug("Leaf: {}, Intermediate: {}, Trust anchor: {}",
-                        CertificateAttributeUtil.getAttributeValue(leaf.getSubjectX500Principal().getName(), BCStyle.CN),
-                        CertificateAttributeUtil.getAttributeValue(intermediate.getSubjectX500Principal().getName(), BCStyle.CN),
-                        CertificateAttributeUtil.getAttributeValue(trustedCert.getSubjectX500Principal().getName(), BCStyle.CN));
+                        CertificateAttributeUtil.getAttributeValue(leaf.getSubjectX500Principal(), BCStyle.CN),
+                        CertificateAttributeUtil.getAttributeValue(intermediate.getSubjectX500Principal(), BCStyle.CN),
+                        CertificateAttributeUtil.getAttributeValue(trustedCert.getSubjectX500Principal(), BCStyle.CN));
             }
         } catch (InvalidAlgorithmParameterException | CertPathBuilderException | NoSuchAlgorithmException ex) {
             throw new UnprocessableSmartIdResponseException("Certificate chain validation failed", ex);

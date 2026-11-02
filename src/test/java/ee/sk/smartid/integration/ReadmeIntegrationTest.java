@@ -616,7 +616,7 @@ public class ReadmeIntegrationTest {
 
         @Test
         void authentication_withDocumentNumber() {
-            String documentNumber = "PNOLT-40504040001-MOCK-Q";
+            String documentNumber = "PNOLT-40504040001-DEM2-Q";
 
             // For security reasons a new rpChallenge must be created for each new authentication request
             RpChallenge rpChallenge = RpChallengeGenerator.generate();
@@ -660,7 +660,7 @@ public class ReadmeIntegrationTest {
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
-            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+            assertEquals("TEST", authenticationIdentity.getSurname());
             assertEquals("LT", authenticationIdentity.getCountry());
         }
 
@@ -703,7 +703,7 @@ public class ReadmeIntegrationTest {
             SessionStatus sessionStatus = poller.fetchFinalSessionStatus(sessionId);
 
             assertEquals("COMPLETE", sessionStatus.getState());
-            assertEquals("PNOLT-40504040001-MOCK-Q", sessionStatus.getResult().getDocumentNumber());
+            assertEquals("PNOLT-40504040001-DEM2-Q", sessionStatus.getResult().getDocumentNumber());
             assertEquals("ACSP_V2", sessionStatus.getSignatureProtocol());
 
             TrustedCACertStore trustedCACertStore = new FileTrustedCAStoreBuilder().build();
@@ -714,7 +714,7 @@ public class ReadmeIntegrationTest {
 
             assertEquals("40504040001", authenticationIdentity.getIdentityCode());
             assertEquals("OK", authenticationIdentity.getGivenName());
-            assertEquals("TESTNUMBER", authenticationIdentity.getSurname());
+            assertEquals("TEST", authenticationIdentity.getSurname());
             assertEquals("LT", authenticationIdentity.getCountry());
         }
 
@@ -750,7 +750,7 @@ public class ReadmeIntegrationTest {
             CertificateChoiceResponse response = certificateChoiceResponseValidator.validate(sessionStatus, requestedCertificateLevel);
 
             assertEquals("OK", response.getEndResult());
-            assertEquals("PNOLT-40504040001-MOCK-Q", response.getDocumentNumber());
+            assertEquals("PNOLT-40504040001-DEM2-Q", response.getDocumentNumber());
             assertNotNull(response.getCertificate());
             assertEquals(CertificateLevel.QUALIFIED, response.getCertificateLevel());
         }
@@ -834,7 +834,7 @@ public class ReadmeIntegrationTest {
                     signatureFactory);
 
             assertEquals("OK", signatureResponse.getEndResult());
-            assertEquals("PNOEE-40504040001-DEM0-Q", signatureResponse.getDocumentNumber());
+            assertEquals("PNOEE-40504040001-DEM2-Q", signatureResponse.getDocumentNumber());
             assertEquals(CertificateLevel.QUALIFIED, signatureResponse.getCertificateLevel());
             assertEquals(CertificateLevel.QSCD, signatureResponse.getRequestedCertificateLevel());
             assertEquals("confirmationMessage", signatureResponse.getInteractionFlowUsed());
@@ -923,7 +923,7 @@ public class ReadmeIntegrationTest {
 
         @Test
         void queryCertificate() {
-            String documentNumber = "PNOLT-40504040001-MOCK-Q";
+            String documentNumber = "PNOLT-40504040001-DEM2-Q";
 
             // Build the certificate by document number request and query the certificate
             CertificateByDocumentNumberResult certResponse = smartIdClient
