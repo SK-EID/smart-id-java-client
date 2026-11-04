@@ -4,7 +4,7 @@ package ee.sk.smartid;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@ import java.util.Date;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.CertificatePolicies;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
 import org.bouncycastle.asn1.x509.Extension;
@@ -70,6 +71,12 @@ public final class InvalidCertificateGenerator {
         private ExtendedKeyUsage extendedKeyUsage;
         private KeyUsage keyUsage;
         private QCStatement qcStatement;
+        private X500Name subject;
+
+        public Builder withSubject(X500Name subject) {
+            this.subject = subject;
+            return this;
+        }
 
         public Builder withPolicies(CertificatePolicies policies) {
             this.policies = policies;
@@ -95,6 +102,9 @@ public final class InvalidCertificateGenerator {
             Security.addProvider(new BouncyCastleProvider());
             KeyPair kp = createKeyPair();
             X509V3CertificateGenerator certGen = getBaseX509Generator(kp);
+            if (subject != null) {
+                certGen.setSubjectDN(new X509Principal(subject));
+            }
             if (policies != null) {
                 certGen.addExtension(Extension.certificatePolicies, false, policies);
             }

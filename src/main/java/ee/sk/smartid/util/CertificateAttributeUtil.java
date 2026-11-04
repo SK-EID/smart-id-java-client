@@ -4,7 +4,7 @@ package ee.sk.smartid.util;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,8 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+
+import javax.security.auth.x500.X500Principal;
 
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1GeneralizedTime;
@@ -90,13 +92,37 @@ public final class CertificateAttributeUtil {
 
     /**
      * Get value of attribute in X.500 principal.
+     * <p>
+     * The principal is read from its DER encoding, so attribute values are not re-validated against
+     * RFC 5280 upper bounds (e.g. common name longer than 64 characters).
+     *
+     * @param principal X.500 principal, e.g. {@link X509Certificate#getSubjectX500Principal()}
+     * @param oid       Object Identifier (OID) of the attribute to extract
+     * @return Attribute value, with special characters escaped as defined in RFC 4514 (e.g. {@code ,} as {@code \,})
+     */
+    public static Optional<String> getAttributeValue(X500Principal principal, ASN1ObjectIdentifier oid) {
+        if (principal == null) {
+            throw new SmartIdClientException("Parameter 'principal' must be provided");
+        }
+        return getAttributeValue(X500Name.getInstance(principal.getEncoded()), oid);
+    }
+
+    /**
+     * Get value of attribute in X.500 principal.
      *
      * @param distinguishedName X.500 distinguished name using the format defined in RFC 2253.
      * @param oid               Object Identifier (OID) of the attribute to extract
-     * @return Attribute value
+     * @return Attribute value, with special characters escaped as defined in RFC 4514 (e.g. {@code ,} as {@code \,})
+     * @throws IllegalArgumentException with Bouncy Castle 1.85 or newer, if an attribute value exceeds its RFC 5280 upper bound
+     * @deprecated parsing the string form re-validates attribute values and fails for e.g. common name longer than 64 characters.
+     * Use {@link #getAttributeValue(X500Principal, ASN1ObjectIdentifier)} instead.
      */
+    @Deprecated(since = "3.3")
     public static Optional<String> getAttributeValue(String distinguishedName, ASN1ObjectIdentifier oid) {
-        var x500name = new X500Name(distinguishedName);
+        return getAttributeValue(new X500Name(distinguishedName), oid);
+    }
+
+    private static Optional<String> getAttributeValue(X500Name x500name, ASN1ObjectIdentifier oid) {
         RDN[] rdns = x500name.getRDNs(oid);
         if (rdns.length == 0) {
             return Optional.empty();

@@ -1,4 +1,4 @@
-List of 112 third-party dependencies (auto-generated on 2025-05-19 with License Maven Plugin):
+List of 112 third-party dependencies (auto-generated on 2026-10-26 with License Maven Plugin):
 
 *  (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Classic Module (ch.qos.logback:logback-classic:1.5.8 - http://logback.qos.ch/logback-classic)
 *  (Eclipse Public License - v 1.0) (GNU Lesser General Public License) Logback Core Module (ch.qos.logback:logback-core:1.5.8 - http://logback.qos.ch/logback-core)
@@ -52,7 +52,7 @@ List of 112 third-party dependencies (auto-generated on 2025-05-19 with License 
 *  (Apache License, Version 2.0) Apache HttpComponents Core HTTP/1.1 (org.apache.httpcomponents.core5:httpcore5:5.2.4 - https://hc.apache.org/httpcomponents-core-5.2.x/5.2.4/httpcore5/)
 *  (Apache License, Version 2.0) Apache HttpComponents Core HTTP/2 (org.apache.httpcomponents.core5:httpcore5-h2:5.2.4 - https://hc.apache.org/httpcomponents-core-5.2.x/5.2.4/httpcore5-h2/)
 *  (The Apache License, Version 2.0) org.apiguardian:apiguardian-api (org.apiguardian:apiguardian-api:1.1.2 - https://github.com/apiguardian-team/apiguardian)
-*  (Bouncy Castle Licence) Bouncy Castle Provider (org.bouncycastle:bcprov-jdk18on:1.78.1 - https://www.bouncycastle.org/java.html)
+*  (Bouncy Castle Licence) Bouncy Castle Provider (org.bouncycastle:bcprov-jdk18on:1.86 - https://www.bouncycastle.org/download/bouncy-castle-java/)
 *  (The MIT License) Checker Qual (org.checkerframework:checker-qual:3.42.0 - https://checkerframework.org/)
 *  (EDL 1.0) Angus Activation Registries (org.eclipse.angus:angus-activation:2.0.2 - https://github.com/eclipse-ee4j/angus-activation/angus-activation)
 *  (Apache Software License - Version 2.0) (Eclipse Public License - Version 2.0) Jetty :: ALPN :: Client (org.eclipse.jetty:jetty-alpn-client:11.0.20 - https://eclipse.dev/jetty/jetty-alpn-parent/jetty-alpn-client)
