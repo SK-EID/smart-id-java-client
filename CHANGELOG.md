@@ -3,9 +3,15 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [3.4] - TBD
+## [3.3] - TBD
 
 ### Changes
+
+- Updated bouncy-castle artifact `bcprov-jdk18on` to version 1.86
+- Fixed reading certificate subject attributes failing with Bouncy Castle 1.85 or newer when an attribute value exceeds its RFC 5280 upper bound
+  (e.g. `commonName length 80 exceeds RFC 5280 ub-common-name (64)`).
+  - Added `CertificateAttributeUtil.getAttributeValue(X500Principal, ASN1ObjectIdentifier)` that reads the distinguished name from its DER encoding.
+  - Deprecated `CertificateAttributeUtil.getAttributeValue(String, ASN1ObjectIdentifier)`.
 - Added Belgium (`BE`) support:
     - Added `BE` to `SemanticsIdentifier.CountryCode`.
     - Added `NationalIdentityNumberUtil.parseBeDateOfBirth()` which extracts the date of birth from a Belgian national
@@ -13,14 +19,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
       are rejected as invalid. Bisnummer, which carries the birth month increased by 20 or 40, is supported. Numbers
       where the birth month and day are unknown (both zeroes) do not carry the date of birth and `null` is returned.
     - `NationalIdentityNumberUtil.getDateOfBirth()` now also handles identities with country `BE`.
-
-## [3.3] - 2026-11-02
-
-- Updated bouncy-castle artifact `bcprov-jdk18on` to version 1.86
-- Fixed reading certificate subject attributes failing with Bouncy Castle 1.85 or newer when an attribute value exceeds its RFC 5280 upper bound
-  (e.g. `commonName length 80 exceeds RFC 5280 ub-common-name (64)`).
-  - Added `CertificateAttributeUtil.getAttributeValue(X500Principal, ASN1ObjectIdentifier)` that reads the distinguished name from its DER encoding.
-  - Deprecated `CertificateAttributeUtil.getAttributeValue(String, ASN1ObjectIdentifier)`.
 
 ## [3.2] - 2026-03-18
 
