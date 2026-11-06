@@ -325,7 +325,7 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 ##### Initiating a device-link authentication session with document number
 
 ```java
-String documentNumber = "PNOLT-40504040001-MOCK-Q";
+String documentNumber = "PNOLT-40504040001-DEM2-Q";
 
 // For security reasons a new rpChallenge must be created for each new authentication request
 RpChallenge rpChallenge = RpChallengeGenerator.generate();
@@ -370,7 +370,7 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 ##### Initiating a device-link authentication session with document number for Web2App flow
 
 ```java
-String documentNumber = "PNOLT-40504040001-MOCK-Q";
+String documentNumber = "PNOLT-40504040001-DEM2-Q";
 
 // For security reasons a new rpChallenge must be created for each new authentication request
 RpChallenge rpChallenge = RpChallengeGenerator.generate();
@@ -1009,7 +1009,7 @@ The request parameters for the certificate by document number request are as fol
 ### Example of querying certificate by document number
 
 ```java
-String documentNumber = "PNOLT-40504040001-MOCK-Q";
+String documentNumber = "PNOLT-40504040001-DEM2-Q";
 
 // Build the certificate by document number request and query the certificate
 CertificateByDocumentNumberResult certResponse = smartIdClient
@@ -1045,7 +1045,7 @@ Sample code snippet (Prerequisite: `SmartIdClient smartIdClient` configured and 
 
 ```java
 var signatureCertificateLevel = CertificateLevel.QUALIFIED;
-var documentNumber = "PNOEE-40504040001-DEM0-Q";
+var documentNumber = "PNOEE-40504040001-DEM2-Q";
 var dataBytes = "Signable data".getBytes();
 var dataFileName = "test.txt";
 var dataFileMimeType = "text/plain";
@@ -1251,7 +1251,7 @@ Jump to [Query session status](#example-of-using-session-status-poller-to-query-
 ##### Initiating a notification-based authentication session with document number
 
 ```java
-String documentNumber = "PNOLT-40504040001-MOCK-Q";
+String documentNumber = "PNOLT-40504040001-DEM2-Q";
 
 // For security reasons a rpChallenge must be created for each new authentication request
 RpChallenge rpChallenge = RpChallengeGenerator.generate();

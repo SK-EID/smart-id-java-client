@@ -4,7 +4,7 @@ package ee.sk.smartid.dao;
  * #%L
  * Smart ID sample Java client
  * %%
- * Copyright (C) 2018 - 2025 SK ID Solutions AS
+ * Copyright (C) 2018 - 2026 SK ID Solutions AS
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,35 +26,62 @@ package ee.sk.smartid.dao;
  * #L%
  */
 
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import ee.sk.smartid.rest.dao.SemanticsIdentifier;
 
-public class SemanticsIdentifierTest {
+class SemanticsIdentifierTest {
+
+    private static final String IDENTITY_NUMBER = "30303039914";
 
     @Test
-    public void constructor1() {
-        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("AAA", "BB", "C123");
+    void getIdentifier_createdFromIdentityTypeCountryCodeAndIdentityNumberStrings() {
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNO", "EE", IDENTITY_NUMBER);
 
-        assertThat(semanticsIdentifier.getIdentifier(), is("AAABB-C123"));
+        assertThat(semanticsIdentifier.getIdentifier(), is("PNOEE-" + IDENTITY_NUMBER));
     }
 
     @Test
-    public void constructor2() {
-        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, "BB", "CCC");
+    void getIdentifier_createdFromFullIdentifierString() {
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier("PNOEE-" + IDENTITY_NUMBER);
 
-        assertThat(semanticsIdentifier.getIdentifier(), is("PNOBB-CCC"));
+        assertThat(semanticsIdentifier.getIdentifier(), is("PNOEE-" + IDENTITY_NUMBER));
     }
 
-    @Test
-    public void constructor3() {
-        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, SemanticsIdentifier.CountryCode.LV, "CCC-DDDDD");
+    @ParameterizedTest
+    @EnumSource(SemanticsIdentifier.IdentityType.class)
+    void getIdentifier_createdWithIdentityTypeAndCountryCodeString(SemanticsIdentifier.IdentityType identityType) {
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(identityType, "EE", IDENTITY_NUMBER);
 
-        assertThat(semanticsIdentifier.getIdentifier(), is("PNOLV-CCC-DDDDD"));
+        assertThat(semanticsIdentifier.getIdentifier(), is(identityType + "EE-" + IDENTITY_NUMBER));
     }
 
+    @ParameterizedTest
+    @EnumSource(SemanticsIdentifier.CountryCode.class)
+    void getIdentifier_createdWithIdentityTypeAndCountryCode(SemanticsIdentifier.CountryCode countryCode) {
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, countryCode, IDENTITY_NUMBER);
+
+        assertThat(semanticsIdentifier.getIdentifier(), is("PNO" + countryCode + "-" + IDENTITY_NUMBER));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "EE, 30303039914, PNOEE-30303039914",
+            "LT, 30303039914, PNOLT-30303039914",
+            "LV, 030303-10012, PNOLV-030303-10012",
+            "BE, 93051822361, PNOBE-93051822361"
+    })
+    void getIdentifier_countrySpecificIdentityNumberIsKeptAsIs(SemanticsIdentifier.CountryCode countryCode,
+                                                               String identityNumber,
+                                                               String expectedIdentifier) {
+        SemanticsIdentifier semanticsIdentifier = new SemanticsIdentifier(SemanticsIdentifier.IdentityType.PNO, countryCode, identityNumber);
+
+        assertThat(semanticsIdentifier.getIdentifier(), is(expectedIdentifier));
+    }
 }
