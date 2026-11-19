@@ -94,6 +94,11 @@ This library supports Smart-ID API v3.1.
 ## Requirements
  * Java 17 or 21
 
+> [!WARNING]
+> **Security Notice!** CVE-2026-114938 affects the Java runtime’s Base64 decoding implementation under certain platform and runtime conditions.
+> This library uses java.util.Base64 to decode values received from an API and values supplied by the integrator. These restricted input paths reduce the library’s exposure to attacker-controlled data, but do not eliminate the runtime vulnerability.
+> We recommend updating to a Java runtime release that includes the vendor’s security fix. For Oracle Java, the minimum patched versions are 17.0.21.1 and 21.0.13.1. Users of other Java distributions should follow their vendor’s guidance for the corresponding fixed version.
+
 ## Getting the library
 
 ### Maven
