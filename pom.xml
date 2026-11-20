@@ -45,7 +45,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <jackson.version>2.17.2</jackson.version>
+        <jackson.version>2.18.11</jackson.version>
         <jackson.annotations.version>2.17.2</jackson.annotations.version>
         <jersey.version>3.1.8</jersey.version>
         <resteasy.version>6.2.10.Final</resteasy.version>
